@@ -39,10 +39,13 @@ namespace karri {
 // Holds information relating to a specific request like its pickups and
 // dropoffs and the best known assignment.
 struct RequestState {
-
   RequestState(const CostCalculator &calculator, const InputConfig &inputConfig)
-      : originalRequest(), originalReqDirectDist(-1), minDirectPDDist(-1),
-        pickups(), dropoffs(), calculator(calculator),
+      : originalRequest(),
+        originalReqDirectDist(-1),
+        minDirectPDDist(-1),
+        pickups(),
+        dropoffs(),
+        calculator(calculator),
         inputConfig(inputConfig) {}
 
   ~RequestState() {
@@ -119,7 +122,6 @@ struct RequestState {
 
     if (cost < bestCost ||
         (cost == bestCost && breakCostTie(asgn, bestAssignment))) {
-
       bestAssignment = asgn;
       bestCost = cost;
       notUsingVehicleIsBest = false;
@@ -168,7 +170,7 @@ struct RequestState {
     notUsingVehicleDist = INFTY;
   }
 
-private:
+ private:
   stats::DispatchingPerformanceStats perfStats;
   stats::OsmRoadCategoryStats allPDLocsRoadCatStats;
   stats::OsmRoadCategoryStats chosenPDLocsRoadCatStats;
@@ -182,4 +184,4 @@ private:
   bool notUsingVehicleIsBest;
   int notUsingVehicleDist;
 };
-} // namespace karri
+}  // namespace karri

@@ -4,17 +4,15 @@
 #include <string>
 #include <vector>
 
-#include "CHQuery.h"
-
 #include "../../../Helpers/Console/Progress.h"
+#include "CHQuery.h"
 
 namespace CH {
 
 template <typename GRAPH = CHGraph, bool STALL_ON_DEMAND = true,
           bool DEBUG = false>
 class BucketQuery {
-
-public:
+ public:
   using Graph = GRAPH;
   constexpr static bool StallOnDemand = STALL_ON_DEMAND;
   constexpr static bool Debug = DEBUG;
@@ -22,7 +20,7 @@ public:
 
   using BaseQuery = Query<Graph, StallOnDemand, false, true>;
 
-public:
+ public:
   BucketQuery(const Graph &forward, const Graph &backward,
               const std::vector<int> &forwardWeight,
               const std::vector<int> &backwardWeight,
@@ -32,7 +30,8 @@ public:
         bucketGraph{CHGraph(), CHGraph()},
         distance{std::vector<int>(forward.numVertices(), INFTY),
                  std::vector<int>(backward.numVertices(), INFTY)},
-        root{noVertex, noVertex}, endOfPOIs(endOfPOIs),
+        root{noVertex, noVertex},
+        endOfPOIs(endOfPOIs),
         reachedPOIs{std::vector<Vertex>(), std::vector<Vertex>()} {
     buildBucketGraph<FORWARD, BACKWARD>();
     buildBucketGraph<BACKWARD, FORWARD>();
@@ -53,8 +52,7 @@ public:
   template <bool TARGET_PRUNING = true>
   inline void run(const Vertex from, const Vertex to,
                   const double targetPruningFactor = 1) noexcept {
-    if (root[FORWARD] == from && root[BACKWARD] == to)
-      return;
+    if (root[FORWARD] == from && root[BACKWARD] == to) return;
     if constexpr (Debug) {
       std::cout << "Starting bucket query" << std::endl;
       timer.restart();
@@ -78,8 +76,7 @@ public:
 
   template <int I, int J, bool TARGET_PRUNING = true>
   inline void run(const Vertex origin) noexcept {
-    if (root[I] == origin && root[J] == noVertex)
-      return;
+    if (root[I] == origin && root[J] == noVertex) return;
     if constexpr (Debug) {
       std::cout << "Starting unidirectional bucket query" << std::endl;
       timer.restart();
@@ -98,8 +95,7 @@ public:
   }
 
   inline void clear() noexcept {
-    if constexpr (Debug)
-      timer.restart();
+    if constexpr (Debug) timer.restart();
     clear<FORWARD>();
     clear<BACKWARD>();
     baseQuery.clear();
@@ -118,8 +114,7 @@ public:
   }
 
   inline void run() noexcept {
-    if constexpr (Debug)
-      std::cout << "Running bucket query" << std::endl;
+    if constexpr (Debug) std::cout << "Running bucket query" << std::endl;
     baseQuery.run();
     collectPOIs<FORWARD>();
     collectPOIs<BACKWARD>();
@@ -162,8 +157,8 @@ public:
     return reachedPOIs[BACKWARD];
   }
 
-  inline std::vector<Vertex>
-  getReversePath(const Vertex = noVertex) const noexcept {
+  inline std::vector<Vertex> getReversePath(
+      const Vertex = noVertex) const noexcept {
     return baseQuery.getReversePath();
   }
 
@@ -179,8 +174,9 @@ public:
     return baseQuery.getStallCount();
   }
 
-private:
-  template <int I, int J> inline void buildBucketGraph() noexcept {
+ private:
+  template <int I, int J>
+  inline void buildBucketGraph() noexcept {
     if constexpr (Debug)
       std::cout << "Building " << ((I == FORWARD) ? ("forward") : ("backward"))
                 << " bucket graph" << std::endl;
@@ -207,7 +203,8 @@ private:
     }
   }
 
-  template <int DIRECTION> inline void clear() noexcept {
+  template <int DIRECTION>
+  inline void clear() noexcept {
     for (const Vertex vertex : reachedPOIs[DIRECTION]) {
       distance[DIRECTION][vertex] = INFTY;
     }
@@ -224,8 +221,7 @@ private:
         const int newDistance =
             baseQuery.template getDistanceToPOI<DIRECTION>(vertex) +
             bucketGraph[DIRECTION].get(Weight, edge);
-        if (newDistance > maxDistance)
-          break;
+        if (newDistance > maxDistance) break;
         const Vertex poi = bucketGraph[DIRECTION].get(ToVertex, edge);
         if (distance[DIRECTION][poi] == INFTY) {
           reachedPOIs[DIRECTION].emplace_back(poi);
@@ -238,7 +234,7 @@ private:
     }
   }
 
-private:
+ private:
   BaseQuery baseQuery;
 
   CHGraph bucketGraph[2];
@@ -252,4 +248,4 @@ private:
   Timer timer;
 };
 
-} // namespace CH
+}  // namespace CH

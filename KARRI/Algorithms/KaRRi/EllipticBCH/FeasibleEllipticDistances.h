@@ -24,20 +24,20 @@
 
 #pragma once
 
-#include "DataStructures/Containers/Subset.h"
-#include "DataStructures/Labels/BasicLabelSet.h"
-#include "DataStructures/Labels/SimdLabelSet.h"
-#include "Tools/Simd/AlignedVector.h"
 #include <type_traits>
 
 #include "Algorithms/KaRRi/RequestState/RequestState.h"
 #include "Algorithms/KaRRi/RouteState.h"
 #include "Algorithms/KaRRi/TimeUtils.h"
+#include "DataStructures/Containers/Subset.h"
+#include "DataStructures/Labels/BasicLabelSet.h"
+#include "DataStructures/Labels/SimdLabelSet.h"
+#include "Tools/Simd/AlignedVector.h"
 
 namespace karri {
 
-template <typename LabelSetT> class FeasibleEllipticDistances {
-
+template <typename LabelSetT>
+class FeasibleEllipticDistances {
   static constexpr int K = LabelSetT::K;
   using DistanceLabel = typename LabelSetT::DistanceLabel;
   using LabelMask = typename LabelSetT::LabelMask;
@@ -45,12 +45,14 @@ template <typename LabelSetT> class FeasibleEllipticDistances {
   using DistsVector = AlignedVector<DistanceLabel>;
   using MeetingVerticesVector = AlignedVector<DistanceLabel>;
 
-public:
+ public:
   explicit FeasibleEllipticDistances(const int fleetSize,
                                      const RouteState &routeState)
-      : routeState(routeState), maxStopId(routeState.getMaxStopId()),
+      : routeState(routeState),
+        maxStopId(routeState.getMaxStopId()),
         startOfRangeInValueArray(fleetSize),
-        vehiclesWithRelevantPDLocs(fleetSize), minDistToPDLoc(fleetSize),
+        vehiclesWithRelevantPDLocs(fleetSize),
+        minDistToPDLoc(fleetSize),
         minDistFromPDLocToNextStop(fleetSize) {}
 
   template <typename PDLocsAtExistingStopsT, typename InputGraphT>
@@ -65,8 +67,7 @@ public:
       minDistFromPDLocToNextStop.resize(maxStopId + 1);
     }
 
-    for (auto &idx : startOfRangeInValueArray)
-      idx = INVALID_INDEX;
+    for (auto &idx : startOfRangeInValueArray) idx = INVALID_INDEX;
     vehiclesWithRelevantPDLocs.clear();
 
     distToRelevantPDLocs.clear();
@@ -107,8 +108,7 @@ public:
 
   // Allocate entries for the given stop if none exist already.
   void preallocateEntriesFor(const int stopId) {
-    if (!hasPotentiallyRelevantPDLocs(stopId))
-      allocateEntriesFor(stopId);
+    if (!hasPotentiallyRelevantPDLocs(stopId)) allocateEntriesFor(stopId);
   }
 
   // Updates the distance from stop to the PD loc. Distance is written if there
@@ -149,7 +149,6 @@ public:
   LabelMask updateDistanceFromPDLocToNextStop(
       const int stopId, const int firstPDLocId,
       const DistanceLabel newDistFromPDLocToNextStop, const int meetingVertex) {
-
     // We assume the from-searches are run after the to-searches. If the stop
     // does not have entries yet, it was considered irrelevant for the
     // to-searches (regardless of whether we allow dynamic allocation or not).
@@ -182,16 +181,15 @@ public:
   // label in the block given a PD loc id. Used to hide intrinsics of
   // DistanceLabels to caller.
   class PerPDLocFacade {
-
     using It = typename DistsVector::const_iterator;
 
-  public:
+   public:
     int operator[](const unsigned int pdLocId) const {
       assert(pdLocId / K < numLabelsPerStop);
       return labelBegin[pdLocId / K][pdLocId % K];
     }
 
-  private:
+   private:
     friend FeasibleEllipticDistances;
 
     PerPDLocFacade(const It labelBegin, const int numLabelsPerStop)
@@ -225,8 +223,8 @@ public:
     return {meetingVerticesToRelevantPDLocs.begin() + start, numLabelsPerStop};
   }
 
-  PerPDLocFacade
-  distancesFromRelevantPDLocsToNextStopOf(const int stopId) const {
+  PerPDLocFacade distancesFromRelevantPDLocsToNextStopOf(
+      const int stopId) const {
     assert(stopId <= maxStopId);
     assert(startOfRangeInValueArray[stopId] != INVALID_INDEX);
     const auto start = startOfRangeInValueArray[stopId];
@@ -242,8 +240,8 @@ public:
     return minDistFromPDLocToNextStop[stopId].horizontalMin();
   }
 
-  PerPDLocFacade
-  meetingVerticesFromRelevantPDLocsToNextStopOf(const int stopId) const {
+  PerPDLocFacade meetingVerticesFromRelevantPDLocsToNextStopOf(
+      const int stopId) const {
     assert(stopId <= maxStopId);
     assert(startOfRangeInValueArray[stopId] != INVALID_INDEX);
     const auto start = startOfRangeInValueArray[stopId];
@@ -258,7 +256,7 @@ public:
     return vehiclesWithRelevantPDLocs;
   }
 
-private:
+ private:
   void allocateEntriesFor(const int stopId) {
     assert(startOfRangeInValueArray[stopId] == INVALID_INDEX);
     const auto curNumLabels = distToRelevantPDLocs.size();
@@ -301,4 +299,4 @@ private:
   std::vector<DistanceLabel> minDistFromPDLocToNextStop;
 };
 
-} // namespace karri
+}  // namespace karri

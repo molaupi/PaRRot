@@ -22,4 +22,4 @@ enum NegativeTag { Negative };
 enum SplitByOriginTag { SplitByOrigin };
 enum SplitByDestinationTag { SplitByDestination };
 
-} // namespace Construct
+}  // namespace Construct

@@ -17,8 +17,7 @@ inline std::vector<bool> targetSelection(const GRAPH_TYPE &graph,
   std::vector<bool> isRequired(graph.numVertices(), false);
   std::vector<Vertex> stack;
   for (const Vertex v : targets) {
-    if (exclude(v))
-      continue;
+    if (exclude(v)) continue;
     stack.emplace_back(v);
     isRequired[v] = true;
   }
@@ -27,20 +26,17 @@ inline std::vector<bool> targetSelection(const GRAPH_TYPE &graph,
     stack.pop_back();
     for (const Edge e : graph.edgesFrom(u)) {
       const Vertex v = graph.get(ToVertex, e);
-      if (isRequired[v])
-        continue;
+      if (isRequired[v]) continue;
       isRequired[v] = true;
-      if (!exclude(v))
-        stack.emplace_back(v);
+      if (!exclude(v)) stack.emplace_back(v);
     }
   }
   return isRequired;
 }
 
 template <typename GRAPH_TYPE>
-inline std::vector<bool>
-targetSelection(const GRAPH_TYPE &graph,
-                const std::vector<Vertex> &targets) noexcept {
+inline std::vector<bool> targetSelection(
+    const GRAPH_TYPE &graph, const std::vector<Vertex> &targets) noexcept {
   return targetSelection(graph, targets, [&](const Vertex) { return false; });
 }
 
@@ -74,8 +70,7 @@ struct SweepGraph {
       const Vertex originalFromVertex(order[fromVertex]);
       for (const Edge edge : originalGraph.edgesFrom(originalFromVertex)) {
         const Vertex originalToVertex = originalGraph.get(ToVertex, edge);
-        if (!isRequired[originalToVertex])
-          continue;
+        if (!isRequired[originalToVertex]) continue;
         const Vertex toVertex(permutation[originalToVertex]);
         constructionGraph.addEdge(revertEdges ? toVertex : fromVertex,
                                   revertEdges ? fromVertex : toVertex,
@@ -113,18 +108,15 @@ struct CompactSweepGraph {
                     const std::vector<Vertex> &targets, const bool invertOrder,
                     const bool revertEdges,
                     const size_t numExcludedVertices) noexcept {
-    std::vector<bool> isRequired =
-        targetSelection(originalGraph, targets, [&](const Vertex v) {
-          return v < numExcludedVertices;
-        });
+    std::vector<bool> isRequired = targetSelection(
+        originalGraph, targets,
+        [&](const Vertex v) { return v < numExcludedVertices; });
 
     for (const Vertex vertex : originalGraph.vertices()) {
-      if (!isRequired[vertex])
-        continue;
+      if (!isRequired[vertex]) continue;
       order.emplace_back(vertex);
     }
-    if (invertOrder)
-      Vector::reverse(order);
+    if (invertOrder) Vector::reverse(order);
     std::vector<Vertex> permutation(originalGraph.numVertices(), noVertex);
     for (size_t i = 0; i < order.size(); i++) {
       permutation[order[i]] = Vertex(i);
@@ -136,8 +128,7 @@ struct CompactSweepGraph {
       const Vertex originalFromVertex = order[fromVertex];
       for (const Edge edge : originalGraph.edgesFrom(originalFromVertex)) {
         const Vertex originalToVertex = originalGraph.get(ToVertex, edge);
-        if (!isRequired[originalToVertex])
-          continue;
+        if (!isRequired[originalToVertex]) continue;
         const Vertex toVertex = permutation[originalToVertex];
         constructionGraph.addEdge(revertEdges ? toVertex : fromVertex,
                                   revertEdges ? fromVertex : toVertex,
@@ -172,4 +163,4 @@ struct BucketGraph {
 
   CHGraph graph;
 };
-} // namespace CH
+}  // namespace CH

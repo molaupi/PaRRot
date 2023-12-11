@@ -4,20 +4,18 @@
 #include <string>
 #include <vector>
 
+#include "../../../DataStructures/Container/ExternalKHeap.h"
 #include "../../../Helpers/String/String.h"
 #include "../../../Helpers/Timer.h"
 #include "../../../Helpers/Types.h"
 #include "../../../Helpers/Vector/Vector.h"
-
-#include "../../../DataStructures/Container/ExternalKHeap.h"
 
 namespace CH {
 
 template <typename GRAPH, typename PROFILER, int Q_POP_LIMIT = -1,
           bool ONE_HOP_HEURISTIC = true>
 class BidirectionalWitnessSearch {
-
-public:
+ public:
   using Graph = GRAPH;
   using Profiler = PROFILER;
   constexpr static int QPopLimit = Q_POP_LIMIT;
@@ -25,7 +23,7 @@ public:
   using Type =
       BidirectionalWitnessSearch<Graph, Profiler, QPopLimit, OneHopHeuristic>;
 
-private:
+ private:
   struct Distance : public ExternalKHeapElement {
     Distance() : ExternalKHeapElement(), distance(intMax / 2) {}
     inline bool hasSmallerKey(const Distance *other) const noexcept {
@@ -34,12 +32,14 @@ private:
     int distance;
   };
 
-public:
+ public:
   BidirectionalWitnessSearch()
-      : graph(0), weight(0),
+      : graph(0),
+        weight(0),
         Q{ExternalKHeap<2, Distance>(), ExternalKHeap<2, Distance>()},
         distance{std::vector<Distance>(), std::vector<Distance>()},
-        settled{std::vector<Vertex>(), std::vector<Vertex>()}, profiler(0) {}
+        settled{std::vector<Vertex>(), std::vector<Vertex>()},
+        profiler(0) {}
 
   inline void initialize(const Graph *graph, const std::vector<int> *weight,
                          Profiler *profiler) {
@@ -55,10 +55,8 @@ public:
   inline bool shortcutIsNecessary(const Vertex from, const Vertex to,
                                   const Vertex via,
                                   const int shortcutDistance) noexcept {
-    if (graph->outDegree(from) == 1)
-      return true;
-    if (graph->inDegree(to) == 1)
-      return true;
+    if (graph->outDegree(from) == 1) return true;
+    if (graph->inDegree(to) == 1) return true;
     if (OneHopHeuristic) {
       const Edge edge = graph->findEdge(from, to);
       if (graph->isEdge(edge)) {
@@ -88,17 +86,14 @@ public:
         return true;
 
       settle<FORWARD>(via, shortcutDistance);
-      if (foundWitness)
-        return false;
+      if (foundWitness) return false;
 
       settle<BACKWARD>(via, shortcutDistance);
-      if (foundWitness)
-        return false;
+      if (foundWitness) return false;
 
       if constexpr (QPopLimit > 0) {
         qPops -= 2;
-        if (qPops < 0)
-          break;
+        if (qPops < 0) break;
       }
     }
 
@@ -106,8 +101,9 @@ public:
     return true;
   }
 
-private:
-  template <int DIRECTION> inline void clear() noexcept {
+ private:
+  template <int DIRECTION>
+  inline void clear() noexcept {
     for (const Vertex vertex : settled[DIRECTION]) {
       distance[DIRECTION][vertex].distance = INFTY;
     }
@@ -126,16 +122,14 @@ private:
     if constexpr (DIRECTION == FORWARD) {
       for (Edge edge : graph->edgesFrom(u)) {
         const Vertex v = graph->get(ToVertex, edge);
-        if (v == via)
-          continue;
+        if (v == via) continue;
         relax<DIRECTION>(v, label->distance + (*weight)[edge],
                          shortcutDistance);
       }
     } else {
       for (Edge edge : graph->edgesTo(u)) {
         const Vertex v = graph->get(FromVertex, edge);
-        if (v == via)
-          continue;
+        if (v == via) continue;
         relax<DIRECTION>(v, label->distance + (*weight)[edge],
                          shortcutDistance);
       }
@@ -155,7 +149,7 @@ private:
     }
   }
 
-private:
+ private:
   const Graph *graph;
   const std::vector<int> *weight;
 
@@ -170,4 +164,4 @@ private:
   Profiler *profiler;
 };
 
-} // namespace CH
+}  // namespace CH

@@ -8,12 +8,11 @@
 #include <utility>
 #include <vector>
 
-#include "File.h"
-
 #include "../Assert.h"
 #include "../FileSystem/FileSystem.h"
 #include "../Meta.h"
 #include "../Vector/Vector.h"
+#include "File.h"
 
 namespace IO {
 
@@ -27,49 +26,59 @@ class Serialization;
 class Deserialization;
 
 namespace ImplementationDetail {
-template <typename T, typename = void> struct IsSerializable : Meta::False {};
+template <typename T, typename = void>
+struct IsSerializable : Meta::False {};
 
 template <typename T>
 struct IsSerializable<T, decltype(std::declval<const T>().serialize(
                                       std::declval<Serialization &>()),
                                   void())> : Meta::True {};
 
-template <typename T, typename = void> struct IsDeserializable : Meta::False {};
+template <typename T, typename = void>
+struct IsDeserializable : Meta::False {};
 
 template <typename T>
 struct IsDeserializable<T, decltype(std::declval<T>().deserialize(
                                         std::declval<Deserialization &>()),
                                     void())> : Meta::True {};
 
-template <typename T, typename = void> struct IsVectorType : Meta::False {};
+template <typename T, typename = void>
+struct IsVectorType : Meta::False {};
 
-template <typename T> struct IsVectorType<std::vector<T>, void> : Meta::True {};
+template <typename T>
+struct IsVectorType<std::vector<T>, void> : Meta::True {};
 
-template <typename T, typename = void> struct IsArrayType : Meta::False {};
+template <typename T, typename = void>
+struct IsArrayType : Meta::False {};
 
 template <typename T, size_t N>
 struct IsArrayType<std::array<T, N>, void> : Meta::True {};
-} // namespace ImplementationDetail
+}  // namespace ImplementationDetail
 
-template <typename T> inline constexpr bool IsSerializable() {
+template <typename T>
+inline constexpr bool IsSerializable() {
   return ImplementationDetail::IsSerializable<T>::Value;
 }
 
-template <typename T> inline constexpr bool IsDeserializable() {
+template <typename T>
+inline constexpr bool IsDeserializable() {
   return ImplementationDetail::IsDeserializable<T>::Value;
 }
 
-template <typename T> inline constexpr bool IsVectorType() {
+template <typename T>
+inline constexpr bool IsVectorType() {
   return ImplementationDetail::IsVectorType<T>::Value;
 }
 
-template <typename T> inline constexpr bool IsArrayType() {
+template <typename T>
+inline constexpr bool IsArrayType() {
   return ImplementationDetail::IsArrayType<T>::Value;
 }
 
 // ############################################### Stream Utilities
 // ################################################################//
-template <typename STREAM> inline void checkStream(STREAM &stream) {
+template <typename STREAM>
+inline void checkStream(STREAM &stream) {
   Ensure(stream.is_open(), "Cannot access a stream that is not open!");
 }
 
@@ -82,19 +91,18 @@ inline void checkStream(STREAM &stream, const std::string &fileName) {
 // ################################################# Serialization
 // #################################################################//
 class Serialization {
-
-public:
+ public:
   template <typename... Ts>
   Serialization(const std::string &fileName, const Ts &...objects)
       : fileName(FileSystem::ensureDirectoryExists(fileName)),
         os(fileName, std::ios::binary) {
     checkStream(os, fileName);
-    serialize(FileHeader); // Magic Header signaling that the following data
-                           // represents a vector serialized by this code
+    serialize(FileHeader);  // Magic Header signaling that the following data
+                            // represents a vector serialized by this code
     operator()(objects...);
   }
 
-public:
+ public:
   inline void operator()() noexcept {}
 
   template <typename T, typename... Ts>
@@ -107,8 +115,9 @@ public:
 
   inline void version(const size_t versionId) noexcept { serialize(versionId); }
 
-private:
-  template <typename T> inline void serialize(const T &object) noexcept {
+ private:
+  template <typename T>
+  inline void serialize(const T &object) noexcept {
     checkStream(os);
     if constexpr (IsSerializable<T>()) {
       object.serialize(*this);
@@ -127,9 +136,9 @@ private:
   template <typename T>
   inline void serialize(const std::vector<T> &vectorObject) noexcept {
     checkStream(os);
-    serialize(Meta::type<T>()); // Type of the vector elements, used to check
-                                // consistency during deserialization
-    serialize(vectorObject.size()); // Size of the serialized vector
+    serialize(Meta::type<T>());  // Type of the vector elements, used to check
+                                 // consistency during deserialization
+    serialize(vectorObject.size());  // Size of the serialized vector
     if constexpr (Meta::Equals<T, bool>()) {
       serialize(Vector::packBool(vectorObject));
     } else if constexpr (IsSerializable<T>() || IsVectorType<T>() ||
@@ -146,9 +155,9 @@ private:
   template <typename T, size_t N>
   inline void serialize(const std::array<T, N> &arrayObject) noexcept {
     checkStream(os);
-    serialize(Meta::type<T>());    // Type of the vector elements, used to check
-                                   // consistency during deserialization
-    serialize(arrayObject.size()); // Size of the serialized vector
+    serialize(Meta::type<T>());  // Type of the vector elements, used to check
+                                 // consistency during deserialization
+    serialize(arrayObject.size());  // Size of the serialized vector
     if constexpr (IsSerializable<T>() || IsVectorType<T>() ||
                   IsArrayType<T>() || Meta::Equals<T, std::string>()) {
       for (const T &element : arrayObject) {
@@ -160,7 +169,7 @@ private:
     }
   }
 
-private:
+ private:
   const std::string fileName;
   std::ofstream os;
 };
@@ -168,8 +177,7 @@ private:
 // ################################################ Deserialization
 // ################################################################//
 class Deserialization {
-
-public:
+ public:
   template <typename T, typename... Ts>
   Deserialization(const std::string &fileName, T &object, Ts &...objects)
       : fileName(fileName), is(fileName, std::ios::binary) {
@@ -186,17 +194,17 @@ public:
     checkStream(is, fileName);
     int header;
     deserialize(header);
-    if (header == FileHeader) { // Assume that the following vector was
-                                // serialized using this code
+    if (header == FileHeader) {  // Assume that the following vector was
+                                 // serialized using this code
       operator()(object);
-    } else { // The following data was not serialized using this code
+    } else {  // The following data was not serialized using this code
       warning("Trying to deserialize a file (", fileName,
               ") without magic header!");
       exit(1);
     }
   }
 
-public:
+ public:
   inline void operator()() noexcept {}
 
   template <typename T, typename... Ts>
@@ -215,8 +223,9 @@ public:
                                << " has version " << fileVersionId);
   }
 
-private:
-  template <typename T> inline void deserialize(T &object) noexcept {
+ private:
+  template <typename T>
+  inline void deserialize(T &object) noexcept {
     checkStream(is);
     if constexpr (IsDeserializable<T>()) {
       object.deserialize(*this);
@@ -286,7 +295,7 @@ private:
     }
   }
 
-private:
+ private:
   const std::string fileName;
   std::ifstream is;
 };
@@ -321,4 +330,4 @@ inline bool checkHeader(const std::string &fileName) noexcept {
   return header == FileHeader;
 }
 
-} // namespace IO
+}  // namespace IO

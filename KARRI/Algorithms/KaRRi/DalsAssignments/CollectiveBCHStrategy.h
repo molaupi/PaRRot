@@ -35,12 +35,10 @@ template <typename InputGraphT, typename CHEnvT, typename LastStopBucketsEnvT,
           typename FallBackCHLabelSet =
               BasicLabelSet<0, ParentInfo::NO_PARENT_INFO>>
 class CollectiveBCHStrategy {
-
   // Checks whether a DALS assignment is possible for this vehicle.
   // Call operator returns false if the vehicle has no relevant pickups along
   // its route before the last stop.
   struct IsVehEligibleForDropoffAfterLastStop {
-
     IsVehEligibleForDropoffAfterLastStop(const CollectiveBCHStrategy &strat)
         : strat(strat) {}
 
@@ -50,7 +48,7 @@ class CollectiveBCHStrategy {
               strat.relevantOrdinaryPickups.hasRelevantSpotsFor(vehId));
     }
 
-  private:
+   private:
     const CollectiveBCHStrategy &strat;
   };
 
@@ -61,7 +59,7 @@ class CollectiveBCHStrategy {
       ClosestPDLocToLastStopBCHQueryWithStallOnDemand<
           InputGraphT, CHEnvT, typename LastStopBucketsEnvT::BucketContainer>;
 
-public:
+ public:
   CollectiveBCHStrategy(const InputGraphT &inputGraph, const Fleet &fleet,
                         const RouteState &routeState, const CHEnvT &chEnv,
                         const LastStopBucketsEnvT &lastStopBucketsEnv,
@@ -71,16 +69,20 @@ public:
                         const RelevantPDLocs &relevantOrdinaryPickups,
                         const RelevantPDLocs &relevantPickupsBeforeNextStop,
                         const InputConfig &inputConfig)
-      : inputGraph(inputGraph), fleet(fleet), routeState(routeState),
+      : inputGraph(inputGraph),
+        fleet(fleet),
+        routeState(routeState),
         calculator(calculator),
         curVehLocToPickupSearches(curVehLocToPickupSearches),
         closestDropoffSearch(inputGraph, fleet.size(), chEnv,
                              lastStopBucketsEnv.getBuckets(),
                              {chEnv.getCH().upwardGraph()}),
-        ch(chEnv.getCH()), requestState(requestState),
+        ch(chEnv.getCH()),
+        requestState(requestState),
         relevantOrdinaryPickups(relevantOrdinaryPickups),
         relevantPickupsBeforeNextStop(relevantPickupsBeforeNextStop),
-        inputConfig(inputConfig), isVehEligibleForDropoffAfterLastStop(*this),
+        inputConfig(inputConfig),
+        isVehEligibleForDropoffAfterLastStop(*this),
         minCostSearch(inputGraph, fleet, chEnv, calculator, lastStopBucketsEnv,
                       isVehEligibleForDropoffAfterLastStop, routeState,
                       requestState, inputConfig),
@@ -93,7 +95,7 @@ public:
     enumerateAssignments();
   }
 
-private:
+ private:
   void runCollectiveSearch() {
     Timer timer;
 
@@ -207,7 +209,7 @@ private:
                 .calcCostLowerBoundForDropoffAfterLastStopIndependentOfVehicle(
                     distFromLastStopToDropoff, *asgn.dropoff, requestState) >
             requestState.getBestCost())
-          break; // no need to check pickup before next stop
+          break;  // no need to check pickup before next stop
 
         const auto &numStops = routeState.numStopsOf(vehId);
         const auto &occupancies = routeState.occupanciesFor(vehId);
@@ -229,8 +231,7 @@ private:
             // New smaller pickup index reached: Check if seating capacity and
             // cost lower bound admit any valid assignments at this or earlier
             // indices.
-            if (occupancies[entry.stopIndex] >= asgn.vehicle->capacity)
-              break;
+            if (occupancies[entry.stopIndex] >= asgn.vehicle->capacity) break;
 
             assert(entry.stopIndex < numStops - 1);
             const auto minTripTimeToLastStop =
@@ -242,15 +243,13 @@ private:
                     .calcCostLowerBoundForDropoffAfterLastStopIndependentOfVehicle(
                         asgn.dropoff->walkingDist, distFromLastStopToDropoff,
                         minTripTimeToLastStop, requestState);
-            if (minCostFromHere > requestState.getBestCost())
-              break;
+            if (minCostFromHere > requestState.getBestCost()) break;
 
             curPickupIndex = entry.stopIndex;
           }
 
           asgn.pickup = &requestState.pickups[entry.pdId];
-          if (asgn.pickup->loc == asgn.dropoff->loc)
-            continue;
+          if (asgn.pickup->loc == asgn.dropoff->loc) continue;
 
           asgn.pickupStopIdx = entry.stopIndex;
           asgn.distToPickup = entry.distToPDLoc;
@@ -321,9 +320,7 @@ private:
     std::vector<PairWithPickupBeforeNextStopLeftToCheck> leftToCheck;
 
     for (const auto &vehId : minCostSearch.getVehiclesSeen()) {
-
-      if (!checkPBNSForVehicle.isSet(vehId))
-        continue;
+      if (!checkPBNSForVehicle.isSet(vehId)) continue;
 
       if (!relevantPickupsBeforeNextStop.hasRelevantSpotsFor(vehId) ||
           routeState.occupanciesFor(vehId)[0] >= fleet[vehId].capacity) {
@@ -351,7 +348,7 @@ private:
                 .calcCostLowerBoundForDropoffAfterLastStopIndependentOfVehicle(
                     distFromLastStopToDropoff, *asgn.dropoff, requestState) >
             requestState.getBestCost())
-          break; // no need to check pickup before next stop
+          break;  // no need to check pickup before next stop
 
         // Compute a lower bound for the cost of any assignment with pickup
         // before next stop based on the trip time starting at stop 1 and the
@@ -377,8 +374,7 @@ private:
         for (const auto &entry :
              relevantPickupsBeforeNextStop.relevantSpotsFor(vehId)) {
           asgn.pickup = &requestState.pickups[entry.pdId];
-          if (asgn.pickup->loc == asgn.dropoff->loc)
-            continue;
+          if (asgn.pickup->loc == asgn.dropoff->loc) continue;
 
           if (!curVehLocToPickupSearches.knowsDistance(vehId,
                                                        asgn.pickup->id)) {
@@ -391,8 +387,7 @@ private:
                 calculator.calcWithoutHardConstraints(asgn, requestState);
             // If the cost lower bound is worse than the best known cost, this
             // pickup/dropoff combination is not relevant.
-            if (lowerBoundCost > requestState.getBestCost())
-              continue;
+            if (lowerBoundCost > requestState.getBestCost()) continue;
 
             // Otherwise, calculate the exact distance from the vehicle's
             // location to the pickup. (computation of exact distances bundled
@@ -420,8 +415,7 @@ private:
         assert(curVehLocToPickupSearches.knowsDistance(vehId, asgn.pickup->id));
         asgn.distToPickup =
             curVehLocToPickupSearches.getDistance(vehId, asgn.pickup->id);
-        if (asgn.distToPickup >= INFTY)
-          continue;
+        if (asgn.distToPickup >= INFTY) continue;
 
         asgn.distFromPickup = pair.distFromPickup;
         asgn.distToDropoff = pair.distToDropoff;
@@ -535,10 +529,8 @@ private:
   // each affected vehicle to each dropoff and tries the assignments of each
   // constraint breaker with each dropoff.
   // Constraint breakers have to be given ordered by vehicles.
-  void
-  evaluateConstraintBreakersWithAllDropoffs(int &numAssignmentsTried,
-                                            int &numFallbackChSearchesRun) {
-
+  void evaluateConstraintBreakersWithAllDropoffs(
+      int &numAssignmentsTried, int &numFallbackChSearchesRun) {
     int lastVehId = constraintBreakers.empty()
                         ? INVALID_ID
                         : constraintBreakers[0].vehicle->vehicleId;
@@ -570,8 +562,7 @@ private:
 
           for (const auto &dropoff : requestState.dropoffs) {
             asgn.dropoff = &dropoff;
-            if (asgn.pickup->loc == asgn.dropoff->loc)
-              continue;
+            if (asgn.pickup->loc == asgn.dropoff->loc) continue;
 
             asgn.distToDropoff = distsFromLastStopToDropoffs[asgn.dropoff->id];
             ++numAssignmentsTried;
@@ -606,8 +597,7 @@ private:
 
     // Compute the distance from the last stop to all other dropoffs
     for (const auto &dropoff : requestState.dropoffs) {
-      if (distances.hasValidValue(dropoff.id))
-        continue;
+      if (distances.hasValidValue(dropoff.id)) continue;
 
       targets[nextFreeDirectSearch] = ch.rank(inputGraph.edgeTail(dropoff.loc));
       dropoffIds[nextFreeDirectSearch] = dropoff.id;
@@ -672,4 +662,4 @@ private:
   typename CHEnvT::template FullCHQuery<FallBackCHLabelSet> fullCHQuery;
 };
 
-} // namespace karri::DropoffAfterLastStopStrategies
+}  // namespace karri::DropoffAfterLastStopStrategies

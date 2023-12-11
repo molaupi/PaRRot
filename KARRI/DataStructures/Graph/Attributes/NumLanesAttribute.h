@@ -30,7 +30,7 @@
 
 // An attribute associating a number of lanes with each edge of a graph.
 class NumLanesAttribute : public AbstractAttribute<double> {
-public:
+ public:
   // Returns the number of lanes of edge e.
   const Type &numLanes(const int e) const {
     assert(e >= 0);
@@ -45,7 +45,7 @@ public:
     return values[e];
   }
 
-protected:
+ protected:
   static constexpr const char *NAME =
-      "num_lanes"; // The attribute's unique name.
+      "num_lanes";  // The attribute's unique name.
 };

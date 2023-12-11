@@ -34,20 +34,21 @@
 // algorithm template. Concrete DFS-based algorithms (like computing a DFS
 // numbering or strongly connected components) are derived from it by
 // implementing various hook functions called during execution of the DFS.
-template <typename ConcreteAlgoT> class DepthFirstSearch {
+template <typename ConcreteAlgoT>
+class DepthFirstSearch {
   // Only concrete DFS-based algorithms are allowed to access the members of
   // this class.
   friend ConcreteAlgoT;
 
-private:
+ private:
   // An active vertex, i.e., a vertex that has been reached but not finished.
   struct ActiveVertex {
     // Constructs an active vertex.
     ActiveVertex(const int id, const int nextUnexploredEdge)
         : id(id), nextUnexploredEdge(nextUnexploredEdge) {}
 
-    int id;                 // The ID of this active vertex.
-    int nextUnexploredEdge; // The next unexplored incident edge.
+    int id;                  // The ID of this active vertex.
+    int nextUnexploredEdge;  // The next unexplored incident edge.
   };
 
   // Constructs a DFS instance.
@@ -57,16 +58,17 @@ private:
   }
 
   // Runs a non-recursive DFS.
-  template <typename GraphT> void run(const GraphT &graph) {
+  template <typename GraphT>
+  void run(const GraphT &graph) {
     concreteAlgo.unmarkVertices(graph.numVertices());
     concreteAlgo.init();
     FORALL_VERTICES(graph, s)
-    if (!concreteAlgo.hasBeenReached(s))
-      growDfsTree(graph, s);
+    if (!concreteAlgo.hasBeenReached(s)) growDfsTree(graph, s);
   }
 
   // Runs a non-recursive DFS starting at s.
-  template <typename GraphT> void run(const GraphT &graph, const int s) {
+  template <typename GraphT>
+  void run(const GraphT &graph, const int s) {
     concreteAlgo.unmarkVertices(graph.numVertices());
     concreteAlgo.init();
     growDfsTree(graph, s);
@@ -79,7 +81,7 @@ private:
     concreteAlgo.markAsReached(s);
     concreteAlgo.root(s);
     assert(activeVertices.size() == 1);
-    activeVertices.top().id = s; // Set the sentinel.
+    activeVertices.top().id = s;  // Set the sentinel.
     activeVertices.emplace(s, graph.firstEdge(s));
 
     // Explore all active vertices in the stack, except for the sentinel.
@@ -111,6 +113,6 @@ private:
 
   using Stack = std::stack<ActiveVertex, std::vector<ActiveVertex>>;
 
-  ConcreteAlgoT &concreteAlgo; // The concrete DFS-based algorithm.
-  Stack activeVertices;        // The stack of active vertices.
+  ConcreteAlgoT &concreteAlgo;  // The concrete DFS-based algorithm.
+  Stack activeVertices;         // The stack of active vertices.
 };

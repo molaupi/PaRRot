@@ -36,14 +36,17 @@ namespace karri {
 // reconstructing the path from its previous stop to its next stop and
 // traversing this path to find the road segment along which the vehicle is
 // currently travelling.
-template <typename InputGraphT, typename CHEnvT> class VehicleLocator {
-
-public:
+template <typename InputGraphT, typename CHEnvT>
+class VehicleLocator {
+ public:
   VehicleLocator(const InputGraphT &inputGraph, const CHEnvT &chEnv,
                  const RouteState &routeState)
-      : inputGraph(inputGraph), ch(chEnv.getCH()),
-        chQuery(chEnv.template getFullCHQuery<>()), unpacker(ch),
-        routeState(routeState), path() {}
+      : inputGraph(inputGraph),
+        ch(chEnv.getCH()),
+        chQuery(chEnv.template getFullCHQuery<>()),
+        unpacker(ch),
+        routeState(routeState),
+        path() {}
 
   VehicleLocation computeCurrentLocation(const Vehicle &veh, const int now) {
     const auto &vehId = veh.vehicleId;
@@ -110,7 +113,7 @@ public:
     return {};
   }
 
-private:
+ private:
   const InputGraphT &inputGraph;
   const CH &ch;
   typename CHEnvT::template FullCHQuery<> chQuery;
@@ -119,4 +122,4 @@ private:
 
   std::vector<int> path;
 };
-} // namespace karri
+}  // namespace karri

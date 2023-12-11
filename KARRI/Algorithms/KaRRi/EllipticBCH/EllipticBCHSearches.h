@@ -24,10 +24,12 @@
 
 #pragma once
 
+#include <Algorithms/KaRRi/RouteState.h>
 #include <DataStructures/Labels/BasicLabelSet.h>
 #include <DataStructures/Labels/ParentInfo.h>
 #include <DataStructures/Labels/SimdLabelSet.h>
 #include <Tools/Logging/NullLogger.h>
+
 #include <vector>
 
 #include "Algorithms/KaRRi/BaseObjects/Request.h"
@@ -35,7 +37,6 @@
 #include "Algorithms/KaRRi/RequestState/RequestState.h"
 #include "BucketEntryWithLeeway.h"
 #include "Tools/Timer.h"
-#include <Algorithms/KaRRi/RouteState.h>
 
 namespace karri {
 
@@ -43,8 +44,7 @@ template <typename InputGraphT, typename CHEnvT, typename CostFunctionT,
           typename EllipticBucketsEnvT, typename FeasibleEllipticDistancesT,
           typename LabelSetT>
 class EllipticBCHSearches {
-
-private:
+ private:
   static constexpr int K = LabelSetT::K;
   using DistanceLabel = typename LabelSetT::DistanceLabel;
   using LabelMask = typename LabelSetT::LabelMask;
@@ -52,7 +52,6 @@ private:
   using Buckets = typename EllipticBucketsEnvT::BucketContainer;
 
   struct StopBCHQuery {
-
     StopBCHQuery(const int &distUpperBound, int &numTimesStoppingCriterionMet)
         : distUpperBound(distUpperBound),
           numTimesStoppingCriterionMet(numTimesStoppingCriterionMet) {}
@@ -67,17 +66,19 @@ private:
       return stop;
     }
 
-  private:
+   private:
     const int &distUpperBound;
     int &numTimesStoppingCriterionMet;
   };
 
-  template <typename UpdateDistancesT> struct ScanOrdinaryBucket {
+  template <typename UpdateDistancesT>
+  struct ScanOrdinaryBucket {
     explicit ScanOrdinaryBucket(const Buckets &buckets,
                                 UpdateDistancesT &updateDistances,
                                 int &numEntriesVisited,
                                 int &numEntriesVisitedWithDistSmallerLeeway)
-        : buckets(buckets), updateDistances(updateDistances),
+        : buckets(buckets),
+          updateDistances(updateDistances),
           numEntriesVisited(numEntriesVisited),
           numEntriesVisitedWithDistSmallerLeeway(
               numEntriesVisitedWithDistSmallerLeeway) {}
@@ -85,7 +86,6 @@ private:
     template <typename DistLabelT, typename DistLabelContainerT>
     bool operator()(const int v, DistLabelT &distToV,
                     const DistLabelContainerT & /*distLabels*/) {
-
       for (const auto &entry : buckets.getBucketOf(v)) {
         ++numEntriesVisited;
         const auto distViaV = distToV + entry.distToTarget;
@@ -96,8 +96,7 @@ private:
           // all distances break the remaining leeway for this entry, then they
           // also break the remaining leeway of the rest of the entries in this
           // bucket, and we can stop scanning the bucket.
-          if (allSet(entry.leeway < distViaV))
-            break;
+          if (allSet(entry.leeway < distViaV)) break;
         }
 
         // Otherwise, check if the tentative distances needs to be updated.
@@ -108,7 +107,7 @@ private:
       return false;
     }
 
-  private:
+   private:
     const Buckets &buckets;
     UpdateDistancesT &updateDistances;
     int &numEntriesVisited;
@@ -116,14 +115,12 @@ private:
   };
 
   struct UpdateDistancesToPDLocs {
-
     UpdateDistancesToPDLocs()
         : curFeasible(nullptr), curFirstIdOfBatch(INVALID_ID) {}
 
     LabelMask operator()(const int meetingVertex,
                          const BucketEntryWithLeeway &entry,
                          const DistanceLabel &distsToPDLocs) {
-
       assert(curFeasible);
       return curFeasible->updateDistanceFromStopToPDLoc(
           entry.targetId, curFirstIdOfBatch, distsToPDLocs, meetingVertex);
@@ -137,27 +134,25 @@ private:
       curFirstIdOfBatch = newCurFirstIdOfBatch;
     }
 
-  private:
+   private:
     FeasibleEllipticDistancesT *curFeasible;
     int curFirstIdOfBatch;
   };
 
   struct UpdateDistancesFromPDLocs {
-
     UpdateDistancesFromPDLocs(const RouteState &routeState)
-        : routeState(routeState), curFeasible(nullptr),
+        : routeState(routeState),
+          curFeasible(nullptr),
           curFirstIdOfBatch(INVALID_ID) {}
 
     LabelMask operator()(const int meetingVertex,
                          const BucketEntryWithLeeway &entry,
                          const DistanceLabel &distsFromPDLocs) {
-
       const auto &prevStopId = routeState.idOfPreviousStopOf(entry.targetId);
 
       // If the given stop is the first stop in the vehicle's route, there is no
       // previous stop.
-      if (prevStopId == INVALID_ID)
-        return LabelMask(false);
+      if (prevStopId == INVALID_ID) return LabelMask(false);
 
       assert(curFeasible);
       return curFeasible->updateDistanceFromPDLocToNextStop(
@@ -172,7 +167,7 @@ private:
       curFirstIdOfBatch = newCurFirstIdOfBatch;
     }
 
-  private:
+   private:
     const RouteState &routeState;
     FeasibleEllipticDistancesT *curFeasible;
     int curFirstIdOfBatch;
@@ -188,7 +183,7 @@ private:
     int stopIndex = INVALID_INDEX;
   };
 
-public:
+ public:
   EllipticBCHSearches(const InputGraphT &inputGraph, const Fleet &fleet,
                       const EllipticBucketsEnvT &ellipticBucketsEnv,
                       const LastStopsAtVertices &lastStopsAtVertices,
@@ -196,13 +191,17 @@ public:
                       FeasibleEllipticDistancesT &feasibleEllipticPickups,
                       FeasibleEllipticDistancesT &feasibleEllipticDropoffs,
                       RequestState &requestState)
-      : inputGraph(inputGraph), fleet(fleet), ch(chEnv.getCH()),
-        routeState(routeState), requestState(requestState),
+      : inputGraph(inputGraph),
+        fleet(fleet),
+        ch(chEnv.getCH()),
+        routeState(routeState),
+        requestState(requestState),
         sourceBuckets(ellipticBucketsEnv.getSourceBuckets()),
         lastStopsAtVertices(lastStopsAtVertices),
         feasibleEllipticPickups(feasibleEllipticPickups),
         feasibleEllipticDropoffs(feasibleEllipticDropoffs),
-        distUpperBound(INFTY), updateDistancesToPdLocs(),
+        distUpperBound(INFTY),
+        updateDistancesToPdLocs(),
         updateDistancesFromPdLocs(routeState),
         toQuery(chEnv.template getReverseSearch<ScanSourceBuckets, StopBCHQuery,
                                                 LabelSetT>(
@@ -219,7 +218,6 @@ public:
 
   // Run Elliptic BCH searches for pickups and dropoffs
   void run() {
-
     // Run for pickups:
     Timer timer;
     updateDistancesToPdLocs.setCurFeasible(&feasibleEllipticPickups);
@@ -252,7 +250,6 @@ public:
 
   // Initialize searches for new request
   void init() {
-
     Timer timer;
 
     // Find pickups at existing stops for new request and initialize distances.
@@ -271,13 +268,12 @@ public:
     requestState.stats().ellipticBchStats.initializationTime += time;
   }
 
-private:
+ private:
   friend UpdateDistancesFromPDLocs;
   friend UpdateDistancesToPDLocs;
 
   template <typename SpotContainerT>
   void runBCHSearchesFromAndTo(const SpotContainerT &pdLocs) {
-
     numSearchesRun = 0;
     numTimesStoppingCriterionMet = 0;
     totalNumEdgeRelaxations = 0;
@@ -319,8 +315,8 @@ private:
       if (startId + i < endId) {
         location = pdLocs[startId + i].loc;
       } else {
-        location = pdLocs[startId].loc; // Fill rest of a partial batch with
-                                        // copies of the first PD loc
+        location = pdLocs[startId].loc;  // Fill rest of a partial batch with
+                                         // copies of the first PD loc
       }
       pdLocHeads[i] = ch.rank(inputGraph.edgeHead(location));
     }
@@ -346,8 +342,8 @@ private:
       if (startId + i < endId) {
         location = pdLocs[startId + i].loc;
       } else {
-        location = pdLocs[startId].loc; // Fill rest of a partial batch with
-                                        // copies of the first PD loc
+        location = pdLocs[startId].loc;  // Fill rest of a partial batch with
+                                         // copies of the first PD loc
       }
       travelTimes[i] = inputGraph.travelTime(location);
       pdLocTails[i] = ch.rank(inputGraph.edgeTail(location));
@@ -362,8 +358,8 @@ private:
   }
 
   template <PDLocType type, typename PDLocsT>
-  std::vector<PDLocAtExistingStop>
-  findPDLocsAtExistingStops(const PDLocsT &pdLocs) {
+  std::vector<PDLocAtExistingStop> findPDLocsAtExistingStops(
+      const PDLocsT &pdLocs) {
     std::vector<PDLocAtExistingStop> res;
 
     for (const auto &pdLoc : pdLocs) {
@@ -382,8 +378,7 @@ private:
 
       if constexpr (type == DROPOFF) {
         // Additionally find dropoffs that coincide with the last stop:
-        if (!lastStopsAtVertices.isAnyLastStopAtVertex(head))
-          continue;
+        if (!lastStopsAtVertices.isAnyLastStopAtVertex(head)) continue;
 
         for (const auto &vehId :
              lastStopsAtVertices.vehiclesWithLastStopAt(head)) {
@@ -427,4 +422,4 @@ private:
   int totalNumEntriesScanned;
   int totalNumEntriesScannedWithDistSmallerLeeway;
 };
-} // namespace karri
+}  // namespace karri

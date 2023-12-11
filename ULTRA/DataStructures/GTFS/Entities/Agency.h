@@ -9,16 +9,14 @@
 namespace GTFS {
 
 class Agency {
-
-public:
+ public:
   Agency(const std::string &agencyId = "", const std::string &name = "",
          const std::string &timezone = "")
       : agencyId(agencyId), name(name), timezone(timezone) {}
   Agency(IO::Deserialization &deserialize) { this->deserialize(deserialize); }
 
   inline bool validate() noexcept {
-    if (name.empty())
-      name = "NOT_NAMED";
+    if (name.empty()) name = "NOT_NAMED";
     return !agencyId.empty();
   }
 
@@ -35,10 +33,10 @@ public:
     deserialize(agencyId, name, timezone);
   }
 
-public:
+ public:
   std::string agencyId{""};
   std::string name{""};
   std::string timezone{""};
 };
 
-} // namespace GTFS
+}  // namespace GTFS

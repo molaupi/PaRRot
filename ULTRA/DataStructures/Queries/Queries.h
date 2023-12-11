@@ -21,10 +21,9 @@ struct VertexQuery {
   int departureTime;
 };
 
-inline std::vector<VertexQuery>
-generateRandomVertexQueries(const size_t numVertices, const size_t numQueries,
-                            const int startTime = 0,
-                            const int endTime = 24 * 60 * 60) noexcept {
+inline std::vector<VertexQuery> generateRandomVertexQueries(
+    const size_t numVertices, const size_t numQueries, const int startTime = 0,
+    const int endTime = 24 * 60 * 60) noexcept {
   std::mt19937 randomGenerator(42);
   std::uniform_int_distribution<> vertexDistribution(0, numVertices - 1);
   std::uniform_int_distribution<> timeDistribution(startTime, endTime - 1);
@@ -45,10 +44,9 @@ struct OneToAllQuery {
   int departureTime;
 };
 
-inline std::vector<OneToAllQuery>
-generateRandomOneToAllQueries(const size_t numVertices, const size_t numQueries,
-                              const int startTime = 0,
-                              const int endTime = 24 * 60 * 60) noexcept {
+inline std::vector<OneToAllQuery> generateRandomOneToAllQueries(
+    const size_t numVertices, const size_t numQueries, const int startTime = 0,
+    const int endTime = 24 * 60 * 60) noexcept {
   std::mt19937 randomGenerator(42);
   std::uniform_int_distribution<> vertexDistribution(0, numVertices - 1);
   std::uniform_int_distribution<> timeDistribution(startTime, endTime - 1);
@@ -76,10 +74,9 @@ struct StopQuery {
   int departureTime;
 };
 
-inline std::vector<StopQuery>
-generateRandomStopQueries(const size_t numStops, const size_t numQueries,
-                          const int startTime = 0,
-                          const int endTime = 24 * 60 * 60) noexcept {
+inline std::vector<StopQuery> generateRandomStopQueries(
+    const size_t numStops, const size_t numQueries, const int startTime = 0,
+    const int endTime = 24 * 60 * 60) noexcept {
   std::mt19937 randomGenerator(42);
   std::uniform_int_distribution<> stopDistribution(0, numStops - 1);
   std::uniform_int_distribution<> timeDistribution(startTime, endTime - 1);

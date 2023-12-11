@@ -35,16 +35,16 @@
 // blocks. Different bits can be modified concurrently when they are in
 // different blocks. The first block is aligned on a cache line boundary.
 class BitVector {
-public:
+ public:
   using Block =
-      uint64_t; // The unsigned integer type in which the bits are stored.
+      uint64_t;  // The unsigned integer type in which the bits are stored.
 
   // A class that simulates the behavior of references to a single bit in a bit
   // vector.
   class Reference {
-    friend BitVector; // Only bit vectors are allowed to construct a reference.
+    friend BitVector;  // Only bit vectors are allowed to construct a reference.
 
-  public:
+   public:
     // Returns the value of the bit.
     operator bool() const { return getBit(block, bitIndex); }
 
@@ -59,7 +59,7 @@ public:
       return *this = static_cast<bool>(other);
     }
 
-  private:
+   private:
     // Constructs a reference to the bit with the specified index in the
     // specified block.
     Reference(Block &block, const int bitIndex)
@@ -68,8 +68,8 @@ public:
       assert(bitIndex < std::numeric_limits<Block>::digits);
     }
 
-    Block &block;       // The block in which the bit is stored.
-    const int bitIndex; // The index of the bit within its block.
+    Block &block;        // The block in which the bit is stored.
+    const int bitIndex;  // The index of the bit within its block.
   };
 
   // The number of bits in a block.
@@ -90,15 +90,13 @@ public:
   // Returns the number of bits set to true in this bit vector.
   int cardinality() const {
     auto cardinality = 0;
-    for (const auto block : blocks)
-      cardinality += bitCount(block);
+    for (const auto block : blocks) cardinality += bitCount(block);
     return cardinality;
   }
 
   // Changes the number of bits in this bit vector. Newly inserted bits are
   // initialized to init.
   void resize(const int size, const bool init = false) {
-
     if (size == 0) {
       numBits = 0;
       blocks.clear();
@@ -140,10 +138,8 @@ public:
   // returned.
   int firstSetBit() const {
     int blockIndex = 0;
-    while (blocks[blockIndex] == 0 && blockIndex < blocks.size())
-      ++blockIndex;
-    if (blockIndex == blocks.size())
-      return -1;
+    while (blocks[blockIndex] == 0 && blockIndex < blocks.size()) ++blockIndex;
+    if (blockIndex == blocks.size()) return -1;
     return blockIndex * BITS_PER_BLOCK + numTrailingZeros(blocks[blockIndex]);
   }
 
@@ -152,21 +148,17 @@ public:
   int nextSetBit(int fromIndex) const {
     assert(fromIndex >= 0);
     assert(fromIndex < size());
-    if (++fromIndex == size())
-      return -1;
+    if (++fromIndex == size()) return -1;
     int blockIndex = fromIndex / BITS_PER_BLOCK;
     const auto firstBlock = blocks[blockIndex] >> fromIndex % BITS_PER_BLOCK;
-    if (firstBlock != 0)
-      return fromIndex + numTrailingZeros(firstBlock);
+    if (firstBlock != 0) return fromIndex + numTrailingZeros(firstBlock);
     ++blockIndex;
-    while (blocks[blockIndex] == 0 && blockIndex < blocks.size())
-      ++blockIndex;
-    if (blockIndex == blocks.size())
-      return -1;
+    while (blocks[blockIndex] == 0 && blockIndex < blocks.size()) ++blockIndex;
+    if (blockIndex == blocks.size()) return -1;
     return blockIndex * BITS_PER_BLOCK + numTrailingZeros(blocks[blockIndex]);
   }
 
-private:
-  AlignedVector<Block> blocks; // The blocks in which the bits are stored.
-  int numBits;                 // The number of bits in this bit vector.
+ private:
+  AlignedVector<Block> blocks;  // The blocks in which the bits are stored.
+  int numBits;                  // The number of bits in this bit vector.
 };

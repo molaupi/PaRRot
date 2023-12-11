@@ -6,7 +6,6 @@
 #include "../../../Helpers/Console/Progress.h"
 #include "../../../Helpers/MultiThreading.h"
 #include "../../../Helpers/Timer.h"
-
 #include "McShortcutSearch.h"
 
 namespace RAPTOR::ULTRA {
@@ -14,14 +13,13 @@ namespace RAPTOR::ULTRA {
 template <bool DEBUG = false, bool USE_ARRIVAL_KEY = true,
           bool FULL_ROUTE_SCANS = false>
 class McBuilder {
-
-public:
+ public:
   inline static constexpr bool Debug = DEBUG;
   inline static constexpr bool UseArrivalKey = USE_ARRIVAL_KEY;
   inline static constexpr bool FullRouteScans = FULL_ROUTE_SCANS;
   using Type = McBuilder<Debug, UseArrivalKey, FullRouteScans>;
 
-public:
+ public:
   McBuilder(const Data &data) : data(data) {
     shortcutGraph.addVertices(data.numberOfStops());
     for (const Vertex vertex : shortcutGraph.vertices()) {
@@ -92,9 +90,9 @@ public:
     return shortcutGraph;
   }
 
-private:
+ private:
   const Data &data;
   DynamicTransferGraph shortcutGraph;
 };
 
-} // namespace RAPTOR::ULTRA
+}  // namespace RAPTOR::ULTRA

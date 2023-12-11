@@ -31,7 +31,7 @@
 
 // An attribute associating an ID with each edge of a graph.
 class EdgeIdAttribute : public AbstractAttribute<int> {
-public:
+ public:
   // Returns the attribute's default value.
   static Type defaultValue() { return INVALID_ID; }
 
@@ -49,6 +49,7 @@ public:
     return values[e];
   }
 
-protected:
-  static constexpr const char *NAME = "edge_id"; // The attribute's unique name.
+ protected:
+  static constexpr const char *NAME =
+      "edge_id";  // The attribute's unique name.
 };

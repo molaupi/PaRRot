@@ -4,16 +4,16 @@
 
 #include "../Assert.h"
 
-template <typename INDEX, typename RANGE> class IndexRange {
-
-public:
+template <typename INDEX, typename RANGE>
+class IndexRange {
+ public:
   using Index = INDEX;
   using Range = RANGE;
   using Type = IndexRange<Index, Range>;
 
-public:
+ public:
   class Iterator {
-  public:
+   public:
     Iterator(const Index *const index, const Range *const range, const size_t i)
         : index(index), range(range), i(i) {}
     inline bool operator!=(const Iterator &other) const noexcept {
@@ -35,7 +35,7 @@ public:
       return (*index)[(*range)[i + n]];
     }
 
-  private:
+   private:
     const Index *index;
     const Range *range;
     size_t i;
@@ -45,12 +45,16 @@ public:
 
   IndexRange(const Index &index, const Range &range, const size_t beginIndex,
              const size_t endIndex)
-      : index(&index), range(&range), beginIndex(beginIndex),
+      : index(&index),
+        range(&range),
+        beginIndex(beginIndex),
         endIndex(endIndex) {}
 
   IndexRange(const Index &index, const Range &range,
              const size_t beginIndex = 0)
-      : index(&index), range(&range), beginIndex(beginIndex),
+      : index(&index),
+        range(&range),
+        beginIndex(beginIndex),
         endIndex(range.size()) {}
 
   IndexRange(const Index &&, const Range &, const size_t = 0,
@@ -85,7 +89,7 @@ public:
     return (*index)[(*range)[endIndex - 1]];
   }
 
-private:
+ private:
   const Index *index;
   const Range *range;
   size_t beginIndex;

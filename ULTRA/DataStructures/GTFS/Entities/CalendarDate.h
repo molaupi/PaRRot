@@ -11,8 +11,7 @@
 namespace GTFS {
 
 class CalendarDate {
-
-public:
+ public:
   CalendarDate(const std::string &serviceId = "", const int date = -1,
                const bool operates = true)
       : serviceId(serviceId), date(date), operates(operates) {}
@@ -38,10 +37,10 @@ public:
     deserialize(serviceId, date, operates);
   }
 
-public:
+ public:
   std::string serviceId{""};
   int date{-1};
   bool operates{true};
 };
 
-} // namespace GTFS
+}  // namespace GTFS

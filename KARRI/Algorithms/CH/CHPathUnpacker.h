@@ -40,7 +40,7 @@
 // filled with the unpacked path. Therefore, arrays can be reused in successive
 // calls.
 class CHPathUnpacker {
-public:
+ public:
   using Path = std::vector<int32_t>;
 
   explicit CHPathUnpacker(const CH &ch) : ch(ch) {}
@@ -68,7 +68,7 @@ public:
     }
   }
 
-private:
+ private:
   const CH &ch;
   Path packedPath;
 };

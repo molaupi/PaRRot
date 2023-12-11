@@ -9,18 +9,25 @@
 namespace RAPTOR {
 
 class JourneyLeg {
-
-public:
+ public:
   JourneyLeg(const Vertex from = noVertex, const Vertex to = noVertex,
              const int departureTime = never, const int arrivalTime = never,
              const bool usesRoute = false, const RouteId routeId = noRouteId)
-      : from(from), to(to), departureTime(departureTime),
-        arrivalTime(arrivalTime), usesRoute(usesRoute), routeId(routeId) {}
+      : from(from),
+        to(to),
+        departureTime(departureTime),
+        arrivalTime(arrivalTime),
+        usesRoute(usesRoute),
+        routeId(routeId) {}
 
   JourneyLeg(const Vertex from, const Vertex to, const int departureTime,
              const int arrivalTime, const Edge edge)
-      : from(from), to(to), departureTime(departureTime),
-        arrivalTime(arrivalTime), usesRoute(false), transferId(edge) {}
+      : from(from),
+        to(to),
+        departureTime(departureTime),
+        arrivalTime(arrivalTime),
+        usesRoute(false),
+        transferId(edge) {}
 
   inline int transferTime() const noexcept {
     return usesRoute ? 0 : arrivalTime - departureTime;
@@ -34,7 +41,7 @@ public:
                << (leg.usesRoute ? ", route: " : ", transfer: ") << leg.routeId;
   }
 
-public:
+ public:
   Vertex from;
   Vertex to;
   int departureTime;
@@ -74,8 +81,7 @@ inline int intermediateTransferTime(const Journey &journey) noexcept {
 }
 
 inline int initialTransferTime(const Journey &journey) noexcept {
-  if (journey.empty())
-    return 0;
+  if (journey.empty()) return 0;
   int transferTime = journey[0].transferTime();
   if (journey.size() > 1) {
     transferTime += journey.back().transferTime();
@@ -86,10 +92,9 @@ inline int initialTransferTime(const Journey &journey) noexcept {
 inline size_t countTrips(const Journey &journey) noexcept {
   size_t numTrips = 0;
   for (const JourneyLeg &leg : journey) {
-    if (leg.usesRoute && leg.routeId != noRouteId)
-      numTrips++;
+    if (leg.usesRoute && leg.routeId != noRouteId) numTrips++;
   }
   return numTrips;
 }
 
-} // namespace RAPTOR
+}  // namespace RAPTOR

@@ -34,13 +34,11 @@ namespace karri::PickupAfterLastStopStrategies {
 template <typename InputGraphT, typename CHEnvT, typename LastStopBucketsEnvT,
           typename PDDistancesT, typename LabelSetT>
 class IndividualBCHStrategy {
-
   static constexpr int K = LabelSetT::K;
   using LabelMask = typename LabelSetT::LabelMask;
   using DistanceLabel = typename LabelSetT::DistanceLabel;
 
   struct PickupAfterLastStopPruner {
-
     PickupAfterLastStopPruner(IndividualBCHStrategy &strat,
                               const CostCalculator &calc)
         : strat(strat), calc(calc) {}
@@ -87,7 +85,7 @@ class IndividualBCHStrategy {
       return true;
     }
 
-  private:
+   private:
     IndividualBCHStrategy &strat;
     const CostCalculator &calc;
   };
@@ -95,7 +93,7 @@ class IndividualBCHStrategy {
   using PickupBCHQuery = LastStopBCHQuery<CHEnvT, LastStopBucketsEnvT,
                                           PickupAfterLastStopPruner, LabelSetT>;
 
-public:
+ public:
   IndividualBCHStrategy(const InputGraphT &inputGraph, const Fleet &fleet,
                         const CHEnvT &chEnv, const CostCalculator &calculator,
                         const LastStopBucketsEnvT &lastStopBucketsEnv,
@@ -104,10 +102,15 @@ public:
                         RequestState &requestState,
                         const int &bestCostBeforeQuery,
                         const InputConfig &inputConfig)
-      : inputGraph(inputGraph), fleet(fleet), calculator(calculator),
-        pdDistances(pdDistances), routeState(routeState),
-        requestState(requestState), bestCostBeforeQuery(bestCostBeforeQuery),
-        inputConfig(inputConfig), distances(fleet.size()),
+      : inputGraph(inputGraph),
+        fleet(fleet),
+        calculator(calculator),
+        pdDistances(pdDistances),
+        routeState(routeState),
+        requestState(requestState),
+        bestCostBeforeQuery(bestCostBeforeQuery),
+        inputConfig(inputConfig),
+        distances(fleet.size()),
         search(lastStopBucketsEnv, distances, chEnv, vehiclesSeenForPickups,
                PickupAfterLastStopPruner(*this, calculator)),
         vehiclesSeenForPickups(fleet.size()) {}
@@ -117,7 +120,7 @@ public:
     enumerateAssignments();
   }
 
-private:
+ private:
   // Run BCH searches that find distances from last stops to pickups
   void runBchSearches() {
     Timer timer;
@@ -147,10 +150,8 @@ private:
 
     Assignment asgn;
     for (const auto &vehId : vehiclesSeenForPickups) {
-
       const int numStops = routeState.numStopsOf(vehId);
-      if (numStops == 0)
-        continue;
+      if (numStops == 0) continue;
 
       asgn.vehicle = &fleet[vehId];
       asgn.pickupStopIdx = numStops - 1;
@@ -159,8 +160,7 @@ private:
       for (auto &p : requestState.pickups) {
         asgn.pickup = &p;
         asgn.distToPickup = getDistanceToPickup(vehId, asgn.pickup->id);
-        if (asgn.distToPickup >= INFTY)
-          continue;
+        if (asgn.distToPickup >= INFTY) continue;
 
         // Compute cost lower bound for this pickup specifically
         const auto depTimeAtThisPickup = getActualDepTimeAtPickup(
@@ -178,8 +178,7 @@ private:
                 vehTimeTillDepAtThisPickup, psgTimeTillDepAtThisPickup,
                 minDirectDistForThisPickup, asgn.pickup->walkingDist, 0,
                 requestState);
-        if (minCost > requestState.getBestCost())
-          continue;
+        if (minCost > requestState.getBestCost()) continue;
 
         for (auto &d : requestState.dropoffs) {
           asgn.dropoff = &d;
@@ -267,4 +266,4 @@ private:
   int totalNumEntriesScanned;
 };
 
-} // namespace karri::PickupAfterLastStopStrategies
+}  // namespace karri::PickupAfterLastStopStrategies

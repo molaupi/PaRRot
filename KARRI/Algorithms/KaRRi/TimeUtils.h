@@ -95,20 +95,18 @@ static INLINE int getActualDepTimeAtPickup(const Assignment &asgn,
 static INLINE int calcLengthOfLegStartingAt(const int stopIndex,
                                             const int vehicleId,
                                             const RouteState &routeState) {
-  if (stopIndex + 1 == routeState.numStopsOf(vehicleId))
-    return 0;
+  if (stopIndex + 1 == routeState.numStopsOf(vehicleId)) return 0;
   const auto &minDepTimes = routeState.schedDepTimesFor(vehicleId);
   const auto &minArrTimes = routeState.schedArrTimesFor(vehicleId);
   return minArrTimes[stopIndex + 1] - minDepTimes[stopIndex];
 }
 
 template <typename LabelSet>
-static INLINE typename LabelSet::LabelMask
-isPickupAtExistingStop(const std::array<PDLoc, LabelSet::K> &pickups,
-                       const int vehId, const int stopIndex,
-                       const bool isMakingStop, const RouteState &routeState) {
-  if (!(stopIndex > 0 || isMakingStop))
-    return false;
+static INLINE typename LabelSet::LabelMask isPickupAtExistingStop(
+    const std::array<PDLoc, LabelSet::K> &pickups, const int vehId,
+    const int stopIndex, const bool isMakingStop,
+    const RouteState &routeState) {
+  if (!(stopIndex > 0 || isMakingStop)) return false;
   typename LabelSet::DistanceLabel pickupLocations;
   for (int i = 0; i < LabelSet::K; ++i) {
     pickupLocations[i] = pickups[i].location;
@@ -165,25 +163,22 @@ static INLINE int getTotalVehWaitTimeInInterval(const int vehId,
                                                 const int fromIndex,
                                                 const int toIndex,
                                                 const RouteState &routeState) {
-  if (fromIndex >= toIndex)
-    return 0;
+  if (fromIndex >= toIndex) return 0;
   const auto &vehWaitTimesPrefixSum =
       routeState.vehWaitTimesPrefixSumFor(vehId);
   return vehWaitTimesPrefixSum[toIndex] - vehWaitTimesPrefixSum[fromIndex];
 }
 
 template <typename RequestContext>
-static INLINE int
-calcInitialPickupDetour(const int vehId, const int pickupIndex,
-                        const int dropoffIndex, const int depTimeAtPickup,
-                        const int distFromPickup, const RequestContext &context,
-                        const RouteState &routeState) {
+static INLINE int calcInitialPickupDetour(
+    const int vehId, const int pickupIndex, const int dropoffIndex,
+    const int depTimeAtPickup, const int distFromPickup,
+    const RequestContext &context, const RouteState &routeState) {
   const auto vehDepTimeAtPrevStop =
       getVehDepTimeAtStopForRequest(vehId, pickupIndex, context, routeState);
   const auto timeUntilDep = depTimeAtPickup - vehDepTimeAtPrevStop;
 
-  if (pickupIndex == dropoffIndex)
-    return timeUntilDep;
+  if (pickupIndex == dropoffIndex) return timeUntilDep;
 
   return timeUntilDep + distFromPickup -
          calcLengthOfLegStartingAt(pickupIndex, vehId, routeState);
@@ -214,14 +209,11 @@ static INLINE int calcInitialPickupDetour(const Assignment &asgn,
   return calcInitialPickupDetour(asgn, actualDepTime, context, routeState);
 }
 
-static INLINE int
-calcOnlyDrivingTimeInInitialPickupDetour(const Assignment &asgn,
-                                         const bool isPickupAtExistingStop,
-                                         const RouteState &routeState) {
-  if (isPickupAtExistingStop)
-    return 0;
-  if (asgn.pickupStopIdx == asgn.dropoffStopIdx)
-    return asgn.distToPickup;
+static INLINE int calcOnlyDrivingTimeInInitialPickupDetour(
+    const Assignment &asgn, const bool isPickupAtExistingStop,
+    const RouteState &routeState) {
+  if (isPickupAtExistingStop) return 0;
+  if (asgn.pickupStopIdx == asgn.dropoffStopIdx) return asgn.distToPickup;
   const auto lengthOfReplacedLeg = calcLengthOfLegStartingAt(
       asgn.pickupStopIdx, asgn.vehicle->vehicleId, routeState);
   return asgn.distToPickup + asgn.distFromPickup - lengthOfReplacedLeg;
@@ -256,8 +248,7 @@ static INLINE int calcInitialDropoffDetour(
     const int vehId, const int dropoffIndex, const int distToDropoff,
     const int distFromDropoff, const bool dropoffAtExistingStop,
     const RouteState &routeState, const InputConfig &inputConfig) {
-  if (dropoffAtExistingStop)
-    return 0;
+  if (dropoffAtExistingStop) return 0;
   const auto lengthOfReplacedLeg =
       calcLengthOfLegStartingAt(dropoffIndex, vehId, routeState);
   return distToDropoff + inputConfig.stopTime + distFromDropoff -
@@ -339,7 +330,6 @@ static INLINE int calcAddedTripTimeInInterval(const int vehId,
                                               const int toIndex,
                                               const int detourAtFromIndex,
                                               const RouteState &routeState) {
-
   assert(detourAtFromIndex >= 0);
   if (detourAtFromIndex == 0 || fromIndex == toIndex) {
     return 0;
@@ -402,10 +392,9 @@ static INLINE int calcAddedTripTimeAffectedByPickupAndDropoff(
                                      detourRightAfterDropoff, routeState);
 }
 
-static INLINE int
-calcAddedTripTimeAffectedByPickupAndDropoff(const Assignment &asgn,
-                                            const int detourRightAfterDropoff,
-                                            const RouteState &routeState) {
+static INLINE int calcAddedTripTimeAffectedByPickupAndDropoff(
+    const Assignment &asgn, const int detourRightAfterDropoff,
+    const RouteState &routeState) {
   return calcAddedTripTimeAffectedByPickupAndDropoff(
       asgn.vehicle->vehicleId, asgn.dropoffStopIdx, detourRightAfterDropoff,
       routeState);
@@ -436,8 +425,7 @@ static INLINE bool isAnyHardConstraintViolated(
 
   // If the pickup is inserted at/after the last stop and the service time
   // constraint is not violated, the assignment is ok.
-  if (pickupIndex + 1 == numStops)
-    return false;
+  if (pickupIndex + 1 == numStops) return false;
 
   // If the pickup detour moves the planned arrival time at the stop after the
   // pickup past the latest permissible arrival time, this assignment violates
@@ -450,16 +438,14 @@ static INLINE bool isAnyHardConstraintViolated(
   // If somewhere between pickup and dropoff the vehicle is already full, we
   // cannot insert another passenger.
   for (int i = pickupIndex; i < dropoffIndex; ++i)
-    if (occupancies[i] >= veh.capacity)
-      return true;
+    if (occupancies[i] >= veh.capacity) return true;
   if (!dropoffAtExistingStop && occupancies[dropoffIndex] >= veh.capacity)
     return true;
 
   // If the dropoff is inserted at/after the last stop, the service time
   // constraint is kept and the pickup does not violate the trip time or wait
   // time constraints, the assignment is ok.
-  if (dropoffIndex + 1 == numStops)
-    return false;
+  if (dropoffIndex + 1 == numStops) return false;
 
   // If the total detour moves the planned arrival time at the stop after the
   // dropoff past the latest permissible arrival time, this assignment violates
@@ -522,8 +508,7 @@ static INLINE bool doesPickupDetourViolateHardConstraints(
 
   // If the pickup is inserted at/after the last stop and the service time
   // constraint is not violated, the assignment is ok.
-  if (pickupIndex + 1 == numStops)
-    return false;
+  if (pickupIndex + 1 == numStops) return false;
 
   // If the pickup detour moves the planned arrival time at the stop after the
   // pickup past the latest permissible arrival time, this assignment violates
@@ -559,8 +544,7 @@ static INLINE bool doesDropoffDetourViolateHardConstraints(
 
   // If the dropoff is inserted at/after the last stop and the service time
   // constraint is not violated, the assignment is ok.
-  if (dropoffIndex + 1 == numStops)
-    return false;
+  if (dropoffIndex + 1 == numStops) return false;
 
   // If the dropoff detour moves the planned arrival time at the stop after the
   // dropoff past the latest permissible arrival time, this assignment violates
@@ -573,4 +557,4 @@ static INLINE bool doesDropoffDetourViolateHardConstraints(
   return false;
 }
 
-} // namespace karri::time_utils
+}  // namespace karri::time_utils

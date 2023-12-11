@@ -47,8 +47,9 @@
 // additionally insert a number of holes after the value block (the number is a
 // constant fraction of the block size). Then, there is a hole after the block,
 // and we proceed as described above.
-template <typename BucketEntryT> class DynamicBucketContainer {
-public:
+template <typename BucketEntryT>
+class DynamicBucketContainer {
+ public:
   using Bucket = ConstantVectorRange<BucketEntryT>;
 
   // Constructs a container that can maintain buckets for the specified number
@@ -156,8 +157,7 @@ public:
 
   // Removes all entries from all buckets.
   void clear() {
-    for (auto &bucketPos : bucketPositions)
-      bucketPos.end = bucketPos.start;
+    for (auto &bucketPos : bucketPositions) bucketPos.end = bucketPos.start;
     std::fill(entries.begin(), entries.end(), BucketEntryT());
   }
 
@@ -167,8 +167,7 @@ public:
                     [](const BucketPosition &bucketPos) {
                       return bucketPos.end == bucketPos.start;
                     });
-    if (!posEmpty)
-      return false;
+    if (!posEmpty) return false;
 
     const auto hole = BucketEntryT();
     return std::all_of(
@@ -182,7 +181,7 @@ public:
     return numEntriesVisited;
   }
 
-private:
+ private:
   using BucketPosition = ValueBlockPosition;
 
   std::vector<BucketPosition> bucketPositions;

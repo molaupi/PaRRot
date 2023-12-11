@@ -42,7 +42,8 @@ namespace dij {
 // A dummy criterion for Dijkstra's algorithm that does nothing at all.
 struct NoCriterion {
   // Returns always false.
-  template <typename... T> bool operator()(const T &...) const noexcept {
+  template <typename... T>
+  bool operator()(const T &...) const noexcept {
     return false;
   }
 };
@@ -50,7 +51,8 @@ struct NoCriterion {
 // A criterion for Dijkstra's algorithm that is composed of multiple separate
 // criteria. A compound criterion is met if any of the constituting criteria is
 // met.
-template <typename... Criterions> struct CompoundCriterion {
+template <typename... Criterions>
+struct CompoundCriterion {
   // Constructs a compound criterion from the specified separate criteria.
   CompoundCriterion(const Criterions... criterions)
       : criterions(criterions...) {}
@@ -67,20 +69,22 @@ template <typename... Criterions> struct CompoundCriterion {
   }
 
   std::tuple<Criterions...>
-      criterions; // The criteria that constitute the compound criterion.
+      criterions;  // The criteria that constitute the compound criterion.
 };
 
-} // namespace dij
+}  // namespace dij
 
 // Forward declarations for friend
 namespace karri {
-template <typename, typename, bool> class EllipticBucketsEnvironment;
+template <typename, typename, bool>
+class EllipticBucketsEnvironment;
 
-template <typename, typename> class FindPDLocsInRadiusQuery;
+template <typename, typename>
+class FindPDLocsInRadiusQuery;
 
 template <typename, typename, typename, typename, typename>
 class ClosestPDLocToLastStopBCHQuery;
-} // namespace karri
+}  // namespace karri
 
 // Implementation of Dijkstra's shortest-path algorithm. Depending on the used
 // label set, it keeps parent vertices and/or edges, and computes multiple
@@ -96,42 +100,51 @@ template <typename GraphT, typename WeightT, typename LabelSetT,
           typename QueueT = AddressableQuadHeap>
 class Dijkstra {
   // Some classes are allowed to execute a Dijkstra search step by step.
-  template <typename> friend class DijkstraOpportunityChooser;
+  template <typename>
+  friend class DijkstraOpportunityChooser;
 
-  template <typename> friend class FormulaDemandCalculator;
+  template <typename>
+  friend class FormulaDemandCalculator;
 
-  template <typename, template <typename> class> friend class BiDijkstra;
+  template <typename, template <typename> class>
+  friend class BiDijkstra;
 
-  template <typename, typename> friend class ODPairGenerator;
+  template <typename, typename>
+  friend class ODPairGenerator;
 
   template <typename, typename, bool>
   friend class karri::EllipticBucketsEnvironment;
 
-  template <typename, typename> friend class karri::FindPDLocsInRadiusQuery;
+  template <typename, typename>
+  friend class karri::FindPDLocsInRadiusQuery;
 
   template <typename, typename, typename, typename, typename>
   friend class karri::ClosestPDLocToLastStopBCHQuery;
 
-private:
-  using Graph = GraphT; // The graph we work on.
+ private:
+  using Graph = GraphT;  // The graph we work on.
   using DistanceLabel =
-      typename LabelSetT::DistanceLabel; // The distance label of a vertex.
+      typename LabelSetT::DistanceLabel;  // The distance label of a vertex.
   using ParentLabel =
-      typename LabelSetT::ParentLabel;        // The parent label of a vertex.
-  using Queue = QueueT;                       // The priority queue type.
-  using PruningCriterion = PruningCriterionT; // The criterion to prune search.
+      typename LabelSetT::ParentLabel;         // The parent label of a vertex.
+  using Queue = QueueT;                        // The priority queue type.
+  using PruningCriterion = PruningCriterionT;  // The criterion to prune search.
 
   static constexpr int K =
-      LabelSetT::K; // The number of simultaneous shortest-path computations.
+      LabelSetT::K;  // The number of simultaneous shortest-path computations.
 
-public:
+ public:
   // Constructs a Dijkstra instance.
   explicit Dijkstra(const Graph &graph, StoppingCriterionT stopSearch = {},
                     PruningCriterionT pruneSearch = {})
-      : graph(graph), distanceLabels(graph.numVertices()), parent(graph),
-        queue(graph.numVertices()), stopSearch(stopSearch),
-        pruneSearch(pruneSearch), numEdgeRelaxations(0), numVerticesSettled(0) {
-  }
+      : graph(graph),
+        distanceLabels(graph.numVertices()),
+        parent(graph),
+        queue(graph.numVertices()),
+        stopSearch(stopSearch),
+        pruneSearch(pruneSearch),
+        numEdgeRelaxations(0),
+        numVerticesSettled(0) {}
 
   // Runs a Dijkstra search from s.
   void run(const int s) { runWithOffset(s, 0); }
@@ -142,8 +155,7 @@ public:
     sources.fill(s);
     init(sources);
     while (!queue.empty()) {
-      if (queue.minId() == t)
-        break;
+      if (queue.minId() == t) break;
       settleNextVertex();
     }
   }
@@ -158,8 +170,7 @@ public:
       auto stop = true;
       for (auto i = 0; i < K; ++i)
         stop &= queue.minKey() >= distanceLabels[targets[i]][i];
-      if (stop)
-        break;
+      if (stop) break;
       settleNextVertex();
     }
   }
@@ -249,7 +260,7 @@ public:
 
   const int &getNumVerticesSettled() const { return numVerticesSettled; }
 
-private:
+ private:
   // Resets the distance labels and inserts all k simultaneous sources into the
   // queue.
   void init(const std::array<int, K> &sources,
@@ -268,8 +279,7 @@ private:
 
     for (auto i = 0; i < K; ++i) {
       const auto s = sources[i];
-      if (!queue.contains(s))
-        queue.insert(s, distanceLabels[s].getKey());
+      if (!queue.contains(s)) queue.insert(s, distanceLabels[s].getKey());
     }
   }
 
@@ -281,8 +291,7 @@ private:
     auto &distToV = distanceLabels[v];
 
     // Check whether the search can be pruned at v.
-    if (pruneSearch(v, distToV, distanceLabels))
-      return v;
+    if (pruneSearch(v, distToV, distanceLabels)) return v;
 
     ++numVerticesSettled;
 
@@ -318,13 +327,13 @@ private:
       DistanceLabelContainerT<typename LabelSetT::DistanceLabel>;
   using ParentLabelCont = ParentLabelContainer<Graph, LabelSetT>;
 
-  const Graph &graph; // The graph on which we compute shortest paths.
-  DistanceLabelCont distanceLabels; // The distance labels of the vertices.
-  ParentLabelCont parent;           // The parent information for each vertex.
-  Queue queue;                      // The priority queue of unsettled vertices.
-  StoppingCriterionT stopSearch;    // The criterion used to stop the search.
-  PruningCriterionT pruneSearch;    // The criterion used to prune the search.
+  const Graph &graph;  // The graph on which we compute shortest paths.
+  DistanceLabelCont distanceLabels;  // The distance labels of the vertices.
+  ParentLabelCont parent;            // The parent information for each vertex.
+  Queue queue;                    // The priority queue of unsettled vertices.
+  StoppingCriterionT stopSearch;  // The criterion used to stop the search.
+  PruningCriterionT pruneSearch;  // The criterion used to prune the search.
 
-  int numEdgeRelaxations; // Number of edge relaxations in last run.
-  int numVerticesSettled; // Number of vertices settled in last run.
+  int numEdgeRelaxations;  // Number of edge relaxations in last run.
+  int numVerticesSettled;  // Number of vertices settled in last run.
 };

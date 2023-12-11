@@ -4,19 +4,17 @@
 #include <string>
 #include <vector>
 
-#include "StopEvent.h"
-
 #include "../../../Helpers/IO/Serialization.h"
 #include "../../../Helpers/Types.h"
+#include "StopEvent.h"
 
 namespace Intermediate {
 
 class Trip {
-
-public:
+ public:
   static const std::string CSV_HEADER;
 
-public:
+ public:
   Trip(const std::string &tripName = "", const std::string &routeName = "",
        const int type = -1)
       : tripName(tripName), routeName(routeName), type(type) {}
@@ -32,26 +30,21 @@ public:
   Trip(IO::Deserialization &deserialize) { this->deserialize(deserialize); }
 
   inline bool operator<(const Trip &t) const noexcept {
-    if (less(stopEvents, t.stopEvents))
-      return true;
-    if (!equals(stopEvents, t.stopEvents))
-      return false;
+    if (less(stopEvents, t.stopEvents)) return true;
+    if (!equals(stopEvents, t.stopEvents)) return false;
     for (size_t i = 0; i < stopEvents.size(); i++) {
       if (stopEvents[i].departureTime < t.stopEvents[i].departureTime)
         return true;
       if (stopEvents[i].departureTime > t.stopEvents[i].departureTime)
         return false;
-      if (stopEvents[i].arrivalTime > t.stopEvents[i].arrivalTime)
-        return true;
-      if (stopEvents[i].arrivalTime < t.stopEvents[i].arrivalTime)
-        return false;
+      if (stopEvents[i].arrivalTime > t.stopEvents[i].arrivalTime) return true;
+      if (stopEvents[i].arrivalTime < t.stopEvents[i].arrivalTime) return false;
     }
     return false;
   }
 
   inline bool operator==(const Trip &t) const noexcept {
-    if (!equals(stopEvents, t.stopEvents))
-      return false;
+    if (!equals(stopEvents, t.stopEvents)) return false;
     for (size_t i = 0; i < stopEvents.size(); i++) {
       if (stopEvents[i].departureTime != t.stopEvents[i].departureTime)
         return false;
@@ -62,13 +55,11 @@ public:
   }
 
   inline bool dominates(const Trip &t) const noexcept {
-    if (!equals(stopEvents, t.stopEvents))
-      return false;
+    if (!equals(stopEvents, t.stopEvents)) return false;
     for (size_t i = 0; i < stopEvents.size(); i++) {
       if (stopEvents[i].departureTime < t.stopEvents[i].departureTime)
         return false;
-      if (stopEvents[i].arrivalTime > t.stopEvents[i].arrivalTime)
-        return false;
+      if (stopEvents[i].arrivalTime > t.stopEvents[i].arrivalTime) return false;
     }
     return true;
   }
@@ -97,11 +88,9 @@ public:
   }
 
   inline bool matches(const Trip &other) const noexcept {
-    if (stopEvents.size() != other.stopEvents.size())
-      return false;
+    if (stopEvents.size() != other.stopEvents.size()) return false;
     for (size_t i = 0; i < stopEvents.size(); i++) {
-      if (!stopEvents[i].matches(other.stopEvents[i]))
-        return false;
+      if (!stopEvents[i].matches(other.stopEvents[i])) return false;
     }
     return true;
   }
@@ -129,7 +118,7 @@ public:
     }
   }
 
-public:
+ public:
   std::vector<StopEvent> stopEvents{};
   std::string tripName{""};
   std::string routeName{""};
@@ -142,8 +131,7 @@ inline bool isFiFo(const Trip &a, const Trip &b) noexcept {
   AssertMsg(a.stopEvents.size() == b.stopEvents.size(),
             "FiFO property can only be tested for trips of equal size!");
   for (size_t i = 0; i < a.stopEvents.size(); i++) {
-    if (a.stopEvents[i].arrivalTime > b.stopEvents[i].arrivalTime)
-      return false;
+    if (a.stopEvents[i].arrivalTime > b.stopEvents[i].arrivalTime) return false;
     if (a.stopEvents[i].departureTime > b.stopEvents[i].departureTime)
       return false;
   }
@@ -153,8 +141,7 @@ inline bool isFiFo(const Trip &a, const Trip &b) noexcept {
 inline bool isOffset(const Trip &a, const Trip &b) noexcept {
   AssertMsg(a.stopEvents.size() == b.stopEvents.size(),
             "Shifted property can only be tested for trips of equal size!");
-  if (a.stopEvents.size() == 0)
-    return true;
+  if (a.stopEvents.size() == 0) return true;
   int ofset =
       a.stopEvents.front().departureTime - b.stopEvents.front().departureTime;
   if (a.stopEvents.back().arrivalTime - b.stopEvents.back().arrivalTime !=
@@ -169,4 +156,4 @@ inline bool isOffset(const Trip &a, const Trip &b) noexcept {
   return true;
 }
 
-} // namespace Intermediate
+}  // namespace Intermediate

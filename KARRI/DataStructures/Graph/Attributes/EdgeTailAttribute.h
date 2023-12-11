@@ -31,7 +31,7 @@
 
 // An attribute storing explicitly the tail vertex with each edge of a graph.
 class EdgeTailAttribute : public AbstractAttribute<int> {
-public:
+ public:
   // Returns the attribute's default value.
   static Type defaultValue() { return INVALID_VERTEX; }
 
@@ -49,7 +49,7 @@ public:
     return values[e];
   }
 
-protected:
+ protected:
   static constexpr const char *NAME =
-      "edge_tail"; // The attribute's unique name.
+      "edge_tail";  // The attribute's unique name.
 };

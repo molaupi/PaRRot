@@ -10,18 +10,22 @@
 namespace GTFS {
 
 class Frequency {
-
-public:
+ public:
   Frequency(const std::string &tripId = "", const int startTime = -1,
             const int endTime = -2, const int headwaySecs = 0,
             const bool exactTimes = true)
-      : tripId(tripId), startTime(startTime), endTime(endTime),
-        headwaySecs(headwaySecs), exactTimes(exactTimes) {}
+      : tripId(tripId),
+        startTime(startTime),
+        endTime(endTime),
+        headwaySecs(headwaySecs),
+        exactTimes(exactTimes) {}
   Frequency(const std::string &tripId, const std::string &startTime,
             const std::string &endTime, const int headwaySecs = 0,
             const bool exactTimes = true)
-      : tripId(tripId), startTime(String::parseSeconds(startTime)),
-        endTime(String::parseSeconds(endTime)), headwaySecs(headwaySecs),
+      : tripId(tripId),
+        startTime(String::parseSeconds(startTime)),
+        endTime(String::parseSeconds(endTime)),
+        headwaySecs(headwaySecs),
         exactTimes(exactTimes) {}
   Frequency(IO::Deserialization &deserialize) {
     this->deserialize(deserialize);
@@ -45,7 +49,7 @@ public:
     deserialize(tripId, startTime, endTime, headwaySecs, exactTimes);
   }
 
-public:
+ public:
   std::string tripId{""};
   int startTime{-1};
   int endTime{-2};
@@ -53,4 +57,4 @@ public:
   bool exactTimes{true};
 };
 
-} // namespace GTFS
+}  // namespace GTFS

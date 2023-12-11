@@ -12,7 +12,6 @@ using namespace Shell;
 #include "../../Algorithms/RAPTOR/MultimodalULTRAMcRAPTOR.h"
 #include "../../Algorithms/RAPTOR/ULTRABounded/MultimodalUBMHydRA.h"
 #include "../../Algorithms/RAPTOR/ULTRABounded/MultimodalUBMRAPTOR.h"
-
 #include "../../DataStructures/CSA/Data.h"
 #include "../../DataStructures/Queries/Queries.h"
 #include "../../DataStructures/RAPTOR/Data.h"
@@ -21,8 +20,7 @@ using namespace Shell;
 #include "../../DataStructures/TripBased/MultimodalData.h"
 
 class RunMultimodalMCRQueries : public ParameterizedCommand {
-
-public:
+ public:
   RunMultimodalMCRQueries(BasicShell &shell)
       : ParameterizedCommand(
             shell, "runMultimodalMCRQueries",
@@ -37,19 +35,19 @@ public:
     raptorData.useImplicitDepartureBufferTimes();
     raptorData.printInfo();
     switch (raptorData.modes.size()) {
-    case 2:
-      run<2>(raptorData);
-      break;
-    case 3:
-      run<3>(raptorData);
-      break;
-    default:
-      Ensure(false, "Unsupported number of modes!");
-      break;
+      case 2:
+        run<2>(raptorData);
+        break;
+      case 3:
+        run<3>(raptorData);
+        break;
+      default:
+        Ensure(false, "Unsupported number of modes!");
+        break;
     }
   }
 
-private:
+ private:
   template <size_t NUM_MODES>
   inline void run(const RAPTOR::MultimodalData &raptorData) const noexcept {
     const std::string chDirectory(getParameter("CH directory"));
@@ -76,8 +74,7 @@ private:
 };
 
 class RunMultimodalULTRAMcRAPTORQueries : public ParameterizedCommand {
-
-public:
+ public:
   RunMultimodalULTRAMcRAPTORQueries(BasicShell &shell)
       : ParameterizedCommand(shell, "runMultimodalULTRAMcRAPTORQueries",
                              "Runs the given number of random multimodal "
@@ -92,19 +89,19 @@ public:
     raptorData.useImplicitDepartureBufferTimes();
     raptorData.printInfo();
     switch (raptorData.modes.size()) {
-    case 2:
-      run<2>(raptorData);
-      break;
-    case 3:
-      run<3>(raptorData);
-      break;
-    default:
-      Ensure(false, "Unsupported number of modes!");
-      break;
+      case 2:
+        run<2>(raptorData);
+        break;
+      case 3:
+        run<3>(raptorData);
+        break;
+      default:
+        Ensure(false, "Unsupported number of modes!");
+        break;
     }
   }
 
-private:
+ private:
   template <size_t NUM_MODES>
   inline void run(const RAPTOR::MultimodalData &raptorData) const noexcept {
     const std::string chDirectory(getParameter("CH directory"));
@@ -131,8 +128,7 @@ private:
 };
 
 class RunMultimodalUBMRAPTORQueries : public ParameterizedCommand {
-
-public:
+ public:
   RunMultimodalUBMRAPTORQueries(BasicShell &shell)
       : ParameterizedCommand(
             shell, "runMultimodalUBMRAPTORQueries",
@@ -149,19 +145,19 @@ public:
     raptorData.useImplicitDepartureBufferTimes();
     raptorData.printInfo();
     switch (raptorData.modes.size()) {
-    case 2:
-      run<2>(raptorData);
-      break;
-    case 3:
-      run<3>(raptorData);
-      break;
-    default:
-      Ensure(false, "Unsupported number of modes!");
-      break;
+      case 2:
+        run<2>(raptorData);
+        break;
+      case 3:
+        run<3>(raptorData);
+        break;
+      default:
+        Ensure(false, "Unsupported number of modes!");
+        break;
     }
   }
 
-private:
+ private:
   template <size_t NUM_MODES>
   inline void run(const RAPTOR::MultimodalData &raptorData) const noexcept {
     const RAPTOR::Data pruningData = raptorData.getPruningData();
@@ -198,8 +194,7 @@ private:
 };
 
 class RunMultimodalUBMHydRAQueries : public ParameterizedCommand {
-
-public:
+ public:
   RunMultimodalUBMHydRAQueries(BasicShell &shell)
       : ParameterizedCommand(
             shell, "runMultimodalUBMHydRAQueries",
@@ -218,22 +213,22 @@ public:
         getParameter("Trip-Based input file"));
     tripBasedData.printInfo();
     switch (tripBasedData.modes.size()) {
-    case 2:
-      run<2>(tripBasedData);
-      break;
-    case 3:
-      run<3>(tripBasedData);
-      break;
-    default:
-      Ensure(false, "Unsupported number of modes!");
-      break;
+      case 2:
+        run<2>(tripBasedData);
+        break;
+      case 3:
+        run<3>(tripBasedData);
+        break;
+      default:
+        Ensure(false, "Unsupported number of modes!");
+        break;
     }
   }
 
-private:
+ private:
   template <size_t NUM_MODES>
-  inline void
-  run(const TripBased::MultimodalData &tripBasedData) const noexcept {
+  inline void run(
+      const TripBased::MultimodalData &tripBasedData) const noexcept {
     const TripBased::MultimodalData forwardBoundedData(
         getParameter("Bounded forward Trip-Based input file"));
     forwardBoundedData.printInfo();

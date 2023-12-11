@@ -1,5 +1,9 @@
 #pragma once
 
+#include <numa.h>
+#include <omp.h>
+#include <sched.h>
+
 #include <cmath>
 #include <iomanip>
 #include <iostream>
@@ -8,20 +12,15 @@
 
 #include "Assert.h"
 
-#include <numa.h>
-#include <sched.h>
-
-#include <omp.h>
-
-#include "Assert.h"
-
 class ThreadScheduler {
-
-public:
+ public:
   ThreadScheduler(const std::string strategy,
                   const size_t nt = omp_get_num_procs())
-      : numLogicalCpus(omp_get_max_threads()), numThreads(nt), numNumaNodes(1),
-        threadToLogicalCpu(numThreads, 0), threadToNumaNode(numThreads, 0),
+      : numLogicalCpus(omp_get_max_threads()),
+        numThreads(nt),
+        numNumaNodes(1),
+        threadToLogicalCpu(numThreads, 0),
+        threadToNumaNode(numThreads, 0),
         threadToNumaMaster(numThreads, false),
         numaNodeToLogicalCpus(numNumaNodes) {
     Assert(1 != -1);
@@ -54,7 +53,7 @@ public:
     sched_setaffinity(0, sizeof(mask), &mask);
   }
 
-protected:
+ protected:
   void initialize(const std::string strategy, bool verbose = true) {
     if (verbose)
       std::cout << "NUMA nodes in the system: " << numNumaNodes << std::endl;
@@ -75,10 +74,8 @@ protected:
     if (verbose)
       std::cout << "Distributing threads according to strategy: " << strategy
                 << std::endl;
-    if (strategy == "R")
-      distributeRoundRobin();
-    if (strategy == "F")
-      distributeFill();
+    if (strategy == "R") distributeRoundRobin();
+    if (strategy == "F") distributeFill();
     numNumaNodesUsed = 0;
     for (size_t threadId = 0; threadId < numThreads; ++threadId) {
       threadToNumaNode[threadId] =
@@ -90,8 +87,7 @@ protected:
     std::vector<bool> numaAssigned(numNumaNodes, false);
     for (size_t threadId = 0; threadId < numThreads; ++threadId) {
       size_t currentNumaNode = threadToNumaNode[threadId];
-      if (numaAssigned[currentNumaNode])
-        continue;
+      if (numaAssigned[currentNumaNode]) continue;
       numaAssigned[currentNumaNode] = true;
       threadToNumaMaster[threadId] = true;
     }
@@ -106,8 +102,7 @@ protected:
       std::cout << "# NUMA nodes used in this setting: " << numNumaNodesUsed
                 << std::endl;
     }
-    if (verbose)
-      std::cout << std::endl;
+    if (verbose) std::cout << std::endl;
   }
 
   inline void distributeRoundRobin() {
@@ -124,7 +119,7 @@ protected:
                                [currentLogicalCpuIndex[currentNumaNode]++];
 
       // Go to next numa node
-      currentNumaNode = (currentNumaNode + 1) % numNumaNodes; // Next node
+      currentNumaNode = (currentNumaNode + 1) % numNumaNodes;  // Next node
     }
   }
 
@@ -134,7 +129,7 @@ protected:
     }
   }
 
-private:
+ private:
   size_t numLogicalCpus;
   size_t numThreads;
   size_t numNumaNodes;
@@ -157,8 +152,7 @@ inline size_t numberOfCores() noexcept {
 }
 
 class ThreadPinning {
-
-public:
+ public:
   ThreadPinning(const size_t numberOfThreads, const size_t pinMultiplier)
       : numberOfThreads(numberOfThreads), pinMultiplier(pinMultiplier) {}
 

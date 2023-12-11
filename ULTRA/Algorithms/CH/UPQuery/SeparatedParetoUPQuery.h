@@ -5,32 +5,29 @@
 #include <vector>
 
 #include "../../../DataStructures/CH/UPGraphs.h"
-#include "../CH.h"
-#include "../CHUtils.h"
-
+#include "../../../DataStructures/Container/ExternalKHeap.h"
+#include "../../../DataStructures/Container/Set.h"
 #include "../../../Helpers/Console/Progress.h"
 #include "../../../Helpers/Helpers.h"
 #include "../../../Helpers/String/String.h"
 #include "../../../Helpers/Timer.h"
 #include "../../../Helpers/Types.h"
 #include "../../../Helpers/Vector/Vector.h"
-
-#include "../../../DataStructures/Container/ExternalKHeap.h"
-#include "../../../DataStructures/Container/Set.h"
+#include "../CH.h"
+#include "../CHUtils.h"
 #include "BucketBuilder.h"
 
 namespace CH {
 
 template <bool STALL_ON_DEMAND = true, bool DEBUG = false>
 class SeparatedParetoUPQuery {
-
-public:
+ public:
   constexpr static bool StallOnDemand = STALL_ON_DEMAND;
   constexpr static bool Debug = DEBUG;
   using Type = SeparatedParetoUPQuery<StallOnDemand, Debug>;
   using BucketBuilderType = BucketBuilder<StallOnDemand, Debug>;
 
-private:
+ private:
   struct DijkstraLabel : public ExternalKHeapElement {
     DijkstraLabel(int *const distance)
         : ExternalKHeapElement(), distance(distance) {}
@@ -56,20 +53,23 @@ private:
     Vertex parent;
   };
 
-public:
+ public:
   SeparatedParetoUPQuery(const TransferGraph &, const CHGraph &forward,
                          const CHGraph &backward, const Order &&order,
                          const Vertex::ValueType numberOfStops,
                          const IndexedSet<false, Vertex> &originalTargets)
-      : graph{forward, backward}, contractionOrder(std::move(order)),
+      : graph{forward, backward},
+        contractionOrder(std::move(order)),
         positionInOrder(Construct::Invert, contractionOrder),
         sweepStart(noVertex),
         stops(graph[FORWARD].numVertices(), Vector::id<Vertex>(numberOfStops)),
-        targets(originalTargets), targetId(graph[FORWARD].numVertices(), -1),
+        targets(originalTargets),
+        targetId(graph[FORWARD].numVertices(), -1),
         Q(graph[FORWARD].numVertices()),
         distance(graph[FORWARD].numVertices(), never),
         parent(graph[FORWARD].numVertices(), noVertex),
-        timestamp(graph[FORWARD].numVertices(), 0), currentTimestamp(0),
+        timestamp(graph[FORWARD].numVertices(), 0),
+        currentTimestamp(0),
         queryStartTimestamp(0) {
     reorderVertices();
     upwardSweepGraph.build(graph[FORWARD], stops, true, true);
@@ -242,7 +242,7 @@ public:
     return targetGraph.graph.numEdges();
   }
 
-private:
+ private:
   inline void reorderVertices() noexcept {
     reorder(graph[FORWARD]);
     reorder(graph[BACKWARD]);
@@ -259,8 +259,7 @@ private:
   inline void addSourceInternal(const Vertex vertex, const int initialDistance,
                                 const Vertex parentVertex) noexcept {
     check(vertex);
-    if (initialDistance >= distance[vertex])
-      return;
+    if (initialDistance >= distance[vertex]) return;
     distance[vertex] = initialDistance;
     parent[vertex] = parentVertex;
     if constexpr (FOR_SWEEP) {
@@ -341,8 +340,7 @@ private:
     for (Vertex sweepV = sweepStart;
          sweepV < reverseUpwardSweepGraph.graph.numVertices(); sweepV++) {
       const Vertex v = reverseUpwardSweepGraph.internalToExternal(sweepV);
-      if (timestamp[v] != currentTimestamp)
-        continue;
+      if (timestamp[v] != currentTimestamp) continue;
       for (const Edge edge : reverseUpwardSweepGraph.graph.edgesFrom(sweepV)) {
         const Vertex u = reverseUpwardSweepGraph.toVertex[edge];
         check(u);
@@ -397,8 +395,7 @@ private:
 
     for (const Vertex sweepV : reverseTargetGraph.graph.vertices()) {
       const Vertex v = reverseTargetGraph.internalToExternal(sweepV);
-      if (timestamp[v] != currentTimestamp)
-        continue;
+      if (timestamp[v] != currentTimestamp) continue;
       for (const Edge edge : reverseTargetGraph.graph.edgesFrom(sweepV)) {
         const Vertex u = reverseTargetGraph.toVertex[edge];
         check(u);
@@ -446,7 +443,7 @@ private:
     }
   }
 
-private:
+ private:
   CHGraph graph[2];
   SweepGraph upwardSweepGraph;
   SweepGraph reverseUpwardSweepGraph;
@@ -474,4 +471,4 @@ private:
   Timer timer;
 };
 
-} // namespace CH
+}  // namespace CH

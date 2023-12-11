@@ -31,7 +31,7 @@
 
 // An attribute associating a travel time with each edge of a graph.
 class TravelTimeAttribute : public AbstractAttribute<int> {
-public:
+ public:
   // Returns the attribute's default value.
   static Type defaultValue() { return INFTY; }
 
@@ -49,7 +49,7 @@ public:
     return values[e];
   }
 
-protected:
+ protected:
   static constexpr const char *NAME =
-      "travel_time"; // The attribute's unique name.
+      "travel_time";  // The attribute's unique name.
 };

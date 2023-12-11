@@ -4,19 +4,17 @@
 #include <string>
 #include <vector>
 
+#include "../../../Helpers/IO/Serialization.h"
 #include "../../GTFS/Entities/Vehicle.h"
 #include "../../Intermediate/Entities/Trip.h"
-
-#include "../../../Helpers/IO/Serialization.h"
 
 namespace CSA {
 
 class Trip {
-
-public:
+ public:
   static const std::string CSV_HEADER;
 
-public:
+ public:
   Trip(const std::string &tripName = "", const std::string &routeName = "",
        const int type = -1)
       : tripName(tripName), routeName(routeName), type(type) {}
@@ -48,7 +46,7 @@ public:
     return ss.str();
   }
 
-public:
+ public:
   std::string tripName{""};
   std::string routeName{""};
   int type{-1};
@@ -56,4 +54,4 @@ public:
 
 const std::string Trip::CSV_HEADER = "name,vehicle";
 
-} // namespace CSA
+}  // namespace CSA

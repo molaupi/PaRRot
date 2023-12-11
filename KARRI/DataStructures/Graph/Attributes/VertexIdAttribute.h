@@ -31,7 +31,7 @@
 
 // An attribute associating an ID with each vertex of a graph.
 class VertexIdAttribute : public AbstractAttribute<int> {
-public:
+ public:
   // Returns the attribute's default value.
   static Type defaultValue() { return INVALID_ID; }
 
@@ -49,7 +49,7 @@ public:
     return values[v];
   }
 
-protected:
+ protected:
   static constexpr const char *NAME =
-      "vertex_id"; // The attribute's unique name.
+      "vertex_id";  // The attribute's unique name.
 };

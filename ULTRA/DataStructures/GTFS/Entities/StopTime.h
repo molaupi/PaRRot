@@ -9,13 +9,15 @@
 namespace GTFS {
 
 class StopTime {
-
-public:
+ public:
   StopTime(const std::string &tripId = "", const int arrivalTime = -1,
            const int departureTime = -2, const std::string &stopId = "",
            const int stopSequence = -1)
-      : tripId(tripId), arrivalTime(arrivalTime), departureTime(departureTime),
-        stopId(stopId), stopSequence(stopSequence) {}
+      : tripId(tripId),
+        arrivalTime(arrivalTime),
+        departureTime(departureTime),
+        stopId(stopId),
+        stopSequence(stopSequence) {}
   StopTime(IO::Deserialization &deserialize) { this->deserialize(deserialize); }
 
   inline bool validate() noexcept {
@@ -46,7 +48,7 @@ public:
     deserialize(tripId, arrivalTime, departureTime, stopId, stopSequence);
   }
 
-public:
+ public:
   std::string tripId{""};
   int arrivalTime{-1};
   int departureTime{-2};
@@ -54,4 +56,4 @@ public:
   int stopSequence{-1};
 };
 
-} // namespace GTFS
+}  // namespace GTFS

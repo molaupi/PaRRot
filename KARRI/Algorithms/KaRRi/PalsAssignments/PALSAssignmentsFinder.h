@@ -35,17 +35,20 @@ namespace karri {
 // strategy.
 template <typename InputGraphT, typename PDDistancesT, typename StrategyT>
 class PALSAssignmentsFinder {
-
-public:
+ public:
   PALSAssignmentsFinder(StrategyT &strategy, const InputGraphT &inputGraph,
                         const Fleet &fleet, const CostCalculator &calculator,
                         const LastStopsAtVertices &lastStopsAtVertices,
                         const RouteState &routeState,
                         const PDDistancesT &pdDistances,
                         RequestState &requestState)
-      : strategy(strategy), inputGraph(inputGraph), fleet(fleet),
-        calculator(calculator), lastStopsAtVertices(lastStopsAtVertices),
-        routeState(routeState), pdDistances(pdDistances),
+      : strategy(strategy),
+        inputGraph(inputGraph),
+        fleet(fleet),
+        calculator(calculator),
+        lastStopsAtVertices(lastStopsAtVertices),
+        routeState(routeState),
+        pdDistances(pdDistances),
         requestState(requestState) {}
 
   void findAssignments() {
@@ -57,7 +60,7 @@ public:
     // no op
   }
 
-private:
+ private:
   // Simple case for pickups that coincide with last stops of vehicles is the
   // same regardless of strategy, so it is treated here.
   void findAssignmentsWherePickupCoincidesWithLastStop() {
@@ -71,8 +74,7 @@ private:
       asgn.pickup = &p;
 
       const int head = inputGraph.edgeHead(asgn.pickup->loc);
-      if (!lastStopsAtVertices.isAnyLastStopAtVertex(head))
-        continue;
+      if (!lastStopsAtVertices.isAnyLastStopAtVertex(head)) continue;
 
       for (const auto &vehId :
            lastStopsAtVertices.vehiclesWithLastStopAt(head)) {
@@ -87,8 +89,7 @@ private:
             calculator.calcCostLowerBoundForPickupAfterLastStop(
                 fleet[vehId], *asgn.pickup, 0, requestState.minDirectPDDist,
                 requestState);
-        if (lowerBoundCost > requestState.getBestCost())
-          continue;
+        if (lowerBoundCost > requestState.getBestCost()) continue;
 
         // If necessary, check paired insertion with each dropoff
         asgn.vehicle = &fleet[vehId];
@@ -126,4 +127,4 @@ private:
   const PDDistancesT &pdDistances;
   RequestState &requestState;
 };
-} // namespace karri
+}  // namespace karri

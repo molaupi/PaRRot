@@ -4,16 +4,16 @@
 
 #include "../Assert.h"
 
-template <typename RANGE, typename ELEMENT> class ConcatenatedRange {
-
-public:
+template <typename RANGE, typename ELEMENT>
+class ConcatenatedRange {
+ public:
   using Range = RANGE;
   using Element = ELEMENT;
   using Type = ConcatenatedRange<Range, Element>;
 
-public:
+ public:
   class Iterator {
-  public:
+   public:
     Iterator(const ConcatenatedRange *const concatenatedRange, const size_t i)
         : concatenatedRange(concatenatedRange), i(i) {}
     inline bool operator!=(const Iterator &other) const noexcept {
@@ -37,7 +37,7 @@ public:
       return (*concatenatedRange)[i + n];
     }
 
-  private:
+   private:
     const ConcatenatedRange *concatenatedRange;
     size_t i;
   };
@@ -78,7 +78,7 @@ public:
     return operator[](size() - 1);
   }
 
-private:
+ private:
   Range firstRange;
   Range secondRange;
   Element offset;

@@ -9,14 +9,12 @@
 #include "../../DataStructures/RAPTOR/Data.h"
 #include "../../DataStructures/RAPTOR/MultimodalData.h"
 #include "../../DataStructures/TripBased/MultimodalData.h"
-
 #include "../../Shell/Shell.h"
 
 using namespace Shell;
 
 class ParseGTFS : public ParameterizedCommand {
-
-public:
+ public:
   ParseGTFS(BasicShell &shell)
       : ParameterizedCommand(shell, "parseGTFS",
                              "Parses raw GTFS data from the given directory "
@@ -36,8 +34,7 @@ public:
 };
 
 class GTFSToIntermediate : public ParameterizedCommand {
-
-public:
+ public:
   GTFSToIntermediate(BasicShell &shell)
       : ParameterizedCommand(
             shell, "gtfsToIntermediate",
@@ -69,8 +66,7 @@ public:
 };
 
 class IntermediateToCSA : public ParameterizedCommand {
-
-public:
+ public:
   IntermediateToCSA(BasicShell &shell)
       : ParameterizedCommand(
             shell, "intermediateToCSA",
@@ -92,8 +88,7 @@ public:
 };
 
 class IntermediateToRAPTOR : public ParameterizedCommand {
-
-public:
+ public:
   IntermediateToRAPTOR(BasicShell &shell)
       : ParameterizedCommand(
             shell, "intermediateToRAPTOR",
@@ -130,8 +125,7 @@ public:
 };
 
 class BuildMultimodalRAPTORData : public ParameterizedCommand {
-
-public:
+ public:
   BuildMultimodalRAPTORData(BasicShell &shell)
       : ParameterizedCommand(
             shell, "buildMultimodalRAPTORData",
@@ -150,8 +144,7 @@ public:
 };
 
 class AddModeToMultimodalRAPTORData : public ParameterizedCommand {
-
-public:
+ public:
   AddModeToMultimodalRAPTORData(BasicShell &shell)
       : ParameterizedCommand(shell, "addModeToMultimodalRAPTORData",
                              "Adds a transfer graph for the specified mode to "
@@ -176,8 +169,7 @@ public:
 };
 
 class BuildMultimodalTripBasedData : public ParameterizedCommand {
-
-public:
+ public:
   BuildMultimodalTripBasedData(BasicShell &shell)
       : ParameterizedCommand(
             shell, "buildMultimodalTripBasedData",
@@ -196,8 +188,7 @@ public:
 };
 
 class AddModeToMultimodalTripBasedData : public ParameterizedCommand {
-
-public:
+ public:
   AddModeToMultimodalTripBasedData(BasicShell &shell)
       : ParameterizedCommand(shell, "addModeToMultimodalTripBasedData",
                              "Adds a transfer graph for the specified mode to "
@@ -222,8 +213,7 @@ public:
 };
 
 class LoadDimacsGraph : public ParameterizedCommand {
-
-public:
+ public:
   LoadDimacsGraph(BasicShell &shell)
       : ParameterizedCommand(
             shell, "loadDimacsGraph",
@@ -243,8 +233,9 @@ public:
     }
   }
 
-private:
-  template <typename GRAPH_TYPE> inline void load() const noexcept {
+ private:
+  template <typename GRAPH_TYPE>
+  inline void load() const noexcept {
     DimacsGraphWithCoordinates dimacs;
     dimacs.fromDimacs<true>(getParameter("Input file"),
                             getParameter<double>("Coordinate factor"));

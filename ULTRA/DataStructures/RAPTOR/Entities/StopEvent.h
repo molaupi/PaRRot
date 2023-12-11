@@ -10,8 +10,7 @@
 namespace RAPTOR {
 
 class StopEvent {
-
-public:
+ public:
   StopEvent(const int arrivalTime = -1, const int departureTime = -2)
       : arrivalTime(arrivalTime), departureTime(departureTime) {}
   StopEvent(const Intermediate::StopEvent &s)
@@ -37,9 +36,9 @@ public:
     deserialize(arrivalTime, departureTime);
   }
 
-public:
+ public:
   int arrivalTime{-1};
   int departureTime{-2};
 };
 
-} // namespace RAPTOR
+}  // namespace RAPTOR

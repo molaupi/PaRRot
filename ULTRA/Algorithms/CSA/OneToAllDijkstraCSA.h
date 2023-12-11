@@ -19,8 +19,7 @@ namespace CSA {
 template <typename INITIAL_TRANSFER_GRAPH, bool PATH_RETRIEVAL = true,
           typename PROFILER = NoProfiler>
 class OneToAllDijkstraCSA {
-
-public:
+ public:
   using InitialTransferGraph = INITIAL_TRANSFER_GRAPH;
   constexpr static bool PathRetrieval = PATH_RETRIEVAL;
   using Profiler = PROFILER;
@@ -28,7 +27,7 @@ public:
       OneToAllDijkstraCSA<InitialTransferGraph, PathRetrieval, Profiler>;
   using TripFlag = Meta::IF<PathRetrieval, ConnectionId, bool>;
 
-private:
+ private:
   struct DijkstraLabel : public ExternalKHeapElement {
     DijkstraLabel(int *const arrivalTime)
         : ExternalKHeapElement(), arrivalTime(arrivalTime) {}
@@ -42,15 +41,17 @@ private:
     int *const arrivalTime;
   };
 
-public:
+ public:
   template <typename ATTRIBUTE>
   OneToAllDijkstraCSA(const Data &data,
                       const InitialTransferGraph &initialTransferGraph,
                       const ATTRIBUTE weight,
                       const Profiler &profilerTemplate = Profiler())
-      : data(data), initialTransferGraph(initialTransferGraph),
+      : data(data),
+        initialTransferGraph(initialTransferGraph),
         initialTransferWeight(initialTransferGraph[weight]),
-        sourceVertex(noVertex), tripReached(data.numberOfTrips(), TripFlag()),
+        sourceVertex(noVertex),
+        tripReached(data.numberOfTrips(), TripFlag()),
         arrivalTime(initialTransferGraph.numVertices(), never),
         parent(PathRetrieval ? data.numberOfStops() : 0, noVertex),
         parentTrip(PathRetrieval ? data.numberOfStops() : 0, noTripId),
@@ -119,8 +120,7 @@ public:
             typename = std::enable_if_t<T == PathRetrieval && T>>
   inline Journey getJourney(const Vertex vertex) noexcept {
     Journey journey;
-    if (!reachable(vertex))
-      return journey;
+    if (!reachable(vertex)) return journey;
     StopId stop(vertex);
     if (!data.isStop(vertex)) {
       stop = StopId(dijkstraParent[vertex]);
@@ -151,14 +151,14 @@ public:
 
   template <bool T = PathRetrieval,
             typename = std::enable_if_t<T == PathRetrieval && T>>
-  inline std::vector<std::string>
-  getRouteDescription(const Vertex vertex) noexcept {
+  inline std::vector<std::string> getRouteDescription(
+      const Vertex vertex) noexcept {
     return data.journeyToText(getJourney(vertex));
   }
 
   inline const Profiler &getProfiler() const noexcept { return profiler; }
 
-private:
+ private:
   inline void clear() {
     sourceVertex = noVertex;
     Vector::fill(tripReached, TripFlag());
@@ -177,8 +177,8 @@ private:
     }
   }
 
-  inline ConnectionId
-  firstReachableConnection(const int departureTime) const noexcept {
+  inline ConnectionId firstReachableConnection(
+      const int departureTime) const noexcept {
     return ConnectionId(
         Vector::lowerBound(data.connections, departureTime,
                            [](const Connection &connection, const int time) {
@@ -199,22 +199,21 @@ private:
     }
   }
 
-  inline bool
-  connectionIsReachableFromStop(const Connection &connection) const noexcept {
+  inline bool connectionIsReachableFromStop(
+      const Connection &connection) const noexcept {
     return arrivalTime[connection.departureStopId] <=
            connection.departureTime -
                data.minTransferTime(connection.departureStopId);
   }
 
-  inline bool
-  connectionIsReachableFromTrip(const Connection &connection) const noexcept {
+  inline bool connectionIsReachableFromTrip(
+      const Connection &connection) const noexcept {
     return tripReached[connection.tripId] != TripFlag();
   }
 
   inline bool connectionIsReachable(const Connection &connection,
                                     const ConnectionId id) noexcept {
-    if (connectionIsReachableFromTrip(connection))
-      return true;
+    if (connectionIsReachableFromTrip(connection)) return true;
     if (connectionIsReachableFromStop(connection)) {
       if constexpr (PathRetrieval) {
         tripReached[connection.tripId] = id;
@@ -229,8 +228,7 @@ private:
 
   inline void arrivalByTrip(const StopId stop, const int time,
                             const TripId trip) noexcept {
-    if (arrivalTime[stop] <= time)
-      return;
+    if (arrivalTime[stop] <= time) return;
     profiler.countMetric(METRIC_STOPS_BY_TRIP);
     arrivalTime[stop] = time;
     queue.update(&dijkstraLabels[stop]);
@@ -283,7 +281,7 @@ private:
     }
   }
 
-private:
+ private:
   const Data &data;
   const InitialTransferGraph &initialTransferGraph;
   const std::vector<int> &initialTransferWeight;
@@ -301,4 +299,4 @@ private:
 
   Profiler profiler;
 };
-} // namespace CSA
+}  // namespace CSA

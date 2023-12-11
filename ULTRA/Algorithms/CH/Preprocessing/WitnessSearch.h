@@ -4,28 +4,26 @@
 #include <string>
 #include <vector>
 
+#include "../../../DataStructures/Container/ExternalKHeap.h"
+#include "../../../DataStructures/Graph/Graph.h"
 #include "../../../Helpers/String/String.h"
 #include "../../../Helpers/Timer.h"
 #include "../../../Helpers/Types.h"
 #include "../../../Helpers/Vector/Vector.h"
-
-#include "../../../DataStructures/Container/ExternalKHeap.h"
-#include "../../../DataStructures/Graph/Graph.h"
 
 namespace CH {
 
 template <typename GRAPH, typename PROFILER, int Q_POP_LIMIT = -1,
           bool ADAPTIVE_Q_POP_LIMIT = true>
 class NoWitnessSearch {
-
-public:
+ public:
   using Graph = GRAPH;
   using Profiler = PROFILER;
   constexpr static int QPopLimit = Q_POP_LIMIT;
   constexpr static bool AdaptiveQPopLimit = ADAPTIVE_Q_POP_LIMIT;
   using Type = NoWitnessSearch<Graph, Profiler, QPopLimit, AdaptiveQPopLimit>;
 
-public:
+ public:
   inline void initialize(const GRAPH *, const std::vector<int> *,
                          Profiler *) noexcept {}
   inline bool shortcutIsNecessary(const Vertex, const Vertex, const Vertex,
@@ -38,15 +36,14 @@ public:
 template <typename GRAPH, typename PROFILER, int Q_POP_LIMIT = -1,
           bool ADAPTIVE_Q_POP_LIMIT = true>
 class WitnessSearch {
-
-public:
+ public:
   using Graph = GRAPH;
   using Profiler = PROFILER;
   constexpr static int QPopLimit = Q_POP_LIMIT;
   constexpr static bool AdaptiveQPopLimit = ADAPTIVE_Q_POP_LIMIT;
   using Type = WitnessSearch<Graph, Profiler, QPopLimit, AdaptiveQPopLimit>;
 
-private:
+ private:
   struct VertexLabel : public ExternalKHeapElement {
     VertexLabel() : ExternalKHeapElement(), distance(intMax), timeStamp(-1) {}
     inline void reset(int time) {
@@ -60,10 +57,16 @@ private:
     int timeStamp;
   };
 
-public:
+ public:
   WitnessSearch()
-      : graph(0), weight(0), timeStamp(0), currentFrom(noVertex),
-        currentVia(noVertex), qPops(0), qPopLimit(0), profiler(0) {}
+      : graph(0),
+        weight(0),
+        timeStamp(0),
+        currentFrom(noVertex),
+        currentVia(noVertex),
+        qPops(0),
+        qPopLimit(0),
+        profiler(0) {}
 
   inline void initialize(const Graph *graph, const std::vector<int> *weight,
                          Profiler *profiler) noexcept {
@@ -97,16 +100,13 @@ public:
 
     while (!Q.empty()) {
       VertexLabel *uLabel = Q.front();
-      if (uLabel->distance > shortcutDistance)
-        break;
+      if (uLabel->distance > shortcutDistance) break;
       const Vertex u = Vertex(uLabel - &(label[0]));
-      if (u == to)
-        break;
+      if (u == to) break;
       Q.extractFront();
       for (Edge edge : graph->edgesFrom(u)) {
         const Vertex v = graph->get(ToVertex, edge);
-        if (v == via)
-          continue;
+        if (v == via) continue;
         VertexLabel &vLabel = getLabel(v);
         const int distance = uLabel->distance + (*weight)[edge];
         if (vLabel.distance > distance) {
@@ -117,11 +117,9 @@ public:
       if constexpr (QPopLimit > 0) {
         qPops++;
         if constexpr (AdaptiveQPopLimit) {
-          if (qPops > qPopLimit)
-            break;
+          if (qPops > qPopLimit) break;
         } else {
-          if (qPops > QPopLimit)
-            break;
+          if (qPops > QPopLimit) break;
         }
       }
       profiler->settledVertex();
@@ -136,15 +134,14 @@ public:
     currentVia = noVertex;
   }
 
-private:
+ private:
   inline VertexLabel &getLabel(const Vertex vertex) noexcept {
     VertexLabel &result = label[vertex];
-    if (result.timeStamp != timeStamp)
-      result.reset(timeStamp);
+    if (result.timeStamp != timeStamp) result.reset(timeStamp);
     return result;
   }
 
-private:
+ private:
   const Graph *graph;
   const std::vector<int> *weight;
 
@@ -159,4 +156,4 @@ private:
   Profiler *profiler;
 };
 
-} // namespace CH
+}  // namespace CH

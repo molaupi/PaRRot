@@ -28,14 +28,11 @@ inline std::string dayToString(const int day) {
   time_t seconds = (((time_t)day * 24) + 12) * 60 * 60;
   std::tm t = *std::localtime(&seconds);
   std::string result = std::to_string(t.tm_mday);
-  while (result.length() < 2)
-    result = "0" + result;
+  while (result.length() < 2) result = "0" + result;
   result = std::to_string(t.tm_mon + 1) + result;
-  while (result.length() < 4)
-    result = "0" + result;
+  while (result.length() < 4) result = "0" + result;
   result = std::to_string(t.tm_year + 1900) + result;
-  while (result.length() < 8)
-    result = "0" + result;
+  while (result.length() < 8) result = "0" + result;
   return result;
 }
 

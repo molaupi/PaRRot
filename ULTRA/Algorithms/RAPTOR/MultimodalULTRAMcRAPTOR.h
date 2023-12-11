@@ -2,8 +2,6 @@
 
 #include <vector>
 
-#include "../CH/CH.h"
-
 #include "../../DataStructures/Container/ExternalKHeap.h"
 #include "../../DataStructures/Container/Map.h"
 #include "../../DataStructures/Container/Set.h"
@@ -11,9 +9,8 @@
 #include "../../DataStructures/RAPTOR/Entities/Bags.h"
 #include "../../DataStructures/RAPTOR/Entities/Journey.h"
 #include "../../DataStructures/RAPTOR/MultimodalData.h"
-
 #include "../../Helpers/Vector/Vector.h"
-
+#include "../CH/CH.h"
 #include "InitialTransfers.h"
 #include "Profiler.h"
 
@@ -21,8 +18,7 @@ namespace RAPTOR {
 
 template <size_t NUM_MODES, typename PROFILER = NoProfiler>
 class MultimodalULTRAMcRAPTOR {
-
-public:
+ public:
   inline static constexpr size_t NumTransferModes = NUM_MODES;
   using Profiler = PROFILER;
   using Type = MultimodalULTRAMcRAPTOR<NumTransferModes, Profiler>;
@@ -30,21 +26,30 @@ public:
   using SourceType = Vertex;
   using ParetoLabel = MultimodalParetoLabel<NumTransferModes>;
 
-private:
+ private:
   struct Label {
     Label()
-        : arrivalTime(never), transferTime{INFTY}, parentStop(noStop),
-          parentIndex(-1), parentDepartureTime(never), routeId(noRouteId) {}
+        : arrivalTime(never),
+          transferTime{INFTY},
+          parentStop(noStop),
+          parentIndex(-1),
+          parentDepartureTime(never),
+          routeId(noRouteId) {}
 
     Label(const int sourceDepartureTime, const StopId sourceStop)
-        : arrivalTime(sourceDepartureTime), transferTime{0},
-          parentStop(sourceStop), parentIndex(-1),
-          parentDepartureTime(sourceDepartureTime), routeId(noRouteId) {}
+        : arrivalTime(sourceDepartureTime),
+          transferTime{0},
+          parentStop(sourceStop),
+          parentIndex(-1),
+          parentDepartureTime(sourceDepartureTime),
+          routeId(noRouteId) {}
 
     Label(const Label &parentLabel, const StopId stop, const size_t parentIndex)
-        : arrivalTime(parentLabel.arrivalTime), parentStop(stop),
+        : arrivalTime(parentLabel.arrivalTime),
+          parentStop(stop),
           parentIndex(parentIndex),
-          parentDepartureTime(parentLabel.arrivalTime), transferId(noEdge) {
+          parentDepartureTime(parentLabel.arrivalTime),
+          transferId(noEdge) {
       std::copy(std::begin(parentLabel.transferTime),
                 std::end(parentLabel.transferTime), std::begin(transferTime));
     }
@@ -53,7 +58,8 @@ private:
     Label(const ROUTE_LABEL &routeLabel, const StopIndex stopIndex,
           const StopId parentStop, const RouteId route)
         : arrivalTime(routeLabel.getArrivalTime(stopIndex)),
-          parentStop(parentStop), parentIndex(routeLabel.parentIndex),
+          parentStop(parentStop),
+          parentIndex(routeLabel.parentIndex),
           parentDepartureTime(routeLabel.parentDepartureTime()),
           routeId(route) {
       std::copy(std::begin(routeLabel.transferTime),
@@ -62,9 +68,11 @@ private:
 
     Label(const Label &parentLabel, const size_t mode, const int travelTime,
           const StopId stop, const size_t parentIndex, const Edge transferId)
-        : arrivalTime(parentLabel.arrivalTime + travelTime), parentStop(stop),
+        : arrivalTime(parentLabel.arrivalTime + travelTime),
+          parentStop(stop),
           parentIndex(parentIndex),
-          parentDepartureTime(parentLabel.arrivalTime), transferId(transferId) {
+          parentDepartureTime(parentLabel.arrivalTime),
+          transferId(transferId) {
       std::copy(std::begin(parentLabel.transferTime),
                 std::end(parentLabel.transferTime), std::begin(transferTime));
       transferTime[mode] += travelTime;
@@ -72,18 +80,23 @@ private:
 
     Label(const Label &parentLabel, const int travelTime, const StopId stop,
           const size_t parentIndex, const Edge transferId)
-        : arrivalTime(parentLabel.arrivalTime + travelTime), parentStop(stop),
+        : arrivalTime(parentLabel.arrivalTime + travelTime),
+          parentStop(stop),
           parentIndex(parentIndex),
-          parentDepartureTime(parentLabel.arrivalTime), transferId(transferId) {
+          parentDepartureTime(parentLabel.arrivalTime),
+          transferId(transferId) {
       std::copy(std::begin(parentLabel.transferTime),
                 std::end(parentLabel.transferTime), std::begin(transferTime));
     }
 
     Label(const int parentDepartureTime, const size_t mode,
           const int travelTime, const StopId stop)
-        : arrivalTime(parentDepartureTime + travelTime), transferTime{0},
-          parentStop(stop), parentIndex(0),
-          parentDepartureTime(parentDepartureTime), transferId(noEdge) {
+        : arrivalTime(parentDepartureTime + travelTime),
+          transferTime{0},
+          parentStop(stop),
+          parentIndex(0),
+          parentDepartureTime(parentDepartureTime),
+          transferId(noEdge) {
       transferTime[mode] = travelTime;
     }
 
@@ -99,11 +112,9 @@ private:
     };
 
     inline bool dominates(const Label &other) const noexcept {
-      if (arrivalTime > other.arrivalTime)
-        return false;
+      if (arrivalTime > other.arrivalTime) return false;
       for (size_t i = 0; i < NumTransferModes; i++) {
-        if (transferTime[i] > other.transferTime[i])
-          return false;
+        if (transferTime[i] > other.transferTime[i]) return false;
       }
       return true;
     }
@@ -123,11 +134,9 @@ private:
 
     template <typename LABEL>
     inline bool dominates(const LABEL &other) const noexcept {
-      if (arrivalTime > other.arrivalTime)
-        return false;
+      if (arrivalTime > other.arrivalTime) return false;
       for (size_t i = 0; i < NumTransferModes; i++) {
-        if (transferTime[i] > other.transferTime[i])
-          return false;
+        if (transferTime[i] > other.transferTime[i]) return false;
       }
       return true;
     }
@@ -147,11 +156,9 @@ private:
     }
 
     inline bool dominates(const RouteLabel &other) const noexcept {
-      if (trip > other.trip)
-        return false;
+      if (trip > other.trip) return false;
       for (size_t i = 0; i < NumTransferModes; i++) {
-        if (transferTime[i] > other.transferTime[i])
-          return false;
+        if (transferTime[i] > other.transferTime[i]) return false;
       }
       return true;
     }
@@ -175,17 +182,21 @@ private:
   using Round = std::vector<BagType>;
   using RouteBagType = RouteBag<RouteLabel>;
 
-public:
+ public:
   MultimodalULTRAMcRAPTOR(const MultimodalData &data,
                           const std::vector<CH::CH> &chData,
                           const Profiler &profilerTemplate = Profiler())
-      : data(data), bestBagByRoute(data.raptorData.numberOfStops() + 1),
+      : data(data),
+        bestBagByRoute(data.raptorData.numberOfStops() + 1),
         bestBagByTransfer(data.raptorData.numberOfStops() + 1),
         stopsUpdatedByRoute(data.raptorData.numberOfStops() + 1),
         stopsUpdatedByTransfer(data.raptorData.numberOfStops() + 1),
         routesServingUpdatedStops(data.raptorData.numberOfRoutes()),
-        sourceVertex(noVertex), targetVertex(noVertex), targetStop(noStop),
-        sourceDepartureTime(intMax), profiler(profilerTemplate) {
+        sourceVertex(noVertex),
+        targetVertex(noVertex),
+        targetStop(noStop),
+        sourceDepartureTime(intMax),
+        profiler(profilerTemplate) {
     AssertMsg(data.raptorData.hasImplicitBufferTimes(),
               "Departure buffer times have to be implicit!");
     AssertMsg(data.modes.size() == NumTransferModes, "Wrong number of modes");
@@ -292,7 +303,8 @@ public:
     return result;
   }
 
-  template <bool RESET_CAPACITIES = false> inline void clear() noexcept {
+  template <bool RESET_CAPACITIES = false>
+  inline void clear() noexcept {
     stopsUpdatedByRoute.clear();
     stopsUpdatedByTransfer.clear();
     routesServingUpdatedStops.clear();
@@ -316,7 +328,7 @@ public:
 
   inline const Profiler &getProfiler() const noexcept { return profiler; }
 
-private:
+ private:
   inline void initialize(const Vertex source, const int departureTime,
                          const Vertex target) noexcept {
     sourceVertex = source;
@@ -388,8 +400,7 @@ private:
                  (trip[stopIndex].departureTime < label.arrivalTime)) {
             trip += tripSize;
           }
-          if (trip[stopIndex].departureTime < label.arrivalTime)
-            continue;
+          if (trip[stopIndex].departureTime < label.arrivalTime) continue;
           routeBag.merge(RouteLabel(trip, label, stopIndex, i));
         }
         stopIndex++;
@@ -406,8 +417,7 @@ private:
   inline void relaxInitialTransfers(const size_t mode) noexcept {
     initialTransfers[mode].template run<true>(sourceVertex, targetVertex);
     for (const Vertex stop : initialTransfers[mode].getForwardPOIs()) {
-      if (stop == targetStop)
-        continue;
+      if (stop == targetStop) continue;
       AssertMsg(data.raptorData.isStop(stop),
                 "Reached POI " << stop << " is not a stop!");
       AssertMsg(initialTransfers[mode].getForwardDistance(stop) != INFTY,
@@ -419,10 +429,10 @@ private:
       arrivalByTransfer(StopId(stop), newLabel);
     }
     if (initialTransfers[mode].getDistance() != INFTY) {
-      const Label newLabel(sourceDepartureTime, mode,
-                           initialTransfers[mode].getDistance() +
-                               TransferModeOverhead[mode],
-                           StopId(sourceVertex));
+      const Label newLabel(
+          sourceDepartureTime, mode,
+          initialTransfers[mode].getDistance() + TransferModeOverhead[mode],
+          StopId(sourceVertex));
       arrivalByTransfer(targetStop, newLabel);
     }
   }
@@ -462,8 +472,7 @@ private:
         profiler.countMetric(METRIC_EDGES);
         const StopId toStop =
             StopId(getTransferGraph(mode).get(ToVertex, edge));
-        if (toStop == targetStop)
-          continue;
+        if (toStop == targetStop) continue;
         AssertMsg(data.raptorData.isStop(toStop),
                   "Graph contains edges to non-stop vertices!");
         const int travelTime = getTransferGraph(mode).get(TravelTime, edge);
@@ -484,8 +493,8 @@ private:
     }
   }
 
-  inline const TransferGraph &
-  getTransferGraph(const size_t mode) const noexcept {
+  inline const TransferGraph &getTransferGraph(
+      const size_t mode) const noexcept {
     return data.getTransferGraph(data.modes[mode]);
   }
 
@@ -508,20 +517,16 @@ private:
 
   template <typename LABEL>
   inline bool checkTargetPruning(const LABEL &label) noexcept {
-    if (bestBagByRoute[targetStop].dominates(label))
-      return true;
-    if (bestBagByTransfer[targetStop].dominates(label))
-      return true;
+    if (bestBagByRoute[targetStop].dominates(label)) return true;
+    if (bestBagByTransfer[targetStop].dominates(label)) return true;
     return false;
   }
 
   inline void arrivalByRoute(const StopId stop, const Label &label) noexcept {
     AssertMsg(data.raptorData.isStop(stop),
               "Stop " << stop << " is out of range!");
-    if (checkTargetPruning(label))
-      return;
-    if (!bestBagByRoute[stop].merge(BestLabel(label)))
-      return;
+    if (checkTargetPruning(label)) return;
+    if (!bestBagByRoute[stop].merge(BestLabel(label))) return;
     profiler.countMetric(METRIC_STOPS_BY_TRIP);
     currentRound()[stop].mergeUndominated(label);
     stopsUpdatedByRoute.insert(stop);
@@ -531,16 +536,12 @@ private:
                                 const Label &label) noexcept {
     AssertMsg(data.raptorData.isStop(stop) || stop == targetStop,
               "Stop " << stop << " is out of range!");
-    if (checkTargetPruning(label))
-      return;
-    if (bestBagByRoute[stop].dominates(label))
-      return;
-    if (!bestBagByTransfer[stop].merge(BestLabel(label)))
-      return;
+    if (checkTargetPruning(label)) return;
+    if (bestBagByRoute[stop].dominates(label)) return;
+    if (!bestBagByTransfer[stop].merge(BestLabel(label))) return;
     profiler.countMetric(METRIC_STOPS_BY_TRANSFER);
     currentRound()[stop].mergeUndominated(label);
-    if (data.raptorData.isStop(stop))
-      stopsUpdatedByTransfer.insert(stop);
+    if (data.raptorData.isStop(stop)) stopsUpdatedByTransfer.insert(stop);
   }
 
   inline void getJourney(std::vector<Journey> &journeys, size_t round,
@@ -560,7 +561,7 @@ private:
     journeys.emplace_back(Vector::reverse(journey));
   }
 
-private:
+ private:
   const MultimodalData &data;
 
   std::vector<BucketCHInitialTransfers> initialTransfers;
@@ -581,4 +582,4 @@ private:
   Profiler profiler;
 };
 
-} // namespace RAPTOR
+}  // namespace RAPTOR

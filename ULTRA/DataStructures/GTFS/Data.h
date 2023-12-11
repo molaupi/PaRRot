@@ -7,6 +7,15 @@
 #include <string>
 #include <vector>
 
+#include "../../Helpers/Assert.h"
+#include "../../Helpers/FileSystem/FileSystem.h"
+#include "../../Helpers/IO/ParserCSV.h"
+#include "../../Helpers/IO/Serialization.h"
+#include "../../Helpers/String/String.h"
+#include "../../Helpers/Timer.h"
+#include "../../Helpers/Types.h"
+#include "../Container/Map.h"
+#include "../Geometry/Rectangle.h"
 #include "Entities/Agency.h"
 #include "Entities/Calendar.h"
 #include "Entities/CalendarDate.h"
@@ -17,26 +26,13 @@
 #include "Entities/Transfer.h"
 #include "Entities/Trip.h"
 
-#include "../Container/Map.h"
-
-#include "../Geometry/Rectangle.h"
-
-#include "../../Helpers/Assert.h"
-#include "../../Helpers/FileSystem/FileSystem.h"
-#include "../../Helpers/IO/ParserCSV.h"
-#include "../../Helpers/IO/Serialization.h"
-#include "../../Helpers/String/String.h"
-#include "../../Helpers/Timer.h"
-#include "../../Helpers/Types.h"
-
 namespace GTFS {
 
 class Data {
-
-private:
+ private:
   Data() {}
 
-public:
+ public:
   inline static Data FromBinary(const std::string &fileName) noexcept {
     Data data;
     data.deserialize(fileName);
@@ -58,7 +54,7 @@ public:
     return data;
   }
 
-protected:
+ protected:
   inline void readAgencies(const std::string &fileName,
                            const bool verbose = true) {
     IO::readFile(
@@ -71,8 +67,7 @@ protected:
                         "agency_timezone");
           Agency agency;
           while (in.readRow(agency.agencyId, agency.name, agency.timezone)) {
-            if (agency.validate())
-              agencies.emplace_back(agency);
+            if (agency.validate()) agencies.emplace_back(agency);
             count++;
           }
           return count;
@@ -102,8 +97,7 @@ protected:
               startDate, endDate)) {
             calendar.startDate = stringToDay(startDate);
             calendar.endDate = stringToDay(endDate);
-            if (calendar.validate())
-              calendars.emplace_back(calendar);
+            if (calendar.validate()) calendars.emplace_back(calendar);
             count++;
           }
           return count;
@@ -152,8 +146,7 @@ protected:
                             frequency.headwaySecs)) {
             frequency.startTime = String::parseSeconds(startTime);
             frequency.endTime = String::parseSeconds(endTime);
-            if (frequency.validate())
-              frequencies.emplace_back(frequency);
+            if (frequency.validate()) frequencies.emplace_back(frequency);
             count++;
           }
           return count;
@@ -178,8 +171,7 @@ protected:
           while (in.readRow(route.routeId, route.agencyId, shortName, longName,
                             route.type, route.routeColor, route.textColor)) {
             route.name = "[" + shortName + "] " + longName;
-            if (route.validate())
-              routes.emplace_back(route);
+            if (route.validate()) routes.emplace_back(route);
             count++;
           }
           return count;
@@ -203,8 +195,7 @@ protected:
           while (in.readRow(stop.stopId, stop.name, latitude, longitude)) {
             stop.coordinates =
                 Geometry::Point(Construct::LatLong, latitude, longitude);
-            if (stop.validate())
-              stops.emplace_back(stop);
+            if (stop.validate()) stops.emplace_back(stop);
             count++;
           }
           return count;
@@ -229,8 +220,7 @@ protected:
                             stopTime.stopId, stopTime.stopSequence)) {
             stopTime.arrivalTime = String::parseSeconds(arrivalTime);
             stopTime.departureTime = String::parseSeconds(departureTime);
-            if (stopTime.validate())
-              stopTimes.push_back(stopTime);
+            if (stopTime.validate()) stopTimes.push_back(stopTime);
             count++;
           }
           return count;
@@ -252,10 +242,8 @@ protected:
           int transferType = 0;
           while (in.readRow(transfer.fromStopId, transfer.toStopId,
                             transfer.minTransferTime, transferType)) {
-            if (transferType == 3)
-              continue;
-            if (transfer.validate())
-              transfers.emplace_back(transfer);
+            if (transferType == 3) continue;
+            if (transfer.validate()) transfers.emplace_back(transfer);
             count++;
           }
           return count;
@@ -276,8 +264,7 @@ protected:
           Trip trip;
           while (in.readRow(trip.routeId, trip.serviceId, trip.tripId,
                             trip.name)) {
-            if (trip.validate())
-              trips.emplace_back(trip);
+            if (trip.validate()) trips.emplace_back(trip);
             count++;
           }
           return count;
@@ -285,10 +272,10 @@ protected:
         verbose);
   }
 
-public:
-  inline Map<std::string, std::vector<int>>
-  unrollCalendarDates(const int startDate, const int endDate,
-                      const bool ignoreDaysOfOperation = false) const noexcept {
+ public:
+  inline Map<std::string, std::vector<int>> unrollCalendarDates(
+      const int startDate, const int endDate,
+      const bool ignoreDaysOfOperation = false) const noexcept {
     Map<std::string, std::set<int>> data;
     for (const Calendar &calendar : calendars) {
       std::set<int> &dates = data[calendar.serviceId];
@@ -300,8 +287,7 @@ public:
         int firstData = std::max(startDate, calendar.startDate);
         int lastData = std::min(endDate, calendar.endDate);
         for (int date = firstData; date <= lastData; date++) {
-          if (calendar.operatesOnWeekday[weekday(date)])
-            dates.insert(date);
+          if (calendar.operatesOnWeekday[weekday(date)]) dates.insert(date);
         }
       }
     }
@@ -312,10 +298,8 @@ public:
           dates.insert(date);
         }
       } else {
-        if (calendarDate.date < startDate)
-          continue;
-        if (calendarDate.date > endDate)
-          continue;
+        if (calendarDate.date < startDate) continue;
+        if (calendarDate.date > endDate) continue;
         if (calendarDate.operates) {
           data[calendarDate.serviceId].insert(calendarDate.date);
         } else {
@@ -326,14 +310,12 @@ public:
     int minDate = never;
     for (const auto &dates : data) {
       for (const int date : dates.second) {
-        if (minDate > date)
-          minDate = date;
+        if (minDate > date) minDate = date;
       }
     }
     Map<std::string, std::vector<int>> result;
     for (const auto &dates : data) {
-      if (dates.second.empty())
-        continue;
+      if (dates.second.empty()) continue;
       std::vector<int> &vector = result[dates.first];
       for (const int date : dates.second) {
         vector.emplace_back(date - minDate);
@@ -347,8 +329,7 @@ public:
     Map<std::string, int> ids;
     for (size_t i = 0; i < routes.size(); i++) {
       const Route &route = routes[i];
-      if (ids.contains(route.routeId))
-        continue;
+      if (ids.contains(route.routeId)) continue;
       ids.insert(route.routeId, i);
     }
     return ids;
@@ -358,8 +339,7 @@ public:
     Map<std::string, int> ids;
     for (size_t i = 0; i < stops.size(); i++) {
       const Stop &stop = stops[i];
-      if (ids.contains(stop.stopId))
-        continue;
+      if (ids.contains(stop.stopId)) continue;
       ids.insert(stop.stopId, i);
     }
     return ids;
@@ -369,8 +349,7 @@ public:
     Map<std::string, int> ids;
     for (size_t i = 0; i < trips.size(); i++) {
       const Trip &trip = trips[i];
-      if (ids.contains(trip.tripId))
-        continue;
+      if (ids.contains(trip.tripId)) continue;
       ids.insert(trip.tripId, i);
     }
     return ids;
@@ -396,16 +375,12 @@ public:
     int firstDay = std::numeric_limits<int>::max();
     int lastDay = std::numeric_limits<int>::min();
     for (const Calendar &calendar : calendars) {
-      if (firstDay > calendar.startDate)
-        firstDay = calendar.startDate;
-      if (lastDay < calendar.endDate)
-        lastDay = calendar.endDate;
+      if (firstDay > calendar.startDate) firstDay = calendar.startDate;
+      if (lastDay < calendar.endDate) lastDay = calendar.endDate;
     }
     for (const CalendarDate &calendarDate : calendarDates) {
-      if (firstDay > calendarDate.date)
-        firstDay = calendarDate.date;
-      if (lastDay < calendarDate.date)
-        lastDay = calendarDate.date;
+      if (firstDay > calendarDate.date) firstDay = calendarDate.date;
+      if (lastDay < calendarDate.date) lastDay = calendarDate.date;
     }
     std::cout << "GTFS raw data:" << std::endl;
     std::cout << "   Number of Agencies:       " << std::setw(12)
@@ -444,7 +419,7 @@ public:
                     routes, stops, stopTimes, transfers, trips);
   }
 
-public:
+ public:
   std::vector<Agency> agencies;
   std::vector<Calendar> calendars;
   std::vector<CalendarDate> calendarDates;
@@ -455,9 +430,9 @@ public:
   std::vector<Transfer> transfers;
   std::vector<Trip> trips;
 
-protected:
+ protected:
   static constexpr IO::IgnoreColumn ReadMode =
       IO::IGNORE_EXTRA_COLUMN | IO::IGNORE_MISSING_COLUMN;
 };
 
-} // namespace GTFS
+}  // namespace GTFS

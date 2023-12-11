@@ -24,23 +24,24 @@
 
 #pragma once
 
-#include "DataStructures/Containers/TimestampedVector.h"
-#include "Tools/Constants.h"
 #include <cassert>
 #include <vector>
+
+#include "DataStructures/Containers/TimestampedVector.h"
+#include "Tools/Constants.h"
 
 namespace karri {
 
 // Data structure for dynamically tracking distances from last stops to PD locs.
 // Allocates entries for distances from a last stop s to all PD locs when one
 // relevant distance from s is found for the first time.
-template <typename LabelSetT> class TentativeLastStopDistances {
-
+template <typename LabelSetT>
+class TentativeLastStopDistances {
   static constexpr int K = LabelSetT::K;
   using DistanceLabel = typename LabelSetT::DistanceLabel;
   using LabelMask = typename LabelSetT::LabelMask;
 
-public:
+ public:
   TentativeLastStopDistances(const size_t fleetSize)
       : startIdxForVeh(fleetSize, INVALID_INDEX), distances() {}
 
@@ -55,8 +56,7 @@ public:
   int getDistance(const int &vehId, const int &pdLocId) {
     assert(vehId < startIdxForVeh.size());
     const int startIdx = startIdxForVeh[vehId];
-    if (startIdx == INVALID_INDEX)
-      return INFTY;
+    if (startIdx == INVALID_INDEX) return INFTY;
 
     const int batchIdx = pdLocId / K;
     return distances[startIdx + batchIdx][pdLocId % K];
@@ -65,16 +65,14 @@ public:
   DistanceLabel getDistancesForCurBatch(const int &vehId) {
     assert(vehId < startIdxForVeh.size());
     const int startIdx = startIdxForVeh[vehId];
-    if (startIdx == INVALID_INDEX)
-      return DistanceLabel(INFTY);
+    if (startIdx == INVALID_INDEX) return DistanceLabel(INFTY);
     return distances[startIdx + curBatchIdx];
   }
 
   void setDistancesForCurBatchIf(const int &vehId,
                                  const DistanceLabel &distanceBatch,
                                  const LabelMask &batchInsertMask) {
-    if (!batchInsertMask)
-      return;
+    if (!batchInsertMask) return;
 
     if (startIdxForVeh[vehId] == INVALID_INDEX) {
       startIdxForVeh[vehId] = distances.size();
@@ -85,12 +83,12 @@ public:
                                                          batchInsertMask);
   }
 
-private:
+ private:
   int curNumBatches;
   TimestampedVector<int> startIdxForVeh;
   std::vector<DistanceLabel>
-      distances; // curNumBatches DistanceLabels per vehicle
+      distances;  // curNumBatches DistanceLabels per vehicle
 
   int curBatchIdx;
 };
-} // namespace karri
+}  // namespace karri

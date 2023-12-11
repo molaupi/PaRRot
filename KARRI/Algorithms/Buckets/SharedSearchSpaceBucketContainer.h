@@ -50,16 +50,18 @@
 // e.cmpAndUpdate(const BucketEntryT& e) that compares an existing entry e
 // against a given entry e' and updates e accordingly. (This should usually
 // consist of comparing the distances in both entries).
-template <typename BucketEntryT> class SharedSearchSpaceBucketContainer {
+template <typename BucketEntryT>
+class SharedSearchSpaceBucketContainer {
   static_assert(std::is_default_constructible<BucketEntryT>());
 
-public:
+ public:
   using Bucket = ConstantVectorRange<BucketEntryT>;
 
   // Constructs a container that can maintain buckets for the specified number
   // of vertices.
   explicit SharedSearchSpaceBucketContainer(const int numVertices)
-      : numSearches(0), offsetForVertex(numVertices, INVALID_INDEX),
+      : numSearches(0),
+        offsetForVertex(numVertices, INVALID_INDEX),
         entries(0) {
     assert(numVertices >= 0);
   }
@@ -107,7 +109,7 @@ public:
     entries.clear();
   }
 
-private:
+ private:
   int numSearches;
   TimestampedVector<int> offsetForVertex;
   std::vector<BucketEntryT> entries;

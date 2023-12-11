@@ -1,19 +1,20 @@
 #pragma once
 
-#include "StopEvent.h"
-
 #include "../../../Helpers/Types.h"
+#include "StopEvent.h"
 
 namespace RAPTOR {
 
 class TripIterator {
-
-public:
+ public:
   TripIterator(const u_int32_t tripSize, const StopId *const stops,
                const StopEvent *const firstTrip, const StopIndex stopIndex,
                const StopEvent *const trip)
-      : tripSize(tripSize), stops(stops), firstTrip(firstTrip),
-        stopIndex(stopIndex), trip(trip) {}
+      : tripSize(tripSize),
+        stops(stops),
+        firstTrip(firstTrip),
+        stopIndex(stopIndex),
+        trip(trip) {}
 
   inline StopIndex getStopIndex() const noexcept { return stopIndex; }
 
@@ -36,8 +37,7 @@ public:
   }
 
   inline bool advanceStop() noexcept {
-    if (!hasFurtherStops())
-      return false;
+    if (!hasFurtherStops()) return false;
     ++stopIndex;
     return true;
   }
@@ -63,15 +63,14 @@ public:
     trip = trip - tripSize;
   }
 
-  inline const StopEvent *
-  previousTrip(const StopEvent *otherTrip) const noexcept {
+  inline const StopEvent *previousTrip(
+      const StopEvent *otherTrip) const noexcept {
     AssertMsg(hasEarlierTrip(otherTrip), "There is no earlier trip!");
     return otherTrip - tripSize;
   }
 
   inline bool decreaseTrip() noexcept {
-    if (!hasEarlierTrip())
-      return false;
+    if (!hasEarlierTrip()) return false;
     trip = trip - tripSize;
     return true;
   }
@@ -139,7 +138,7 @@ public:
     }
   }
 
-private:
+ private:
   const u_int32_t tripSize;
   const StopId *const stops;
   const StopEvent *const firstTrip;
@@ -148,4 +147,4 @@ private:
   const StopEvent *trip;
 };
 
-} // namespace RAPTOR
+}  // namespace RAPTOR

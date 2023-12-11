@@ -7,7 +7,6 @@
 #include <vector>
 
 #include "../../DataStructures/CSA/Data.h"
-
 #include "../../Helpers/HighlightText.h"
 #include "../../Helpers/String/String.h"
 #include "../../Helpers/Timer.h"
@@ -45,12 +44,11 @@ constexpr const char *MetricNames[] = {
 };
 
 class NoProfiler {
-
-public:
-  inline void
-  registerPhases(const std::initializer_list<Phase> &) const noexcept {}
-  inline void
-  registerMetrics(const std::initializer_list<Metric> &) const noexcept {}
+ public:
+  inline void registerPhases(
+      const std::initializer_list<Phase> &) const noexcept {}
+  inline void registerMetrics(
+      const std::initializer_list<Metric> &) const noexcept {}
 
   inline void initialize() const noexcept {}
 
@@ -64,21 +62,21 @@ public:
 };
 
 class SimpleProfiler : public NoProfiler {
-
-public:
+ public:
   SimpleProfiler()
-      : totalTime(0.0), phaseTime(NUM_PHASES, 0.0),
+      : totalTime(0.0),
+        phaseTime(NUM_PHASES, 0.0),
         metricValue(NUM_METRICS, 0) {}
 
-  inline void
-  registerPhases(const std::initializer_list<Phase> &phaseList) noexcept {
+  inline void registerPhases(
+      const std::initializer_list<Phase> &phaseList) noexcept {
     for (const Phase phase : phaseList) {
       phases.push_back(phase);
     }
   }
 
-  inline void
-  registerMetrics(const std::initializer_list<Metric> &metricList) noexcept {
+  inline void registerMetrics(
+      const std::initializer_list<Metric> &metricList) noexcept {
     for (const Metric metric : metricList) {
       metrics.push_back(metric);
     }
@@ -131,7 +129,7 @@ public:
     return *this;
   }
 
-private:
+ private:
   inline void printStatistics() const noexcept {
     std::cout << std::endl;
     std::cout << "Total time: " << String::musToString(totalTime) << std::endl;
@@ -146,7 +144,7 @@ private:
     }
   }
 
-private:
+ private:
   Timer totalTimer;
   double totalTime;
   Timer phaseTimer;
@@ -157,21 +155,22 @@ private:
 };
 
 class AggregateProfiler : public NoProfiler {
-
-public:
+ public:
   AggregateProfiler()
-      : totalTime(0.0), phaseTime(NUM_PHASES, 0.0), metricValue(NUM_METRICS, 0),
+      : totalTime(0.0),
+        phaseTime(NUM_PHASES, 0.0),
+        metricValue(NUM_METRICS, 0),
         numQueries(0) {}
 
-  inline void
-  registerPhases(const std::initializer_list<Phase> &phaseList) noexcept {
+  inline void registerPhases(
+      const std::initializer_list<Phase> &phaseList) noexcept {
     for (const Phase phase : phaseList) {
       phases.push_back(phase);
     }
   }
 
-  inline void
-  registerMetrics(const std::initializer_list<Metric> &metricList) noexcept {
+  inline void registerMetrics(
+      const std::initializer_list<Metric> &metricList) noexcept {
     for (const Metric metric : metricList) {
       metrics.push_back(metric);
     }
@@ -211,8 +210,8 @@ public:
     return metricValue[metric] / static_cast<double>(numQueries);
   }
 
-  inline AggregateProfiler &
-  operator+=(const AggregateProfiler &other) noexcept {
+  inline AggregateProfiler &operator+=(
+      const AggregateProfiler &other) noexcept {
     totalTime += other.totalTime;
     for (size_t i = 0; i < NUM_PHASES; i++) {
       phaseTime[i] += other.phaseTime[i];
@@ -239,7 +238,7 @@ public:
     }
   }
 
-private:
+ private:
   Timer totalTimer;
   double totalTime;
   Timer phaseTimer;
@@ -250,4 +249,4 @@ private:
   size_t numQueries;
 };
 
-} // namespace CSA
+}  // namespace CSA

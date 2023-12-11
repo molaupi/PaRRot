@@ -37,18 +37,22 @@ namespace karri {
 // are inserted between the same pair of existing stops.
 //
 // Works based on filtered relevant PD locs.
-template <typename PDDistancesT> class OrdinaryAssignmentsFinder {
-
-public:
+template <typename PDDistancesT>
+class OrdinaryAssignmentsFinder {
+ public:
   OrdinaryAssignmentsFinder(const RelevantPDLocs &relPickups,
                             const RelevantPDLocs &relDropoffs,
                             const PDDistancesT &pdDistances, const Fleet &fleet,
                             const CostCalculator &calculator,
                             const RouteState &routeState,
                             RequestState &requestState)
-      : relPickups(relPickups), relDropoffs(relDropoffs),
-        pdDistances(pdDistances), fleet(fleet), calculator(calculator),
-        routeState(routeState), requestState(requestState) {}
+      : relPickups(relPickups),
+        relDropoffs(relDropoffs),
+        pdDistances(pdDistances),
+        fleet(fleet),
+        calculator(calculator),
+        routeState(routeState),
+        requestState(requestState) {}
 
   void findAssignments() {
     findOrdinaryAssignments();
@@ -59,13 +63,12 @@ public:
     // no op
   }
 
-private:
+ private:
   // Try assignments where pickup is inserted at or just after stop i and
   // dropoff is inserted at or just after stop j with j > i. Does not deal with
   // inserting the pickup at or after a last stop. Does not deal with inserting
   // the dropoff after a last stop.
   void findOrdinaryAssignments() {
-
     Timer timer;
     int numCandidateVehicles = 0;
     int numAssignmentsTried = 0;
@@ -85,7 +88,6 @@ private:
       auto curFirstDropoffIt = relevantDropoffs.begin();
 
       for (const auto &pickupEntry : relPickups.relevantSpotsFor(vehId)) {
-
         // Find first stop position after the pickup's stop position that has
         // relevant dropoffs.
         const auto &stopPos = pickupEntry.stopIndex;
@@ -94,8 +96,8 @@ private:
           ++curFirstDropoffIt;
         }
         if (curFirstDropoffIt == relevantDropoffs.end())
-          break; // No dropoffs later in route than current (or subsequent)
-                 // pickup(s)
+          break;  // No dropoffs later in route than current (or subsequent)
+                  // pickup(s)
 
         asgn.pickup = &requestState.pickups[pickupEntry.pdId];
         asgn.pickupStopIdx = pickupEntry.stopIndex;
@@ -131,8 +133,7 @@ private:
     assert(startItInRegularDropoffs >= relevantDropoffs.begin() &&
            startItInRegularDropoffs <= relevantDropoffs.end());
 
-    if (!relDropoffs.getVehiclesWithRelevantPDLocs().contains(vehId))
-      return 0;
+    if (!relDropoffs.getVehiclesWithRelevantPDLocs().contains(vehId)) return 0;
 
     auto numAssignmentsTriedWithOrdinaryDropoff = 0;
 
@@ -172,7 +173,6 @@ private:
   }
 
   void findOrdinaryPairedAssignments() {
-
     Timer timer;
     int numAssignmentsTried = 0;
 
@@ -199,19 +199,16 @@ private:
       dropoffIt = relevantDropoffs.begin();
       while (pickupIt < relevantPickups.end() &&
              dropoffIt < relevantDropoffs.end()) {
-
         // Alternating sweep over pickups and dropoffs which pause once they
         // meet or pass the other sweep.
         while (pickupIt < relevantPickups.end() &&
                pickupIt->stopIndex < dropoffIt->stopIndex)
           ++pickupIt;
-        if (pickupIt == relevantPickups.end())
-          break;
+        if (pickupIt == relevantPickups.end()) break;
         while (dropoffIt < relevantDropoffs.end() &&
                dropoffIt->stopIndex < pickupIt->stopIndex)
           ++dropoffIt;
-        if (dropoffIt == relevantDropoffs.end())
-          break;
+        if (dropoffIt == relevantDropoffs.end()) break;
 
         // If both sweeps paused at the same stopIndex, there are pickups and
         // dropoffs at this stop. We attempt a paired assignment.
@@ -250,8 +247,7 @@ private:
             ++dropoffIt;
           }
 
-          if (minDistToPickup == INFTY || minDistFromDropoff == INFTY)
-            continue;
+          if (minDistToPickup == INFTY || minDistFromDropoff == INFTY) continue;
 
           const auto endOfStopInPickups = pickupIt;
           const auto endOfStopInDropoffs = dropoffIt;
@@ -268,8 +264,7 @@ private:
           const auto lowerBoundCost =
               calculator.calcCostLowerBoundForOrdinaryPairedAssignment(
                   asgn, requestState);
-          if (lowerBoundCost > requestState.getBestCost())
-            continue;
+          if (lowerBoundCost > requestState.getBestCost()) continue;
 
           // Try paired assignment for every combination of relevant pickup and
           // dropoff
@@ -279,9 +274,9 @@ private:
             asgn.dropoff = &requestState.dropoffs[dropoffEntry.pdId];
 
             if (stopLocations[stopPos + 1] == asgn.dropoff->loc)
-              continue; // if dropoff coincides with the following stop, an
-                        // ordinary non-paired assignment with dropoffIndex =
-                        // pickupIndex + 1 will cover this case
+              continue;  // if dropoff coincides with the following stop, an
+                         // ordinary non-paired assignment with dropoffIndex =
+                         // pickupIndex + 1 will cover this case
 
             asgn.distFromDropoff = dropoffEntry.distFromPDLocToNextStop;
             for (auto pickupIt2 = beginOfStopInPickups;
@@ -316,4 +311,4 @@ private:
   const RouteState &routeState;
   RequestState &requestState;
 };
-} // namespace karri
+}  // namespace karri

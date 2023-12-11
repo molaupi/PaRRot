@@ -1,10 +1,8 @@
-#include "Commands/NetworkIO.h"
-#include "Commands/NetworkTools.h"
-
 #include "../Helpers/Console/CommandLineParser.h"
 #include "../Helpers/MultiThreading.h"
-
 #include "../Shell/Shell.h"
+#include "Commands/NetworkIO.h"
+#include "Commands/NetworkTools.h"
 using namespace Shell;
 
 int main(int argc, char **argv) {

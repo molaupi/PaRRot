@@ -6,15 +6,6 @@
 #include <string>
 #include <vector>
 
-#include "Entities/Connection.h"
-#include "Entities/Journey.h"
-#include "Entities/Stop.h"
-#include "Entities/Trip.h"
-
-#include "../Geometry/Rectangle.h"
-#include "../Graph/Graph.h"
-#include "../Intermediate/Data.h"
-
 #include "../../Algorithms/Dijkstra/Dijkstra.h"
 #include "../../DataStructures/Container/Map.h"
 #include "../../Helpers/Console/Progress.h"
@@ -25,17 +16,23 @@
 #include "../../Helpers/Ranges/Range.h"
 #include "../../Helpers/String/String.h"
 #include "../../Helpers/Vector/Permutation.h"
+#include "../Geometry/Rectangle.h"
+#include "../Graph/Graph.h"
+#include "../Intermediate/Data.h"
+#include "Entities/Connection.h"
+#include "Entities/Journey.h"
+#include "Entities/Stop.h"
+#include "Entities/Trip.h"
 
 namespace CSA {
 
 using TransferGraph = ::TransferGraph;
 
 class Data {
-
-private:
+ private:
   Data() {}
 
-public:
+ public:
   Data(const std::string &fileName) { deserialize(fileName); }
 
   inline static Data FromBinary(const std::string &fileName) noexcept {
@@ -44,8 +41,8 @@ public:
     return data;
   }
 
-  inline static Data
-  FromIntermediate(const Intermediate::Data &inter) noexcept {
+  inline static Data FromIntermediate(
+      const Intermediate::Data &inter) noexcept {
     Data data;
     for (const Intermediate::Stop &stop : inter.stops) {
       data.stopData.emplace_back(stop);
@@ -89,23 +86,20 @@ public:
       if (con.arrivalStopId >= data.stopData.size() ||
           data.stopData[con.arrivalStopId].minTransferTime < 0)
         continue;
-      if (con.departureTime > con.arrivalTime)
-        continue;
-      if (con.tripId >= data.tripData.size())
-        continue;
+      if (con.departureTime > con.arrivalTime) continue;
+      if (con.tripId >= data.tripData.size()) continue;
       data.connections.emplace_back(con);
     }
     Intermediate::TransferGraph graph;
     Graph::move(std::move(transferGraph), graph);
-    if constexpr (MAKE_BIDIRECTIONAL)
-      graph.makeBidirectional();
+    if constexpr (MAKE_BIDIRECTIONAL) graph.makeBidirectional();
     graph.reduceMultiEdgesBy(TravelTime);
     graph.packEdges();
     Graph::move(std::move(graph), data.transferGraph);
     return data;
   }
 
-public:
+ public:
   inline size_t numberOfStops() const noexcept { return stopData.size(); }
   inline bool isStop(const Vertex stop) const noexcept {
     return stop < numberOfStops();
@@ -205,8 +199,7 @@ public:
       return departureTime <= arrivalTime;
     } else {
       Edge transferEdge = transferGraph.findEdge(source, target);
-      if (!transferGraph.isEdge(transferEdge))
-        return false;
+      if (!transferGraph.isEdge(transferEdge)) return false;
       return departureTime + transferGraph.get(TravelTime, transferEdge) <=
              arrivalTime;
     }
@@ -230,10 +223,8 @@ public:
 
   inline bool isCombinable(const Connection &first,
                            const Connection &second) const noexcept {
-    if (first.arrivalTime > second.departureTime)
-      return false;
-    if (first.tripId == second.tripId)
-      return true;
+    if (first.arrivalTime > second.departureTime) return false;
+    if (first.tripId == second.tripId) return true;
     return isCombinable<true>(first.arrivalStopId, first.arrivalTime,
                               second.departureStopId, second.departureTime);
   }
@@ -263,16 +254,15 @@ public:
                         arrivalTime);
   }
 
-  inline void
-  makeUndirectedTransitiveStopGraph(const bool verbose = false) noexcept {
+  inline void makeUndirectedTransitiveStopGraph(
+      const bool verbose = false) noexcept {
     Intermediate::TransferGraph graph;
     graph.addVertices(transferGraph.numVertices());
     for (const Vertex from : transferGraph.vertices()) {
       graph.set(Coordinates, from, transferGraph.get(Coordinates, from));
       for (const Edge edge : transferGraph.edgesFrom(from)) {
         const Vertex to = transferGraph.get(ToVertex, edge);
-        if (to >= stopData.size())
-          continue;
+        if (to >= stopData.size()) continue;
         graph.addEdge(from, to).set(TravelTime,
                                     transferGraph.get(TravelTime, edge));
       }
@@ -287,8 +277,7 @@ public:
     for (const Vertex v : transferGraph.vertices()) {
       graph.set(Coordinates, v, transferGraph.get(Coordinates, v));
       dijkstra.run(v, noVertex, [&](const Vertex u) {
-        if (u >= v)
-          return;
+        if (u >= v) return;
         const int travelTime = dijkstra.getDistance(u);
         graph.addEdge(v, u).set(TravelTime, travelTime);
         graph.addEdge(u, v).set(TravelTime, travelTime);
@@ -299,8 +288,8 @@ public:
     Graph::move(std::move(graph), transferGraph);
   }
 
-  inline void
-  makeDirectedTransitiveStopGraph(const bool verbose = false) noexcept {
+  inline void makeDirectedTransitiveStopGraph(
+      const bool verbose = false) noexcept {
     Intermediate::TransferGraph toZones;
     Intermediate::TransferGraph fromZones;
     Intermediate::TransferGraph newTransferGraph;
@@ -388,9 +377,9 @@ public:
     }
   }
 
-  inline void
-  applyVertexPermutation(const Permutation &permutation,
-                         const bool permutateStops = true) noexcept {
+  inline void applyVertexPermutation(
+      const Permutation &permutation,
+      const bool permutateStops = true) noexcept {
     Permutation splitPermutation = permutation.splitAt(numberOfStops());
     if (!permutateStops) {
       for (size_t i = 0; i < numberOfStops(); i++) {
@@ -416,15 +405,14 @@ public:
     applyStopPermutation(Permutation(Construct::Invert, order));
   }
 
-public:
+ public:
   inline const std::vector<Geometry::Point> &getCoordinates() const noexcept {
     return transferGraph[Coordinates];
   }
 
   inline std::string journeyToShortText(
       const std::vector<ConnectionId> &connectionList) const noexcept {
-    if (connectionList.empty())
-      return "";
+    if (connectionList.empty()) return "";
     std::stringstream text;
     TripId trip = connections[connectionList.front()].tripId;
     text << stopData[connections[connectionList.front()].departureStopId].name
@@ -432,8 +420,7 @@ public:
          << "] -> ";
     text << tripData[trip].tripName << "[" << trip << "] -> ";
     for (size_t i = 1; i < connectionList.size(); i++) {
-      if (connections[connectionList[i]].tripId == trip)
-        continue;
+      if (connections[connectionList[i]].tripId == trip) continue;
       trip = connections[connectionList[i]].tripId;
       text << stopData[connections[connectionList[i - 1]].arrivalStopId].name
            << "[" << connections[connectionList[i - 1]].arrivalStopId
@@ -451,8 +438,8 @@ public:
     return text.str();
   }
 
-  inline std::vector<std::string>
-  journeyToText(const Journey &journey) const noexcept {
+  inline std::vector<std::string> journeyToText(
+      const Journey &journey) const noexcept {
     std::vector<std::string> text;
     for (const JourneyLeg &leg : journey) {
       std::stringstream line;
@@ -545,8 +532,7 @@ public:
     Intermediate::TransferGraph topology;
     topology.addVertices(transferGraph.numVertices());
     for (const Connection &connection : connections) {
-      if (connection.departureStopId == connection.arrivalStopId)
-        continue;
+      if (connection.departureStopId == connection.arrivalStopId) continue;
       const size_t numEdges = topology.numEdges();
       const Edge newEdge = topology.findOrAddEdge(connection.departureStopId,
                                                   connection.arrivalStopId);
@@ -560,8 +546,7 @@ public:
     for (Vertex vertex : transferGraph.vertices()) {
       topology.set(Coordinates, vertex, transferGraph.get(Coordinates, vertex));
       for (Edge edge : transferGraph.edgesFrom(vertex)) {
-        if (vertex == transferGraph.get(ToVertex, edge))
-          continue;
+        if (vertex == transferGraph.get(ToVertex, edge)) continue;
         const size_t numEdges = topology.numEdges();
         const Edge newEdge =
             topology.findOrAddEdge(vertex, transferGraph.get(ToVertex, edge));
@@ -590,8 +575,7 @@ public:
     for (const Connection &connection : connections) {
       if (firstDay > connection.departureTime)
         firstDay = connection.departureTime;
-      if (lastDay < connection.arrivalTime)
-        lastDay = connection.arrivalTime;
+      if (lastDay < connection.arrivalTime) lastDay = connection.arrivalTime;
       departuresByStop[connection.departureStopId]++;
       arrivalsByStop[connection.arrivalStopId]++;
       connectionsByStop[connection.departureStopId]++;
@@ -599,8 +583,7 @@ public:
     }
     size_t numberOfIsolatedStops = 0;
     for (const StopId stop : stops()) {
-      if (transferGraph.outDegree(stop) == 0)
-        numberOfIsolatedStops++;
+      if (transferGraph.outDegree(stop) == 0) numberOfIsolatedStops++;
     }
     std::cout << "CSA public transit data:" << std::endl;
     std::cout << "   Number of Stops:           " << std::setw(12)
@@ -657,7 +640,7 @@ public:
     transferGraph.readBinary(fileName + ".graph");
   }
 
-private:
+ private:
   inline void permutate(const Permutation &fullPermutation,
                         const Permutation &stopPermutation) noexcept {
     AssertMsg(fullPermutation.size() == transferGraph.numVertices(),
@@ -679,7 +662,7 @@ private:
     transferGraph.applyVertexPermutation(fullPermutation);
   }
 
-public:
+ public:
   std::vector<Connection> connections;
   std::vector<Stop> stopData;
   std::vector<Trip> tripData;
@@ -687,4 +670,4 @@ public:
   TransferGraph transferGraph;
 };
 
-} // namespace CSA
+}  // namespace CSA

@@ -36,16 +36,16 @@ namespace karri {
 // closed labels always come earlier in this order than any open label. The
 // order of open labels is subject to cost updates for individual labels (i.e.
 // each bucket is used as a cost PQ in its own right).
-template <typename BucketEntryT> class LabelBucketContainer {
-
-private:
+template <typename BucketEntryT>
+class LabelBucketContainer {
+ private:
   struct BucketPosition {
     int start = 0;
     int numClosed = 0;
     int end = 0;
   };
 
-public:
+ public:
   using Label = BucketEntryT;
 
   struct Bucket {
@@ -62,7 +62,7 @@ public:
               entries.begin() + bucketPos.end};
     }
 
-  private:
+   private:
     friend LabelBucketContainer;
 
     Bucket(const BucketPosition &bucketPos,
@@ -164,9 +164,9 @@ public:
                [hole](const BucketEntryT &entry) { return entry == hole; });
   }
 
-private:
+ private:
   TimestampedVector<BucketPosition> bucketPositions;
   std::vector<BucketEntryT> entries;
 };
 
-} // namespace karri
+}  // namespace karri

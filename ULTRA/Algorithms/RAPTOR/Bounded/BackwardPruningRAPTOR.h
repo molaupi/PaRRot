@@ -6,22 +6,22 @@
 #include "../../../DataStructures/Container/Set.h"
 #include "../../../DataStructures/RAPTOR/Data.h"
 #include "../../../DataStructures/RAPTOR/Entities/ArrivalLabel.h"
-#include "ForwardPruningRAPTOR.h"
-
 #include "../Profiler.h"
+#include "ForwardPruningRAPTOR.h"
 
 namespace RAPTOR {
 
-template <typename PROFILER> class BackwardPruningRAPTOR {
-
-public:
+template <typename PROFILER>
+class BackwardPruningRAPTOR {
+ public:
   using Profiler = PROFILER;
   using Type = BackwardPruningRAPTOR<Profiler>;
 
-public:
+ public:
   struct EarliestArrivalLabel {
     EarliestArrivalLabel()
-        : arrivalTimeByRoute(never), arrivalTimeByTransfer(never),
+        : arrivalTimeByRoute(never),
+          arrivalTimeByTransfer(never),
           timestamp(0) {}
     int arrivalTimeByRoute;
     int arrivalTimeByTransfer;
@@ -41,16 +41,23 @@ public:
   };
   using Round = std::vector<EarliestArrivalLabel>;
 
-public:
+ public:
   BackwardPruningRAPTOR(
       const Data &data,
       const ForwardPruningRAPTOR<Profiler> &forwardPruningRAPTOR,
       Profiler &profiler)
-      : data(data), forwardPruningRAPTOR(forwardPruningRAPTOR), roundOffset(-1),
-        roundIndex(-1), maxTrips(-1), stopsUpdatedByRoute(data.numberOfStops()),
+      : data(data),
+        forwardPruningRAPTOR(forwardPruningRAPTOR),
+        roundOffset(-1),
+        roundIndex(-1),
+        maxTrips(-1),
+        stopsUpdatedByRoute(data.numberOfStops()),
         stopsUpdatedByTransfer(data.numberOfStops()),
-        routesServingUpdatedStops(data.numberOfRoutes()), sourceStop(noStop),
-        targetStop(noStop), sourceDepartureTime(intMax), timestamp(0),
+        routesServingUpdatedStops(data.numberOfRoutes()),
+        sourceStop(noStop),
+        targetStop(noStop),
+        sourceDepartureTime(intMax),
+        timestamp(0),
         profiler(profiler) {
     AssertMsg(data.hasImplicitBufferTimes(),
               "Departure buffer times have to be implicit!");
@@ -92,8 +99,9 @@ public:
         .arrivalTimeByTransfer;
   }
 
-private:
-  template <bool RESET = true> inline void clear() noexcept {
+ private:
+  template <bool RESET = true>
+  inline void clear() noexcept {
     roundIndex = roundOffset - 1;
     stopsUpdatedByRoute.clear();
     stopsUpdatedByTransfer.clear();
@@ -125,8 +133,7 @@ private:
       profiler.startPhase();
       scanRoutes();
       profiler.donePhase(PHASE_SCAN);
-      if (stopsUpdatedByRoute.empty())
-        break;
+      if (stopsUpdatedByRoute.empty()) break;
       profiler.startPhase();
       relaxTransfers();
       profiler.donePhase(PHASE_TRANSFERS);
@@ -179,14 +186,14 @@ private:
       const StopEvent *trip;
       trip = data.lastTripOfRoute(route);
       StopId stop = stops[stopIndex];
-      AssertMsg(trip[stopIndex].departureTime >=
-                    previousRoundLabel(stop).arrivalTimeByTransfer,
-                "Cannot scan a route after the last trip has departed (Route: "
-                    << route << ", Stop: " << stop
-                    << ", StopIndex: " << stopIndex << ", Time: "
-                    << previousRoundLabel(stop).arrivalTimeByTransfer
-                    << ", LastDeparture: " << trip[stopIndex].departureTime
-                    << ", RoundIndex: " << roundIndex << ")!");
+      AssertMsg(
+          trip[stopIndex].departureTime >=
+              previousRoundLabel(stop).arrivalTimeByTransfer,
+          "Cannot scan a route after the last trip has departed (Route: "
+              << route << ", Stop: " << stop << ", StopIndex: " << stopIndex
+              << ", Time: " << previousRoundLabel(stop).arrivalTimeByTransfer
+              << ", LastDeparture: " << trip[stopIndex].departureTime
+              << ", RoundIndex: " << roundIndex << ")!");
 
       StopIndex parentIndex = stopIndex;
       while (stopIndex < tripSize - 1) {
@@ -268,8 +275,7 @@ private:
             stop, maxTrips - roundIndex) > -time)
       return;
     EarliestArrivalLabel &label = currentRoundLabel(stop);
-    if (label.arrivalTimeByRoute <= time)
-      return;
+    if (label.arrivalTimeByRoute <= time) return;
     profiler.countMetric(METRIC_STOPS_BY_TRIP);
     label.setArrivalTimeByRoute(time);
     stopsUpdatedByRoute.insert(stop);
@@ -280,14 +286,13 @@ private:
             stop, maxTrips - roundIndex) > -time)
       return;
     EarliestArrivalLabel &label = currentRoundLabel(stop);
-    if (label.arrivalTimeByTransfer <= time)
-      return;
+    if (label.arrivalTimeByTransfer <= time) return;
     profiler.countMetric(METRIC_STOPS_BY_TRANSFER);
     label.arrivalTimeByTransfer = time;
     stopsUpdatedByTransfer.insert(stop);
   }
 
-private:
+ private:
   const Data &data;
   const ForwardPruningRAPTOR<Profiler> &forwardPruningRAPTOR;
 
@@ -308,4 +313,4 @@ private:
   Profiler &profiler;
 };
 
-} // namespace RAPTOR
+}  // namespace RAPTOR

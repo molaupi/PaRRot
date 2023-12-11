@@ -1,13 +1,11 @@
 #pragma once
 
-#include "../../CH/Query/BucketQuery.h"
-
 #include "../../../DataStructures/RAPTOR/Entities/ArrivalLabel.h"
 #include "../../../DataStructures/TripBased/Data.h"
 #include "../../../DataStructures/TripBased/RouteLabel.h"
+#include "../../CH/Query/BucketQuery.h"
 #include "../Query/Profiler.h"
 #include "../Query/ReachedIndex.h"
-
 #include "StopArrivalTimes.h"
 
 namespace TripBased {
@@ -15,13 +13,12 @@ namespace TripBased {
 template <typename PROFILER = NoProfiler,
           typename INITIAL_TRANSFERS = RAPTOR::BucketCHInitialTransfers>
 class ForwardPruningQuery {
-
-public:
+ public:
   using Profiler = PROFILER;
   using InitialTransferType = INITIAL_TRANSFERS;
   using Type = ForwardPruningQuery<Profiler, InitialTransferType>;
 
-private:
+ private:
   struct TripLabel {
     TripLabel(const StopEventId begin = noStopEvent,
               const StopEventId end = noStopEvent)
@@ -47,15 +44,25 @@ private:
     StopEventId firstEvent;
   };
 
-public:
+ public:
   ForwardPruningQuery(const Data &data, InitialTransferType &bucketQuery,
                       Profiler &profiler)
-      : data(data), bucketQuery(bucketQuery), queue(data.numberOfStopEvents()),
-        edgeRanges(data.numberOfStopEvents()), queueSize(0), reachedIndex(data),
-        stopArrivalTimes(data), targetLabels(1), minArrivalTime(INFTY),
-        edgeLabels(data.stopEventGraph.numEdges()), sourceVertex(noVertex),
-        targetVertex(noVertex), sourceDepartureTime(never), arrivalSlack(INFTY),
-        maxTrips(0), profiler(profiler) {
+      : data(data),
+        bucketQuery(bucketQuery),
+        queue(data.numberOfStopEvents()),
+        edgeRanges(data.numberOfStopEvents()),
+        queueSize(0),
+        reachedIndex(data),
+        stopArrivalTimes(data),
+        targetLabels(1),
+        minArrivalTime(INFTY),
+        edgeLabels(data.stopEventGraph.numEdges()),
+        sourceVertex(noVertex),
+        targetVertex(noVertex),
+        sourceDepartureTime(never),
+        arrivalSlack(INFTY),
+        maxTrips(0),
+        profiler(profiler) {
     for (const Edge edge : data.stopEventGraph.edges()) {
       edgeLabels[edge].stopEvent =
           StopEventId(data.stopEventGraph.get(ToVertex, edge) + 1);
@@ -88,8 +95,8 @@ public:
     return targetLabels[std::min(numTrips, targetLabels.size() - 1)];
   }
 
-  inline const std::vector<RAPTOR::ArrivalLabel> &
-  getAnchorLabels() const noexcept {
+  inline const std::vector<RAPTOR::ArrivalLabel> &getAnchorLabels()
+      const noexcept {
     return anchorLabels;
   }
 
@@ -100,7 +107,7 @@ public:
     return stopArrivalTimes(stop, round);
   }
 
-private:
+ private:
   inline void clear() noexcept {
     queueSize = 0;
     reachedIndex.clear();
@@ -127,8 +134,7 @@ private:
       }
     }
     for (const RouteId route : data.routes()) {
-      if (!reachedRoutes[route])
-        continue;
+      if (!reachedRoutes[route]) continue;
       const RouteLabel &label = routeLabels[route];
       const StopIndex endIndex = label.end();
       const TripId firstTrip = data.firstTripOfRoute[route];
@@ -136,14 +142,12 @@ private:
       for (StopIndex stopIndex(0); stopIndex < endIndex; stopIndex++) {
         const StopId stop = data.getStop(firstTrip, stopIndex);
         const int timeFromSource = bucketQuery.getForwardDistance(stop);
-        if (timeFromSource == INFTY)
-          continue;
+        if (timeFromSource == INFTY) continue;
         const int stopDepartureTime = sourceDepartureTime + timeFromSource;
         if (!label.findEarliestTrip(stopIndex, stopDepartureTime, tripIndex))
           continue;
         enqueue(firstTrip + tripIndex, StopIndex(stopIndex + 1));
-        if (tripIndex == 0)
-          break;
+        if (tripIndex == 0) break;
       }
     }
   }
@@ -160,8 +164,7 @@ private:
         profiler.countMetric(METRIC_SCANNED_TRIPS);
         for (StopEventId j = label.begin; j < label.end; j++) {
           profiler.countMetric(METRIC_SCANNED_STOPS);
-          if (data.arrivalEvents[j].arrivalTime >= minArrivalTime)
-            break;
+          if (data.arrivalEvents[j].arrivalTime >= minArrivalTime) break;
           const int timeToTarget =
               bucketQuery.getBackwardDistance(data.arrivalEvents[j].stop);
           if (timeToTarget != INFTY)
@@ -201,8 +204,7 @@ private:
 
   inline void enqueue(const TripId trip, const StopIndex index) noexcept {
     profiler.countMetric(METRIC_ENQUEUES);
-    if (reachedIndex.alreadyReached(trip, index))
-      return;
+    if (reachedIndex.alreadyReached(trip, index)) return;
     const StopEventId firstEvent = data.firstStopEventOfTrip[trip];
     queue[queueSize] = TripLabel(StopEventId(firstEvent + index),
                                  StopEventId(firstEvent + reachedIndex(trip)));
@@ -247,7 +249,7 @@ private:
     Vector::reverse(anchorLabels);
   }
 
-private:
+ private:
   const Data &data;
   InitialTransferType &bucketQuery;
 
@@ -274,4 +276,4 @@ private:
   Profiler &profiler;
 };
 
-} // namespace TripBased
+}  // namespace TripBased

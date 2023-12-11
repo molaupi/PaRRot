@@ -36,8 +36,8 @@ namespace karri::PickupAfterLastStopStrategies {
 struct PDPairAfterLastStopLabel {
   int pickupId = INVALID_ID;
   int dropoffId = INVALID_ID;
-  int directDistance =
-      INFTY; // Stored so it only has to be retrieved from direct distances once
+  int directDistance = INFTY;  // Stored so it only has to be retrieved from
+                               // direct distances once
   int distToPickup = INFTY;
 
   friend bool operator==(const PDPairAfterLastStopLabel &label1,
@@ -61,7 +61,6 @@ template <typename InputGraphT, typename CHEnvT, typename LastStopBucketsEnvT,
           typename DirectSearchesT, typename QueueT = AddressableQuadHeap,
           bool STALL_LABELS = false>
 class MinCostPairAfterLastStopQuery {
-
   using BucketContainer = LabelBucketContainer<PDPairAfterLastStopLabel>;
 
   using PDDistanceLabel = typename DirectSearchesT::DistanceLabel;
@@ -69,7 +68,7 @@ class MinCostPairAfterLastStopQuery {
   static constexpr int PD_K = DirectSearchesT::K;
   static constexpr int INVALID_DIST = -1;
 
-public:
+ public:
   MinCostPairAfterLastStopQuery(const InputGraphT &inputGraph,
                                 const Fleet &fleet, const CHEnvT &chEnv,
                                 const RouteState &routeState,
@@ -78,19 +77,26 @@ public:
                                 const LastStopBucketsEnvT &lastStopBucketsEnv,
                                 const RequestState &requestState,
                                 const InputConfig &inputConfig)
-      : inputGraph(inputGraph), ch(chEnv.getCH()),
-        queryGraph(ch.downwardGraph()), oppositeGraph(ch.upwardGraph()),
-        fleet(fleet), routeState(routeState), calculator(calculator),
+      : inputGraph(inputGraph),
+        ch(chEnv.getCH()),
+        queryGraph(ch.downwardGraph()),
+        oppositeGraph(ch.upwardGraph()),
+        fleet(fleet),
+        routeState(routeState),
+        calculator(calculator),
         lastStopBuckets(lastStopBucketsEnv.getBuckets()),
-        directSearches(directSearches), requestState(requestState),
-        inputConfig(inputConfig), reverseLabelBuckets(inputGraph.numVertices()),
-        reverseQueue(queryGraph.numVertices()), markedIndices(),
-        upperBoundCostWithConstraints(INFTY), bestCostWithoutConstraints(INFTY),
+        directSearches(directSearches),
+        requestState(requestState),
+        inputConfig(inputConfig),
+        reverseLabelBuckets(inputGraph.numVertices()),
+        reverseQueue(queryGraph.numVertices()),
+        markedIndices(),
+        upperBoundCostWithConstraints(INFTY),
+        bestCostWithoutConstraints(INFTY),
         bestAsgn() {}
 
   void run(const std::vector<int> &promisingDropoffIds,
            const int &bestKnownCost) {
-
     Timer timer;
 
     initQueryForRun(promisingDropoffIds, bestKnownCost);
@@ -141,11 +147,9 @@ public:
 
   int64_t getRunTime() const { return runTime; }
 
-private:
+ private:
   inline bool stopSearch() const {
-
-    if (reverseQueue.empty())
-      return true;
+    if (reverseQueue.empty()) return true;
 
     int v, minCostLowerBound;
     reverseQueue.min(v, minCostLowerBound);
@@ -174,7 +178,6 @@ private:
                                  (requestState.numPickups() % PD_K != 0);
     for (int pickupBatchIdx = 0; pickupBatchIdx < numPickupBatches;
          ++pickupBatchIdx) {
-
       // For each pickup in batch (using batched operations): Find dropoffs for
       // which an initial label with this pickup and dropoff needs to be
       // created.
@@ -202,8 +205,7 @@ private:
 
         for (int i = 0; i < dropoffIdsForInitialLabels.size(); ++i) {
           const int directDist = directDistsForInitialLabels[i][idxInBatch];
-          if (directDist == INVALID_DIST)
-            continue;
+          if (directDist == INVALID_DIST) continue;
 
           const auto &dropoff =
               requestState.dropoffs[dropoffIdsForInitialLabels[i]];
@@ -215,8 +217,7 @@ private:
           // and insert into the bucket at the right spot.
           const auto minCostOfLabel = lowerBoundCostOfLabel(initialLabel);
 
-          if (minCostOfLabel > upperBoundCostWithConstraints)
-            continue;
+          if (minCostOfLabel > upperBoundCostWithConstraints) continue;
           if (insertLabelAtVertexAndClean(tail, reverseLabelBuckets,
                                           initialLabel, minCostOfLabel)) {
             ++numInitialLabelsNotPruned;
@@ -243,8 +244,7 @@ private:
       isNewDominated |= batchInitialLabelDominates(
           dropoffIdsForInitialLabels[i], directDistsForInitialLabels[i],
           dropoff.id, distancesToDropoff);
-      if (allSet(isNewDominated))
-        return;
+      if (allSet(isNewDominated)) return;
     }
 
     int i = 0;
@@ -304,11 +304,10 @@ private:
     return maxCostDiff < 0;
   }
 
-  PDLabelMask
-  batchInitialLabelDominates(const unsigned int dropoffId1,
-                             const PDDistanceLabel &distancesToDropoff1,
-                             const unsigned int dropoffId2,
-                             const PDDistanceLabel &distancesToDropoff2) {
+  PDLabelMask batchInitialLabelDominates(
+      const unsigned int dropoffId1, const PDDistanceLabel &distancesToDropoff1,
+      const unsigned int dropoffId2,
+      const PDDistanceLabel &distancesToDropoff2) {
     static const PDDistanceLabel INVALID_DIST_LABEL =
         PDDistanceLabel(INVALID_DIST);
     static const PDDistanceLabel ZERO_DIST_LABEL = PDDistanceLabel(0);
@@ -371,16 +370,14 @@ private:
       FORALL_INCIDENT_EDGES(queryGraph, v, e) {
         ++numEdgeRelaxations;
         const auto w = queryGraph.edgeHead(e);
-        if (w == v)
-          continue;
+        if (w == v) continue;
         PDPairAfterLastStopLabel labelViaV = labelAtV;
         labelViaV.distToPickup += queryGraph.template get<CH::Weight>(e);
 
         // Check whether the lower bound of this label exceeds the current upper
         // bound for the cost of any assignment
         const auto minCostOfLabelViaV = lowerBoundCostOfLabel(labelViaV);
-        if (minCostOfLabelViaV > bestCostWithoutConstraints)
-          continue;
+        if (minCostOfLabelViaV > bestCostWithoutConstraints) continue;
 
         bool inserted = insertLabelAtVertexAndClean(
             w, reverseLabelBuckets, labelViaV, minCostOfLabelViaV);
@@ -425,7 +422,6 @@ private:
                                    BucketContainer &bucketContainer,
                                    const PDPairAfterLastStopLabel &newLabel,
                                    const int minCostOfNewLabel) {
-
     // Check if labelViaV is dominated by any closed labels at vertex.
     // Min cost of closed label at vertex <= max cost of closed label at vertex
     // <= max cost of new label at vertex
@@ -440,8 +436,7 @@ private:
     // Check if labelViaV is dominated by any open labels at vertex.
     auto openLabels = bucketContainer.getBucketOf(vertex).open();
     for (int i = 0; i < openLabels.size(); ++i) {
-      if (dominates(openLabels[i], newLabel))
-        return false;
+      if (dominates(openLabels[i], newLabel)) return false;
     }
 
     // Check if new label dominates any open labels
@@ -463,7 +458,7 @@ private:
 
     // Insert new label at the right spot into the open labels
     openLabels =
-        bucketContainer.getBucketOf(vertex).open(); // open labels changed
+        bucketContainer.getBucketOf(vertex).open();  // open labels changed
     if (openLabels.size() == 0) {
       bucketContainer.stableInsertOpenLabel(vertex, 0, newLabel);
       return true;
@@ -489,8 +484,7 @@ private:
   bool pruneLabel(const int v, const PDPairAfterLastStopLabel &label) {
     FORALL_INCIDENT_EDGES(oppositeGraph, v, e) {
       const auto w = oppositeGraph.edgeHead(e);
-      if (w == v)
-        continue;
+      if (w == v) continue;
       const auto &bucketAtW = reverseLabelBuckets.getBucketOf(w);
 
       // Check if labelAtW is dominated by any closed labels at w.
@@ -561,7 +555,6 @@ private:
 
   void scanVehicleBucket(const int rank,
                          const PDPairAfterLastStopLabel &label) {
-
     Assignment asgn;
     asgn.distFromPickup = 0;
     asgn.distFromDropoff = 0;
@@ -573,7 +566,6 @@ private:
 
     auto bucket = lastStopBuckets.getBucketOf(rank);
     for (const auto &entry : bucket) {
-
       // Scan bucket. Entries are ordered according to entry.distToTarget, i.e.
       // the distance from the last stop of the vehicle with id entry.targetId
       // to vertex v.
@@ -596,8 +588,7 @@ private:
                 std::max(asgn.pickup->walkingDist, minVehTimeTillDepAtPickup),
                 directDist, asgn.pickup->walkingDist, asgn.dropoff->walkingDist,
                 requestState);
-        if (lowerBoundCostForEarlyBreak > upperBoundCostWithConstraints)
-          break;
+        if (lowerBoundCostForEarlyBreak > upperBoundCostWithConstraints) break;
       }
 
       const int &vehId = entry.targetId;
@@ -618,12 +609,10 @@ private:
           calculator.calcWithoutHardConstraints(asgn, requestState);
 
       assert(bestCostWithoutConstraints <= upperBoundCostWithConstraints);
-      if (costIgnoringHardConstraints > bestCostWithoutConstraints)
-        continue;
+      if (costIgnoringHardConstraints > bestCostWithoutConstraints) continue;
 
       if (costIgnoringHardConstraints == bestCostWithoutConstraints) {
-        if (!breakCostTie(asgn, bestAsgn))
-          continue;
+        if (!breakCostTie(asgn, bestAsgn)) continue;
       }
 
       // If the cost is better than the best known cost for the vehicle or if
@@ -685,4 +674,4 @@ private:
   std::vector<unsigned int> dropoffIdsForInitialLabels;
   std::vector<PDDistanceLabel> directDistsForInitialLabels;
 };
-} // namespace karri::PickupAfterLastStopStrategies
+}  // namespace karri::PickupAfterLastStopStrategies

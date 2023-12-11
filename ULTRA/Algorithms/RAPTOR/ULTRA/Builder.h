@@ -6,7 +6,6 @@
 #include "../../../Helpers/Console/Progress.h"
 #include "../../../Helpers/MultiThreading.h"
 #include "../../../Helpers/Timer.h"
-
 #include "ShortcutSearch.h"
 
 namespace RAPTOR::ULTRA {
@@ -14,8 +13,7 @@ namespace RAPTOR::ULTRA {
 template <bool DEBUG = false, bool COUNT_OPTIMAL_CANDIDATES = false,
           bool IGNORE_ISOLATED_CANDIDATES = false>
 class Builder {
-
-public:
+ public:
   inline static constexpr bool Debug = DEBUG;
   inline static constexpr bool CountOptimalCandidates =
       COUNT_OPTIMAL_CANDIDATES;
@@ -23,7 +21,7 @@ public:
       IGNORE_ISOLATED_CANDIDATES;
   using Type = Builder<Debug, CountOptimalCandidates, IgnoreIsolatedCandidates>;
 
-public:
+ public:
   Builder(const Data &data) : data(data) {
     shortcutGraph.addVertices(data.numberOfStops());
     for (const Vertex vertex : shortcutGraph.vertices()) {
@@ -102,9 +100,9 @@ public:
     return shortcutGraph;
   }
 
-private:
+ private:
   const Data &data;
   DynamicTransferGraph shortcutGraph;
 };
 
-} // namespace RAPTOR::ULTRA
+}  // namespace RAPTOR::ULTRA

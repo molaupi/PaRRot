@@ -33,7 +33,7 @@
 // An attribute the OSM global ID of the OSM node associated with each vertex of
 // a graph.
 class OsmNodeIdAttribute : public AbstractAttribute<uint64_t> {
-public:
+ public:
   // Returns the attribute's default value.
   static Type defaultValue() { return std::numeric_limits<uint64_t>::max(); }
 
@@ -52,7 +52,7 @@ public:
     return values[v];
   }
 
-protected:
+ protected:
   static constexpr const char *NAME =
-      "osm_node_id"; // The attribute's unique name.
+      "osm_node_id";  // The attribute's unique name.
 };

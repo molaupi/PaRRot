@@ -4,17 +4,15 @@
 #include <string>
 #include <vector>
 
-#include "CHData.h"
-
 #include "../../../Helpers/Console/ProgressBar.h"
 #include "../../../Helpers/Timer.h"
 #include "../../../Helpers/Types.h"
+#include "CHData.h"
 
 namespace CH {
 
 class NoProfiler {
-
-public:
+ public:
   inline void initialize(Data *) noexcept {}
 
   inline void start() noexcept {}
@@ -40,8 +38,7 @@ public:
 };
 
 class TimeProfiler : public NoProfiler {
-
-public:
+ public:
   inline void start() noexcept {
     std::cout << "Start building CH." << std::flush;
     timer.restart();
@@ -53,13 +50,12 @@ public:
               << std::flush;
   }
 
-private:
+ private:
   Timer timer;
 };
 
 class ProgressProfiler : public NoProfiler {
-
-public:
+ public:
   inline void initialize(Data *data) noexcept { this->data = data; }
 
   inline void start() noexcept {
@@ -80,19 +76,30 @@ public:
               << std::flush;
   }
 
-private:
+ private:
   Timer timer;
   Data *data;
 };
 
 class FullProfiler : public NoProfiler {
-
-public:
+ public:
   FullProfiler()
-      : data(0), QBar(0), printTime(-1), expectedTime(-1), QTime(-1),
-        printCounter(0), maxLevel(0), contractions(0), shortcutsAdded(0),
-        shortcutsTested(0), inDegSum(0), outDegSum(0), witnessSearchTime(0),
-        witnessSearchCount(0), lastWitnessSearchCount(0), settledVertices(0),
+      : data(0),
+        QBar(0),
+        printTime(-1),
+        expectedTime(-1),
+        QTime(-1),
+        printCounter(0),
+        maxLevel(0),
+        contractions(0),
+        shortcutsAdded(0),
+        shortcutsTested(0),
+        inDegSum(0),
+        outDegSum(0),
+        witnessSearchTime(0),
+        witnessSearchCount(0),
+        lastWitnessSearchCount(0),
+        settledVertices(0),
         lastSettledVertices(0) {}
 
   inline void initialize(Data *data) noexcept {
@@ -192,8 +199,7 @@ public:
     contracted[vertex] = true;
     if ((timer.elapsedMilliseconds() > printTime + 2000) ||
         (data->order.size() % 200000 == 0)) {
-      if (printCounter % 50 == 0)
-        printHeader();
+      if (printCounter % 50 == 0) printHeader();
       printStatistics();
     }
   }
@@ -203,14 +209,12 @@ public:
   inline void addShortcut() noexcept { shortcutsAdded++; }
 
   inline void updateIncomingNeighbor(const Vertex vertex, const int) noexcept {
-    if (maxLevel < data->level[vertex])
-      maxLevel = data->level[vertex];
+    if (maxLevel < data->level[vertex]) maxLevel = data->level[vertex];
     inDegSum++;
   }
 
   inline void updateOutgoingNeighbor(const Vertex vertex, const int) noexcept {
-    if (maxLevel < data->level[vertex])
-      maxLevel = data->level[vertex];
+    if (maxLevel < data->level[vertex]) maxLevel = data->level[vertex];
     outDegSum++;
   }
 
@@ -225,7 +229,7 @@ public:
 
   inline void settledVertex() noexcept { settledVertices++; }
 
-private:
+ private:
   inline void printHeader() noexcept {
     std::cout << std::endl
               << std::setw(11) << "Contracted" << std::setw(11) << "Missing"
@@ -241,8 +245,7 @@ private:
   }
 
   inline void printStatistics() noexcept {
-    if (contractions == 0)
-      return;
+    if (contractions == 0) return;
     const double totalTime = timer.elapsedMilliseconds();
     const double roundTime = totalTime - printTime;
     const int contracted = data->order.size();
@@ -318,7 +321,7 @@ private:
     lastWitnessSearchCount = witnessSearchCount;
   }
 
-private:
+ private:
   Data *data;
   ProgressBar *QBar;
 
@@ -344,4 +347,4 @@ private:
   long long lastSettledVertices;
 };
 
-} // namespace CH
+}  // namespace CH

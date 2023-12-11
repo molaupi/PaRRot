@@ -10,8 +10,7 @@
 namespace RAPTOR {
 
 class RouteSegment {
-
-public:
+ public:
   RouteSegment(const RouteId routeId = noRouteId,
                const StopIndex stopIndex = noStopIndex)
       : routeId(routeId), stopIndex(stopIndex) {}
@@ -36,9 +35,9 @@ public:
            (routeId == other.routeId && stopIndex < other.stopIndex);
   }
 
-public:
+ public:
   RouteId routeId;
   StopIndex stopIndex;
 };
 
-} // namespace RAPTOR
+}  // namespace RAPTOR

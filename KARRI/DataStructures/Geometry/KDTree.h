@@ -37,7 +37,7 @@
 
 // A kd-tree for the problem of finding nearest neighbors.
 class KDTree {
-public:
+ public:
   // Constructs a kd-tree that stores the specified set of points.
   explicit KDTree(const std::vector<Point> &points) { buildKDTree(points); }
 
@@ -56,23 +56,23 @@ public:
     return closestPoint;
   }
 
-private:
+ private:
   // A (leaf or interior) node in the kd-tree.
   struct Node {
-    bool isLeaf;     // A flag that indicates whether this is a leaf or interior
-                     // node.
-    int8_t splitDim; // The dimension on which we split the record space.
-    int32_t splitVal; // The split value that defines the partition of the
-                      // record space.
+    bool isLeaf;  // A flag that indicates whether this is a leaf or interior
+                  // node.
+    int8_t splitDim;   // The dimension on which we split the record space.
+    int32_t splitVal;  // The split value that defines the partition of the
+                       // record space.
     union {
-      int32_t leftChild;   // The index of the left child of this node.
-      int32_t firstRecord; // The index of the first record in the bucket of
-                           // this node.
+      int32_t leftChild;    // The index of the left child of this node.
+      int32_t firstRecord;  // The index of the first record in the bucket of
+                            // this node.
     };
     union {
-      int32_t rightChild; // The index of the right child of this node.
-      int32_t lastRecord; // The index one past the last record in the bucket of
-                          // this node.
+      int32_t rightChild;  // The index of the right child of this node.
+      int32_t lastRecord;  // The index one past the last record in the bucket
+                           // of this node.
     };
   };
 
@@ -82,7 +82,7 @@ private:
     Point coordinates;
   };
 
-  static constexpr int BUCKET_SIZE = 16; // The number of records per bucket.
+  static constexpr int BUCKET_SIZE = 16;  // The number of records per bucket.
 
   // Builds a kd-tree that stores the specified set of points.
   void buildKDTree(const std::vector<Point> &points) {
@@ -206,8 +206,7 @@ private:
       auto &lowerBound = boundingBox.southWest()[node.splitDim];
       tmp = lowerBound;
       lowerBound = node.splitVal;
-      if (boundsIntersectBall())
-        findClosestPoint(tree[node.rightChild]);
+      if (boundsIntersectBall()) findClosestPoint(tree[node.rightChild]);
       lowerBound = tmp;
     } else {
       // Recursive call on the closer child.
@@ -221,8 +220,7 @@ private:
       auto &upperBound = boundingBox.northEast()[node.splitDim];
       tmp = upperBound;
       upperBound = node.splitVal;
-      if (boundsIntersectBall())
-        findClosestPoint(tree[node.leftChild]);
+      if (boundsIntersectBall()) findClosestPoint(tree[node.leftChild]);
       upperBound = tmp;
     }
   }
@@ -262,19 +260,20 @@ private:
     return distToBox < distToClosestPoint;
   }
 
-  std::vector<Node> tree;      // The nodes in the kd-tree.
-  std::vector<Record> buckets; // The buckets of the leaves concatenated.
+  std::vector<Node> tree;       // The nodes in the kd-tree.
+  std::vector<Record> buckets;  // The buckets of the leaves concatenated.
 
-  Point queryPoint; // The query point for which we search the nearest neighbor.
-  Rectangle boundingBox; // The bounds of the record space represented by the
-                         // current node.
-  int closestPoint;      // The closest point so far encountered.
-  int64_t distToClosestPoint; // The distance to the closest point.
+  Point
+      queryPoint;  // The query point for which we search the nearest neighbor.
+  Rectangle boundingBox;  // The bounds of the record space represented by the
+                          // current node.
+  int closestPoint;       // The closest point so far encountered.
+  int64_t distToClosestPoint;  // The distance to the closest point.
 
   std::vector<Record>
-      recordsByX; // During construction: records ordered by the x-coordinate.
+      recordsByX;  // During construction: records ordered by the x-coordinate.
   std::vector<Record>
-      recordsByY; // During construction: records ordered by the y-coordinate.
+      recordsByY;  // During construction: records ordered by the y-coordinate.
   std::vector<Record>
-      tmpStorage; // During construction: records larger than the split value.
+      tmpStorage;  // During construction: records larger than the split value.
 };

@@ -5,13 +5,14 @@
 namespace TripBased {
 
 class TimestampedWalkingDistanceData {
-
-public:
+ public:
   TimestampedWalkingDistanceData(const Data &data)
-      : data(data), labels(data.numberOfStopEvents(), INFTY),
-        timestamps(data.numberOfStopEvents(), 0), timestamp(0) {}
+      : data(data),
+        labels(data.numberOfStopEvents(), INFTY),
+        timestamps(data.numberOfStopEvents(), 0),
+        timestamp(0) {}
 
-public:
+ public:
   inline void clear() noexcept { timestamp++; }
 
   inline int operator()(const StopEventId stopEvent) noexcept {
@@ -24,8 +25,7 @@ public:
                                 const StopEventId tripEnd,
                                 const int walkingDistance) noexcept {
     for (StopEventId event = stopEvent; event < tripEnd; event++) {
-      if (getLabel(event) <= walkingDistance)
-        return event;
+      if (getLabel(event) <= walkingDistance) return event;
     }
     return tripEnd;
   }
@@ -39,14 +39,13 @@ public:
          currentStart += tripLength, currentEnd += tripLength) {
       for (StopEventId event = currentStart; event < currentEnd; event++) {
         int &label = getLabel(event);
-        if (label <= walkingDistance)
-          break;
+        if (label <= walkingDistance) break;
         label = walkingDistance;
       }
     }
   }
 
-private:
+ private:
   inline int &getLabel(const StopEventId stopEvent) noexcept {
     if (timestamps[stopEvent] != timestamp) {
       labels[stopEvent] = INFTY;
@@ -62,4 +61,4 @@ private:
   int timestamp;
 };
 
-} // namespace TripBased
+}  // namespace TripBased

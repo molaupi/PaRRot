@@ -24,11 +24,10 @@
 
 #pragma once
 
+#include <boost/dynamic_bitset.hpp>
 #include <cassert>
 #include <stack>
 #include <vector>
-
-#include <boost/dynamic_bitset.hpp>
 
 #include "Algorithms/GraphTraversal/DepthFirstSearch.h"
 #include "Tools/Workarounds.h"
@@ -39,14 +38,17 @@
 // instantiation of the general DFS template, implementing the needed hook
 // functions.
 class StronglyConnectedComponents {
-public:
+ public:
   // Constructs a DFS instance computing the SCCs of a graph.
   StronglyConnectedComponents()
-      : dfs(*this), currentNegatedDfsNumber(-2), largestScc(-1),
+      : dfs(*this),
+        currentNegatedDfsNumber(-2),
+        largestScc(-1),
         largestSccSize(0) {}
 
   // Computes the SCCs of the specified graph.
-  template <typename GraphT> void run(const GraphT graph) {
+  template <typename GraphT>
+  void run(const GraphT graph) {
     dfs.run(graph);
     for (const auto representative : components) {
       unused(representative);
@@ -74,11 +76,11 @@ public:
     return bitmask;
   }
 
-private:
+ private:
   // The DFS implementation is allowed to call the hook functions.
   friend class DepthFirstSearch<StronglyConnectedComponents>;
 
-  using StackT = std::stack<int, std::vector<int>>; // A stack of integers.
+  using StackT = std::stack<int, std::vector<int>>;  // A stack of integers.
 
   // Functions for marking and unmarking vertices as reached.
   bool hasBeenReached(const int v) const { return components[v] != -1; }
@@ -136,16 +138,16 @@ private:
   }
 
   DepthFirstSearch<StronglyConnectedComponents>
-      dfs; // DFS instance executing the actual search.
+      dfs;  // DFS instance executing the actual search.
 
-  std::vector<int> components; // Stores different kinds of information; see
-                               // member unmarkVertices.
-  StackT openRepresentatives; // Stores the (DFS numbers of the) representatives
-                              // of the open SCCs.
-  StackT openVertices;        // Stores all vertices that belong to an open SCC.
+  std::vector<int> components;  // Stores different kinds of information; see
+                                // member unmarkVertices.
+  StackT openRepresentatives;   // Stores the (DFS numbers of the)
+                               // representatives of the open SCCs.
+  StackT openVertices;  // Stores all vertices that belong to an open SCC.
 
-  int currentNegatedDfsNumber; // Maintains the current (negated) DFS number
-                               // during the DFS.
-  int largestScc; // The representative vertex of the largest SCC seen so far.
-  int largestSccSize; // The size of the largest SCC seen so far.
+  int currentNegatedDfsNumber;  // Maintains the current (negated) DFS number
+                                // during the DFS.
+  int largestScc;  // The representative vertex of the largest SCC seen so far.
+  int largestSccSize;  // The size of the largest SCC seen so far.
 };

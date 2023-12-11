@@ -35,8 +35,9 @@
 // A container maintaining distance labels. It stores a global clock and a
 // timestamp for each distance label. The timestamp indicates whether a distance
 // label has a valid value or not.
-template <typename DistanceLabelT> class StampedDistanceLabelContainer {
-public:
+template <typename DistanceLabelT>
+class StampedDistanceLabelContainer {
+ public:
   // Constructs a distance label container using timestamps.
   explicit StampedDistanceLabelContainer(const int numVertices) : clock(0) {
     resize(numVertices);
@@ -79,9 +80,10 @@ public:
     return distanceLabels[v];
   }
 
-private:
+ private:
   AlignedVector<DistanceLabelT>
-      distanceLabels;          // The distance labels of the vertices.
-  std::vector<int> timestamps; // The timestamps indicating if a label is valid.
-  int clock;                   // The global clock.
+      distanceLabels;  // The distance labels of the vertices.
+  std::vector<int>
+      timestamps;  // The timestamps indicating if a label is valid.
+  int clock;       // The global clock.
 };

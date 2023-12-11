@@ -35,8 +35,7 @@ namespace karri::PickupAfterLastStopStrategies {
 
 template <typename InputGraphT, typename PDDistancesT, typename DijLabelSet>
 struct DijkstraStrategy {
-
-private:
+ private:
   static constexpr int K = DijLabelSet::K;
   using DistanceLabel = typename DijLabelSet::DistanceLabel;
   using LabelMask = typename DijLabelSet::LabelMask;
@@ -45,13 +44,13 @@ private:
     TryToInsertPickupAfterLastStop(DijkstraStrategy &strategy,
                                    const CostCalculator &calculator,
                                    const RequestState &requestState)
-        : strategy(strategy), calculator(calculator),
+        : strategy(strategy),
+          calculator(calculator),
           requestState(requestState) {}
 
     template <typename DistLabelT, typename DistLabelContainerT>
     bool operator()(const int v, DistLabelT &distFromV,
                     const DistLabelContainerT & /*distLabels*/) {
-
       const DistanceLabel costLowerBound =
           calculator
               .calcCostLowerBoundForKPickupsAfterLastStopIndependentOfVehicle(
@@ -59,39 +58,44 @@ private:
                   requestState);
       const LabelMask bestCostExceeded =
           DistanceLabel(strategy.upperBoundCost) < costLowerBound;
-      if (allSet(bestCostExceeded))
-        return true;
+      if (allSet(bestCostExceeded)) return true;
 
       strategy.updateDistancesForLastStopsAt(v, distFromV);
       return false;
     }
 
-  private:
+   private:
     DijkstraStrategy &strategy;
     const CostCalculator &calculator;
     const RequestState &requestState;
   };
 
-public:
+ public:
   DijkstraStrategy(const InputGraphT &inputGraph,
                    const InputGraphT &reverseGraph, const Fleet &fleet,
                    const RouteState &routeState,
                    const LastStopsAtVertices &lastStopsAtVertices,
                    const CostCalculator &calculator, PDDistancesT &pdDistances,
                    RequestState &requestState, const InputConfig &inputConfig)
-      : inputGraph(inputGraph), reverseGraph(reverseGraph),
-        requestState(requestState), inputConfig(inputConfig),
-        pdDistances(pdDistances), calculator(calculator), fleet(fleet),
-        routeState(routeState), lastStopsAtVertices(lastStopsAtVertices),
+      : inputGraph(inputGraph),
+        reverseGraph(reverseGraph),
+        requestState(requestState),
+        inputConfig(inputConfig),
+        pdDistances(pdDistances),
+        calculator(calculator),
+        fleet(fleet),
+        routeState(routeState),
+        lastStopsAtVertices(lastStopsAtVertices),
         dijSearchToPickup(reverseGraph, {*this, calculator, requestState}),
-        lastStopDistances(fleet.size()), vehiclesSeen(fleet.size()) {}
+        lastStopDistances(fleet.size()),
+        vehiclesSeen(fleet.size()) {}
 
   void tryPickupAfterLastStop() {
     runDijkstraSearches();
     enumerateAssignments();
   }
 
-private:
+ private:
   void runDijkstraSearches() {
     numLastStopsVisited = 0;
     upperBoundCost = requestState.getBestCost();
@@ -132,10 +136,8 @@ private:
 
     Assignment asgn;
     for (const auto &vehId : vehiclesSeen) {
-
       const int numStops = routeState.numStopsOf(vehId);
-      if (numStops == 0)
-        continue;
+      if (numStops == 0) continue;
 
       asgn.vehicle = &fleet[vehId];
       asgn.pickupStopIdx = numStops - 1;
@@ -145,8 +147,7 @@ private:
         asgn.pickup = &p;
         asgn.distToPickup =
             lastStopDistances.getDistance(vehId, asgn.pickup->id);
-        if (asgn.distToPickup >= INFTY)
-          continue;
+        if (asgn.distToPickup >= INFTY) continue;
 
         // Compute cost lower bound for this pickup specifically
         const auto depTimeAtThisPickup = getActualDepTimeAtPickup(
@@ -164,8 +165,7 @@ private:
                 vehTimeTillDepAtThisPickup, psgTimeTillDepAtThisPickup,
                 minDirectDistForThisPickup, asgn.pickup->walkingDist, 0,
                 requestState);
-        if (minCost > requestState.getBestCost())
-          continue;
+        if (minCost > requestState.getBestCost()) continue;
 
         for (auto &d : requestState.dropoffs) {
           asgn.dropoff = &d;
@@ -188,7 +188,6 @@ private:
   }
 
   void runSearchesForPickupBatch(const int batchIdx) {
-
     std::array<int, K> pickupTails;
     std::array<int, K> offsets;
     for (int i = 0; i < K; ++i) {
@@ -196,7 +195,7 @@ private:
       if (curPickupIds[i] >= requestState.numPickups())
         curPickupIds[i] =
             batchIdx *
-            K; // fill last batch with copies of first pickup in batch
+            K;  // fill last batch with copies of first pickup in batch
       const auto &pickup = requestState.pickups[curPickupIds[i]];
       curWalkingDists[i] = pickup.walkingDist;
       curPassengerArrTimesAtPickups[i] =
@@ -216,9 +215,7 @@ private:
 
   void updateDistancesForLastStopsAt(const int v,
                                      const DistanceLabel &distFromV) {
-
-    if (!lastStopsAtVertices.isAnyLastStopAtVertex(v))
-      return;
+    if (!lastStopsAtVertices.isAnyLastStopAtVertex(v)) return;
 
     const auto minCost =
         calculator
@@ -228,8 +225,7 @@ private:
     LabelMask notExceedingUpperBound =
         ~(DistanceLabel(upperBoundCost) < minCost);
 
-    if (!anySet(notExceedingUpperBound))
-      return;
+    if (!anySet(notExceedingUpperBound)) return;
 
     for (const auto &vehId : lastStopsAtVertices.vehiclesWithLastStopAt(v)) {
       ++numLastStopsVisited;
@@ -275,4 +271,4 @@ private:
   Subset vehiclesSeen;
 };
 
-} // namespace karri::PickupAfterLastStopStrategies
+}  // namespace karri::PickupAfterLastStopStrategies

@@ -4,15 +4,13 @@
 #include <string>
 #include <vector>
 
-#include "CH.h"
-#include "Preprocessing/CHData.h"
-
-#include "../DepthFirstSearch.h"
-
 #include "../../Helpers/Helpers.h"
 #include "../../Helpers/String/String.h"
 #include "../../Helpers/Vector/Permutation.h"
 #include "../../Helpers/Vector/Vector.h"
+#include "../DepthFirstSearch.h"
+#include "CH.h"
+#include "Preprocessing/CHData.h"
 
 namespace CH {
 
@@ -41,9 +39,8 @@ inline std::vector<Vertex> getOrder(const CH &ch) noexcept {
   return coreOrder;
 }
 
-inline std::vector<uint16_t>
-vertexLevelTopDown(const CHGraph &ch,
-                   const std::vector<Vertex> &order) noexcept {
+inline std::vector<uint16_t> vertexLevelTopDown(
+    const CHGraph &ch, const std::vector<Vertex> &order) noexcept {
   std::vector<uint16_t> level(order.size(), 0);
   for (Vertex vertex : descending(order)) {
     for (Edge edge : ch.edgesFrom(vertex)) {
@@ -54,12 +51,11 @@ vertexLevelTopDown(const CHGraph &ch,
   return level;
 }
 
-inline std::vector<uint16_t>
-vertexLevelTopDown(const CH &ch, const std::vector<Vertex> &order) noexcept {
+inline std::vector<uint16_t> vertexLevelTopDown(
+    const CH &ch, const std::vector<Vertex> &order) noexcept {
   std::vector<uint16_t> level(order.size(), 0);
   for (Vertex vertex : descending(order)) {
-    if (ch.isCoreVertex(vertex))
-      continue;
+    if (ch.isCoreVertex(vertex)) continue;
     for (Edge edge : ch.forward.edgesFrom(vertex)) {
       level[vertex] = std::max<uint16_t>(
           level[vertex], level[ch.forward.get(ToVertex, edge)] + 1);
@@ -72,12 +68,11 @@ vertexLevelTopDown(const CH &ch, const std::vector<Vertex> &order) noexcept {
   return level;
 }
 
-inline std::vector<uint16_t>
-vertexLevelBottomUp(const CH &ch, const std::vector<Vertex> &order) noexcept {
+inline std::vector<uint16_t> vertexLevelBottomUp(
+    const CH &ch, const std::vector<Vertex> &order) noexcept {
   std::vector<uint16_t> level(order.size(), 0);
   for (Vertex vertex : order) {
-    if (ch.isCoreVertex(vertex))
-      continue;
+    if (ch.isCoreVertex(vertex)) continue;
     for (Edge edge : ch.forward.edgesFrom(vertex)) {
       level[ch.forward.get(ToVertex, edge)] = std::max<uint16_t>(
           level[vertex] + 1, level[ch.forward.get(ToVertex, edge)]);
@@ -90,8 +85,8 @@ vertexLevelBottomUp(const CH &ch, const std::vector<Vertex> &order) noexcept {
   return level;
 }
 
-inline std::vector<std::vector<Vertex>>
-verticesByLevel(const CH &ch, const std::vector<uint16_t> &level) noexcept {
+inline std::vector<std::vector<Vertex>> verticesByLevel(
+    const CH &ch, const std::vector<uint16_t> &level) noexcept {
   std::vector<std::vector<Vertex>> verticesByLevel;
   for (Vertex vertex : ch.vertices()) {
     if (verticesByLevel.size() <= level[vertex])
@@ -101,8 +96,8 @@ verticesByLevel(const CH &ch, const std::vector<uint16_t> &level) noexcept {
   return verticesByLevel;
 }
 
-inline std::vector<size_t>
-verticesPerLevel(const CH &ch, const std::vector<uint16_t> &level) noexcept {
+inline std::vector<size_t> verticesPerLevel(
+    const CH &ch, const std::vector<uint16_t> &level) noexcept {
   std::vector<size_t> verticesPerLevel;
   for (Vertex vertex : ch.vertices()) {
     if (verticesPerLevel.size() <= level[vertex])
@@ -112,15 +107,13 @@ verticesPerLevel(const CH &ch, const std::vector<uint16_t> &level) noexcept {
   return verticesPerLevel;
 }
 
-inline std::vector<std::vector<Vertex>>
-verticesByLevelTopDown(const CH &ch,
-                       const std::vector<Vertex> &order) noexcept {
+inline std::vector<std::vector<Vertex>> verticesByLevelTopDown(
+    const CH &ch, const std::vector<Vertex> &order) noexcept {
   return verticesByLevel(ch, vertexLevelTopDown(ch, order));
 }
 
-inline std::vector<size_t>
-verticesPerLevelTopDown(const CH &ch,
-                        const std::vector<Vertex> &order) noexcept {
+inline std::vector<size_t> verticesPerLevelTopDown(
+    const CH &ch, const std::vector<Vertex> &order) noexcept {
   return verticesPerLevel(ch, vertexLevelTopDown(ch, order));
 }
 
@@ -129,15 +122,13 @@ inline std::vector<Vertex> getLevelOrderTopDown(const CH &ch) noexcept {
       verticesByLevel(ch, vertexLevelTopDown(ch, getOrder(ch))));
 }
 
-inline std::vector<std::vector<Vertex>>
-verticesByLevelBottomUp(const CH &ch,
-                        const std::vector<Vertex> &order) noexcept {
+inline std::vector<std::vector<Vertex>> verticesByLevelBottomUp(
+    const CH &ch, const std::vector<Vertex> &order) noexcept {
   return verticesByLevel(ch, vertexLevelTopDown(ch, order));
 }
 
-inline std::vector<size_t>
-verticesPerLevelBottomUp(const CH &ch,
-                         const std::vector<Vertex> &order) noexcept {
+inline std::vector<size_t> verticesPerLevelBottomUp(
+    const CH &ch, const std::vector<Vertex> &order) noexcept {
   return verticesPerLevel(ch, vertexLevelBottomUp(ch, order));
 }
 
@@ -180,9 +171,10 @@ inline Data expandData(const CH &ch) noexcept {
 }
 
 template <typename GRAPH>
-inline std::vector<Vertex>
-unpackShortcut(const GRAPH &forward, const GRAPH &backward, const Vertex from,
-               const Vertex via, const Vertex to) noexcept {
+inline std::vector<Vertex> unpackShortcut(const GRAPH &forward,
+                                          const GRAPH &backward,
+                                          const Vertex from, const Vertex via,
+                                          const Vertex to) noexcept {
   struct Shortcut {
     const Vertex via;
     const Vertex to;
@@ -251,20 +243,13 @@ inline void analyze(const CH &ch, const std::vector<Vertex> &order,
     }
   }
   for (size_t v = 0; v < inDegree.size(); v++) {
-    if (inDegree[v] == 0 && outDegree[v] == 0)
-      isolatedVertexCount++;
-    if (inDegree[v] == 0)
-      sourceCount++;
-    if (outDegree[v] == 0)
-      sinkCount++;
-    if (inDegree[v] < minInDegree)
-      minInDegree = inDegree[v];
-    if (inDegree[v] > maxInDegree)
-      maxInDegree = inDegree[v];
-    if (outDegree[v] < minOutDegree)
-      minOutDegree = outDegree[v];
-    if (outDegree[v] > maxOutDegree)
-      maxOutDegree = outDegree[v];
+    if (inDegree[v] == 0 && outDegree[v] == 0) isolatedVertexCount++;
+    if (inDegree[v] == 0) sourceCount++;
+    if (outDegree[v] == 0) sinkCount++;
+    if (inDegree[v] < minInDegree) minInDegree = inDegree[v];
+    if (inDegree[v] > maxInDegree) maxInDegree = inDegree[v];
+    if (outDegree[v] < minOutDegree) minOutDegree = outDegree[v];
+    if (outDegree[v] > maxOutDegree) maxOutDegree = outDegree[v];
   }
   int tabSize = 18;
   out << std::right;
@@ -298,4 +283,4 @@ inline void analyze(const CH &ch, std::ostream &out = std::cout) noexcept {
   analyze(ch, getOrder(ch), out);
 }
 
-} // namespace CH
+}  // namespace CH

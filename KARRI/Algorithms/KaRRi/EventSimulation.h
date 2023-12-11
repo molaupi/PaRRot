@@ -37,7 +37,6 @@ namespace karri {
 template <typename AssignmentFinderT, typename SystemStateUpdaterT,
           typename ScheduledStopsT>
 class EventSimulation {
-
   enum VehicleState { OUT_OF_SERVICE, IDLING, DRIVING, STOPPING };
 
   enum RequestState {
@@ -56,32 +55,38 @@ class EventSimulation {
     int assignmentCost;
   };
 
-public:
+ public:
   EventSimulation(const Fleet &fleet, const std::vector<Request> &requests,
                   const int stopTime, AssignmentFinderT &assignmentFinder,
                   SystemStateUpdaterT &systemStateUpdater,
                   const ScheduledStopsT &scheduledStops,
                   const bool verbose = false)
-      : fleet(fleet), requests(requests), stopTime(stopTime),
+      : fleet(fleet),
+        requests(requests),
+        stopTime(stopTime),
         assignmentFinder(assignmentFinder),
-        systemStateUpdater(systemStateUpdater), scheduledStops(scheduledStops),
-        vehicleEvents(fleet.size()), requestEvents(requests.size()),
+        systemStateUpdater(systemStateUpdater),
+        scheduledStops(scheduledStops),
+        vehicleEvents(fleet.size()),
+        requestEvents(requests.size()),
         vehicleState(fleet.size(), OUT_OF_SERVICE),
         requestState(requests.size(), NOT_RECEIVED),
         requestData(requests.size(), RequestData()),
-        eventSimulationStatsLogger(LogManager<std::ofstream>::getLogger(
-            "eventsimulationstats.csv", "occurrence_time,"
-                                        "type,"
-                                        "running_time\n")),
-        assignmentQualityStats(LogManager<std::ofstream>::getLogger(
-            "assignmentquality.csv", "request_id,"
-                                     "arr_time,"
-                                     "wait_time,"
-                                     "ride_time,"
-                                     "trip_time,"
-                                     "walk_to_pickup_time,"
-                                     "walk_to_dropoff_time,"
-                                     "cost\n")),
+        eventSimulationStatsLogger(
+            LogManager<std::ofstream>::getLogger("eventsimulationstats.csv",
+                                                 "occurrence_time,"
+                                                 "type,"
+                                                 "running_time\n")),
+        assignmentQualityStats(
+            LogManager<std::ofstream>::getLogger("assignmentquality.csv",
+                                                 "request_id,"
+                                                 "arr_time,"
+                                                 "wait_time,"
+                                                 "ride_time,"
+                                                 "trip_time,"
+                                                 "walk_to_pickup_time,"
+                                                 "walk_to_dropoff_time,"
+                                                 "cost\n")),
         legStatsLogger(LogManager<std::ofstream>::getLogger("legstats.csv",
                                                             "vehicle_id,"
                                                             "stop_time,"
@@ -97,7 +102,6 @@ public:
   }
 
   void run() {
-
     while (!(vehicleEvents.empty() && requestEvents.empty())) {
       // Pop next event from either queue. Request event has precedence if at
       // the same time as vehicle event.
@@ -126,44 +130,44 @@ public:
     }
   }
 
-private:
+ private:
   void handleVehicleEvent(const int vehId, const int occTime) {
     switch (vehicleState[vehId]) {
-    case OUT_OF_SERVICE:
-      handleVehicleStartup(vehId, occTime);
-      break;
-    case IDLING:
-      handleVehicleShutdown(vehId, occTime);
-      break;
-    case DRIVING:
-      handleVehicleArrivalAtStop(vehId, occTime);
-      break;
-    case STOPPING:
-      handleVehicleDepartureFromStop(vehId, occTime);
-      break;
-    default:
-      break;
+      case OUT_OF_SERVICE:
+        handleVehicleStartup(vehId, occTime);
+        break;
+      case IDLING:
+        handleVehicleShutdown(vehId, occTime);
+        break;
+      case DRIVING:
+        handleVehicleArrivalAtStop(vehId, occTime);
+        break;
+      case STOPPING:
+        handleVehicleDepartureFromStop(vehId, occTime);
+        break;
+      default:
+        break;
     }
   }
 
   void handleRequestEvent(const int reqId, const int occTime) {
     switch (requestState[reqId]) {
-    case NOT_RECEIVED:
-      handleRequestReceipt(reqId, occTime);
-      break;
-    case ASSIGNED_TO_VEH:
-      // When assigned to a vehicle, there should be no request event until the
-      // dropoff. At that point the request state becomes WALKING_TO_DEST.
-      assert(false);
-      break;
-    case WALKING_TO_DEST:
-      handleWalkingArrivalAtDest(reqId, occTime);
-      break;
-    case FINISHED:
-      assert(false);
-      break;
-    default:
-      break;
+      case NOT_RECEIVED:
+        handleRequestReceipt(reqId, occTime);
+        break;
+      case ASSIGNED_TO_VEH:
+        // When assigned to a vehicle, there should be no request event until
+        // the dropoff. At that point the request state becomes WALKING_TO_DEST.
+        assert(false);
+        break;
+      case WALKING_TO_DEST:
+        handleWalkingArrivalAtDest(reqId, occTime);
+        break;
+      case FINISHED:
+        assert(false);
+        break;
+      default:
+        break;
     }
   }
 
@@ -298,7 +302,7 @@ private:
 
     int id, key;
     requestEvents.deleteMin(
-        id, key); // event for walking arrival at dest inserted at dropoff
+        id, key);  // event for walking arrival at dest inserted at dropoff
     assert(id == reqId && key == occTime);
 
     const auto &bestAsgn = asgnFinderResponse.getBestAssignment();
@@ -320,23 +324,23 @@ private:
 
     const auto vehId = bestAsgn.vehicle->vehicleId;
     switch (vehicleState[vehId]) {
-    case STOPPING:
-      // Update event time to departure time at current stop since it may have
-      // changed
-      vehicleEvents.updateKey(
-          vehId, scheduledStops.getCurrentOrPrevScheduledStop(vehId).depTime);
-      break;
-    case IDLING:
-      vehicleState[vehId] = VehicleState::DRIVING;
-      [[fallthrough]];
-    case DRIVING:
-      // Update event time to arrival time at next stop since it may have
-      // changed (also for case of idling).
-      vehicleEvents.updateKey(
-          vehId, scheduledStops.getNextScheduledStop(vehId).arrTime);
-      [[fallthrough]];
-    default:
-      break;
+      case STOPPING:
+        // Update event time to departure time at current stop since it may have
+        // changed
+        vehicleEvents.updateKey(
+            vehId, scheduledStops.getCurrentOrPrevScheduledStop(vehId).depTime);
+        break;
+      case IDLING:
+        vehicleState[vehId] = VehicleState::DRIVING;
+        [[fallthrough]];
+      case DRIVING:
+        // Update event time to arrival time at next stop since it may have
+        // changed (also for case of idling).
+        vehicleEvents.updateKey(
+            vehId, scheduledStops.getNextScheduledStop(vehId).arrTime);
+        [[fallthrough]];
+      default:
+        break;
     }
   }
 
@@ -386,4 +390,4 @@ private:
   std::ofstream &legStatsLogger;
   ProgressBar progressBar;
 };
-} // namespace karri
+}  // namespace karri

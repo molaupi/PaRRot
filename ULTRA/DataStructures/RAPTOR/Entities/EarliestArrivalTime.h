@@ -56,4 +56,4 @@ struct CombinedEarliestArrivalTime {
 template <bool SEPARATE>
 using EarliestArrivalTime = Meta::IF<SEPARATE, SeparatedEarliestArrivalTime,
                                      CombinedEarliestArrivalTime>;
-} // namespace RAPTOR
+}  // namespace RAPTOR

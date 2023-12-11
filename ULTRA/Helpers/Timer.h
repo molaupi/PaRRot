@@ -3,8 +3,7 @@
 #include <sys/time.h>
 
 class Timer {
-
-public:
+ public:
   Timer() : start(timestamp()) {}
 
   inline void restart() noexcept { start = timestamp(); }
@@ -24,7 +23,7 @@ public:
     start = cur - targetTime;
   }
 
-private:
+ private:
   inline static double timestamp() noexcept {
     timeval tp;
     gettimeofday(&tp, nullptr);
@@ -32,6 +31,6 @@ private:
     return (tp.tv_sec * 1000000.0) + mus;
   }
 
-private:
+ private:
   double start;
 };

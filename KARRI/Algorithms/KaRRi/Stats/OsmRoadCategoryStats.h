@@ -30,7 +30,6 @@ namespace karri::stats {
 
 // Statistics about the OSM road categories of edges considered for PDLocs.
 struct OsmRoadCategoryStats {
-
   OsmRoadCategoryStats() : counts() { counts.fill(0); }
 
   void incCountForCat(const OsmRoadCategory &cat) {
@@ -41,8 +40,7 @@ struct OsmRoadCategoryStats {
   friend inline std::ostream &operator<<(std::ostream &os,
                                          const OsmRoadCategoryStats &stats) {
     uint64_t totalCount = 0;
-    for (const auto &c : stats.counts)
-      totalCount += c;
+    for (const auto &c : stats.counts) totalCount += c;
 
     os << "\n"
        << "Road categories of PDLocs:\nTotal count: " << totalCount << "\n";
@@ -56,20 +54,18 @@ struct OsmRoadCategoryStats {
 
   std::string getLoggerRow() const {
     std::stringstream ss;
-    for (int i = 0; i < NUM_OSM_ROAD_CATEGORIES; ++i)
-      ss << counts[i] << ", ";
+    for (int i = 0; i < NUM_OSM_ROAD_CATEGORIES; ++i) ss << counts[i] << ", ";
 
     uint64_t totalCount = 0;
-    for (const auto &c : counts)
-      totalCount += c;
+    for (const auto &c : counts) totalCount += c;
     ss << totalCount;
     return ss.str();
   }
 
-private:
+ private:
   std::array<uint32_t, NUM_OSM_ROAD_CATEGORIES> counts;
 
-public:
+ public:
   static constexpr auto LOGGER_NAME = "road_cats_of_pdlocs.csv";
   static std::string getLoggerCols() {
     std::stringstream header;
@@ -80,4 +76,4 @@ public:
   }
 };
 
-} // namespace karri::stats
+}  // namespace karri::stats

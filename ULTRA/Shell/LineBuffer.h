@@ -1,18 +1,18 @@
 #pragma once
 
+#include <sys/ioctl.h>
+
 #include <algorithm>
 #include <fstream>
 #include <iostream>
 #include <sstream>
 #include <string>
-#include <sys/ioctl.h>
 #include <vector>
-
-#include "Command.h"
 
 #include "../Helpers/FileSystem/FileSystem.h"
 #include "../Helpers/String/String.h"
 #include "../Helpers/Vector/Vector.h"
+#include "Command.h"
 
 namespace Shell {
 
@@ -29,15 +29,14 @@ inline size_t getScreenHeight() {
 }
 
 class LineBuffer {
-
-private:
+ private:
   struct CursorPosition {
     CursorPosition(const size_t x, const size_t y) : x(x), y(y) {}
     size_t x;
     size_t y;
   };
 
-public:
+ public:
   LineBuffer(std::ostream &out)
       : out(out), firstCharColumn(0), cursorCouldBeOffScreen(false) {}
 
@@ -132,8 +131,7 @@ public:
   }
 
   inline void operator<<(const std::string &s) noexcept {
-    if (s.empty())
-      return;
+    if (s.empty()) return;
     for (const char c : s) {
       prefix.emplace_back(c);
       out << c;
@@ -145,8 +143,7 @@ public:
   }
 
   inline void clear() noexcept {
-    if (prefix.empty() && suffix.empty())
-      return;
+    if (prefix.empty() && suffix.empty()) return;
     moveCursorLeft(prefix.size(), prefix.size());
     out << whiteSpace(prefix.size() + suffix.size());
     cursorCouldBeOffScreen = true;
@@ -219,7 +216,7 @@ public:
     out << std::flush;
   }
 
-private:
+ private:
   inline void cursorLeft() noexcept { out << "\x1b[1D"; }
 
   inline void cursorRight() noexcept { out << "\x1b[1C"; }
@@ -232,8 +229,7 @@ private:
 
   inline void moveCursorLeft(const size_t textSize,
                              const size_t amount = 1) noexcept {
-    if (amount == 0)
-      return;
+    if (amount == 0) return;
     AssertMsg(textSize >= amount,
               "Cannot move left for "
                   << amount << " steps, because the buffer contains only "
@@ -266,9 +262,8 @@ private:
     return ss.str();
   }
 
-  inline CursorPosition
-  getCursorPosition(const size_t textSize,
-                    const bool cursorCouldBeOffScreen) const noexcept {
+  inline CursorPosition getCursorPosition(
+      const size_t textSize, const bool cursorCouldBeOffScreen) const noexcept {
     const size_t screenWidth = getScreenWidth();
     size_t x = (firstCharColumn + textSize) % screenWidth;
     size_t y = (firstCharColumn + textSize) / screenWidth;
@@ -291,7 +286,7 @@ private:
     }
   }
 
-private:
+ private:
   std::ostream &out;
 
   std::vector<char> prefix;
@@ -302,4 +297,4 @@ private:
   bool cursorCouldBeOffScreen;
 };
 
-} // namespace Shell
+}  // namespace Shell

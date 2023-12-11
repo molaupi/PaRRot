@@ -31,7 +31,7 @@
 
 // An attribute associating a LatLng with each vertex of a graph.
 class LatLngAttribute : public AbstractAttribute<LatLng> {
-public:
+ public:
   // Returns the LatLng of vertex v.
   const Type &latLng(const int v) const {
     assert(v >= 0);
@@ -46,6 +46,7 @@ public:
     return values[v];
   }
 
-protected:
-  static constexpr const char *NAME = "lat_lng"; // The attribute's unique name.
+ protected:
+  static constexpr const char *NAME =
+      "lat_lng";  // The attribute's unique name.
 };

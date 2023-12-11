@@ -38,11 +38,13 @@ namespace bidij {
 // The stopping criterion for a standard bidirectional search that computes k
 // shortest paths. We can stop the search as soon as mu_i <= Qf.minKey +
 // Qr.minKey for all i = 1, ..., k.
-template <typename QueueT> struct StoppingCriterion {
+template <typename QueueT>
+struct StoppingCriterion {
   // Constructs a stopping criterion for a standard bidirectional search.
   StoppingCriterion(const QueueT &forwardQueue, const QueueT &reverseQueue,
                     const int &maxTentativeDistance)
-      : forwardQueue(forwardQueue), reverseQueue(reverseQueue),
+      : forwardQueue(forwardQueue),
+        reverseQueue(reverseQueue),
         maxTentativeDistance(maxTentativeDistance) {}
 
   // Returns true if we can stop the forward search.
@@ -59,12 +61,12 @@ template <typename QueueT> struct StoppingCriterion {
                forwardQueue.minKey() + reverseQueue.minKey();
   }
 
-  const QueueT &forwardQueue;      // The priority queue of the forward search.
-  const QueueT &reverseQueue;      // The priority queue of the reverse search.
-  const int &maxTentativeDistance; // The largest of all k tentative distances.
+  const QueueT &forwardQueue;       // The priority queue of the forward search.
+  const QueueT &reverseQueue;       // The priority queue of the reverse search.
+  const int &maxTentativeDistance;  // The largest of all k tentative distances.
 };
 
-} // namespace bidij
+}  // namespace bidij
 
 // Implementation of a bidirectional search. Depending on the underlying
 // Dijkstra implementation, it keeps parent vertices and/or edges, and computes
@@ -74,19 +76,20 @@ template <typename QueueT> struct StoppingCriterion {
 template <typename DijkstraT, template <typename> class StoppingCriterionT =
                                   bidij::StoppingCriterion>
 class BiDijkstra {
-private:
+ private:
   static constexpr int K =
-      DijkstraT::K; // The number of simultaneous shortest-path computations.
+      DijkstraT::K;  // The number of simultaneous shortest-path computations.
 
   using StoppingCriterion = StoppingCriterionT<typename DijkstraT::Queue>;
   using DistanceLabel = typename DijkstraT::DistanceLabel;
   using ParentLabel = typename DijkstraT::ParentLabel;
 
-  template <typename, typename> friend class FindPDLocsInRadiusQuery;
+  template <typename, typename>
+  friend class FindPDLocsInRadiusQuery;
 
-public:
-  using Graph = typename DijkstraT::Graph; // The graph on which we compute
-                                           // shortest paths.
+ public:
+  using Graph = typename DijkstraT::Graph;  // The graph on which we compute
+                                            // shortest paths.
 
   // Constructs a bidirectional search instance.
   BiDijkstra(const Graph &forwardGraph, const Graph &reverseGraph,
@@ -140,7 +143,7 @@ public:
     while (!stoppingCriterion.stopForwardSearch() ||
            !stoppingCriterion.stopReverseSearch()) {
       advanceForward =
-          !advanceForward; // Alternate between the forward and reverse search.
+          !advanceForward;  // Alternate between the forward and reverse search.
       if ((advanceForward && !stoppingCriterion.stopForwardSearch()) ||
           stoppingCriterion.stopReverseSearch())
         updateTentativeDistances(forwardSearch.settleNextVertex());
@@ -167,7 +170,7 @@ public:
     return reverseSearch.getReverseEdgePath(meetingVertices.vertex(i), i);
   }
 
-private:
+ private:
   // Checks whether the path via v improves the tentative distance for any
   // search.
   void updateTentativeDistances(const int v) {
@@ -178,12 +181,13 @@ private:
     maxTentativeDistance = tentativeDistances.horizontalMax();
   }
 
-  DijkstraT forwardSearch;             // The forward search from the source(s).
-  DijkstraT reverseSearch;             // The reverse search from the target(s).
-  StoppingCriterion stoppingCriterion; // The criterion used to stop the search.
+  DijkstraT forwardSearch;  // The forward search from the source(s).
+  DijkstraT reverseSearch;  // The reverse search from the target(s).
+  StoppingCriterion
+      stoppingCriterion;  // The criterion used to stop the search.
 
   DistanceLabel
-      tentativeDistances; // One tentative distance per simultaneous search.
-  ParentLabel meetingVertices; // One meeting vertex per simultaneous search.
-  int maxTentativeDistance;    // The largest of all k tentative distances.
+      tentativeDistances;  // One tentative distance per simultaneous search.
+  ParentLabel meetingVertices;  // One meeting vertex per simultaneous search.
+  int maxTentativeDistance;     // The largest of all k tentative distances.
 };

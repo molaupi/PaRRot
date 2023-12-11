@@ -11,8 +11,7 @@
 namespace Geometry {
 
 class Point {
-
-public:
+ public:
   // Constructors
   Point() : latitude(0.0), longitude(0.0) {}
   Point(const Construct::XYTag, const double &x, const double &y)
@@ -142,7 +141,7 @@ public:
     return (&latitude)[dimension];
   }
 
-public:
+ public:
   union {
     double latitude;
     double y;
@@ -163,8 +162,7 @@ inline Point max(const Point &a, const Point &b) {
 }
 
 inline double geoDistanceInCM(const Point &from, const Point &to) {
-  if (from == to)
-    return 0;
+  if (from == to) return 0;
   double heightFrom(degreesToRadians(from.longitude));
   double heightTo(degreesToRadians(to.longitude));
   double widthFrom(degreesToRadians(from.latitude));
@@ -187,4 +185,4 @@ inline double euclideanDistance(const Point &a, const Point &b) {
 
 static_assert(sizeof(Point) == 2 * sizeof(double), "Point layout is broken");
 
-} // namespace Geometry
+}  // namespace Geometry

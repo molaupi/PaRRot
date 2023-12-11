@@ -7,36 +7,44 @@
 #include "../../DataStructures/RAPTOR/Data.h"
 #include "../../DataStructures/RAPTOR/Entities/ArrivalLabel.h"
 #include "../../DataStructures/RAPTOR/Entities/Bags.h"
-
 #include "InitialTransfers.h"
 #include "Profiler.h"
 
 namespace RAPTOR {
 
-template <typename PROFILER = NoProfiler> class ULTRAMcRAPTOR {
-
-public:
+template <typename PROFILER = NoProfiler>
+class ULTRAMcRAPTOR {
+ public:
   using Profiler = PROFILER;
   using Type = ULTRAMcRAPTOR<Profiler>;
   using InitialTransferGraph = CHGraph;
   using SourceType = Vertex;
 
-private:
+ private:
   struct Label {
     Label()
-        : arrivalTime(never), walkingDistance(INFTY), parentStop(noStop),
-          parentIndex(-1), parentDepartureTime(never), routeId(noRouteId) {}
+        : arrivalTime(never),
+          walkingDistance(INFTY),
+          parentStop(noStop),
+          parentIndex(-1),
+          parentDepartureTime(never),
+          routeId(noRouteId) {}
 
     Label(const Label &parentLabel, const StopId stop, const size_t parentIndex)
         : arrivalTime(parentLabel.arrivalTime),
-          walkingDistance(parentLabel.walkingDistance), parentStop(stop),
+          walkingDistance(parentLabel.walkingDistance),
+          parentStop(stop),
           parentIndex(parentIndex),
-          parentDepartureTime(parentLabel.arrivalTime), transferId(noEdge) {}
+          parentDepartureTime(parentLabel.arrivalTime),
+          transferId(noEdge) {}
 
     Label(const int departureTime, const StopId sourceStop)
-        : arrivalTime(departureTime), walkingDistance(0),
-          parentStop(sourceStop), parentIndex(-1),
-          parentDepartureTime(departureTime), routeId(noRouteId) {}
+        : arrivalTime(departureTime),
+          walkingDistance(0),
+          parentStop(sourceStop),
+          parentIndex(-1),
+          parentDepartureTime(departureTime),
+          routeId(noRouteId) {}
 
     int arrivalTime;
     int walkingDistance;
@@ -92,16 +100,20 @@ private:
   using Round = std::vector<BagType>;
   using RouteBagType = RouteBag<RouteLabel>;
 
-public:
+ public:
   ULTRAMcRAPTOR(const Data &data, const CH::CH &chData,
                 const Profiler &profilerTemplate = Profiler())
-      : data(data), initialTransfers(chData, FORWARD, data.numberOfStops()),
+      : data(data),
+        initialTransfers(chData, FORWARD, data.numberOfStops()),
         bestLabels(data.numberOfStops() + 1),
         stopsUpdatedByRoute(data.numberOfStops()),
         stopsUpdatedByTransfer(data.numberOfStops()),
         routesServingUpdatedStops(data.numberOfRoutes()),
-        sourceVertex(noVertex), targetVertex(noVertex), targetStop(noStop),
-        sourceDepartureTime(never), profiler(profilerTemplate) {
+        sourceVertex(noVertex),
+        targetVertex(noVertex),
+        targetStop(noStop),
+        sourceDepartureTime(never),
+        profiler(profilerTemplate) {
     AssertMsg(data.hasImplicitBufferTimes(),
               "Departure buffer times have to be implicit!");
     profiler.registerExtraRounds(
@@ -178,8 +190,8 @@ public:
     return getResults(targetStop);
   }
 
-  inline std::vector<WalkingParetoLabel>
-  getResults(const Vertex vertex) const noexcept {
+  inline std::vector<WalkingParetoLabel> getResults(
+      const Vertex vertex) const noexcept {
     const StopId target =
         (vertex == targetVertex) ? (targetStop) : (StopId(vertex));
     std::vector<WalkingParetoLabel> result;
@@ -192,7 +204,8 @@ public:
     return result;
   }
 
-  template <bool RESET_CAPACITIES = false> inline void clear() noexcept {
+  template <bool RESET_CAPACITIES = false>
+  inline void clear() noexcept {
     stopsUpdatedByRoute.clear();
     stopsUpdatedByTransfer.clear();
     routesServingUpdatedStops.clear();
@@ -213,7 +226,7 @@ public:
 
   inline const Profiler &getProfiler() const noexcept { return profiler; }
 
-private:
+ private:
   inline void initialize(const Vertex source, const int departureTime,
                          const Vertex target) noexcept {
     sourceVertex = source;
@@ -278,8 +291,7 @@ private:
                  (trip[stopIndex].departureTime < label.arrivalTime)) {
             trip += tripSize;
           }
-          if (trip[stopIndex].departureTime < label.arrivalTime)
-            continue;
+          if (trip[stopIndex].departureTime < label.arrivalTime) continue;
 
           RouteLabel newLabel;
           newLabel.trip = trip;
@@ -315,8 +327,7 @@ private:
     }
     initialTransfers.template run<true>(sourceVertex, targetVertex);
     for (const Vertex stop : initialTransfers.getForwardPOIs()) {
-      if (stop == targetStop)
-        continue;
+      if (stop == targetStop) continue;
       AssertMsg(data.isStop(stop), "Reached POI " << stop << " is not a stop!");
       AssertMsg(initialTransfers.getForwardDistance(stop) != INFTY,
                 "Vertex " << stop << " was not reached!");
@@ -412,16 +423,13 @@ private:
                       Metric metric) noexcept {
     AssertMsg(data.isStop(stop) || stop == targetStop,
               "Stop " << stop << " is out of range!");
-    if (bestLabels[targetStop].dominates(label))
-      return;
-    if (!bestLabels[stop].merge(BestLabel(label)))
-      return;
+    if (bestLabels[targetStop].dominates(label)) return;
+    if (!bestLabels[stop].merge(BestLabel(label))) return;
     profiler.countMetric(metric);
     currentRound()[stop].mergeUndominated(label);
     AssertMsg(bestLabels[stop].dominates(currentRound()[stop]),
               "Best bag does not dominate current bag!");
-    if (data.isStop(stop))
-      updatedStops.insert(stop);
+    if (data.isStop(stop)) updatedStops.insert(stop);
   }
 
   inline void arrivalByTransfer(const StopId stop,
@@ -450,7 +458,7 @@ private:
     journeys.emplace_back(Vector::reverse(journey));
   }
 
-private:
+ private:
   const Data &data;
 
   BucketCHInitialTransfers initialTransfers;
@@ -471,4 +479,4 @@ private:
   Profiler profiler;
 };
 
-} // namespace RAPTOR
+}  // namespace RAPTOR

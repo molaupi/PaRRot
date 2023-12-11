@@ -34,10 +34,11 @@
 // have k sorted sequences that are to be merged into a single output sequence.
 // We repeatedly have to find the smallest from the leading elements in the k
 // sequences. This can be done efficiently by a tournament tree.
-template <int logK> class TournamentTree {
-public:
+template <int logK>
+class TournamentTree {
+ public:
   static constexpr int K =
-      1 << logK; // The number of sequences that are to be merged.
+      1 << logK;  // The number of sequences that are to be merged.
 
   // Constructs a tournament tree given the leading elements in the k sequences.
   explicit TournamentTree(const std::array<int, K> &keys) { build(keys); }
@@ -68,12 +69,11 @@ public:
     int parent = winner.seq + K;
     for (int i = 0; i < logK; ++i) {
       parent = getParent(parent);
-      if (tree[parent] < winner)
-        std::swap(tree[parent], winner);
+      if (tree[parent] < winner) std::swap(tree[parent], winner);
     }
   }
 
-private:
+ private:
   // A vertex in the tournament tree. It represents the leading element from one
   // of the sequences.
   struct Vertex {
@@ -82,8 +82,8 @@ private:
       return lhs.key < rhs.key;
     }
 
-    int key; // The key of the element.
-    int seq; // The index of the sequence where the element comes from.
+    int key;  // The key of the element.
+    int seq;  // The index of the sequence where the element comes from.
   };
 
   // Returns the index of the parent of the specified child.
@@ -93,5 +93,5 @@ private:
     return child / 2;
   }
 
-  std::array<Vertex, K> tree; // The actual tournament tree.
+  std::array<Vertex, K> tree;  // The actual tournament tree.
 };

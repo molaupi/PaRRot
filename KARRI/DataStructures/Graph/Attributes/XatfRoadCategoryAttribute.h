@@ -49,7 +49,7 @@ enum class XatfRoadCategory {
 
 // An attribute associating an XATF road category with each edge of a graph.
 class XatfRoadCategoryAttribute : public AbstractAttribute<XatfRoadCategory> {
-public:
+ public:
   // Returns the attribute's default value.
   static Type defaultValue() { return XatfRoadCategory::UNUSED; }
 
@@ -67,7 +67,7 @@ public:
     return values[e];
   }
 
-protected:
+ protected:
   static constexpr const char *NAME =
-      "xatf_road_category"; // The attribute's unique name.
+      "xatf_road_category";  // The attribute's unique name.
 };

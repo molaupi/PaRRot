@@ -1,12 +1,11 @@
 #pragma once
 
+#include "../../DataStructures/RAPTOR/TransferModes.h"
 #include "../CH/Query/BucketQuery.h"
 #include "../CH/Query/CHQuery.h"
 #include "../CH/UPQuery/GroupedParetoUPQuery.h"
 #include "../CH/UPQuery/SeparatedParetoUPQuery.h"
 #include "../CH/UPQuery/UPQuery.h"
-
-#include "../../DataStructures/RAPTOR/TransferModes.h"
 
 namespace RAPTOR {
 
@@ -30,7 +29,7 @@ using ParetoInitialAndFinalTransfers =
              SeparatedParetoInitialAndFinalTransfers<DEBUG>>;
 
 class TransitiveInitialTransfers {
-public:
+ public:
   using Graph = TransferGraph;
 
   TransitiveInitialTransfers(const TransferGraph &forwardGraph,
@@ -94,11 +93,11 @@ public:
     return reachedPOIs[BACKWARD];
   }
 
-private:
-  template <int DIRECTION> inline void clear() noexcept {
+ private:
+  template <int DIRECTION>
+  inline void clear() noexcept {
     reachedPOIs[DIRECTION].clear();
-    if (root[DIRECTION] >= graph[DIRECTION].numVertices())
-      return;
+    if (root[DIRECTION] >= graph[DIRECTION].numVertices()) return;
     distance[DIRECTION][root[DIRECTION]] = INFTY;
     for (const Edge edge : graph[DIRECTION].edgesFrom(root[DIRECTION])) {
       const Vertex vertex = graph[DIRECTION].get(ToVertex, edge);
@@ -106,9 +105,9 @@ private:
     }
   }
 
-  template <int DIRECTION> inline void setDistances() noexcept {
-    if (root[DIRECTION] >= graph[DIRECTION].numVertices())
-      return;
+  template <int DIRECTION>
+  inline void setDistances() noexcept {
+    if (root[DIRECTION] >= graph[DIRECTION].numVertices()) return;
     distance[DIRECTION][root[DIRECTION]] = 0;
     reachedPOIs[DIRECTION].emplace_back(root[DIRECTION]);
     for (const Edge edge : graph[DIRECTION].edgesFrom(root[DIRECTION])) {
@@ -127,7 +126,7 @@ private:
 
 template <size_t NUM_MODES, typename INITIAL_TRANSFERS>
 class MultimodalInitialTransfers {
-public:
+ public:
   inline static constexpr size_t NumTransferModes = NUM_MODES;
   using InitialTransferType = INITIAL_TRANSFERS;
   using Graph = typename InitialTransferType::Graph;
@@ -140,7 +139,8 @@ public:
       const std::vector<size_t> &modes, const size_t numVertices,
       const Vertex::ValueType endOfPOIs)
       : transitiveInitialTransfers(transitiveInitialTransfers),
-        initialTransfers(transfers), modes(modes),
+        initialTransfers(transfers),
+        modes(modes),
         distance{std::vector<int>(numVertices, INFTY),
                  std::vector<int>(numVertices, INFTY)},
         reachedPOIs{IndexedSet<false, Vertex>(endOfPOIs),
@@ -197,8 +197,9 @@ public:
     return reachedPOIs[BACKWARD].getValues();
   }
 
-private:
-  template <int DIRECTION> inline void clear() noexcept {
+ private:
+  template <int DIRECTION>
+  inline void clear() noexcept {
     for (const Vertex vertex : reachedPOIs[DIRECTION]) {
       distance[DIRECTION][vertex] = INFTY;
     }
@@ -233,4 +234,4 @@ private:
   int targetDistance;
 };
 
-} // namespace RAPTOR
+}  // namespace RAPTOR

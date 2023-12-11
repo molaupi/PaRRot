@@ -25,11 +25,11 @@
 
 #pragma once
 
+#include <vectorclass/vectorclass.h>
+
 #include <array>
 #include <cassert>
 #include <type_traits>
-
-#include <vectorclass/vectorclass.h>
 
 #include "DataStructures/Labels/ParentInfo.h"
 #include "Tools/TemplateProgramming.h"
@@ -37,12 +37,13 @@
 // A set of consistent distance and parent labels for Dijkstra's algorithm. The
 // template arguments specify the number of shortest paths computed
 // simultaneously and the kind of parent information that should be collected.
-template <int logSearches, ParentInfo parentInfo> struct SimdLabelSet {
+template <int logSearches, ParentInfo parentInfo>
+struct SimdLabelSet {
   static_assert(
       logSearches >= 2,
       "The SIMD label set requires at least 4 simultaneous searches.");
 
-public:
+ public:
   // The number of simultaneous shortest-path computations.
   static constexpr int logK = logSearches;
   static constexpr int K = 1 << logK;
@@ -58,37 +59,35 @@ public:
   static constexpr bool KEEP_PARENT_EDGES =
       parentInfo == ParentInfo::FULL_PARENT_INFO;
 
-private:
+ private:
   static constexpr int VECTOR_SIZE =
-      logK == 2 ? 4 : 8; // The number of data elements per vector.
+      logK == 2 ? 4 : 8;  // The number of data elements per vector.
   static constexpr int NUM_VECTORS =
-      K / VECTOR_SIZE; // The number of vectors per label.
+      K / VECTOR_SIZE;  // The number of vectors per label.
 
   // Arrays of vectors that store all k values of a packed label.
   using BooleanLabel = std::array<BooleanVector, NUM_VECTORS>;
   using IntegerLabel = std::array<IntegerVector, NUM_VECTORS>;
 
-public:
+ public:
   // A mask that marks a subset of components in a packed distance label. For
   // example, the result of a less-than comparison between two multiple-source
   // distance labels a and b is a mask that indicates for which components i it
   // holds that a[i] < b[i].
   class LabelMask {
-  public:
+   public:
     // Constructs an uninitialized mask.
     LabelMask() = default;
 
     // Constructs a mask with all k components set to val. Converting
     // constructor.
     LabelMask(const bool val) {
-      for (int i = 0; i < NUM_VECTORS; ++i)
-        isMarked[i] = val;
+      for (int i = 0; i < NUM_VECTORS; ++i) isMarked[i] = val;
     }
 
     // Takes the logical AND of this and the specified mask.
     LabelMask &operator&=(const LabelMask &rhs) {
-      for (int i = 0; i < NUM_VECTORS; ++i)
-        isMarked[i] &= rhs.isMarked[i];
+      for (int i = 0; i < NUM_VECTORS; ++i) isMarked[i] &= rhs.isMarked[i];
       return *this;
     }
 
@@ -101,8 +100,7 @@ public:
 
     // Takes the logical AND of this and the specified mask.
     LabelMask &operator|=(const LabelMask &rhs) {
-      for (int i = 0; i < NUM_VECTORS; ++i)
-        isMarked[i] |= rhs.isMarked[i];
+      for (int i = 0; i < NUM_VECTORS; ++i) isMarked[i] |= rhs.isMarked[i];
       return *this;
     }
 
@@ -117,8 +115,7 @@ public:
     // Returns the logical NOT of a mask.
     friend LabelMask operator~(const LabelMask &mask) {
       LabelMask res;
-      for (int i = 0; i < NUM_VECTORS; ++i)
-        res.isMarked[i] = ~mask.isMarked[i];
+      for (int i = 0; i < NUM_VECTORS; ++i) res.isMarked[i] = ~mask.isMarked[i];
       return res;
     }
 
@@ -139,8 +136,7 @@ public:
     // Returns true if this mask marks at least one component.
     operator bool() const {
       BooleanVector tmp = isMarked[0];
-      for (int i = 1; i < NUM_VECTORS; ++i)
-        tmp |= isMarked[i];
+      for (int i = 1; i < NUM_VECTORS; ++i) tmp |= isMarked[i];
       return horizontal_or(tmp);
     }
 
@@ -149,13 +145,13 @@ public:
     friend bool allSet(const LabelMask &mask) { return !anySet(~mask); }
 
     BooleanLabel
-        isMarked; // Flags indicating for each component if it is marked.
+        isMarked;  // Flags indicating for each component if it is marked.
   };
 
   // A packed distance label for a vertex, storing k distance values. Each value
   // maintains the tentative distance from a different simultaneous source.
   class DistanceLabel {
-  public:
+   public:
     static constexpr int K = SimdLabelSet::K;
 
     // A class simulating the behavior of references to a single distance value
@@ -165,7 +161,7 @@ public:
       // distance value.
       friend class DistanceLabel;
 
-    public:
+     public:
       // Sets the distance value to val.
       Reference &operator=(const int val) {
         block.insert(localIndex, val);
@@ -175,15 +171,15 @@ public:
       // Returns the distance value.
       operator int() const { return block.extract(localIndex); }
 
-    private:
+     private:
       // Constructs a reference to the i-th distance value in the specified
       // block.
       Reference(IntegerVector &block, const int i)
           : block(block), localIndex(i) {}
 
-      IntegerVector &block; // The block containing the distance value.
+      IntegerVector &block;  // The block containing the distance value.
       const int
-          localIndex; // The index of the distance value in the block above.
+          localIndex;  // The index of the distance value in the block above.
     };
 
     // Constructs an uninitialized distance label.
@@ -192,8 +188,7 @@ public:
     // Constructs a distance label with all k values set to val. Converting
     // constructor.
     DistanceLabel(const int val) {
-      for (int i = 0; i < NUM_VECTORS; ++i)
-        values[i] = val;
+      for (int i = 0; i < NUM_VECTORS; ++i) values[i] = val;
     }
 
     // Returns a reference to the i-th distance value in this label.
@@ -318,8 +313,7 @@ public:
 
     // Multiply all entries in this label with a scalar factor
     void multiplyWithScalar(const int s) {
-      for (int i = 0; i < NUM_VECTORS; ++i)
-        values[i] = s * values[i];
+      for (int i = 0; i < NUM_VECTORS; ++i) values[i] = s * values[i];
     }
 
     // Sets this label at all slots i where mask[i] = true.
@@ -338,16 +332,15 @@ public:
       return result;
     }
 
-  private:
+   private:
     IntegerLabel
-        values; // The k distance values, one for each simultaneous source.
+        values;  // The k distance values, one for each simultaneous source.
   };
 
-private:
+ private:
   // A packed label for a vertex, storing k parent edges.
   class ParentEdge {
-
-  public:
+   public:
     // Returns the parent edge on the shortest path from the i-th source.
     int edge(const int i) const {
       assert(i >= 0);
@@ -361,21 +354,21 @@ private:
         edges[i] = select(mask.isMarked[i], e, edges[i]);
     }
 
-  private:
-    IntegerLabel edges; // The k parent edges, one for each simultaneous source.
+   private:
+    IntegerLabel
+        edges;  // The k parent edges, one for each simultaneous source.
   };
 
-public:
+ public:
   // A packed label for a vertex, storing k parent vertices and possibly k
   // parent edges.
   class ParentLabel
       : public std::conditional_t<KEEP_PARENT_EDGES, ParentEdge, EmptyClass> {
-  public:
+   public:
     ParentLabel() = default;
 
     ParentLabel(const int val) {
-      for (int i = 0; i < NUM_VECTORS; ++i)
-        vertices[i] = val;
+      for (int i = 0; i < NUM_VECTORS; ++i) vertices[i] = val;
 
       if (ParentEdge *e = dynamic_cast<ParentEdge *>(this)) {
         e->setEdge(val, true);
@@ -395,8 +388,8 @@ public:
         vertices[i] = select(mask.isMarked[i], u, vertices[i]);
     }
 
-  private:
+   private:
     IntegerLabel
-        vertices; // The k parent vertices, one for each simultaneous source.
+        vertices;  // The k parent vertices, one for each simultaneous source.
   };
 };

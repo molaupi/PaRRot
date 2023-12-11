@@ -25,6 +25,10 @@
 
 #pragma once
 
+#include <routingkit/id_mapper.h>
+#include <routingkit/osm_graph_builder.h>
+#include <routingkit/tag_map.h>
+
 #include <cassert>
 #include <cmath>
 #include <cstdint>
@@ -34,10 +38,6 @@
 #include <tuple>
 #include <utility>
 #include <vector>
-
-#include <routingkit/id_mapper.h>
-#include <routingkit/osm_graph_builder.h>
-#include <routingkit/tag_map.h>
 
 #include "DataStructures/Containers/BitVector.h"
 #include "DataStructures/Graph/Attributes/AbstractAttribute.h"
@@ -64,7 +64,7 @@
 // and fetches various vertex attributes. Then it repeatedly calls nextEdge to
 // read the next edge and fetches various edge attributes.
 class VehicleOsmImporter {
-public:
+ public:
   VehicleOsmImporter(const bool ALLOW_EDGE_MAPPING = false,
                      const IsRoadAccessibleByCategory &isVehicleAccessible =
                          defaultIsVehicleAccessible,
@@ -137,8 +137,7 @@ public:
       if (lanes) {
         try {
           auto numLanes = lexicalCast<double>(lanes);
-          if (dir == RoadDirection::OPEN_IN_BOTH)
-            numLanes /= 2;
+          if (dir == RoadDirection::OPEN_IN_BOTH) numLanes /= 2;
           numForwardLanes = numLanes;
           numReverseLanes = numLanes;
         } catch (std::logic_error & /*e*/) {
@@ -149,8 +148,7 @@ public:
       if (lanesForward) {
         try {
           auto numLanes = lexicalCast<double>(lanesForward);
-          if (numLanes > 0)
-            numForwardLanes = numLanes;
+          if (numLanes > 0) numForwardLanes = numLanes;
         } catch (std::logic_error & /*e*/) {
         }
       }
@@ -159,8 +157,7 @@ public:
       if (lanesBackward) {
         try {
           auto numLanes = lexicalCast<double>(lanesBackward);
-          if (numLanes > 0)
-            numReverseLanes = numLanes;
+          if (numLanes > 0) numReverseLanes = numLanes;
         } catch (std::logic_error & /*e*/) {
         }
       }
@@ -173,8 +170,7 @@ public:
     // Returns true if the specified way is open for vehicles.
     auto isWayOpenForVehicles = [&](uint64_t, const RoutingKit::TagMap &tags) {
       const auto highway = tags["highway"];
-      if (highway)
-        try {
+      if (highway) try {
           const auto cat = parseOsmRoadCategory(highway);
           return isVehicleAccessible(cat);
         } catch (std::invalid_argument & /*e*/) {
@@ -198,15 +194,15 @@ public:
           getNumLanes(cat, dir, tags);
 
       switch (dir) {
-      case RoadDirection::OPEN_IN_BOTH:
-        return RoutingKit::OSMWayDirectionCategory::open_in_both;
-      case RoadDirection::FORWARD:
-        return RoutingKit::OSMWayDirectionCategory::only_open_forwards;
-      case RoadDirection::REVERSE:
-        return RoutingKit::OSMWayDirectionCategory::only_open_backwards;
-      default:
-        assert(false);
-        return RoutingKit::OSMWayDirectionCategory::closed;
+        case RoadDirection::OPEN_IN_BOTH:
+          return RoutingKit::OSMWayDirectionCategory::open_in_both;
+        case RoadDirection::FORWARD:
+          return RoutingKit::OSMWayDirectionCategory::only_open_forwards;
+        case RoadDirection::REVERSE:
+          return RoutingKit::OSMWayDirectionCategory::only_open_backwards;
+        default:
+          assert(false);
+          return RoutingKit::OSMWayDirectionCategory::closed;
       }
     };
 
@@ -257,7 +253,7 @@ public:
       // firstArcOfRoutingWay[i] is the index of the first index in the range of
       // arcs that represent i.
       unsigned beginOfNextRange =
-          0; // index of first arc in the next range of arcs
+          0;  // index of first arc in the next range of arcs
       for (unsigned routingWayId = 0; routingWayId < numWaysOpenForVehicles;
            ++routingWayId) {
         unsigned numInRange = firstArcOfRoutingWay[routingWayId];
@@ -324,7 +320,8 @@ public:
   // Returns the value of the specified attribute for the current vertex/edge,
   // or the attribute's default value if the attribute is not part of the file
   // format.
-  template <typename Attr> typename Attr::Type getValue() const {
+  template <typename Attr>
+  typename Attr::Type getValue() const {
     return Attr::defaultValue();
   }
 
@@ -379,13 +376,14 @@ public:
   //        return routingWayHasAntiParallelArc.cardinality();
   //    }
 
-private:
+ private:
   // A struct that carries standard values for a set of static road properties.
   struct RoadDefaults {
-    int speedLimit;           // The speed limit in km/h.
-    int numLanesPerDirection; // The number of lanes per direction.
-    int laneCapacity;         // The capacity per lane in veh/h.
-    RoadDirection direction; // The direction in which the road segment is open.
+    int speedLimit;            // The speed limit in km/h.
+    int numLanesPerDirection;  // The number of lanes per direction.
+    int laneCapacity;          // The capacity per lane in veh/h.
+    RoadDirection
+        direction;  // The direction in which the road segment is open.
   };
 
   // A map that contains default road properties for a set of OSM road
@@ -424,29 +422,30 @@ private:
   std::function<bool(uint64_t osm_node_id, const RoutingKit::TagMap &node_tags)>
       make_routing_node;
 
-  RoutingKit::OSMRoutingGraph osmGraph; // The graph extracted from OSM data.
+  RoutingKit::OSMRoutingGraph osmGraph;  // The graph extracted from OSM data.
   RoutingKit::OSMRoutingIDMapping
-      idMapping; // Mapping used in OSM Graph creation and used by edgeIDMapper.
+      idMapping;  // Mapping used in OSM Graph creation and used by
+                  // edgeIDMapper.
   std::vector<OsmRoadCategory>
-      wayCategory;                   // The OSM road category for each way.
-  std::vector<double> waySpeedLimit; // The speed limit for each way.
-  BitVector isWaySpeedLimitGiven; // Indicates for each way whether speed limit
-                                  // is given.
+      wayCategory;                    // The OSM road category for each way.
+  std::vector<double> waySpeedLimit;  // The speed limit for each way.
+  BitVector isWaySpeedLimitGiven;  // Indicates for each way whether speed limit
+                                   // is given.
   std::vector<double>
-      numForwardLanes; // The number of forward lanes for each way.
+      numForwardLanes;  // The number of forward lanes for each way.
   std::vector<double>
-      numReverseLanes; // The number of reverse lanes for each way.
+      numReverseLanes;  // The number of reverse lanes for each way.
 
-  int currentVertex = -1; // The index of the current vertex in the OSM graph.
-  int currentEdge = -1;   // The index of the current edge in the OSM graph.
-  int currentTail = -1;   // The tail of the current edge.
+  int currentVertex = -1;  // The index of the current vertex in the OSM graph.
+  int currentEdge = -1;    // The index of the current edge in the OSM graph.
+  int currentTail = -1;    // The tail of the current edge.
 
   RoutingKit::LocalIDMapper
-      edgeIDMapper; // Mapping from osm way ids (global ids) to routing way ids
-                    // (local ids).
+      edgeIDMapper;  // Mapping from osm way ids (global ids) to routing way ids
+                     // (local ids).
   RoutingKit::IDMapper
-      nodeIDMapper; // Mapping from osm node ids (global ids) to graph vertex
-                    // ids (local ids) and vice versa.
+      nodeIDMapper;  // Mapping from osm node ids (global ids) to graph vertex
+                     // ids (local ids) and vice versa.
 
   // The following index and value array are used to map a routing way to the
   // one or more arcs in the graph that represent it. (One global OSM way is
@@ -454,19 +453,19 @@ private:
   // more arcs. One global OSM node id is mapped to one or zero routing nodes
   // which are equivalent to the graph vertices.)
   std::vector<unsigned>
-      firstArcOfRoutingWay; // firstArcOfRoutingWay[i] = index of first arc ID
-                            // in arcsRepresentingRoutingWay that represents
-                            // part of the way with routing way id i
+      firstArcOfRoutingWay;  // firstArcOfRoutingWay[i] = index of first arc ID
+                             // in arcsRepresentingRoutingWay that represents
+                             // part of the way with routing way id i
   std::vector<unsigned>
-      arcsRepresentingRoutingWay; // for each routing way with id i, this
-                                  // contains a consecutive range of those arc
-                                  // IDs that represent i
+      arcsRepresentingRoutingWay;  // for each routing way with id i, this
+                                   // contains a consecutive range of those arc
+                                   // IDs that represent i
 };
 
 // Returns the value of the LatLng attribute for the current vertex.
 template <>
-inline LatLngAttribute::Type
-VehicleOsmImporter::getValue<LatLngAttribute>() const {
+inline LatLngAttribute::Type VehicleOsmImporter::getValue<LatLngAttribute>()
+    const {
   assert(currentVertex >= 0);
   assert(currentVertex < osmGraph.node_count());
   return {osmGraph.latitude[currentVertex], osmGraph.longitude[currentVertex]};
@@ -483,8 +482,8 @@ VehicleOsmImporter::getValue<OsmNodeIdAttribute>() const {
 
 // Returns the value of the length attribute for the current edge.
 template <>
-inline LengthAttribute::Type
-VehicleOsmImporter::getValue<LengthAttribute>() const {
+inline LengthAttribute::Type VehicleOsmImporter::getValue<LengthAttribute>()
+    const {
   assert(currentEdge >= 0);
   assert(currentEdge < osmGraph.arc_count());
   return osmGraph.geo_distance[currentEdge];
@@ -492,8 +491,8 @@ VehicleOsmImporter::getValue<LengthAttribute>() const {
 
 // Returns the value of the number of lanes attribute for the current edge.
 template <>
-inline NumLanesAttribute::Type
-VehicleOsmImporter::getValue<NumLanesAttribute>() const {
+inline NumLanesAttribute::Type VehicleOsmImporter::getValue<NumLanesAttribute>()
+    const {
   assert(currentEdge >= 0);
   assert(currentEdge < osmGraph.arc_count());
   const auto way = osmGraph.way[currentEdge];
@@ -537,14 +536,13 @@ VehicleOsmImporter::getValue<SpeedLimitAttribute>() const {
 
 // Returns the value of the capacity attribute for the current edge.
 template <>
-inline CapacityAttribute::Type
-VehicleOsmImporter::getValue<CapacityAttribute>() const {
+inline CapacityAttribute::Type VehicleOsmImporter::getValue<CapacityAttribute>()
+    const {
   assert(currentEdge >= 0);
   assert(currentEdge < osmGraph.arc_count());
   auto laneCapacity =
       roadDefaults.at(wayCategory[osmGraph.way[currentEdge]]).laneCapacity;
-  if (getValue<LengthAttribute>() < 100)
-    laneCapacity *= 2;
+  if (getValue<LengthAttribute>() < 100) laneCapacity *= 2;
   return std::round(getValue<NumLanesAttribute>() * laneCapacity);
 }
 
@@ -574,8 +572,7 @@ VehicleOsmImporter::getValue<FreeFlowSpeedAttribute>() const {
 template <>
 inline TravelTimeAttribute::Type
 VehicleOsmImporter::getValue<TravelTimeAttribute>() const {
-  if (getValue<FreeFlowSpeedAttribute>() == 0)
-    return INFTY;
+  if (getValue<FreeFlowSpeedAttribute>() == 0) return INFTY;
   return std::round(36.0 * getValue<LengthAttribute>() /
                     getValue<FreeFlowSpeedAttribute>());
 }

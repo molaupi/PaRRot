@@ -24,25 +24,27 @@
 
 #pragma once
 
+#include <cassert>
+#include <vector>
+
 #include "DataStructures/Utilities/DynamicRagged2DArrays.h"
 #include "DataStructures/Utilities/IteratorRange.h"
 #include "Tools/Workarounds.h"
-#include <cassert>
-#include <vector>
 
 namespace karri {
 
 class LastStopsAtVertices {
-
   using VehiclesOrderedByLastStop = std::vector<int>;
   using VehiclesOrderedByLastStopIt = VehiclesOrderedByLastStop::const_iterator;
 
-public:
+ public:
   LastStopsAtVertices(const int numVertices, const int fleetSize)
-      : numVertices(numVertices), fleetSize(fleetSize),
-        firstLastStopAtVertex(numVertices), vehiclesOrderedByLastStop() {
+      : numVertices(numVertices),
+        fleetSize(fleetSize),
+        firstLastStopAtVertex(numVertices),
+        vehiclesOrderedByLastStop() {
     unused(this->numVertices,
-           this->fleetSize); // only used for sanity checks in asserts
+           this->fleetSize);  // only used for sanity checks in asserts
   }
 
   bool isAnyLastStopAtVertex(const int vertex) const {
@@ -91,11 +93,11 @@ public:
            end - start - 1);
   }
 
-private:
+ private:
   const int numVertices;
   const int fleetSize;
 
   std::vector<ValueBlockPosition> firstLastStopAtVertex;
   std::vector<int> vehiclesOrderedByLastStop;
 };
-} // namespace karri
+}  // namespace karri

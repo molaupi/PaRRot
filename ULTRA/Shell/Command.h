@@ -9,8 +9,7 @@
 namespace Shell {
 
 class Command {
-
-public:
+ public:
   Command() {}
 
   virtual ~Command() {}
@@ -34,4 +33,4 @@ public:
   }
 };
 
-} // namespace Shell
+}  // namespace Shell

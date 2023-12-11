@@ -40,7 +40,6 @@ namespace karri {
 // well as relevant ordinary dropoffs.
 template <typename PDDistancesT, typename CurVehLocToPickupSearchesT>
 class PBNSAssignmentsFinder {
-
   // Algorithm iterates through combinations of pickups and dropoffs and filters
   // based on lower bound cost. If exact distance from vehicle's current
   // location to a pickup is ever needed, we delay the computation of that
@@ -54,7 +53,7 @@ class PBNSAssignmentsFinder {
     RelevantPDLocs::It continueIt;
   };
 
-public:
+ public:
   PBNSAssignmentsFinder(const RelevantPDLocs &relPickupsBns,
                         const RelevantPDLocs &relOrdinaryDropoffs,
                         const RelevantPDLocs &relDropoffsBns,
@@ -63,10 +62,14 @@ public:
                         const Fleet &fleet, const CostCalculator &calculator,
                         const RouteState &routeState,
                         RequestState &requestState)
-      : relPickupsBNS(relPickupsBns), relOrdinaryDropoffs(relOrdinaryDropoffs),
-        relDropoffsBNS(relDropoffsBns), pdDistances(pdDistances),
-        curVehLocToPickupSearches(curVehLocToPickupSearches), fleet(fleet),
-        calculator(calculator), routeState(routeState),
+      : relPickupsBNS(relPickupsBns),
+        relOrdinaryDropoffs(relOrdinaryDropoffs),
+        relDropoffsBNS(relDropoffsBns),
+        pdDistances(pdDistances),
+        curVehLocToPickupSearches(curVehLocToPickupSearches),
+        fleet(fleet),
+        calculator(calculator),
+        routeState(routeState),
         requestState(requestState) {}
 
   void findAssignments() {
@@ -75,7 +78,6 @@ public:
 
     int numCandidateVehicles = 0;
     for (const auto &vehId : relPickupsBNS.getVehiclesWithRelevantPDLocs()) {
-
       if (!relOrdinaryDropoffs.hasRelevantSpotsFor(vehId) &&
           !relDropoffsBNS.hasRelevantSpotsFor(vehId))
         continue;
@@ -119,7 +121,7 @@ public:
     requestState.stats().pbnsAssignmentsStats.initializationTime += time;
   }
 
-private:
+ private:
   // Filters combinations of pickups and dropoffs using a cost lower bound.
   // If a combination is found for a pickup that cannot be filtered, we need the
   // exact distance from the vehicle location to the pickup. These pickups are
@@ -127,7 +129,6 @@ private:
   // stored to restart the iteration of combinations for that pickup after the
   // computation of exact distances.
   void determineNecessaryExactDistances(const Vehicle &veh) {
-
     const auto &relOrdinaryDropoffsForVeh =
         relOrdinaryDropoffs.relevantSpotsFor(veh.vehicleId);
     const auto &relDropoffsBeforeNextStopForVeh =
@@ -162,12 +163,13 @@ private:
           curVehLocToPickupSearches.addPickupForProcessing(asgn.pickup->id,
                                                            asgn.distToPickup);
           pairedContinuations.push_back({asgn.pickup->id, 0, scannedUntil});
-          ++numAssignmentsTriedWithPickupBeforeNextStop; // Count first ordinary
-                                                         // continuation
+          ++numAssignmentsTriedWithPickupBeforeNextStop;  // Count first
+                                                          // ordinary
+                                                          // continuation
           ordinaryContinuations.push_back({asgn.pickup->id, distFromPickup,
                                            relOrdinaryDropoffsForVeh.begin()});
-          continue; // Continue with next pickup, rest of assignments for this
-                    // pickup later with exact distance
+          continue;  // Continue with next pickup, rest of assignments for this
+                     // pickup later with exact distance
         }
       }
 
@@ -212,8 +214,7 @@ private:
          dropoffIt != relevantDropoffs.end(); ++dropoffIt) {
       const auto &dropoffEntry = *dropoffIt;
       asgn.dropoff = &requestState.dropoffs[dropoffEntry.pdId];
-      if (stopLocations[1] == asgn.dropoff->loc)
-        continue;
+      if (stopLocations[1] == asgn.dropoff->loc) continue;
       ++numAssignmentsTriedWithPickupBeforeNextStop;
 
       asgn.distToDropoff =
@@ -258,8 +259,7 @@ private:
       if (dropoffEntry.stopIndex + 1 < numStops &&
           stopLocations[dropoffEntry.stopIndex + 1] == asgn.dropoff->loc)
         continue;
-      if (asgn.dropoff->loc == asgn.pickup->loc)
-        continue;
+      if (asgn.dropoff->loc == asgn.pickup->loc) continue;
 
       asgn.dropoffStopIdx = dropoffEntry.stopIndex;
       asgn.distToDropoff = dropoffEntry.distToPDLoc;
@@ -293,8 +293,7 @@ private:
 
       asgn.distToPickup = curVehLocToPickupSearches.getDistance(
           veh.vehicleId, continuation.pickupId);
-      if (asgn.distToPickup >= INFTY)
-        continue;
+      if (asgn.distToPickup >= INFTY) continue;
 
       asgn.distFromPickup = continuation.distFromPickup;
 
@@ -306,8 +305,7 @@ private:
         if (dropoffEntry.stopIndex + 1 < numStops &&
             stopLocations[dropoffEntry.stopIndex + 1] == asgn.dropoff->loc)
           continue;
-        if (asgn.pickup->loc == asgn.dropoff->loc)
-          continue;
+        if (asgn.pickup->loc == asgn.dropoff->loc) continue;
 
         asgn.dropoffStopIdx = dropoffEntry.stopIndex;
         asgn.distToDropoff = dropoffEntry.distToPDLoc;
@@ -316,7 +314,7 @@ private:
 
         if (dropoffIt >
             continuation
-                .continueIt) { // Do not count assignment at continuation twice
+                .continueIt) {  // Do not count assignment at continuation twice
           ++numAssignmentsTriedWithPickupBeforeNextStop;
         }
       }
@@ -332,8 +330,7 @@ private:
       asgn.dropoffStopIdx = 0;
       asgn.distToPickup =
           curVehLocToPickupSearches.getDistance(veh.vehicleId, pId);
-      if (asgn.distToPickup >= INFTY)
-        continue;
+      if (asgn.distToPickup >= INFTY) continue;
 
       asgn.distFromPickup = 0;
 
@@ -342,18 +339,16 @@ private:
         const auto &dropoffEntry = *dropoffIt;
         asgn.dropoff = &requestState.dropoffs[dropoffEntry.pdId];
 
-        if (stopLocations[1] == asgn.dropoff->loc)
-          continue;
+        if (stopLocations[1] == asgn.dropoff->loc) continue;
 
         if (dropoffIt >
             continuation
-                .continueIt) { // Do not count assignment at continuation twice
+                .continueIt) {  // Do not count assignment at continuation twice
           ++numAssignmentsTriedWithPickupBeforeNextStop;
         }
 
         asgn.distFromDropoff = dropoffEntry.distFromPDLocToNextStop;
-        if (asgn.distFromDropoff >= INFTY)
-          continue;
+        if (asgn.distFromDropoff >= INFTY) continue;
 
         asgn.distToDropoff =
             pdDistances.getDirectDistance(pId, asgn.dropoff->id);
@@ -376,4 +371,4 @@ private:
   std::vector<Continuation> ordinaryContinuations;
   std::vector<Continuation> pairedContinuations;
 };
-} // namespace karri
+}  // namespace karri

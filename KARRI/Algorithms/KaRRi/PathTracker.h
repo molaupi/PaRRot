@@ -24,6 +24,8 @@
 
 #pragma once
 
+#include <vector>
+
 #include "Algorithms/CH/CH.h"
 #include "Algorithms/CH/CHPathUnpacker.h"
 #include "Algorithms/KaRRi/BaseObjects/Request.h"
@@ -31,31 +33,36 @@
 #include "DataStructures/Utilities/DynamicRagged2DArrays.h"
 #include "Tools/Logging/LogManager.h"
 #include "Tools/Logging/NullLogger.h"
-#include <vector>
 
 namespace karri {
 
 template <typename InputGraphT, typename CHEnvT, typename LoggerT = NullLogger>
 class PathTracker {
-
-public:
+ public:
   explicit PathTracker(const InputGraphT &inputGraph, const CHEnvT &chEnv,
                        const RequestState &requestState,
                        const RouteState &routeState, const int fleetSize)
-      : inputGraph(inputGraph), requestState(requestState),
-        routeState(routeState), ch(chEnv.getCH()),
-        chQuery(chEnv.template getFullCHQuery<>()), pathUnpacker(ch),
-        eventPos(fleetSize, {0, 0}), requestIds(), pdLocTypes(),
-        pathPos(fleetSize, {0, 0}), pathEdges(),
+      : inputGraph(inputGraph),
+        requestState(requestState),
+        routeState(routeState),
+        ch(chEnv.getCH()),
+        chQuery(chEnv.template getFullCHQuery<>()),
+        pathUnpacker(ch),
+        eventPos(fleetSize, {0, 0}),
+        requestIds(),
+        pdLocTypes(),
+        pathPos(fleetSize, {0, 0}),
+        pathEdges(),
         numCompletedStopsPerVeh(fleetSize, 0),
-        vehiclePathLogger(LogManager<LoggerT>::getLogger(
-            "vehpaths.csv", "vehicle_id, "
-                            "stop_number, "
-                            "arr_time, "
-                            "dep_time, "
-                            "events, "
-                            "osm_node_ids_path_to_stop, "
-                            "lat_lng_path_to_stop\n")) {}
+        vehiclePathLogger(
+            LogManager<LoggerT>::getLogger("vehpaths.csv",
+                                           "vehicle_id, "
+                                           "stop_number, "
+                                           "arr_time, "
+                                           "dep_time, "
+                                           "events, "
+                                           "osm_node_ids_path_to_stop, "
+                                           "lat_lng_path_to_stop\n")) {}
 
   // Updates paths of vehicle for best assignment of pickup and dropoff into the
   // vehicle path. Needs to be called after the insertion is performed on
@@ -187,8 +194,7 @@ public:
       const auto typeStr = pdLocTypesAtStop[i] == PICKUP ? "pickup" : "dropoff";
       vehiclePathLogger << "(" << requestIdsAtStop[i] << " - " << typeStr
                         << ")";
-      if (i < numEvents - 1)
-        vehiclePathLogger << " : ";
+      if (i < numEvents - 1) vehiclePathLogger << " : ";
     }
     vehiclePathLogger << ", ";
 
@@ -229,7 +235,7 @@ public:
     invalidateDataFor(idOfStartedStop);
   }
 
-private:
+ private:
   ConstantVectorRange<int> requestIdsAt(const int stopId) const {
     assert(stopId >= 0);
     assert(stopId < eventPos.size());
@@ -284,7 +290,6 @@ private:
 
   void computePathsForBestAssignment(const int pickupIndexAfterInsertion,
                                      const int dropoffIndexAfterInsertion) {
-
     pathToPickup.clear();
     pathFromPickup.clear();
     pathToDropoff.clear();
@@ -375,9 +380,8 @@ private:
 };
 
 struct NoOpPathTracker {
-
   void updateForBestAssignment(const int, const int, const int, const bool) {}
 
   void logCompletedLeg(const Vehicle &) {}
 };
-} // namespace karri
+}  // namespace karri

@@ -22,26 +22,14 @@
 /// IN THE SOFTWARE.
 /// ******************************************************************************
 
+#include <csv.h>
+
 #include <cassert>
 #include <cstdint>
 #include <cstdio>
 #include <cstdlib>
 #include <fstream>
 #include <iostream>
-
-#include <csv.h>
-
-#include "DataStructures/Graph/Attributes/CarEdgeToPsgEdgeAttribute.h"
-#include "DataStructures/Graph/Attributes/EdgeIdAttribute.h"
-#include "DataStructures/Graph/Attributes/EdgeTailAttribute.h"
-#include "DataStructures/Graph/Attributes/FreeFlowSpeedAttribute.h"
-#include "DataStructures/Graph/Attributes/LatLngAttribute.h"
-#include "DataStructures/Graph/Attributes/OsmNodeIdAttribute.h"
-#include "DataStructures/Graph/Attributes/PsgEdgeToCarEdgeAttribute.h"
-#include "DataStructures/Graph/Attributes/TravelTimeAttribute.h"
-#include "DataStructures/Graph/Graph.h"
-#include "Tools/CommandLine/CommandLineParser.h"
-#include "Tools/Logging/LogManager.h"
 
 #include "Algorithms/KaRRi/AssignmentFinder.h"
 #include "Algorithms/KaRRi/BaseObjects/Request.h"
@@ -65,6 +53,17 @@
 #include "Algorithms/KaRRi/RequestState/RequestStateInitializer.h"
 #include "Algorithms/KaRRi/RequestState/VehicleToPDLocQuery.h"
 #include "Algorithms/KaRRi/SystemStateUpdater.h"
+#include "DataStructures/Graph/Attributes/CarEdgeToPsgEdgeAttribute.h"
+#include "DataStructures/Graph/Attributes/EdgeIdAttribute.h"
+#include "DataStructures/Graph/Attributes/EdgeTailAttribute.h"
+#include "DataStructures/Graph/Attributes/FreeFlowSpeedAttribute.h"
+#include "DataStructures/Graph/Attributes/LatLngAttribute.h"
+#include "DataStructures/Graph/Attributes/OsmNodeIdAttribute.h"
+#include "DataStructures/Graph/Attributes/PsgEdgeToCarEdgeAttribute.h"
+#include "DataStructures/Graph/Attributes/TravelTimeAttribute.h"
+#include "DataStructures/Graph/Graph.h"
+#include "Tools/CommandLine/CommandLineParser.h"
+#include "Tools/Logging/LogManager.h"
 
 #ifdef KARRI_USE_CCHS
 #include "Algorithms/KaRRi/CCHEnvironment.h"
@@ -76,7 +75,7 @@
 
 #include "Algorithms/KaRRi/PDDistanceQueries/BCHStrategy.h"
 
-#else // KARRI_PD_STRATEGY == KARRI_CH_PD_STRAT
+#else  // KARRI_PD_STRATEGY == KARRI_CH_PD_STRAT
 #include "Algorithms/KaRRi/PDDistanceQueries/CHStrategy.h"
 #endif
 
@@ -88,7 +87,7 @@
 
 #include "Algorithms/KaRRi/PalsAssignments/IndividualBCHStrategy.h"
 
-#else // KARRI_PALS_STRATEGY == KARRI_DIJ
+#else  // KARRI_PALS_STRATEGY == KARRI_DIJ
 
 #include "Algorithms/KaRRi/PalsAssignments/DijkstraStrategy.h"
 
@@ -102,7 +101,7 @@
 
 #include "Algorithms/KaRRi/DalsAssignments//IndividualBCHStrategy.h"
 
-#else // KARRI_DALS_STRATEGY == KARRI_DIJ
+#else  // KARRI_DALS_STRATEGY == KARRI_DIJ
 
 #include "Algorithms/KaRRi/DalsAssignments/DijkstraStrategy.h"
 
@@ -171,10 +170,8 @@ int main(int argc, char *argv[]) {
     inputConfig.maxNumPickups = clp.getValue<int>("max-num-p", INFTY);
     inputConfig.maxNumDropoffs = clp.getValue<int>("max-num-d", INFTY);
     inputConfig.alwaysUseVehicle = clp.isSet("always-veh");
-    if (inputConfig.maxNumPickups == 0)
-      inputConfig.maxNumPickups = INFTY;
-    if (inputConfig.maxNumDropoffs == 0)
-      inputConfig.maxNumDropoffs = INFTY;
+    if (inputConfig.maxNumPickups == 0) inputConfig.maxNumPickups = INFTY;
+    if (inputConfig.maxNumDropoffs == 0) inputConfig.maxNumDropoffs = INFTY;
     inputConfig.alpha = clp.getValue<double>("a", 1.7);
     inputConfig.beta = clp.getValue<int>("b", 120) * 10;
     const auto vehicleNetworkFileName = clp.getValue<std::string>("veh-g");
@@ -520,7 +517,7 @@ int main(int argc, char *argv[]) {
                                         pdDistances, reqState,
                                         vehicleToPdLocQuery);
 
-#else // KARRI_PD_STRATEGY == KARRI_CH_PD_STRAT
+#else  // KARRI_PD_STRATEGY == KARRI_CH_PD_STRAT
     using PDDistanceQueryImpl =
         PDDistanceQueryStrategies::CHStrategy<VehicleInputGraph, VehCHEnv,
                                               PDDistancesLabelSet>;
@@ -554,7 +551,7 @@ int main(int argc, char *argv[]) {
     // If we use any BCH queries in the PALS or DALS strategies, we construct
     // the according bucket data structure. Otherwise, we use no-op last stop
     // buckets.
-#if KARRI_PALS_STRATEGY == KARRI_COL || KARRI_PALS_STRATEGY == KARRI_IND ||    \
+#if KARRI_PALS_STRATEGY == KARRI_COL || KARRI_PALS_STRATEGY == KARRI_IND || \
     KARRI_DALS_STRATEGY == KARRI_COL || KARRI_DALS_STRATEGY == KARRI_IND
     static constexpr bool LAST_STOP_SORTED_BUCKETS =
         KARRI_LAST_STOP_BCH_SORTED_BUCKETS;
@@ -591,8 +588,8 @@ int main(int argc, char *argv[]) {
     PALSStrategy palsStrategy(vehicleInputGraph, fleet, *vehChEnv, calc,
                               lastStopBucketsEnv, pdDistances, routeState,
                               reqState, reqState.getBestCost(), inputConfig);
-#else // KARRI_PALS_STRATEGY == KARRI_DIJ
-      // Use Dijkstra PALS Strategy
+#else  // KARRI_PALS_STRATEGY == KARRI_DIJ
+       // Use Dijkstra PALS Strategy
     using PALSStrategy = PickupAfterLastStopStrategies::DijkstraStrategy<
         VehicleInputGraph, PDDistancesImpl, PALSLabelSet>;
     PALSStrategy palsStrategy(vehicleInputGraph, revVehicleGraph, fleet,
@@ -630,8 +627,8 @@ int main(int argc, char *argv[]) {
                               lastStopBucketsEnv, curVehLocToPickupSearches,
                               routeState, reqState, relOrdinaryPickups,
                               relPickupsBeforeNextStop);
-#else // KARRI_DALS_STRATEGY == KARRI_DIJ
-      // Use Dijkstra DALS Strategy
+#else  // KARRI_DALS_STRATEGY == KARRI_DIJ
+       // Use Dijkstra DALS Strategy
     using DALSLabelSet = std::conditional_t<
         KARRI_DALS_USE_SIMD,
         SimdLabelSet<KARRI_DALS_LOG_K, ParentInfo::NO_PARENT_INFO>,

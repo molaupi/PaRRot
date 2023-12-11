@@ -4,29 +4,26 @@
 #include <string>
 #include <vector>
 
-#include "../CH.h"
-
+#include "../../../DataStructures/Container/ExternalKHeap.h"
 #include "../../../Helpers/String/String.h"
 #include "../../../Helpers/Timer.h"
 #include "../../../Helpers/Types.h"
 #include "../../../Helpers/Vector/Vector.h"
-
-#include "../../../DataStructures/Container/ExternalKHeap.h"
+#include "../CH.h"
 
 namespace CH {
 
 template <typename GRAPH = CHGraph, bool STALL_ON_DEMAND = true,
           bool DEBUG = false, size_t COLLECT_POIS = false>
 class Query {
-
-public:
+ public:
   using Graph = GRAPH;
   constexpr static bool StallOnDemand = STALL_ON_DEMAND;
   constexpr static bool Debug = DEBUG;
   constexpr static bool CollectPOIs = COLLECT_POIS;
   using Type = Query<Graph, StallOnDemand, Debug, CollectPOIs>;
 
-private:
+ private:
   struct Distance : public ExternalKHeapElement {
     Distance() : ExternalKHeapElement(), distance(INFTY) {}
     inline bool hasSmallerKey(const Distance *other) const noexcept {
@@ -35,12 +32,13 @@ private:
     int distance;
   };
 
-public:
+ public:
   Query(const Graph &forward, const Graph &backward,
         const std::vector<int> &forwardWeight,
         const std::vector<int> &backwardWeight,
         const Vertex::ValueType endOfPOIs = 0)
-      : graph{&forward, &backward}, weight{&forwardWeight, &backwardWeight},
+      : graph{&forward, &backward},
+        weight{&forwardWeight, &backwardWeight},
         root{noVertex, noVertex},
         Q{ExternalKHeap<2, Distance>(forward.numVertices()),
           ExternalKHeap<2, Distance>(backward.numVertices())},
@@ -48,8 +46,12 @@ public:
                  std::vector<Distance>(backward.numVertices())},
         parent{std::vector<Vertex>(forward.numVertices()),
                std::vector<Vertex>(backward.numVertices())},
-        timeStamp(forward.numVertices()), time(0), tentativeDistance(INFTY),
-        intersectingVertex(noVertex), settleCount(0), stallCount(0),
+        timeStamp(forward.numVertices()),
+        time(0),
+        tentativeDistance(INFTY),
+        intersectingVertex(noVertex),
+        settleCount(0),
+        stallCount(0),
         endOfPOIs(endOfPOIs),
         reachedPOIs{std::vector<Vertex>(), std::vector<Vertex>()} {
     Assert(forward.numVertices() == backward.numVertices());
@@ -70,8 +72,7 @@ public:
   template <bool TARGET_PRUNING = true>
   inline void run(const Vertex from, const Vertex to,
                   const double targetPruningFactor = 1) noexcept {
-    if (root[FORWARD] == from && root[BACKWARD] == to)
-      return;
+    if (root[FORWARD] == from && root[BACKWARD] == to) return;
     if constexpr (Debug) {
       std::cout << "Starting " << ((CollectPOIs) ? ("CH-POI") : ("CH"))
                 << " query" << std::endl;
@@ -86,8 +87,7 @@ public:
 
   template <int I, int J, bool TARGET_PRUNING = true>
   inline void run(const Vertex origin) noexcept {
-    if (root[I] == origin && root[J] == noVertex)
-      return;
+    if (root[I] == origin && root[J] == noVertex) return;
     if constexpr (Debug) {
       std::cout << "Starting unidirectional "
                 << ((CollectPOIs) ? ("CH-POI") : ("CH")) << " query"
@@ -106,7 +106,8 @@ public:
     clearDirection<BACKWARD>();
   }
 
-  template <int I> inline void clear() noexcept {
+  template <int I>
+  inline void clear() noexcept {
     clearGeneral();
     clearDirection<I>();
   }
@@ -154,8 +155,7 @@ public:
       settle<BACKWARD, FORWARD, TARGET_PRUNING>(targetPruningFactor);
     }
 
-    if constexpr (Debug)
-      printStatistics();
+    if constexpr (Debug) printStatistics();
   }
 
   template <int I, int J, bool TARGET_PRUNING = true>
@@ -174,8 +174,7 @@ public:
       settle<I, J, TARGET_PRUNING>();
     }
 
-    if constexpr (Debug)
-      printStatistics();
+    if constexpr (Debug) printStatistics();
   }
 
   inline void setTentativeDistance(const int distance) noexcept {
@@ -227,8 +226,8 @@ public:
     return reachedPOIs[DIRECTION];
   }
 
-  inline std::vector<Vertex>
-  getReversePath(const Vertex = noVertex) const noexcept {
+  inline std::vector<Vertex> getReversePath(
+      const Vertex = noVertex) const noexcept {
     return Vector::reverse(backwardLeg<true>()) + forwardLeg<true>();
   }
 
@@ -248,7 +247,7 @@ public:
 
   inline int getStallCount() const noexcept { return stallCount; }
 
-private:
+ private:
   inline void clearGeneral() noexcept {
     if constexpr (Debug) {
       timer.restart();
@@ -260,7 +259,8 @@ private:
     intersectingVertex = noVertex;
   }
 
-  template <int I> inline void clearDirection() noexcept {
+  template <int I>
+  inline void clearDirection() noexcept {
     Q[I].clear();
     if constexpr (CollectPOIs) {
       reachedPOIs[I].clear();
@@ -300,10 +300,8 @@ private:
   template <int I, int J, bool UNPACK>
   inline std::vector<Vertex> getLeg() const noexcept {
     std::vector<Vertex> path;
-    if (!graph[I]->isVertex(intersectingVertex))
-      return path;
-    if (!visited(intersectingVertex))
-      return path;
+    if (!graph[I]->isVertex(intersectingVertex)) return path;
+    if (!visited(intersectingVertex)) return path;
     path.push_back(intersectingVertex);
     Vertex p = parent[I][path.back()];
     while (p != noVertex) {
@@ -336,8 +334,7 @@ private:
         cleanLabel(v);
         if (distance[I][v].distance <
             distance[I][u].distance - (*(weight[J]))[edge]) {
-          if constexpr (Debug)
-            stallCount++;
+          if constexpr (Debug) stallCount++;
           return;
         }
       }
@@ -362,11 +359,10 @@ private:
         reachedPOIs[I].emplace_back(u);
       }
     }
-    if constexpr (Debug)
-      settleCount++;
+    if constexpr (Debug) settleCount++;
   }
 
-private:
+ private:
   const Graph *graph[2];
   const std::vector<int> *weight[2];
 
@@ -389,4 +385,4 @@ private:
   std::vector<Vertex> reachedPOIs[2];
 };
 
-} // namespace CH
+}  // namespace CH

@@ -14,4 +14,4 @@ struct Shortcut {
   int travelTime;
 };
 
-} // namespace RAPTOR
+}  // namespace RAPTOR

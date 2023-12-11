@@ -33,7 +33,7 @@
 // graph. MULTIPLE PASSENGER EDGES MAY BE MAPPED TO THE SAME VEHICLE EDGE SO
 // THIS ONLY RETURNS ONE (OUT OF POTENTIALLY MULTIPLE) PASSENGER EDGES!!!
 class CarEdgeToPsgEdgeAttribute : public AbstractAttribute<int> {
-public:
+ public:
   // Returns the attribute's default value.
   static Type defaultValue() { return INVALID_ID; }
 
@@ -53,7 +53,7 @@ public:
     return values[e];
   }
 
-protected:
+ protected:
   static constexpr const char *NAME =
-      "car_edge_to_psg_edge"; // The attribute's unique name.
+      "car_edge_to_psg_edge";  // The attribute's unique name.
 };

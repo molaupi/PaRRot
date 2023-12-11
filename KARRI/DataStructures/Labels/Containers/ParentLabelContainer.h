@@ -35,12 +35,13 @@
 // A container that maintains parent information during a shortest-path search.
 // Depending on the used label set, the parent information consists of parent
 // vertices and/or edges.
-template <typename GraphT, typename LabelSetT> class ParentLabelContainer {
-public:
-  using LabelMask =
-      typename LabelSetT::LabelMask; // Marks a subset of components in a label.
+template <typename GraphT, typename LabelSetT>
+class ParentLabelContainer {
+ public:
+  using LabelMask = typename LabelSetT::LabelMask;  // Marks a subset of
+                                                    // components in a label.
   using ParentLabel =
-      typename LabelSetT::ParentLabel; // The parent information for a vertex.
+      typename LabelSetT::ParentLabel;  // The parent information for a vertex.
 
   // Constructs a container that maintains parent information.
   explicit ParentLabelContainer(const GraphT &graph)
@@ -129,9 +130,9 @@ public:
     return lastPath;
   }
 
-private:
-  const GraphT &graph; // The graph on which we compute shortest paths.
-  AlignedVector<ParentLabel> parent; // The parent information for each vertex.
+ private:
+  const GraphT &graph;  // The graph on which we compute shortest paths.
+  AlignedVector<ParentLabel> parent;  // The parent information for each vertex.
   std::vector<int32_t>
-      lastPath; // The (vertex or edge) path that was retrieved last.
+      lastPath;  // The (vertex or edge) path that was retrieved last.
 };

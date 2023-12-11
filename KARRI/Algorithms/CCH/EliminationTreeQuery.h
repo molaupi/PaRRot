@@ -39,8 +39,9 @@
 // CCH without using priority queues. Depending on the used label set, it keeps
 // parent vertices and/or edges, and computes multiple shortest paths
 // simultaneously, optionally using SSE or AVX instructions.
-template <typename LabelSetT> class EliminationTreeQuery {
-private:
+template <typename LabelSetT>
+class EliminationTreeQuery {
+ private:
   using DistanceLabel = typename LabelSetT::DistanceLabel;
   using ParentLabel = typename LabelSetT::ParentLabel;
 
@@ -60,13 +61,13 @@ private:
     }
 
     const DistanceLabel
-        *tentativeDistances; // One tentative distance per simultaneous search.
+        *tentativeDistances;  // One tentative distance per simultaneous search.
   };
 
   static constexpr int K =
-      LabelSetT::K; // The number of simultaneous shortest-path computations.
+      LabelSetT::K;  // The number of simultaneous shortest-path computations.
 
-public:
+ public:
   // Constructs an elimination tree query instance.
   EliminationTreeQuery(const CH &ch, const std::vector<int32_t> &eliminTree)
 #ifdef NO_FAST_ELIMINATION_TREE_QUERY
@@ -152,7 +153,7 @@ public:
     return meetingVertices.vertex(i);
   }
 
-private:
+ private:
   // Checks whether the path via v improves the tentative distance for any
   // search.
   void updateTentativeDistances(const int v) {
@@ -169,10 +170,10 @@ private:
       UpwardEliminationTreeSearch<LabelSetT, PruningCriterion>;
 #endif
 
-  UpwardSearch forwardSearch; // The forward search from the source(s).
-  UpwardSearch reverseSearch; // The reverse search from the target(s).
+  UpwardSearch forwardSearch;  // The forward search from the source(s).
+  UpwardSearch reverseSearch;  // The reverse search from the target(s).
 
   DistanceLabel
-      tentativeDistances; // One tentative distance per simultaneous search.
-  ParentLabel meetingVertices; // One meeting vertex per simultaneous search.
+      tentativeDistances;  // One tentative distance per simultaneous search.
+  ParentLabel meetingVertices;  // One meeting vertex per simultaneous search.
 };

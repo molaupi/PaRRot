@@ -6,39 +6,36 @@
 #include <utility>
 #include <vector>
 
-#include "../Classes/GraphInterface.h"
-
-#include "../../Geometry/Point.h"
-#include "../../Geometry/Rectangle.h"
-
-#include "../../../Helpers/Assert.h"
-#include "../../../Helpers/String/String.h"
-#include "../../../Helpers/Vector/Permutation.h"
-
 #include "../../../Algorithms/DepthFirstSearch.h"
 #include "../../../Algorithms/Dijkstra/Dijkstra.h"
 #include "../../../Algorithms/StronglyConnectedComponents.h"
+#include "../../../Helpers/Assert.h"
+#include "../../../Helpers/String/String.h"
+#include "../../../Helpers/Vector/Permutation.h"
+#include "../../Geometry/Point.h"
+#include "../../Geometry/Rectangle.h"
+#include "../Classes/GraphInterface.h"
 
 namespace Graph {
 
-template <typename GRAPH> inline bool hasLoops(const GRAPH &graph) noexcept {
+template <typename GRAPH>
+inline bool hasLoops(const GRAPH &graph) noexcept {
   for (const Vertex vertex : graph.vertices()) {
     for (const Edge edge : graph.edgesFrom(vertex)) {
-      if (graph.get(ToVertex, edge) == vertex)
-        return true;
+      if (graph.get(ToVertex, edge) == vertex) return true;
     }
   }
   return false;
 }
 
-template <typename GRAPH> inline bool isAcyclic(const GRAPH &graph) noexcept {
+template <typename GRAPH>
+inline bool isAcyclic(const GRAPH &graph) noexcept {
   bool result = true;
   std::vector<bool> active(graph.numVertices(), false);
   dfs(
       graph, [&](const Vertex vertex) { active[vertex] = true; },
       [&](const Vertex vertex) {
-        if (active[vertex])
-          result = false;
+        if (active[vertex]) result = false;
       },
       [&](const Vertex vertex) { active[vertex] = false; });
   return result;
@@ -114,8 +111,7 @@ inline bool hasTriangleInequality(
       const Vertex to = graph.get(ToVertex, edge);
       for (const Edge first : graph.edgesFrom(from)) {
         for (const Edge second : graph.edgesFrom(graph.get(ToVertex, first))) {
-          if (graph.get(ToVertex, second) != to)
-            continue;
+          if (graph.get(ToVertex, second) != to) continue;
           if (graph.get(attributeName, first) +
                   graph.get(attributeName, second) <
               graph.get(attributeName, edge))
@@ -128,10 +124,9 @@ inline bool hasTriangleInequality(
 }
 
 template <typename GRAPH, AttributeNameType ATTRIBUTE_NAME = TravelTime>
-inline std::string
-characterize(const GRAPH &graph,
-             const AttributeNameWrapper<ATTRIBUTE_NAME> attributeName =
-                 TravelTime) noexcept {
+inline std::string characterize(const GRAPH &graph,
+                                const AttributeNameWrapper<ATTRIBUTE_NAME>
+                                    attributeName = TravelTime) noexcept {
   if (isClusterGraph(graph)) {
     if (hasTriangleInequality(graph, attributeName)) {
       return "Transitively closed";
@@ -182,8 +177,7 @@ inline void makeTransitivelyClosed(GRAPH &graph,
   Dijkstra<GRAPH> dijkstra(graph);
   for (const Vertex v : graph.vertices()) {
     dijkstra.run(v, noVertex, [&](const Vertex u) {
-      if (u == v)
-        return;
+      if (u == v) return;
       const int distance = dijkstra.getDistance(u);
       const Edge edge = graph.findOrAddEdge(v, u);
       if (distance < graph.get(weight, edge)) {
@@ -254,4 +248,4 @@ inline void writeStatisticsFile(const GRAPH &graph,
   statistics.close();
 }
 
-} // namespace Graph
+}  // namespace Graph

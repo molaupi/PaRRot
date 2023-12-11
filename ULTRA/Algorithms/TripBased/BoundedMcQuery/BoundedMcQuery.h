@@ -1,11 +1,9 @@
 #pragma once
 
-#include "../../CH/Query/BucketQuery.h"
-
 #include "../../../DataStructures/RAPTOR/Entities/ArrivalLabel.h"
 #include "../../../DataStructures/RAPTOR/Entities/Bags.h"
 #include "../../../DataStructures/TripBased/Data.h"
-
+#include "../../CH/Query/BucketQuery.h"
 #include "../Query/Profiler.h"
 #include "BackwardPruningQuery.h"
 #include "ForwardPruningQuery.h"
@@ -13,19 +11,23 @@
 
 namespace TripBased {
 
-template <typename PROFILER = NoProfiler> class BoundedMcQuery {
-
-public:
+template <typename PROFILER = NoProfiler>
+class BoundedMcQuery {
+ public:
   using Profiler = PROFILER;
   using Type = BoundedMcQuery<Profiler>;
 
-private:
+ private:
   struct TripLabel {
     TripLabel(const StopEventId begin = noStopEvent,
               const StopEventId end = noStopEvent,
               const int walkingDistance = INFTY, const u_int32_t parent = -1)
-        : begin(begin), end(end), walkingDistance(walkingDistance),
-          parent(parent), edgeBegin(noEdge), edgeEnd(noEdge) {}
+        : begin(begin),
+          end(end),
+          walkingDistance(walkingDistance),
+          parent(parent),
+          edgeBegin(noEdge),
+          edgeEnd(noEdge) {}
     StopEventId begin;
     StopEventId end;
     int walkingDistance;
@@ -56,7 +58,8 @@ private:
   struct TargetLabel {
     TargetLabel(const int arrivalTime = never, int walkingDistance = INFTY,
                 const u_int32_t parent = -1)
-        : arrivalTime(arrivalTime), walkingDistance(walkingDistance),
+        : arrivalTime(arrivalTime),
+          walkingDistance(walkingDistance),
           parent(parent) {}
 
     inline bool dominates(const TargetLabel &other) const noexcept {
@@ -71,19 +74,24 @@ private:
 
   using TargetBag = RAPTOR::Bag<TargetLabel>;
 
-public:
+ public:
   BoundedMcQuery(const Data &data, const Data &forwardBoundedData,
                  const Data &backwardBoundedData, const CH::CH &chData)
-      : data(data), bucketQuery(chData.forward, chData.backward,
-                                data.numberOfStops(), Weight),
+      : data(data),
+        bucketQuery(chData.forward, chData.backward, data.numberOfStops(),
+                    Weight),
         forwardPruningQuery(forwardBoundedData, bucketQuery, profiler),
         backwardPruningQuery(backwardBoundedData, forwardPruningQuery,
                              bucketQuery, profiler),
-        walkingDistanceData(data), targetBags(1),
+        walkingDistanceData(data),
+        targetBags(1),
         tripInfo(data.numberOfTrips()),
         edgeLabels(data.stopEventGraph.numEdges()),
-        offsets(data.numberOfStopEvents()), sourceVertex(noVertex),
-        targetVertex(noVertex), sourceDepartureTime(never), maxTrips(-1) {
+        offsets(data.numberOfStopEvents()),
+        sourceVertex(noVertex),
+        targetVertex(noVertex),
+        sourceDepartureTime(never),
+        maxTrips(-1) {
     queue.reserve(data.numberOfStopEvents());
     for (const TripId trip : data.trips()) {
       tripInfo[trip].tripStart = data.firstStopEventOfTrip[trip];
@@ -142,8 +150,7 @@ public:
     forwardPruningQuery.run(source, departureTime, target, arrivalSlack,
                             tripSlack);
     profiler.donePhase(PHASE_FORWARD);
-    if (forwardPruningQuery.getAnchorLabels().empty())
-      return;
+    if (forwardPruningQuery.getAnchorLabels().empty()) return;
     maxTrips = forwardPruningQuery.getMaxTrips();
     profiler.startPhase();
     backwardPruningQuery.run(target, departureTime, source, arrivalSlack,
@@ -181,8 +188,8 @@ public:
     }
   }
 
-  inline const std::vector<RAPTOR::ArrivalLabel> &
-  getAnchorLabels() const noexcept {
+  inline const std::vector<RAPTOR::ArrivalLabel> &getAnchorLabels()
+      const noexcept {
     return forwardPruningQuery.getAnchorLabels();
   }
 
@@ -208,7 +215,7 @@ public:
 
   inline Profiler &getProfiler() noexcept { return profiler; }
 
-private:
+ private:
   inline void clear() noexcept {
     queue.clear();
     walkingDistanceData.clear();
@@ -231,8 +238,7 @@ private:
       const int stopDepartureTime = sourceDepartureTime + timeFromSource;
       const int arrivalTime =
           -backwardPruningQuery.getArrivalTime(StopId(stop), maxTrips);
-      if (stopDepartureTime > arrivalTime)
-        continue;
+      if (stopDepartureTime > arrivalTime) continue;
       for (const RAPTOR::RouteSegment &segment :
            data.routesContainingStop(StopId(stop))) {
         const TripId trip = data.getEarliestTrip(segment, stopDepartureTime);
@@ -276,8 +282,7 @@ private:
           profiler.countMetric(METRIC_SCANNED_STOPS);
           const int timeToTarget =
               bucketQuery.getBackwardDistance(data.arrivalEvents[j].stop);
-          if (timeToTarget == INFTY)
-            continue;
+          if (timeToTarget == INFTY) continue;
           const int arrivalTime =
               data.arrivalEvents[j].arrivalTime + timeToTarget;
           if (arrivalTime > -backwardPruningQuery.getDepartureTime(
@@ -300,8 +305,7 @@ private:
         const TripLabel &label = queue[i];
         const TargetLabel pruningLabel(
             data.arrivalEvents[label.begin].arrivalTime, label.walkingDistance);
-        if (bestTargetBag.dominates(pruningLabel))
-          continue;
+        if (bestTargetBag.dominates(pruningLabel)) continue;
         for (Edge edge = label.edgeBegin; edge < label.edgeEnd; edge++) {
           enqueue(edge, label.walkingDistance, i);
         }
@@ -320,8 +324,7 @@ private:
     profiler.countMetric(METRIC_ENQUEUES);
     const TripInfo &info = tripInfo[trip];
     const StopEventId stopEvent = StopEventId(info.tripStart + index);
-    if (walkingDistance >= walkingDistanceData(stopEvent))
-      return;
+    if (walkingDistance >= walkingDistanceData(stopEvent)) return;
     const StopIndex reverseStopIndex(info.tripLength - index);
     if (backwardPruningQuery.getReachedIndex(
             info.reverseTrip, maxTrips - currentNumberOfTrips()) >
@@ -339,8 +342,7 @@ private:
     profiler.countMetric(METRIC_ENQUEUES);
     const EdgeLabel &label = edgeLabels[edge];
     walkingDistance += label.walkingDistance;
-    if (walkingDistance >= walkingDistanceData(label.stopEvent))
-      return;
+    if (walkingDistance >= walkingDistanceData(label.stopEvent)) return;
     if (backwardPruningQuery.getReachedIndex(
             label.reverseTrip, maxTrips - currentNumberOfTrips()) >
         label.reverseStopIndex)
@@ -354,13 +356,12 @@ private:
 
   inline void addTargetLabel(const TargetLabel &newLabel) noexcept {
     profiler.countMetric(METRIC_ADD_JOURNEYS);
-    if (!bestTargetBag.merge(newLabel))
-      return;
+    if (!bestTargetBag.merge(newLabel)) return;
     targetBags.back().mergeUndominated(newLabel);
   }
 
-  inline RAPTOR::Journey
-  getJourney(const TargetLabel &targetLabel) const noexcept {
+  inline RAPTOR::Journey getJourney(
+      const TargetLabel &targetLabel) const noexcept {
     RAPTOR::Journey result;
     u_int32_t parent = targetLabel.parent;
     if (parent == u_int32_t(-1)) {
@@ -406,9 +407,9 @@ private:
     return result;
   }
 
-  inline std::pair<StopEventId, Edge>
-  getParent(const TripLabel &parentLabel,
-            const StopEventId departureStopEvent) const noexcept {
+  inline std::pair<StopEventId, Edge> getParent(
+      const TripLabel &parentLabel,
+      const StopEventId departureStopEvent) const noexcept {
     for (StopEventId i = parentLabel.begin; i < parentLabel.end; i++) {
       for (const Edge edge : data.stopEventGraph.edgesFrom(Vertex(i))) {
         if (edgeLabels[edge].stopEvent == departureStopEvent)
@@ -419,14 +420,13 @@ private:
     return std::make_pair(noStopEvent, noEdge);
   }
 
-  inline std::pair<StopEventId, Edge>
-  getParent(const TripLabel &parentLabel,
-            const TargetLabel &targetLabel) const noexcept {
+  inline std::pair<StopEventId, Edge> getParent(
+      const TripLabel &parentLabel,
+      const TargetLabel &targetLabel) const noexcept {
     for (StopEventId i = parentLabel.begin; i < parentLabel.end; i++) {
       const int timeToTarget =
           bucketQuery.getBackwardDistance(data.arrivalEvents[i].stop);
-      if (timeToTarget == INFTY)
-        continue;
+      if (timeToTarget == INFTY) continue;
       if (data.arrivalEvents[i].arrivalTime + timeToTarget ==
           targetLabel.arrivalTime)
         return std::make_pair(i, noEdge);
@@ -435,18 +435,17 @@ private:
     return std::make_pair(noStopEvent, noEdge);
   }
 
-  inline bool
-  isContained(const RAPTOR::ArrivalLabel &anchorLabel) const noexcept {
+  inline bool isContained(
+      const RAPTOR::ArrivalLabel &anchorLabel) const noexcept {
     Ensure(anchorLabel.numberOfTrips < targetBags.size(),
            "Label with " << anchorLabel.numberOfTrips << " is out of bounds!");
     for (const TargetLabel &label : targetBags[anchorLabel.numberOfTrips]) {
-      if (label.arrivalTime == anchorLabel.arrivalTime)
-        return true;
+      if (label.arrivalTime == anchorLabel.arrivalTime) return true;
     }
     return false;
   }
 
-private:
+ private:
   const Data &data;
   CH::BucketQuery<CHGraph, true, false> bucketQuery;
   ForwardPruningQuery<Profiler> forwardPruningQuery;
@@ -471,4 +470,4 @@ private:
   Profiler profiler;
 };
 
-} // namespace TripBased
+}  // namespace TripBased

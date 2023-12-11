@@ -17,20 +17,20 @@ namespace CSA {
 
 template <bool PATH_RETRIEVAL = true, typename PROFILER = NoProfiler>
 class CSA {
-
-public:
+ public:
   constexpr static bool PathRetrieval = PATH_RETRIEVAL;
   using Profiler = PROFILER;
   using Type = CSA<PathRetrieval, Profiler>;
   using TripFlag = Meta::IF<PathRetrieval, ConnectionId, bool>;
 
-private:
+ private:
   struct ParentLabel {
     ParentLabel(const StopId parent = noStop,
                 const bool reachedByTransfer = false,
                 const TripId tripId = noTripId)
-        : parent(parent), reachedByTransfer(reachedByTransfer), tripId(tripId) {
-    }
+        : parent(parent),
+          reachedByTransfer(reachedByTransfer),
+          tripId(tripId) {}
 
     StopId parent;
     bool reachedByTransfer;
@@ -40,9 +40,11 @@ private:
     };
   };
 
-public:
+ public:
   CSA(const Data &data, const Profiler &profilerTemplate = Profiler())
-      : data(data), sourceStop(noStop), targetStop(noStop),
+      : data(data),
+        sourceStop(noStop),
+        targetStop(noStop),
         tripReached(data.numberOfTrips(), TripFlag()),
         arrivalTime(data.numberOfStops(), never),
         parentLabel(PathRetrieval ? data.numberOfStops() : 0),
@@ -100,8 +102,7 @@ public:
             typename = std::enable_if_t<T == PathRetrieval && T>>
   inline Journey getJourney(StopId stop) const noexcept {
     Journey journey;
-    if (!reachable(stop))
-      return journey;
+    if (!reachable(stop)) return journey;
     while (stop != sourceStop) {
       const ParentLabel &label = parentLabel[stop];
       if (label.reachedByTransfer) {
@@ -125,14 +126,14 @@ public:
     return journeyToPath(getJourney(stop));
   }
 
-  inline std::vector<std::string>
-  getRouteDescription(const StopId stop) const noexcept {
+  inline std::vector<std::string> getRouteDescription(
+      const StopId stop) const noexcept {
     return data.journeyToText(getJourney(stop));
   }
 
   inline const Profiler &getProfiler() const noexcept { return profiler; }
 
-private:
+ private:
   inline void clear() {
     sourceStop = noStop;
     targetStop = noStop;
@@ -143,8 +144,8 @@ private:
     }
   }
 
-  inline ConnectionId
-  firstReachableConnection(const int departureTime) const noexcept {
+  inline ConnectionId firstReachableConnection(
+      const int departureTime) const noexcept {
     return ConnectionId(
         Vector::lowerBound(data.connections, departureTime,
                            [](const Connection &connection, const int time) {
@@ -167,22 +168,21 @@ private:
     }
   }
 
-  inline bool
-  connectionIsReachableFromStop(const Connection &connection) const noexcept {
+  inline bool connectionIsReachableFromStop(
+      const Connection &connection) const noexcept {
     return arrivalTime[connection.departureStopId] <=
            connection.departureTime -
                data.minTransferTime(connection.departureStopId);
   }
 
-  inline bool
-  connectionIsReachableFromTrip(const Connection &connection) const noexcept {
+  inline bool connectionIsReachableFromTrip(
+      const Connection &connection) const noexcept {
     return tripReached[connection.tripId] != TripFlag();
   }
 
   inline bool connectionIsReachable(const Connection &connection,
                                     const ConnectionId id) noexcept {
-    if (connectionIsReachableFromTrip(connection))
-      return true;
+    if (connectionIsReachableFromTrip(connection)) return true;
     if (connectionIsReachableFromStop(connection)) {
       if constexpr (PathRetrieval) {
         tripReached[connection.tripId] = id;
@@ -197,8 +197,7 @@ private:
 
   inline void arrivalByTrip(const StopId stop, const int time,
                             const TripId trip) noexcept {
-    if (arrivalTime[stop] <= time)
-      return;
+    if (arrivalTime[stop] <= time) return;
     profiler.countMetric(METRIC_STOPS_BY_TRIP);
     arrivalTime[stop] = time;
     if constexpr (PathRetrieval) {
@@ -222,8 +221,7 @@ private:
 
   inline void arrivalByTransfer(const StopId stop, const int time,
                                 const StopId parent, const Edge edge) noexcept {
-    if (arrivalTime[stop] <= time)
-      return;
+    if (arrivalTime[stop] <= time) return;
     profiler.countMetric(METRIC_STOPS_BY_TRANSFER);
     arrivalTime[stop] = time;
     if constexpr (PathRetrieval) {
@@ -233,7 +231,7 @@ private:
     }
   }
 
-private:
+ private:
   const Data &data;
 
   StopId sourceStop;
@@ -245,4 +243,4 @@ private:
 
   Profiler profiler;
 };
-} // namespace CSA
+}  // namespace CSA

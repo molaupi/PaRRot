@@ -4,15 +4,13 @@
 #include <sstream>
 
 #include "Assert.h"
-
 #include "Meta.h"
 #include "String/String.h"
 
 template <int TAG, typename VALUE_TYPE, VALUE_TYPE INVALID,
           VALUE_TYPE DEFAULT = INVALID, typename... ADDITIONAL_CASTS>
 class TaggedInteger {
-
-public:
+ public:
   using ValueType = VALUE_TYPE;
   constexpr static ValueType InvalidValue = INVALID;
   constexpr static ValueType DefaultValue = DEFAULT;
@@ -26,7 +24,7 @@ public:
   using pointer = Type;
   using reference = ValueType &;
 
-public:
+ public:
   constexpr TaggedInteger() : internalValue(DefaultValue) {}
 
   constexpr explicit TaggedInteger(const ValueType &value)
@@ -206,7 +204,7 @@ public:
     return result.str();
   }
 
-private:
+ private:
   ValueType internalValue;
 };
 

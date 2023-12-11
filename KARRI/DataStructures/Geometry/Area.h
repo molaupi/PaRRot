@@ -45,7 +45,7 @@
 // the order in which they appear in the list. Areas can be read from and
 // written to OSM POLY files.
 class Area {
-public:
+ public:
   // Iterators referring to faces of the area.
   using Iterator = std::vector<Polygon>::iterator;
   using ConstIterator = std::vector<Polygon>::const_iterator;
@@ -59,8 +59,7 @@ public:
   // Returns true if p is inside the boundary of this area.
   bool contains(const Point &p) const {
     for (auto face = faces.rbegin(); face != faces.rend(); ++face)
-      if (face->contains(p))
-        return face->orientation() > 0;
+      if (face->contains(p)) return face->orientation() > 0;
     return false;
   }
 
@@ -70,8 +69,7 @@ public:
     while (firstPositiveFace < faces.size() &&
            faces[firstPositiveFace].orientation() < 0)
       ++firstPositiveFace;
-    if (firstPositiveFace == faces.size())
-      return Rectangle();
+    if (firstPositiveFace == faces.size()) return Rectangle();
     Rectangle box(faces[firstPositiveFace].begin(),
                   faces[firstPositiveFace].end());
     for (int i = 1; i < faces.size(); ++i)
@@ -122,8 +120,7 @@ public:
     bool addToArea = false;
     while (getline(in, line)) {
       trim(line);
-      if (line.empty())
-        continue;
+      if (line.empty()) continue;
       if (!inPolygon && line == "END") {
         // End-of-file occurred.
         return;
@@ -166,8 +163,7 @@ public:
     out << std::fixed;
     out << "none\n";
     for (int i = 0; i < faces.size(); ++i) {
-      if (faces[i].orientation() < 0)
-        out << '!';
+      if (faces[i].orientation() < 0) out << '!';
       out << i + 1 << '\n';
       for (const auto &vertex : faces[i]) {
         LatLng latLng(vertex.y(), vertex.x());
@@ -178,6 +174,6 @@ public:
     out << "END\n";
   }
 
-private:
-  std::vector<Polygon> faces; // The polygons composing this area.
+ private:
+  std::vector<Polygon> faces;  // The polygons composing this area.
 };

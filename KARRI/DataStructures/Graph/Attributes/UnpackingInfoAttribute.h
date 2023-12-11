@@ -37,7 +37,7 @@
 // integer is the index of this edge in the input graph, and the second integer
 // is set to INVALID_EDGE.
 class UnpackingInfoAttribute : public AbstractAttribute<std::pair<int, int>> {
-public:
+ public:
   // Returns the attribute's default value.
   static Type defaultValue() { return {INVALID_EDGE, INVALID_EDGE}; }
 
@@ -55,7 +55,7 @@ public:
     return values[e];
   }
 
-protected:
+ protected:
   static constexpr const char *NAME =
-      "unpacking_info"; // The attribute's unique name.
+      "unpacking_info";  // The attribute's unique name.
 };

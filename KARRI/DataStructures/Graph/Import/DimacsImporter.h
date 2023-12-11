@@ -43,12 +43,15 @@
 // various vertex attributes. Then it repeatedly calls nextEdge to read the next
 // edge from disk and fetches various edge attributes.
 class DimacsImporter {
-public:
+ public:
   // Constructs an importer to read graphs in DIMACS file format.
   DimacsImporter(const int distPrecision, const int timePrecision,
                  const int coordinatePrecision)
-      : distPrecision(distPrecision), timePrecision(timePrecision),
-        coordinatePrecision(coordinatePrecision), vertexCount(0), edgeCount(0) {
+      : distPrecision(distPrecision),
+        timePrecision(timePrecision),
+        coordinatePrecision(coordinatePrecision),
+        vertexCount(0),
+        edgeCount(0) {
     assert(distPrecision > 0);
     assert(timePrecision > 0);
     assert(coordinatePrecision > 0);
@@ -214,7 +217,8 @@ public:
   // Returns the value of the specified attribute for the current vertex/edge,
   // or the attribute's default value if the attribute is not part of the file
   // format.
-  template <typename Attr> typename Attr::Type getValue() const {
+  template <typename Attr>
+  typename Attr::Type getValue() const {
     return Attr::defaultValue();
   }
 
@@ -225,7 +229,7 @@ public:
     coFile.close();
   }
 
-private:
+ private:
   // A vertex record in DIMACS file format.
   struct VertexRecord {
     int id;
@@ -240,23 +244,23 @@ private:
     int time;
   };
 
-  int distPrecision; // Travel distances are given in 1/distPrecision meters.
-  int timePrecision; // Travel times are given in 1/timePrecision seconds.
-  int coordinatePrecision; // Coordinates are given in 1/coordinatePrecision
-                           // degrees.
+  int distPrecision;  // Travel distances are given in 1/distPrecision meters.
+  int timePrecision;  // Travel times are given in 1/timePrecision seconds.
+  int coordinatePrecision;  // Coordinates are given in 1/coordinatePrecision
+                            // degrees.
 
   std::ifstream
-      distGrFile; // The graph file that contains the travel distance metric.
+      distGrFile;  // The graph file that contains the travel distance metric.
   std::ifstream
-      timeGrFile;       // The graph file that contains the travel time metric.
-  std::ifstream coFile; // The auxiliary file that contains the coordinates.
+      timeGrFile;        // The graph file that contains the travel time metric.
+  std::ifstream coFile;  // The auxiliary file that contains the coordinates.
 
-  int vertexCount; // The number of vertices in the graph.
-  int edgeCount;   // The number of edges in the graph.
+  int vertexCount;  // The number of vertices in the graph.
+  int edgeCount;    // The number of edges in the graph.
 
   VertexRecord
-      currentVertex; // The vertex record read by the last call of nextVertex.
-  EdgeRecord currentEdge; // The edge record read by the last call of nextEdge.
+      currentVertex;  // The vertex record read by the last call of nextVertex.
+  EdgeRecord currentEdge;  // The edge record read by the last call of nextEdge.
 };
 
 // Returns the value of the LatLng attribute for the current vertex.
@@ -273,7 +277,7 @@ inline LengthAttribute::Type DimacsImporter::getValue<LengthAttribute>() const {
 
 // Returns the value of the travel time attribute for the current edge.
 template <>
-inline TravelTimeAttribute::Type
-DimacsImporter::getValue<TravelTimeAttribute>() const {
+inline TravelTimeAttribute::Type DimacsImporter::getValue<TravelTimeAttribute>()
+    const {
   return currentEdge.time;
 }

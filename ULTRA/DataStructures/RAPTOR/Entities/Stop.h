@@ -11,16 +11,17 @@
 namespace RAPTOR {
 
 class Stop {
-
-public:
+ public:
   Stop(const std::string &name = "",
        const Geometry::Point &coordinates = Geometry::Point(),
        const int minTransferTime = 0)
-      : name(name), coordinates(coordinates), minTransferTime(minTransferTime) {
-  }
+      : name(name),
+        coordinates(coordinates),
+        minTransferTime(minTransferTime) {}
   template <typename STOP_TYPE>
   Stop(const STOP_TYPE &s)
-      : name(s.name), coordinates(s.coordinates),
+      : name(s.name),
+        coordinates(s.coordinates),
         minTransferTime(s.minTransferTime) {}
   Stop(IO::Deserialization &deserialize) { this->deserialize(deserialize); }
 
@@ -37,10 +38,10 @@ public:
     deserialize(name, coordinates, minTransferTime);
   }
 
-public:
+ public:
   std::string name{""};
   Geometry::Point coordinates{};
   int minTransferTime{0};
 };
 
-} // namespace RAPTOR
+}  // namespace RAPTOR

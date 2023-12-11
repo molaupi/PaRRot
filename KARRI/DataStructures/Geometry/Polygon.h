@@ -36,7 +36,7 @@
 // A polygon defines a two-dimensional region enclosed by a single closed
 // polygonal chain.
 class Polygon {
-public:
+ public:
   // Iterators referring to vertices of this polygon.
   using VertexIterator = std::vector<Point>::iterator;
   using ConstVertexIterator = std::vector<Point>::const_iterator;
@@ -56,8 +56,7 @@ public:
   friend std::ostream &operator<<(std::ostream &os, const Polygon &polygon) {
     os << "(";
     for (int i = 0; i < polygon.size(); ++i) {
-      if (i != 0)
-        os << ", ";
+      if (i != 0) os << ", ";
       os << polygon.vertices[i];
     }
     os << ")";
@@ -163,8 +162,7 @@ public:
   // intersect itself. Note: The implementation takes quadratic time, whereas
   // the problem can be solved in O(nlog⁡n).
   bool simple() const {
-    if (size() < 3)
-      return false;
+    if (size() < 3) return false;
     // Test each pair of edges. Edges that are consecutive must not form an
     // angle of zero degrees. Non-consecutive edges must not intersect.
     for (int i = size() - 1, j = 0; j < size() - 1; i = j++) {
@@ -193,8 +191,7 @@ public:
   // Returns the signed doubled area of this polygon.
   int64_t doubledArea() const noexcept {
     const auto n = vertices.size();
-    if (n < 3)
-      return 0;
+    if (n < 3) return 0;
     int64_t area = 0;
     for (auto i = 0; i < n - 2; ++i)
       area +=
@@ -217,6 +214,6 @@ public:
     return inside;
   }
 
-private:
-  std::vector<Point> vertices; // The vertices of this polygon.
+ private:
+  std::vector<Point> vertices;  // The vertices of this polygon.
 };

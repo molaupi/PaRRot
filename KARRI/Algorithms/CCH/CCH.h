@@ -24,13 +24,13 @@
 
 #pragma once
 
-#include <cassert>
-#include <cstdint>
-#include <vector>
-
 #include <omp.h>
 #include <routingkit/constants.h>
 #include <routingkit/customizable_contraction_hierarchy.h>
+
+#include <cassert>
+#include <cstdint>
+#include <vector>
 
 #include "DataStructures/Graph/Attributes/EdgeIdAttribute.h"
 #include "DataStructures/Graph/Attributes/EdgeTailAttribute.h"
@@ -44,14 +44,14 @@
 // dissection order associated with a separator decomposition to order the
 // vertices by importance.
 class CCH {
-public:
-  using EliminationTree = std::vector<int32_t>; // The elimination tree.
+ public:
+  using EliminationTree = std::vector<int32_t>;  // The elimination tree.
   using UpGraph =
       StaticGraph<VertexAttrs<>,
-                  EdgeAttrs<EdgeTailAttribute>>; // The upward graph.
+                  EdgeAttrs<EdgeTailAttribute>>;  // The upward graph.
   using DownGraph =
       StaticGraph<VertexAttrs<>,
-                  EdgeAttrs<EdgeIdAttribute>>; // The downward graph.
+                  EdgeAttrs<EdgeIdAttribute>>;  // The downward graph.
 
   // Constructs an empty CCH.
   CCH() = default;
@@ -149,8 +149,7 @@ public:
     assert(e >= 0);
     assert(e < upGraph.numEdges());
     for (auto i = firstUpInputEdge[e]; i != firstUpInputEdge[e + 1]; ++i)
-      if (!func(upInputEdges[i]))
-        return false;
+      if (!func(upInputEdges[i])) return false;
     return true;
   }
 
@@ -161,8 +160,7 @@ public:
     assert(e >= 0);
     assert(e < upGraph.numEdges());
     for (auto i = firstDownInputEdge[e]; i != firstDownInputEdge[e + 1]; ++i)
-      if (!func(downInputEdges[i]))
-        return false;
+      if (!func(downInputEdges[i])) return false;
     return true;
   }
 
@@ -229,8 +227,7 @@ public:
       } else if (neighborOfTail > neighborOfHead) {
         ++edgeOnHead;
       } else {
-        if (!func(neighborOfTail, edgeOnTail, edgeOnHead))
-          return false;
+        if (!func(neighborOfTail, edgeOnTail, edgeOnHead)) return false;
         ++edgeOnTail;
         ++edgeOnHead;
       }
@@ -264,7 +261,7 @@ public:
     bio::write(out, downInputEdges);
   }
 
-private:
+ private:
   // Applies func to each vertex in bottom-up fashion, starting from from and
   // proceeding to to - 1. That is, func is applied to a vertex after it has
   // been applied to each downward neighbor. If this member function is called
@@ -277,8 +274,7 @@ private:
     assert(from <= to);
     const auto threshold = upGraph.numVertices() / (32 * omp_get_num_threads());
     if (to - from <= threshold || omp_get_num_threads() == 1) {
-      for (auto v = from; v < to; ++v)
-        func(v);
+      for (auto v = from; v < to; ++v) func(v);
     } else {
       for (auto child = decomp.leftChild(node); child != 0;
            child = decomp.rightSibling(child)) {
@@ -288,8 +284,7 @@ private:
         from = decomp.lastSeparatorVertex(child);
       }
 #pragma omp taskwait
-      for (auto v = from; v < to; ++v)
-        func(v);
+      for (auto v = from; v < to; ++v) func(v);
     }
   }
 
@@ -305,8 +300,7 @@ private:
     assert(from <= to);
     const auto threshold = upGraph.numVertices() / (32 * omp_get_num_threads());
     if (to - from <= threshold || omp_get_num_threads() == 1) {
-      for (auto v = to - 1; v >= from; --v)
-        func(v);
+      for (auto v = to - 1; v >= from; --v) func(v);
     } else {
       for (auto v = to - 1; v >= decomp.firstSeparatorVertex(node); --v)
         func(v);
@@ -321,17 +315,17 @@ private:
   }
 
   SeparatorDecomposition
-      decomp;        // The separator decomposition used to build this CCH.
-  Permutation ranks; // The position of each vertex in the contraction order.
-  EliminationTree eliminationTree; // The associated elimination tree.
+      decomp;         // The separator decomposition used to build this CCH.
+  Permutation ranks;  // The position of each vertex in the contraction order.
+  EliminationTree eliminationTree;  // The associated elimination tree.
 
-  UpGraph upGraph;     // The upward graph.
-  DownGraph downGraph; // The downward graph.
+  UpGraph upGraph;      // The upward graph.
+  DownGraph downGraph;  // The downward graph.
 
   std::vector<int32_t>
-      firstUpInputEdge; // The idx of the 1st upward input edge for each edge.
-  std::vector<int32_t> firstDownInputEdge; // The idx of the 1st downward input
-                                           // edge for each edge.
-  std::vector<int32_t> upInputEdges;       // The upward input edges.
-  std::vector<int32_t> downInputEdges;     // The downward input edges.
+      firstUpInputEdge;  // The idx of the 1st upward input edge for each edge.
+  std::vector<int32_t> firstDownInputEdge;  // The idx of the 1st downward input
+                                            // edge for each edge.
+  std::vector<int32_t> upInputEdges;        // The upward input edges.
+  std::vector<int32_t> downInputEdges;      // The downward input edges.
 };

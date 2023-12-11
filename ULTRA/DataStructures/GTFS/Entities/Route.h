@@ -4,30 +4,29 @@
 #include <string>
 #include <vector>
 
-#include "Vehicle.h"
-
 #include "../../../Helpers/IO/Serialization.h"
+#include "Vehicle.h"
 
 namespace GTFS {
 
 class Route {
-
-public:
+ public:
   Route(const std::string &routeId = "", const std::string &agencyId = "",
         const std::string &name = "", const int type = -1,
         const std::string &routeColor = "FFFFFF",
         const std::string &textColor = "000000")
-      : routeId(routeId), agencyId(agencyId), name(name), type(type),
-        routeColor(routeColor), textColor(textColor) {}
+      : routeId(routeId),
+        agencyId(agencyId),
+        name(name),
+        type(type),
+        routeColor(routeColor),
+        textColor(textColor) {}
   Route(IO::Deserialization &deserialize) { this->deserialize(deserialize); }
 
   inline bool validate() noexcept {
-    if (name.empty())
-      name = "NOT_NAMED";
-    if (!String::isColor(routeColor))
-      routeColor = "FFFFFF";
-    if (!String::isColor(textColor))
-      textColor = "000000";
+    if (name.empty()) name = "NOT_NAMED";
+    if (!String::isColor(routeColor)) routeColor = "FFFFFF";
+    if (!String::isColor(textColor)) textColor = "000000";
     return !routeId.empty();
   }
 
@@ -45,7 +44,7 @@ public:
     deserialize(routeId, agencyId, name, type, routeColor, textColor);
   }
 
-public:
+ public:
   std::string routeId{""};
   std::string agencyId{""};
   std::string name{""};
@@ -54,4 +53,4 @@ public:
   std::string textColor{"000000"};
 };
 
-} // namespace GTFS
+}  // namespace GTFS

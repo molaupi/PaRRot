@@ -4,13 +4,11 @@
 #include <string>
 #include <vector>
 
-#include "InitialTransfers.h"
-
 #include "../../DataStructures/Container/Map.h"
 #include "../../DataStructures/Container/Set.h"
 #include "../../DataStructures/RAPTOR/Data.h"
 #include "../../DataStructures/RAPTOR/Entities/EarliestArrivalTime.h"
-
+#include "InitialTransfers.h"
 #include "Profiler.h"
 
 namespace RAPTOR {
@@ -18,8 +16,7 @@ namespace RAPTOR {
 template <typename PROFILER = NoProfiler, bool PREVENT_DIRECT_WALKING = false,
           typename INITIAL_TRANSFERS = BucketCHInitialTransfers>
 class ULTRARAPTOR {
-
-public:
+ public:
   using Profiler = PROFILER;
   static constexpr bool PreventDirectWalking = PREVENT_DIRECT_WALKING;
   using InitialTransferType = INITIAL_TRANSFERS;
@@ -30,11 +27,14 @@ public:
   using Type = ULTRARAPTOR<Profiler, PreventDirectWalking, InitialTransferType>;
   using SourceType = Vertex;
 
-private:
+ private:
   struct EarliestArrivalLabel {
     EarliestArrivalLabel()
-        : arrivalTime(never), parentDepartureTime(never), parent(noVertex),
-          usesRoute(false), routeId(noRouteId) {}
+        : arrivalTime(never),
+          parentDepartureTime(never),
+          parent(noVertex),
+          usesRoute(false),
+          routeId(noRouteId) {}
     int arrivalTime;
     int parentDepartureTime;
     Vertex parent;
@@ -46,16 +46,20 @@ private:
   };
   using Round = std::vector<EarliestArrivalLabel>;
 
-public:
+ public:
   ULTRARAPTOR(const Data &data, const InitialTransferType initialTransfers,
               const Profiler &profilerTemplate = Profiler())
-      : data(data), initialTransfers(initialTransfers),
+      : data(data),
+        initialTransfers(initialTransfers),
         earliestArrival(data.numberOfStops() + 1),
         stopsUpdatedByRoute(data.numberOfStops() + 1),
         stopsUpdatedByTransfer(data.numberOfStops() + 1),
         routesServingUpdatedStops(data.numberOfRoutes()),
-        sourceVertex(noVertex), targetVertex(noVertex), targetStop(noStop),
-        sourceDepartureTime(never), profiler(profilerTemplate) {
+        sourceVertex(noVertex),
+        targetVertex(noVertex),
+        targetStop(noStop),
+        sourceDepartureTime(never),
+        profiler(profilerTemplate) {
     AssertMsg(data.hasImplicitBufferTimes(),
               "Departure buffer times have to be implicit!");
     profiler.registerExtraRounds(
@@ -163,8 +167,8 @@ public:
     return getArrivals(targetStop);
   }
 
-  inline std::vector<ArrivalLabel>
-  getArrivals(const Vertex vertex) const noexcept {
+  inline std::vector<ArrivalLabel> getArrivals(
+      const Vertex vertex) const noexcept {
     const StopId target =
         (vertex == targetVertex) ? (targetStop) : (StopId(vertex));
     std::vector<ArrivalLabel> labels;
@@ -207,8 +211,7 @@ public:
   inline int getEarliestArrivalNumberOfTrips() const noexcept {
     const int eat = getEarliestArrivalTime();
     for (size_t i = rounds.size() - 1; i < rounds.size(); i -= RoundFactor) {
-      if (rounds[i][targetStop].arrivalTime == eat)
-        return i;
+      if (rounds[i][targetStop].arrivalTime == eat) return i;
     }
     return -1;
   }
@@ -243,8 +246,8 @@ public:
     return getPath(targetVertex);
   }
 
-  inline std::vector<std::string>
-  getRouteDescription(const Vertex vertex) const noexcept {
+  inline std::vector<std::string> getRouteDescription(
+      const Vertex vertex) const noexcept {
     const StopId target =
         (vertex == targetVertex) ? (targetStop) : (StopId(vertex));
     return data.journeyToText(getJourneys(target).back());
@@ -263,13 +266,14 @@ public:
            rounds[round][target].arrivalTime))
         round++;
     }
-    AssertMsg(rounds[round][target].arrivalTime < never,
-              "No label found for stop " << target << " in round " << round
-                                         << "!");
+    AssertMsg(
+        rounds[round][target].arrivalTime < never,
+        "No label found for stop " << target << " in round " << round << "!");
     return rounds[round][target].arrivalTime;
   }
 
-  template <bool RESET_CAPACITIES = false> inline void clear() noexcept {
+  template <bool RESET_CAPACITIES = false>
+  inline void clear() noexcept {
     stopsUpdatedByRoute.clear();
     stopsUpdatedByTransfer.clear();
     routesServingUpdatedStops.clear();
@@ -286,7 +290,7 @@ public:
 
   inline void reset() noexcept { clear<true>(); }
 
-private:
+ private:
   inline void initialize(const Vertex source, const int departureTime,
                          const Vertex target) noexcept {
     sourceVertex = source;
@@ -304,8 +308,7 @@ private:
       if constexpr (!SeparateRouteAndTransferEntries)
         stopsUpdatedByTransfer.insert(StopId(source));
     }
-    if constexpr (SeparateRouteAndTransferEntries)
-      startNewRound();
+    if constexpr (SeparateRouteAndTransferEntries) startNewRound();
   }
 
   inline void collectRoutesServingUpdatedStops() noexcept {
@@ -382,8 +385,7 @@ private:
     initialTransfers.template run<!PreventDirectWalking>(sourceVertex,
                                                          targetVertex);
     for (const Vertex stop : initialTransfers.getForwardPOIs()) {
-      if (stop == targetStop)
-        continue;
+      if (stop == targetStop) continue;
       AssertMsg(data.isStop(stop), "Reached POI " << stop << " is not a stop!");
       AssertMsg(initialTransfers.getForwardDistance(stop) != INFTY,
                 "Vertex " << stop << " was not reached!");
@@ -421,8 +423,7 @@ private:
                                           : currentRound()[stop].arrivalTime;
       for (const Edge edge : data.transferGraph.edgesFrom(stop)) {
         const StopId toStop = StopId(data.transferGraph.get(ToVertex, edge));
-        if (toStop == targetStop)
-          continue;
+        if (toStop == targetStop) continue;
         profiler.countMetric(METRIC_EDGES);
         const int arrivalTime =
             earliestArrivalTime + data.transferGraph.get(TravelTime, edge);
@@ -481,8 +482,7 @@ private:
     AssertMsg(data.isStop(stop), "Stop " << stop << " is out of range!");
     if (earliestArrival[targetStop].getArrivalTimeByRoute() <= time)
       return false;
-    if (earliestArrival[stop].getArrivalTimeByRoute() <= time)
-      return false;
+    if (earliestArrival[stop].getArrivalTimeByRoute() <= time) return false;
     profiler.countMetric(METRIC_STOPS_BY_TRIP);
     currentRound()[stop].arrivalTime = time;
     earliestArrival[stop].setArrivalTimeByRoute(time);
@@ -495,13 +495,11 @@ private:
               "Stop " << stop << " is out of range!");
     if (earliestArrival[targetStop].getArrivalTimeByTransfer() <= time)
       return false;
-    if (earliestArrival[stop].getArrivalTimeByTransfer() <= time)
-      return false;
+    if (earliestArrival[stop].getArrivalTimeByTransfer() <= time) return false;
     profiler.countMetric(METRIC_STOPS_BY_TRANSFER);
     currentRound()[stop].arrivalTime = time;
     earliestArrival[stop].setArrivalTimeByTransfer(time);
-    if (data.isStop(stop))
-      stopsUpdatedByTransfer.insert(stop);
+    if (data.isStop(stop)) stopsUpdatedByTransfer.insert(stop);
     return true;
   }
 
@@ -530,8 +528,7 @@ private:
       if constexpr (SeparateRouteAndTransferEntries) {
         round--;
       } else {
-        if (label.usesRoute)
-          round--;
+        if (label.usesRoute) round--;
       }
     } while (journey.back().from != sourceVertex);
     journeys.emplace_back(Vector::reverse(journey));
@@ -561,7 +558,7 @@ private:
                                  (labels.empty()) ? (never) : (labels.back())));
   }
 
-private:
+ private:
   const Data &data;
 
   InitialTransferType initialTransfers;
@@ -582,4 +579,4 @@ private:
   Profiler profiler;
 };
 
-} // namespace RAPTOR
+}  // namespace RAPTOR

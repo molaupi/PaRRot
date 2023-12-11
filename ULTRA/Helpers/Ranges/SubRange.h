@@ -4,15 +4,15 @@
 
 #include "../Assert.h"
 
-template <typename RANGE> class SubRange {
-
-public:
+template <typename RANGE>
+class SubRange {
+ public:
   using Range = RANGE;
   using Type = SubRange<Range>;
 
-public:
+ public:
   class Iterator {
-  public:
+   public:
     Iterator(const Range *const range, const size_t i) : range(range), i(i) {}
     inline bool operator!=(const Iterator &other) const noexcept {
       return i != other.i;
@@ -33,7 +33,7 @@ public:
       return (*range)[i + n];
     }
 
-  private:
+   private:
     const Range *range;
     size_t i;
   };
@@ -47,7 +47,8 @@ public:
   template <typename INDEX_TYPE_A, typename INDEX_TYPE_B>
   SubRange(const Range &range, const std::vector<INDEX_TYPE_A> &indices,
            const INDEX_TYPE_B index)
-      : range(&range), beginIndex(indices[index]),
+      : range(&range),
+        beginIndex(indices[index]),
         endIndex(indices[index + 1]) {}
 
   SubRange(const Range &&, const size_t = 0, const size_t = 0) = delete;
@@ -79,7 +80,7 @@ public:
     return (*range)[endIndex - 1];
   }
 
-private:
+ private:
   const Range *range;
   size_t beginIndex;
   size_t endIndex;

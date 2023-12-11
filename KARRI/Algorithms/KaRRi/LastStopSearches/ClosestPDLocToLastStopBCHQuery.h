@@ -40,28 +40,30 @@ template <typename InputGraphT, typename CHEnvT, typename LastStopBucketsT,
           typename LabelSetT =
               BasicLabelSet<0, ParentInfo::PARENT_VERTICES_ONLY>>
 class ClosestPDLocToLastStopBCHQuery {
-
   static_assert(LabelSetT::KEEP_PARENT_VERTICES,
                 "ClosestPDLocToLastStopBCHQuery needs parent vertex pointers "
                 "to propagate id of closest PD loc through search tree.");
 
   using LabelSet = LabelSetT;
   using PruningCriterion =
-      PruningCriterionT; // Criterion to prune the Dijkstra search that
-                         // constitutes the BCH.
+      PruningCriterionT;  // Criterion to prune the Dijkstra search that
+                          // constitutes the BCH.
 
-public:
+ public:
   ClosestPDLocToLastStopBCHQuery(const InputGraphT &inputGraph,
                                  const int fleetSize, const CHEnvT &chEnv,
                                  const LastStopBucketsT &lastStopBuckets,
                                  PruningCriterion pruningCriterion = {})
-      : inputGraph(inputGraph), lastStopBuckets(lastStopBuckets),
-        ch(chEnv.getCH()), search(ch.downwardGraph(), {}, pruningCriterion),
+      : inputGraph(inputGraph),
+        lastStopBuckets(lastStopBuckets),
+        ch(chEnv.getCH()),
+        search(ch.downwardGraph(), {}, pruningCriterion),
         idOfClosestSpotToRank(ch.downwardGraph().numVertices()),
-        idOfClosestSpotToVeh(fleetSize), distVehToClosestSpot(fleetSize) {}
+        idOfClosestSpotToVeh(fleetSize),
+        distVehToClosestSpot(fleetSize) {}
 
-  template <typename PDLocsT> void run(const PDLocsT &pdLocs) {
-
+  template <typename PDLocsT>
+  void run(const PDLocsT &pdLocs) {
     Timer timer;
 
     init(pdLocs);
@@ -100,8 +102,9 @@ public:
 
   int64_t getRunTime() const { return runTime; }
 
-private:
-  template <typename PDLocsT> void init(const PDLocsT &pdLocs) {
+ private:
+  template <typename PDLocsT>
+  void init(const PDLocsT &pdLocs) {
     numEntriesScanned = 0;
 
     search.distanceLabels.init();
@@ -168,4 +171,4 @@ using ClosestPDLocToLastStopBCHQueryWithStallOnDemand =
         typename CHQuery<BasicLabelSet<0, ParentInfo::PARENT_VERTICES_ONLY>>::
             PruningCriterion>;
 
-} // namespace karri
+}  // namespace karri

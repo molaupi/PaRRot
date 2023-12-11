@@ -5,13 +5,13 @@
 namespace TripBased {
 
 class StopArrivalTimes {
-
-public:
+ public:
   StopArrivalTimes(const Data &data)
-      : data(data), defaultLabels(data.numberOfStops(), INFTY),
+      : data(data),
+        defaultLabels(data.numberOfStops(), INFTY),
         currentRound(0) {}
 
-public:
+ public:
   inline void clear() noexcept {
     labels.resize(1);
     labels[0] = defaultLabels;
@@ -46,13 +46,12 @@ public:
     const StopId stop = data.arrivalEvents[stopEvent].stop;
     const int arrivalTime = data.arrivalEvents[stopEvent].arrivalTime;
     for (size_t round = currentRound; round < labels.size(); round++) {
-      if (labels[round][stop] <= arrivalTime)
-        break;
+      if (labels[round][stop] <= arrivalTime) break;
       labels[round][stop] = arrivalTime;
     }
   }
 
-private:
+ private:
   const Data &data;
 
   std::vector<std::vector<int>> labels;
@@ -61,4 +60,4 @@ private:
   size_t currentRound;
 };
 
-} // namespace TripBased
+}  // namespace TripBased

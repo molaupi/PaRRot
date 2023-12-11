@@ -2,24 +2,22 @@
 
 #include <limits>
 
-#include "../../Attributes/Attributes.h"
-#include "../../Geometry/Point.h"
-
 #include "../../../Helpers/Meta.h"
 #include "../../../Helpers/String/String.h"
 #include "../../../Helpers/TaggedInteger.h"
 #include "../../../Helpers/Types.h"
+#include "../../Attributes/Attributes.h"
+#include "../../Geometry/Point.h"
 
 class EdgeWithFromVertex {
-
-public:
+ public:
   EdgeWithFromVertex(const Edge edge, const Vertex fromVertex)
       : edge(edge), fromVertex(fromVertex) {}
 
   inline operator Edge() const noexcept { return edge; }
 
-  inline Vertex
-  operator[](const ImplementationDetail::FromVertexType) const noexcept {
+  inline Vertex operator[](
+      const ImplementationDetail::FromVertexType) const noexcept {
     return fromVertex;
   }
 
@@ -27,14 +25,13 @@ public:
     return fromVertex;
   }
 
-public:
+ public:
   const Edge edge;
   const Vertex fromVertex;
 };
 
 inline std::string cleanGraphType(const std::string &rawType) noexcept {
-  if (rawType.empty())
-    return rawType;
+  if (rawType.empty()) return rawType;
   std::string cleanType =
       String::replaceAll(rawType, Meta::type<Vertex>(), "Vertex");
   cleanType = String::replaceAll(cleanType, Meta::type<Edge>(), "Edge");
@@ -52,11 +49,13 @@ inline std::string cleanGraphType(const std::string &rawType) noexcept {
   return cleanType;
 }
 
-template <typename T> inline std::string graphType() noexcept {
+template <typename T>
+inline std::string graphType() noexcept {
   return cleanGraphType(Meta::type<Meta::PlainType<T>>());
 }
 
-template <typename T> inline std::string graphType(T &&) noexcept {
+template <typename T>
+inline std::string graphType(T &&) noexcept {
   return graphType<T>();
 }
 
@@ -71,52 +70,52 @@ namespace Graph {
 template <typename VERTEX_ATTRIBUTES_FROM, typename EDGE_ATTRIBUTES_FROM,
           typename VERTEX_ATTRIBUTES_TO, typename EDGE_ATTRIBUTES_TO,
           typename... ATTRIBUTE_NAME_CHANGES>
-inline void
-move(StaticGraphImplementation<VERTEX_ATTRIBUTES_FROM, EDGE_ATTRIBUTES_FROM>
-         &&from,
-     StaticGraphImplementation<VERTEX_ATTRIBUTES_TO, EDGE_ATTRIBUTES_TO> &to,
-     const ATTRIBUTE_NAME_CHANGES... attributeNameChanges);
+inline void move(
+    StaticGraphImplementation<VERTEX_ATTRIBUTES_FROM, EDGE_ATTRIBUTES_FROM>
+        &&from,
+    StaticGraphImplementation<VERTEX_ATTRIBUTES_TO, EDGE_ATTRIBUTES_TO> &to,
+    const ATTRIBUTE_NAME_CHANGES... attributeNameChanges);
 template <typename VERTEX_ATTRIBUTES_FROM, typename EDGE_ATTRIBUTES_FROM,
           typename VERTEX_ATTRIBUTES_TO, typename EDGE_ATTRIBUTES_TO,
           typename... ATTRIBUTE_NAME_CHANGES>
-inline void
-move(StaticGraphImplementation<VERTEX_ATTRIBUTES_FROM, EDGE_ATTRIBUTES_FROM>
-         &&from,
-     DynamicGraphImplementation<VERTEX_ATTRIBUTES_TO, EDGE_ATTRIBUTES_TO> &to,
-     const ATTRIBUTE_NAME_CHANGES... attributeNameChanges);
+inline void move(
+    StaticGraphImplementation<VERTEX_ATTRIBUTES_FROM, EDGE_ATTRIBUTES_FROM>
+        &&from,
+    DynamicGraphImplementation<VERTEX_ATTRIBUTES_TO, EDGE_ATTRIBUTES_TO> &to,
+    const ATTRIBUTE_NAME_CHANGES... attributeNameChanges);
 template <typename VERTEX_ATTRIBUTES_FROM, typename EDGE_ATTRIBUTES_FROM,
           typename VERTEX_ATTRIBUTES_TO, typename EDGE_ATTRIBUTES_TO,
           typename... ATTRIBUTE_NAME_CHANGES>
-inline void
-move(StaticGraphImplementation<VERTEX_ATTRIBUTES_FROM, EDGE_ATTRIBUTES_FROM>
-         &&from,
-     EdgeListImplementation<VERTEX_ATTRIBUTES_TO, EDGE_ATTRIBUTES_TO> &to,
-     const ATTRIBUTE_NAME_CHANGES... attributeNameChanges);
+inline void move(
+    StaticGraphImplementation<VERTEX_ATTRIBUTES_FROM, EDGE_ATTRIBUTES_FROM>
+        &&from,
+    EdgeListImplementation<VERTEX_ATTRIBUTES_TO, EDGE_ATTRIBUTES_TO> &to,
+    const ATTRIBUTE_NAME_CHANGES... attributeNameChanges);
 
 template <typename VERTEX_ATTRIBUTES_FROM, typename EDGE_ATTRIBUTES_FROM,
           typename VERTEX_ATTRIBUTES_TO, typename EDGE_ATTRIBUTES_TO,
           typename... ATTRIBUTE_NAME_CHANGES>
-inline void
-move(DynamicGraphImplementation<VERTEX_ATTRIBUTES_FROM, EDGE_ATTRIBUTES_FROM>
-         &&from,
-     StaticGraphImplementation<VERTEX_ATTRIBUTES_TO, EDGE_ATTRIBUTES_TO> &to,
-     const ATTRIBUTE_NAME_CHANGES... attributeNameChanges);
+inline void move(
+    DynamicGraphImplementation<VERTEX_ATTRIBUTES_FROM, EDGE_ATTRIBUTES_FROM>
+        &&from,
+    StaticGraphImplementation<VERTEX_ATTRIBUTES_TO, EDGE_ATTRIBUTES_TO> &to,
+    const ATTRIBUTE_NAME_CHANGES... attributeNameChanges);
 template <typename VERTEX_ATTRIBUTES_FROM, typename EDGE_ATTRIBUTES_FROM,
           typename VERTEX_ATTRIBUTES_TO, typename EDGE_ATTRIBUTES_TO,
           typename... ATTRIBUTE_NAME_CHANGES>
-inline void
-move(DynamicGraphImplementation<VERTEX_ATTRIBUTES_FROM, EDGE_ATTRIBUTES_FROM>
-         &&from,
-     DynamicGraphImplementation<VERTEX_ATTRIBUTES_TO, EDGE_ATTRIBUTES_TO> &to,
-     const ATTRIBUTE_NAME_CHANGES... attributeNameChanges);
+inline void move(
+    DynamicGraphImplementation<VERTEX_ATTRIBUTES_FROM, EDGE_ATTRIBUTES_FROM>
+        &&from,
+    DynamicGraphImplementation<VERTEX_ATTRIBUTES_TO, EDGE_ATTRIBUTES_TO> &to,
+    const ATTRIBUTE_NAME_CHANGES... attributeNameChanges);
 template <typename VERTEX_ATTRIBUTES_FROM, typename EDGE_ATTRIBUTES_FROM,
           typename VERTEX_ATTRIBUTES_TO, typename EDGE_ATTRIBUTES_TO,
           typename... ATTRIBUTE_NAME_CHANGES>
-inline void
-move(DynamicGraphImplementation<VERTEX_ATTRIBUTES_FROM, EDGE_ATTRIBUTES_FROM>
-         &&from,
-     EdgeListImplementation<VERTEX_ATTRIBUTES_TO, EDGE_ATTRIBUTES_TO> &to,
-     const ATTRIBUTE_NAME_CHANGES... attributeNameChanges);
+inline void move(
+    DynamicGraphImplementation<VERTEX_ATTRIBUTES_FROM, EDGE_ATTRIBUTES_FROM>
+        &&from,
+    EdgeListImplementation<VERTEX_ATTRIBUTES_TO, EDGE_ATTRIBUTES_TO> &to,
+    const ATTRIBUTE_NAME_CHANGES... attributeNameChanges);
 
 template <typename VERTEX_ATTRIBUTES_FROM, typename EDGE_ATTRIBUTES_FROM,
           typename VERTEX_ATTRIBUTES_TO, typename EDGE_ATTRIBUTES_TO,
@@ -139,7 +138,7 @@ inline void move(
     EdgeListImplementation<VERTEX_ATTRIBUTES_FROM, EDGE_ATTRIBUTES_FROM> &&from,
     EdgeListImplementation<VERTEX_ATTRIBUTES_TO, EDGE_ATTRIBUTES_TO> &to,
     const ATTRIBUTE_NAME_CHANGES... attributeNameChanges);
-} // namespace Graph
+}  // namespace Graph
 
 template <typename LIST_OF_VERTEX_ATTRIBUTES, typename LIST_OF_EDGE_ATTRIBUTES>
 using StaticGraph = StaticGraphImplementation<

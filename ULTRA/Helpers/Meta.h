@@ -1,14 +1,14 @@
 #pragma once
 
+#include <cxxabi.h>
 #include <emmintrin.h>
+
+#include <cstdlib>
 #include <iostream>
+#include <memory>
 #include <type_traits>
 #include <typeinfo>
 #include <utility>
-
-#include <cstdlib>
-#include <cxxabi.h>
-#include <memory>
 
 #include "String/String.h"
 
@@ -19,7 +19,8 @@ namespace Meta {
 
 // ID
 
-template <typename T> struct ID {
+template <typename T>
+struct ID {
   using Type = T;
 };
 
@@ -33,26 +34,31 @@ struct False {
   constexpr static bool Value = false;
 };
 
-template <typename T> struct FalseIfInstantiated {
+template <typename T>
+struct FalseIfInstantiated {
   constexpr static bool Value = false;
 };
 
 // EQUALS
 
 namespace Implementation {
-template <typename T, typename U> struct Equals : False {};
+template <typename T, typename U>
+struct Equals : False {};
 
-template <typename T> struct Equals<T, T> : True {};
-} // namespace Implementation
+template <typename T>
+struct Equals<T, T> : True {};
+}  // namespace Implementation
 
-template <typename T, typename U> inline constexpr bool Equals() {
+template <typename T, typename U>
+inline constexpr bool Equals() {
   return Implementation::Equals<T, U>::Value;
 }
 
 // IF THEN ELSE
 
 namespace Implementation {
-template <bool CONDITION, typename IF_TYPE, typename ELSE_TYPE> struct If {
+template <bool CONDITION, typename IF_TYPE, typename ELSE_TYPE>
+struct If {
   using Type = ELSE_TYPE;
 };
 
@@ -60,14 +66,15 @@ template <typename IF_TYPE, typename ELSE_TYPE>
 struct If<true, IF_TYPE, ELSE_TYPE> {
   using Type = IF_TYPE;
 };
-} // namespace Implementation
+}  // namespace Implementation
 
 template <bool CONDITION, typename IF_TYPE, typename ELSE_TYPE>
 using IF = typename Implementation::If<CONDITION, IF_TYPE, ELSE_TYPE>::Type;
 
 // LIST
 
-template <typename... VALUES> struct List {
+template <typename... VALUES>
+struct List {
   using Type = List<VALUES...>;
   constexpr static size_t Size = sizeof...(VALUES);
 };
@@ -75,34 +82,39 @@ template <typename... VALUES> struct List {
 // LIST HEAD
 
 namespace Implementation {
-template <typename LIST> struct Head;
+template <typename LIST>
+struct Head;
 
 template <typename HEAD, typename... TAIL>
 struct Head<List<HEAD, TAIL...>> : ID<HEAD> {};
-} // namespace Implementation
+}  // namespace Implementation
 
-template <typename LIST> using Head = typename Implementation::Head<LIST>::Type;
+template <typename LIST>
+using Head = typename Implementation::Head<LIST>::Type;
 
 // LIST TAIL
 
 namespace Implementation {
-template <typename LIST> struct Tail;
+template <typename LIST>
+struct Tail;
 
 template <typename HEAD, typename... TAIL>
 struct Tail<List<HEAD, TAIL...>> : List<TAIL...> {};
-} // namespace Implementation
+}  // namespace Implementation
 
-template <typename LIST> using Tail = typename Implementation::Head<LIST>::Type;
+template <typename LIST>
+using Tail = typename Implementation::Head<LIST>::Type;
 
 // LIST CONCAT
 
 namespace Implementation {
-template <typename LIST_A, typename LIST_B> struct Concat;
+template <typename LIST_A, typename LIST_B>
+struct Concat;
 
 template <typename... VALUES_A, typename... VALUES_B>
 struct Concat<List<VALUES_A...>, List<VALUES_B...>>
     : List<VALUES_A..., VALUES_B...> {};
-} // namespace Implementation
+}  // namespace Implementation
 
 template <typename LIST_A, typename LIST_B>
 using Concat = typename Implementation::Concat<LIST_A, LIST_B>::Type;
@@ -110,16 +122,19 @@ using Concat = typename Implementation::Concat<LIST_A, LIST_B>::Type;
 // LIST CONTAINS
 
 namespace Implementation {
-template <typename T, typename LIST> struct Contains;
+template <typename T, typename LIST>
+struct Contains;
 
-template <typename T> struct Contains<T, List<>> : False {};
+template <typename T>
+struct Contains<T, List<>> : False {};
 
 template <typename T, typename HEAD, typename... TAIL>
 struct Contains<T, List<HEAD, TAIL...>>
     : IF<!Meta::Equals<T, HEAD>(), Contains<T, List<TAIL...>>, True> {};
-} // namespace Implementation
+}  // namespace Implementation
 
-template <typename T, typename LIST> inline constexpr bool Contains() {
+template <typename T, typename LIST>
+inline constexpr bool Contains() {
   return Implementation::Contains<T, LIST>::Value;
 }
 
@@ -147,12 +162,9 @@ inline std::string cleanType(const char *name) noexcept {
     int parenthesisCount = 1;
     size_t j;
     for (j = i + 17; j < typeID.size(); j++) {
-      if (parenthesisCount == 0)
-        break;
-      if (typeID[j] == '<')
-        parenthesisCount++;
-      if (typeID[j] == '>')
-        parenthesisCount--;
+      if (parenthesisCount == 0) break;
+      if (typeID[j] == '<') parenthesisCount++;
+      if (typeID[j] == '>') parenthesisCount--;
     }
     typeID = typeID.substr(0, i) + typeID.substr(j);
     i = String::firstIndexOf(typeID, ", std::allocator<");
@@ -164,81 +176,97 @@ inline std::string cleanType(const std::string &name) noexcept {
   return cleanType(name.c_str());
 }
 
-template <typename T> struct Type;
-} // namespace Implementation
+template <typename T>
+struct Type;
+}  // namespace Implementation
 
-template <typename T> inline std::string type(T &&) noexcept {
+template <typename T>
+inline std::string type(T &&) noexcept {
   return Implementation::cleanType(typeid(ID<T &&>).name());
 }
 
-template <typename T> inline std::string type() noexcept {
+template <typename T>
+inline std::string type() noexcept {
   return Implementation::cleanType(typeid(ID<T>).name());
 }
 
-template <typename T> struct Type {
+template <typename T>
+struct Type {
   Type() { Implementation::Type<T> type; }
 };
 
 // MAKE CONST
 
 namespace Implementation {
-template <typename T> struct MakeConst {
+template <typename T>
+struct MakeConst {
   using Type = const T;
 };
 
-template <typename T> struct MakeConst<T *> {
+template <typename T>
+struct MakeConst<T *> {
   using Type = const T *;
 };
 
-template <typename T> struct MakeConst<T *const> {
+template <typename T>
+struct MakeConst<T *const> {
   using Type = const T *const;
 };
 
-template <typename T> struct MakeConst<T &> {
+template <typename T>
+struct MakeConst<T &> {
   using Type = const T &;
 };
 
-template <typename T> struct MakeConst<T &&> {
+template <typename T>
+struct MakeConst<T &&> {
   using Type = const T &&;
 };
-} // namespace Implementation
+}  // namespace Implementation
 
 template <typename T>
 using MakeConst = typename Implementation::MakeConst<T>::Type;
 
 // IS CONST
 
-template <typename T> inline constexpr bool IsConst() {
+template <typename T>
+inline constexpr bool IsConst() {
   return Equals<T, MakeConst<T>>();
 }
 
 // REMOVE CONSTNESS
 
 namespace Implementation {
-template <typename T> struct RemoveConstness {
+template <typename T>
+struct RemoveConstness {
   using Type = T;
 };
 
-template <typename T> struct RemoveConstness<const T> {
+template <typename T>
+struct RemoveConstness<const T> {
   using Type = T;
 };
 
-template <typename T> struct RemoveConstness<const T *> {
+template <typename T>
+struct RemoveConstness<const T *> {
   using Type = T *;
 };
 
-template <typename T> struct RemoveConstness<const T *const> {
+template <typename T>
+struct RemoveConstness<const T *const> {
   using Type = T *;
 };
 
-template <typename T> struct RemoveConstness<const T &> {
+template <typename T>
+struct RemoveConstness<const T &> {
   using Type = T &;
 };
 
-template <typename T> struct RemoveConstness<const T &&> {
+template <typename T>
+struct RemoveConstness<const T &&> {
   using Type = T &&;
 };
-} // namespace Implementation
+}  // namespace Implementation
 
 template <typename T>
 using RemoveConstness = typename Implementation::RemoveConstness<T>::Type;
@@ -251,32 +279,39 @@ using CopyConstness = IF<IsConst<FROM>(), MakeConst<TO>, TO>;
 // IS REFERENCE
 
 namespace Implementation {
-template <typename T> struct IsReference : False {};
+template <typename T>
+struct IsReference : False {};
 
-template <typename T> struct IsReference<T &> : True {};
+template <typename T>
+struct IsReference<T &> : True {};
 
-template <typename T> struct IsReference<T &&> : True {};
-} // namespace Implementation
+template <typename T>
+struct IsReference<T &&> : True {};
+}  // namespace Implementation
 
-template <typename T> inline constexpr bool IsReference() {
+template <typename T>
+inline constexpr bool IsReference() {
   return Implementation::IsReference<T>::Value;
 }
 
 // REMOVE REFERENCE
 
 namespace Implementation {
-template <typename T> struct RemoveReference {
+template <typename T>
+struct RemoveReference {
   using Type = T;
 };
 
-template <typename T> struct RemoveReference<T &> {
+template <typename T>
+struct RemoveReference<T &> {
   using Type = T;
 };
 
-template <typename T> struct RemoveReference<T &&> {
+template <typename T>
+struct RemoveReference<T &&> {
   using Type = T;
 };
-} // namespace Implementation
+}  // namespace Implementation
 
 template <typename T>
 using RemoveReference = typename Implementation::RemoveReference<T>::Type;
@@ -284,30 +319,36 @@ using RemoveReference = typename Implementation::RemoveReference<T>::Type;
 // IS POINTER
 
 namespace Implementation {
-template <typename T> struct IsPointer : False {};
+template <typename T>
+struct IsPointer : False {};
 
-template <typename T> struct IsPointer<T *> : True {};
-} // namespace Implementation
+template <typename T>
+struct IsPointer<T *> : True {};
+}  // namespace Implementation
 
-template <typename T> inline constexpr bool IsPointer() {
+template <typename T>
+inline constexpr bool IsPointer() {
   return Implementation::IsPointer<RemoveConstness<T>>::Value;
 }
 
 // REMOVE POINTER
 
 namespace Implementation {
-template <typename T> struct RemovePointer {
+template <typename T>
+struct RemovePointer {
   using Type = T;
 };
 
-template <typename T> struct RemovePointer<T *> {
+template <typename T>
+struct RemovePointer<T *> {
   using Type = T;
 };
 
-template <typename T> struct RemovePointer<T *const> {
+template <typename T>
+struct RemovePointer<T *const> {
   using Type = T;
 };
-} // namespace Implementation
+}  // namespace Implementation
 
 template <typename T>
 using RemovePointer = typename Implementation::RemovePointer<T>::Type;
@@ -320,9 +361,10 @@ using PlainType = IF<IsReference<T>(), RemoveReference<RemoveConstness<T>>,
 
 // IS MOVEABLE
 
-template <typename T> inline constexpr bool IsMovable() {
+template <typename T>
+inline constexpr bool IsMovable() {
   return std::is_move_assignable<T>::value &&
          std::is_move_constructible<T>::value;
 }
 
-} // namespace Meta
+}  // namespace Meta

@@ -6,16 +6,14 @@
 #include <sstream>
 #include <vector>
 
-#include "Point.h"
-
 #include "../../Helpers/Assert.h"
 #include "../../Helpers/Helpers.h"
+#include "Point.h"
 
 namespace Geometry {
 
 class Rectangle {
-
-public:
+ public:
   // Constructors
   Rectangle() : min(), max() {}
   Rectangle(const Point &p) : min(p), max(p) {}
@@ -99,18 +97,14 @@ public:
   }
 
   inline bool contains(const Point &p) const noexcept {
-    if (p.x > max.x || p.x < min.x)
-      return false;
-    if (p.y > max.y || p.y < min.y)
-      return false;
+    if (p.x > max.x || p.x < min.x) return false;
+    if (p.y > max.y || p.y < min.y) return false;
     return true;
   }
 
   inline bool contains(const Rectangle &r) const noexcept {
-    if (r.max.x > max.x || r.min.x < min.x)
-      return false;
-    if (r.max.y > max.y || r.min.y < min.y)
-      return false;
+    if (r.max.x > max.x || r.min.x < min.x) return false;
+    if (r.max.y > max.y || r.min.y < min.y) return false;
     return true;
   }
 
@@ -173,7 +167,7 @@ public:
     return max[dimension] - min[dimension];
   }
 
-public:
+ public:
   union {
     Point topLeft;
     Point min;
@@ -197,4 +191,4 @@ inline double euclideanDistance(const Point &a, const Rectangle &b) noexcept {
 static_assert(sizeof(Rectangle) == 2 * sizeof(Point),
               "Rectangle layout is broken");
 
-} // namespace Geometry
+}  // namespace Geometry

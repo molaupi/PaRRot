@@ -24,14 +24,15 @@
 
 #pragma once
 
-#include "IteratorRange.h"
-#include "Tools/Constants.h"
 #include <algorithm>
 #include <cassert>
 #include <cstdint>
 #include <iterator>
 #include <limits>
 #include <vector>
+
+#include "IteratorRange.h"
+#include "Tools/Constants.h"
 
 // This file contains various functions for manipulating dynamic ragged
 // two-dimensional arrays. In a ragged 2D array, different rows have different
@@ -66,7 +67,6 @@
 // value block to the end of the value array).
 
 struct ValueBlockPosition {
-
   int32_t start;
   int32_t end;
 };

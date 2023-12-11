@@ -31,9 +31,9 @@ namespace karri {
 // Filters information about feasible distances found by elliptic BCH searches
 // to pickups/dropoffs that are relevant for certain stops by considering the
 // leeway and the current best known assignment cost.
-template <typename FeasibleDistancesT> class RelevantPDLocsFilter {
-
-public:
+template <typename FeasibleDistancesT>
+class RelevantPDLocsFilter {
+ public:
   RelevantPDLocsFilter(const Fleet &fleet, const CostCalculator &calculator,
                        RequestState &requestState, const RouteState &routeState,
                        const InputConfig &inputConfig,
@@ -43,8 +43,11 @@ public:
                        RelevantPDLocs &relOrdinaryDropoffs,
                        RelevantPDLocs &relPickupsBeforeNextStop,
                        RelevantPDLocs &relDropoffsBeforeNextStop)
-      : fleet(fleet), calculator(calculator), requestState(requestState),
-        routeState(routeState), inputConfig(inputConfig),
+      : fleet(fleet),
+        calculator(calculator),
+        requestState(requestState),
+        routeState(routeState),
+        inputConfig(inputConfig),
         feasiblePickupDistances(feasiblePickupDistances),
         feasibleDropoffDistances(feasibleDropoffDistances),
         relOrdinaryPickups(relOrdinaryPickups),
@@ -102,11 +105,10 @@ public:
                               requestState.numDropoffs());
   }
 
-private:
+ private:
   template <bool beforeNextStop, bool isDropoff>
   int filter(const FeasibleDistancesT &feasible, RelevantPDLocs &rel,
              const int numPDLocs) {
-
     // For each stop s, prune the pickups and dropoffs deemed relevant for an
     // ordinary assignment after s by checking them against constraints and
     // lower bounds.
@@ -125,15 +127,13 @@ private:
       rel.startOfRelevantPDLocs[vehId] = rel.relevantSpots.size();
       rel.startOfRelevantPDLocs[vehId] = rel.relevantSpots.size();
 
-      if (!vehiclesWithFeasibleDistances.contains(vehId))
-        continue;
+      if (!vehiclesWithFeasibleDistances.contains(vehId)) continue;
 
       const auto &numStops = routeState.numStopsOf(vehId);
       const auto &stopIds = routeState.stopIdsFor(vehId);
       const auto &occupancies = routeState.occupanciesFor(vehId);
 
-      if (numStops <= 1)
-        continue;
+      if (numStops <= 1) continue;
 
       // Track relevant PD locs for each stop in the relevant PD locs data
       // structure. Entries are ordered by vehicle and by stop.
@@ -141,7 +141,6 @@ private:
       const int endStopId =
           beforeNextStop ? 1 : (isDropoff ? numStops : numStops - 1);
       for (int i = beginStopId; i < endStopId; ++i) {
-
         if ((!isDropoff || beforeNextStop) && occupancies[i] == veh.capacity)
           continue;
 
@@ -170,7 +169,6 @@ private:
           }
 
           if (minCost <= requestState.getBestCost()) {
-
             ++numStopsRelevant;
             // Check each PD loc
             const auto &distsToPDLocs =
@@ -248,8 +246,7 @@ private:
 
     // If cost for only pickup side is already worse than best known cost for a
     // whole assignment, then this pickup is not relevant at this stop.
-    if (curKnownCost > requestState.getBestCost())
-      return false;
+    if (curKnownCost > requestState.getBestCost()) return false;
 
     return true;
   }
@@ -275,8 +272,7 @@ private:
     if (stopIndex == numStops - 1 || occupancy == veh.capacity)
       return d.loc == stopLocations[stopIndex];
 
-    if (stopLocations[stopIndex + 1] == d.loc)
-      return false;
+    if (stopLocations[stopIndex + 1] == d.loc) return false;
 
     if (distFromStopToDropoff >= INFTY || distFromDropoffToNextStop >= INFTY)
       return false;
@@ -295,8 +291,7 @@ private:
 
     // If cost for only dropoff side is already worse than best known cost for a
     // whole assignment, then this dropoff is not relevant at this stop.
-    if (curMinCost > requestState.getBestCost())
-      return false;
+    if (curMinCost > requestState.getBestCost()) return false;
 
     return true;
   }
@@ -346,4 +341,4 @@ private:
   RelevantPDLocs &relPickupsBeforeNextStop;
   RelevantPDLocs &relDropoffsBeforeNextStop;
 };
-} // namespace karri
+}  // namespace karri

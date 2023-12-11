@@ -37,8 +37,7 @@ template <typename InputGraphT, typename EllipticBucketsEnvT,
           typename LastStopBucketsEnvT, typename CurVehLocsT,
           typename PathTrackerT, typename LoggerT = NullLogger>
 class SystemStateUpdater {
-
-public:
+ public:
   SystemStateUpdater(const InputGraphT &inputGraph, RequestState &requestState,
                      const InputConfig &inputConfig,
                      const CurVehLocsT &curVehLocs, PathTrackerT &pathTracker,
@@ -46,32 +45,36 @@ public:
                      EllipticBucketsEnvT &ellipticBucketsEnv,
                      LastStopBucketsEnvT &lastStopBucketsEnv,
                      LastStopsAtVertices &lastStopsAtVertices)
-      : inputGraph(inputGraph), requestState(requestState),
-        inputConfig(inputConfig), curVehLocs(curVehLocs),
-        pathTracker(pathTracker), routeState(routeState),
+      : inputGraph(inputGraph),
+        requestState(requestState),
+        inputConfig(inputConfig),
+        curVehLocs(curVehLocs),
+        pathTracker(pathTracker),
+        routeState(routeState),
         ellipticBucketsEnv(ellipticBucketsEnv),
         lastStopBucketsEnv(lastStopBucketsEnv),
         lastStopsAtVertices(lastStopsAtVertices),
         bestAssignmentsLogger(LogManager<LoggerT>::getLogger(
-            "bestassignments.csv", "request_id, "
-                                   "request_time, "
-                                   "direct_od_dist, "
-                                   "vehicle_id, "
-                                   "pickup_insertion_point, "
-                                   "dropoff_insertion_point, "
-                                   "dist_to_pickup, "
-                                   "dist_from_pickup, "
-                                   "dist_to_dropoff, "
-                                   "dist_from_dropoff, "
-                                   "pickup_id, "
-                                   "pickup_walking_dist, "
-                                   "dropoff_id, "
-                                   "dropoff_walking_dist, "
-                                   "num_stops, "
-                                   "veh_dep_time_at_stop_before_pickup, "
-                                   "veh_dep_time_at_stop_before_dropoff, "
-                                   "not_using_vehicle, "
-                                   "cost\n")),
+            "bestassignments.csv",
+            "request_id, "
+            "request_time, "
+            "direct_od_dist, "
+            "vehicle_id, "
+            "pickup_insertion_point, "
+            "dropoff_insertion_point, "
+            "dist_to_pickup, "
+            "dist_from_pickup, "
+            "dist_to_dropoff, "
+            "dist_from_dropoff, "
+            "pickup_id, "
+            "pickup_walking_dist, "
+            "dropoff_id, "
+            "dropoff_walking_dist, "
+            "num_stops, "
+            "veh_dep_time_at_stop_before_pickup, "
+            "veh_dep_time_at_stop_before_dropoff, "
+            "not_using_vehicle, "
+            "cost\n")),
         overallPerfLogger(LogManager<LoggerT>::getLogger(
             stats::DispatchingPerformanceStats::LOGGER_NAME,
             "request_id, " +
@@ -248,7 +251,7 @@ public:
                      << requestState.stats().updateStats.getLoggerRow() << "\n";
   }
 
-private:
+ private:
   // If vehicle is rerouted from its current position to a newly inserted stop
   // (PBNS assignment), move stop 0 of the vehicle to its current position to
   // maintain the invariant of the schedule for the first stop, i.e. dist(s_0,
@@ -269,7 +272,6 @@ private:
   // dropoff after the insertion.
   void updateBucketState(const Assignment &asgn, const int pickupIndex,
                          const int dropoffIndex) {
-
     generateBucketStateForNewStops(asgn, pickupIndex, dropoffIndex);
 
     // If we use buckets sorted by remaining leeway, we have to update the
@@ -299,8 +301,7 @@ private:
 
     // If no new stop was inserted for the pickup, we do not need to generate
     // any new entries for it.
-    if (dropoffAtExistingStop)
-      return;
+    if (dropoffAtExistingStop) return;
 
     ellipticBucketsEnv.generateTargetBucketEntries(*asgn.vehicle, dropoffIndex);
 
@@ -364,4 +365,4 @@ private:
   LoggerT &dalsPerfLogger;
   LoggerT &updatePerfLogger;
 };
-} // namespace karri
+}  // namespace karri

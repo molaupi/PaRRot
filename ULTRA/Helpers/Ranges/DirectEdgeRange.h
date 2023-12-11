@@ -2,19 +2,19 @@
 
 #include "../../DataStructures/Graph/Classes/GraphInterface.h"
 
-template <typename GRAPH> class DirectEdgeRange {
-
-public:
+template <typename GRAPH>
+class DirectEdgeRange {
+ public:
   using Graph = GRAPH;
   using Type = DirectEdgeRange<Graph>;
 
-private:
+ private:
   using EdgeRange = decltype(std::declval<Graph>().edges());
   using EdgeIterator = decltype(std::declval<EdgeRange>().begin());
 
-public:
+ public:
   class Iterator {
-  public:
+   public:
     Iterator(const Graph *const graph, const EdgeIterator &currentEdge)
         : graph(graph), currentEdge(currentEdge) {}
     inline bool operator!=(const Iterator &other) const noexcept {
@@ -39,7 +39,7 @@ public:
       return *(*this + n);
     }
 
-  private:
+   private:
     const Graph *graph;
     EdgeIterator currentEdge;
   };
@@ -75,7 +75,7 @@ public:
     return begin()[size() - 1];
   }
 
-private:
+ private:
   const Graph *graph;
   EdgeRange edges;
 };

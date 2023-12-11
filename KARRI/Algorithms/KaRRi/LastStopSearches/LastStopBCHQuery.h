@@ -35,21 +35,18 @@ namespace karri {
 template <typename CHEnvT, typename LastStopBucketsEnvT, typename PrunerT,
           typename LabelSetT = BasicLabelSet<0, ParentInfo::FULL_PARENT_INFO>>
 class LastStopBCHQuery {
-
-private:
+ private:
   static constexpr int K = LabelSetT::K;
   using DistanceLabel = typename LabelSetT::DistanceLabel;
   using LabelMask = typename LabelSetT::LabelMask;
 
   struct ScanSortedBucket {
-
-  public:
+   public:
     explicit ScanSortedBucket(LastStopBCHQuery &search) : search(search) {}
 
     template <typename DistLabelT, typename DistLabelContainerT>
     bool operator()(const int v, DistLabelT &distFromV,
                     const DistLabelContainerT & /*distLabels*/) {
-
       // Check if we can prune at this vertex based only on the distance from v
       // to the pickup(s)
       if (allSet(search.pruner.isWorseThanUpperBoundCost(distFromV, true)))
@@ -59,7 +56,6 @@ private:
 
       auto bucket = search.bucketContainer.getBucketOf(v);
       for (const auto &entry : bucket) {
-
         const int &vehId = entry.targetId;
 
         ++numEntriesScannedHere;
@@ -87,8 +83,7 @@ private:
         }
 
         // If this vehicle is not eligible, skip it.
-        if (!search.pruner.isVehicleEligible(vehId))
-          continue;
+        if (!search.pruner.isVehicleEligible(vehId)) continue;
 
         // Update tentative distances to v for any searches where distViaV
         // admits a possible better assignment than the current best and where
@@ -100,8 +95,8 @@ private:
         // Don't update anywhere where distViaV >= INFTY
         mask &= distViaV < INFTY;
 
-        if (mask) { // if any search requires updates, update the right ones
-                    // according to mask
+        if (mask) {  // if any search requires updates, update the right ones
+                     // according to mask
           search.tentativeDistances.setDistancesForCurBatchIf(vehId, distViaV,
                                                               mask);
           search.vehiclesSeen.insert(vehId);
@@ -115,7 +110,7 @@ private:
       return false;
     }
 
-  private:
+   private:
     LastStopBCHQuery &search;
   };
 
@@ -128,11 +123,11 @@ private:
       return allSet(search.pruner.isWorseThanUpperBoundCost(distToV, false));
     }
 
-  private:
+   private:
     const LastStopBCHQuery &search;
   };
 
-public:
+ public:
   LastStopBCHQuery(
       const LastStopBucketsEnvT &lastStopBucketsEnv,
       TentativeLastStopDistances<LabelSetT> &tentativeLastStopDistances,
@@ -141,10 +136,12 @@ public:
             chEnv.template getReverseSearch<ScanSortedBucket, StopLastStopBCH,
                                             LabelSetT>(ScanSortedBucket(*this),
                                                        StopLastStopBCH(*this))),
-        pruner(pruner), ch(chEnv.getCH()),
+        pruner(pruner),
+        ch(chEnv.getCH()),
         bucketContainer(lastStopBucketsEnv.getBuckets()),
         tentativeDistances(tentativeLastStopDistances),
-        vehiclesSeen(vehiclesSeen), numVerticesSettled(0),
+        vehiclesSeen(vehiclesSeen),
+        numVerticesSettled(0),
         numEntriesVisited(0) {}
 
   void run(const std::array<int, K> &sources,
@@ -165,7 +162,7 @@ public:
 
   int getNumEntriesScanned() const { return numEntriesVisited; }
 
-private:
+ private:
   typename CHEnvT::template UpwardSearch<ScanSortedBucket, StopLastStopBCH,
                                          LabelSetT>
       upwardSearch;
@@ -181,4 +178,4 @@ private:
   int numEntriesVisited;
 };
 
-} // namespace karri
+}  // namespace karri

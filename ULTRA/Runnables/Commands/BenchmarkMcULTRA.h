@@ -16,15 +16,13 @@ using namespace Shell;
 #include "../../Algorithms/RAPTOR/ULTRAMcRAPTOR.h"
 #include "../../Algorithms/TripBased/BoundedMcQuery/BoundedMcQuery.h"
 #include "../../Algorithms/TripBased/Query/McQuery.h"
-
 #include "../../DataStructures/CSA/Data.h"
 #include "../../DataStructures/Queries/Queries.h"
 #include "../../DataStructures/RAPTOR/Data.h"
 #include "../../DataStructures/TripBased/Data.h"
 
 class RunTransitiveMcRAPTORQueries : public ParameterizedCommand {
-
-public:
+ public:
   RunTransitiveMcRAPTORQueries(BasicShell &shell)
       : ParameterizedCommand(
             shell, "runTransitiveMcRAPTORQueries",
@@ -57,8 +55,7 @@ public:
 };
 
 class RunMCRQueries : public ParameterizedCommand {
-
-public:
+ public:
   RunMCRQueries(BasicShell &shell)
       : ParameterizedCommand(shell, "runMCRQueries",
                              "Runs the given number of random MCR queries.") {
@@ -91,8 +88,7 @@ public:
 };
 
 class RunULTRAMcRAPTORQueries : public ParameterizedCommand {
-
-public:
+ public:
   RunULTRAMcRAPTORQueries(BasicShell &shell)
       : ParameterizedCommand(
             shell, "runULTRAMcRAPTORQueries",
@@ -126,8 +122,7 @@ public:
 };
 
 class RunULTRAMcTBQueries : public ParameterizedCommand {
-
-public:
+ public:
   RunULTRAMcTBQueries(BasicShell &shell)
       : ParameterizedCommand(
             shell, "runULTRAMcTBQueries",
@@ -160,8 +155,7 @@ public:
 };
 
 class RunTransitiveBoundedMcRAPTORQueries : public ParameterizedCommand {
-
-public:
+ public:
   RunTransitiveBoundedMcRAPTORQueries(BasicShell &shell)
       : ParameterizedCommand(shell, "runTransitiveBoundedMcRAPTORQueries",
                              "Runs the given number of random transitive "
@@ -201,8 +195,7 @@ public:
 };
 
 class RunUBMRAPTORQueries : public ParameterizedCommand {
-
-public:
+ public:
   RunUBMRAPTORQueries(BasicShell &shell)
       : ParameterizedCommand(
             shell, "runUBMRAPTORQueries",
@@ -244,8 +237,7 @@ public:
 };
 
 class RunUBMTBQueries : public ParameterizedCommand {
-
-public:
+ public:
   RunUBMTBQueries(BasicShell &shell)
       : ParameterizedCommand(
             shell, "runUBMTBQueries",
@@ -292,8 +284,7 @@ public:
 };
 
 class RunUBMHydRAQueries : public ParameterizedCommand {
-
-public:
+ public:
   RunUBMHydRAQueries(BasicShell &shell)
       : ParameterizedCommand(
             shell, "runUBMHydRAQueries",
@@ -341,8 +332,7 @@ public:
 };
 
 class ComputeTransferTimeSavings : public ParameterizedCommand {
-
-public:
+ public:
   ComputeTransferTimeSavings(BasicShell &shell)
       : ParameterizedCommand(
             shell, "computeTransferTimeSavings",
@@ -420,11 +410,9 @@ public:
         for (const double s : transferTimeSavings) {
           while (s < thresholds[j]) {
             j++;
-            if (j == thresholds.size())
-              break;
+            if (j == thresholds.size()) break;
           }
-          if (j == thresholds.size())
-            break;
+          if (j == thresholds.size()) break;
           savingsCount[j]++;
         }
         for (const size_t c : savingsCount) {
@@ -438,7 +426,7 @@ public:
     }
   }
 
-private:
+ private:
   std::vector<double> thresholds{0.75, 0.5, 0.25};
   std::vector<double> arrivalSlacks{1, 1.1, 1.2, 1.3, 1.4, 1.5};
   std::vector<double> tripSlacks{1, 1.25, 1.5};
@@ -447,10 +435,8 @@ private:
       const RAPTOR::WalkingParetoLabel &label,
       const std::vector<RAPTOR::ArrivalLabel> &anchorLabels) const noexcept {
     for (const RAPTOR::ArrivalLabel &anchorLabel : anchorLabels) {
-      if (label.arrivalTime != anchorLabel.arrivalTime)
-        continue;
-      if (label.numberOfTrips != anchorLabel.numberOfTrips)
-        continue;
+      if (label.arrivalTime != anchorLabel.arrivalTime) continue;
+      if (label.numberOfTrips != anchorLabel.numberOfTrips) continue;
       return true;
     }
     return false;

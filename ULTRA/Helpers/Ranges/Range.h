@@ -4,15 +4,15 @@
 
 #include "../Assert.h"
 
-template <typename ELEMENT> class Range {
-
-public:
+template <typename ELEMENT>
+class Range {
+ public:
   using Element = ELEMENT;
   using Type = Range<Element>;
 
-public:
+ public:
   class Iterator {
-  public:
+   public:
     Iterator(const Element i) : i(i) {}
     inline bool operator!=(const Iterator &other) const noexcept {
       return i != other.i;
@@ -33,7 +33,7 @@ public:
       return i + Element(n);
     }
 
-  private:
+   private:
     Element i;
   };
 
@@ -68,7 +68,7 @@ public:
     return endElement - Element(1);
   }
 
-private:
+ private:
   Element beginElement;
   Element endElement;
 };
@@ -78,7 +78,8 @@ inline Range<T> range(const T begin, const T end) noexcept {
   return Range<T>(begin, end);
 }
 
-template <typename T> inline Range<T> range(const T end) noexcept {
+template <typename T>
+inline Range<T> range(const T end) noexcept {
   return Range<T>(T(0), end);
 }
 

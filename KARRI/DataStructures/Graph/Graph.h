@@ -25,6 +25,7 @@
 #pragma once
 
 #include <algorithm>
+#include <boost/dynamic_bitset.hpp>
 #include <cassert>
 #include <cstdint>
 #include <fstream>
@@ -33,8 +34,6 @@
 #include <type_traits>
 #include <utility>
 #include <vector>
-
-#include <boost/dynamic_bitset.hpp>
 
 #include "DataStructures/Graph/Export/DefaultExporter.h"
 #include "DataStructures/Graph/Import/XatfImporter.h"
@@ -79,19 +78,23 @@ struct DynamicOutEdgeRange {
   int lastEdge;
 };
 
-} // namespace impl
+}  // namespace impl
 
 // Auxiliary classes for grouping vertex and edge attributes, respectively.
-template <typename... Attributes> class VertexAttrs {};
+template <typename... Attributes>
+class VertexAttrs {};
 
-template <typename... Attributes> class EdgeAttrs {};
+template <typename... Attributes>
+class EdgeAttrs {};
 
 template <typename VertexAttributes, typename EdgeAttributes, bool dynamic>
 class Graph;
 
 // Type trait checking if the specified type is a graph.
-template <typename T> struct IsGraph : std::false_type {};
-template <typename T> struct IsGraph<const T> : IsGraph<T> {};
+template <typename T>
+struct IsGraph : std::false_type {};
+template <typename T>
+struct IsGraph<const T> : IsGraph<T> {};
 template <typename VertexAttributes, typename EdgeAttributes, bool dynamic>
 struct IsGraph<Graph<VertexAttributes, EdgeAttributes, dynamic>>
     : std::true_type {};
@@ -107,9 +110,10 @@ class Graph<VertexAttrs<VertexAttributes...>, EdgeAttrs<EdgeAttributes...>,
             dynamic> : public VertexAttributes...,
                        public EdgeAttributes... {
   // All specializations of this class template should be friends of each other.
-  template <typename, typename, bool> friend class Graph;
+  template <typename, typename, bool>
+  friend class Graph;
 
-public:
+ public:
   using OutEdgeRange = std::conditional_t<dynamic, impl::DynamicOutEdgeRange,
                                           impl::StaticOutEdgeRange>;
 
@@ -130,7 +134,8 @@ public:
         AlignedVector<int32_t> &&edgeHeads, int edgeCount,
         AlignedVector<typename VertexAttributes::Type> &&...vertexAttrs,
         AlignedVector<typename EdgeAttributes::Type> &&...edgeAttrs)
-      : outEdges(std::move(outEdges)), edgeHeads(std::move(edgeHeads)),
+      : outEdges(std::move(outEdges)),
+        edgeHeads(std::move(edgeHeads)),
         edgeCount(edgeCount) {
     RUN_FORALL(VertexAttributes::values = std::move(vertexAttrs));
     RUN_FORALL(EdgeAttributes::values = std::move(edgeAttrs));
@@ -179,7 +184,8 @@ public:
   }
 
   // Returns true if the graph has the specified attribute.
-  template <typename Attr> static constexpr bool has() {
+  template <typename Attr>
+  static constexpr bool has() {
     return std::is_base_of<Attr, Graph>::value;
   }
 
@@ -243,14 +249,16 @@ public:
   }
 
   // Returns the value of the attribute Attr for the vertex/edge with index idx.
-  template <typename Attr> const typename Attr::Type &get(const int idx) const {
+  template <typename Attr>
+  const typename Attr::Type &get(const int idx) const {
     assert(idx >= 0);
     assert(idx < Attr::values.size());
     return Attr::values[idx];
   }
 
   // Returns the value of the attribute Attr for the vertex/edge with index idx.
-  template <typename Attr> typename Attr::Type &get(const int idx) {
+  template <typename Attr>
+  typename Attr::Type &get(const int idx) {
     assert(idx >= 0);
     assert(idx < Attr::values.size());
     return Attr::values[idx];
@@ -264,8 +272,7 @@ public:
   // Returns true if the graph contains an edge from tail to head.
   bool containsEdge(const int tail, const int head) const {
     for (int e = firstEdge(tail); e != lastEdge(tail); ++e)
-      if (edgeHead(e) == head)
-        return true;
+      if (edgeHead(e) == head) return true;
     return false;
   }
 
@@ -308,7 +315,8 @@ public:
 
   // Appends a vertex with the specified attributes to the graph. Returns the ID
   // of the new vertex.
-  template <typename... Attrs> int appendVertex(Attrs &&...attrs) {
+  template <typename... Attrs>
+  int appendVertex(Attrs &&...attrs) {
     appendVertex();
     RUN_FORALL(VertexAttributes::values.back() = std::forward<Attrs>(attrs));
     return numVertices() - 1;
@@ -353,7 +361,8 @@ public:
   // Inserts an edge with the specified attributes from the last inserted vertex
   // to v. Returns the index of the inserted edge. Note that v does not need to
   // be already present in static graphs.
-  template <typename... Attrs> int appendEdge(const int v, Attrs &&...attrs) {
+  template <typename... Attrs>
+  int appendEdge(const int v, Attrs &&...attrs) {
     const int idx = appendEdge<dynamic>(v);
     RUN_FORALL(EdgeAttributes::values[idx] = std::forward<Attrs>(attrs));
     return idx;
@@ -474,38 +483,31 @@ public:
   // Returns true if the edge arrays are sorted by tail ID and contain no holes,
   // false otherwise.
   bool isDefrag() const {
-    if (!dynamic || numVertices() == 0)
-      return true;
-    if (outEdges[0].first() != 0)
-      return false;
+    if (!dynamic || numVertices() == 0) return true;
+    if (outEdges[0].first() != 0) return false;
     for (int v = 0; v < numVertices() - 1; ++v)
-      if (outEdges[v].last() != outEdges[v + 1].first())
-        return false;
-    if (outEdges.back().last() != edgeHeads.size())
-      return false;
+      if (outEdges[v].last() != outEdges[v + 1].first()) return false;
+    if (outEdges.back().last() != edgeHeads.size()) return false;
     return true;
   }
 
   // Sorts the edge arrays by tail ID, leaving them without holes.
   void defrag() {
-    if (!dynamic)
-      return;
+    if (!dynamic) return;
     Permutation perm(edgeHeads.size());
     int newEdgeIdx = 0;
 
     // Push all valid edges to the front, breaking ties by tail ID.
     for (int u = 0; u < numVertices(); ++u) {
-      const int first = newEdgeIdx; // The index of the first edge out of u.
-      for (int e = firstEdge(u); e < lastEdge(u); ++e)
-        perm[e] = newEdgeIdx++;
+      const int first = newEdgeIdx;  // The index of the first edge out of u.
+      for (int e = firstEdge(u); e < lastEdge(u); ++e) perm[e] = newEdgeIdx++;
       outEdges[u].first() = first;
       outEdges[u].last() = newEdgeIdx;
     }
 
     // Push all invalid edges to the back.
     for (int e = 0; e < edgeHeads.size(); ++e)
-      if (edgeHeads[e] == INVALID_EDGE)
-        perm[e] = newEdgeIdx++;
+      if (edgeHeads[e] == INVALID_EDGE) perm[e] = newEdgeIdx++;
     assert(newEdgeIdx == edgeHeads.size());
 
     // Reorder the edge arrays according to the permutation.
@@ -544,8 +546,7 @@ public:
     RUN_FORALL(perm.applyTo(VertexAttributes::values));
 
     // Update edge heads.
-    for (auto &head : edgeHeads)
-      head = perm[head];
+    for (auto &head : edgeHeads) head = perm[head];
   }
 
   // Removes all vertices and edges that do not lie in the vertex-induced
@@ -577,7 +578,7 @@ public:
     for (int i = 0, u = bitmask.find_first(); i != nextId;
          ++i, u = bitmask.find_next(u)) {
       // Copy the current vertex belonging to the subgraph.
-      const int first = edgeCount; // The index of the first edge out of u.
+      const int first = edgeCount;  // The index of the first edge out of u.
       if (i != u)
         RUN_FORALL(VertexAttributes::values[i] =
                        std::move(VertexAttributes::values[u]));
@@ -596,8 +597,7 @@ public:
       }
 
       outEdges[i].first() = first;
-      if (dynamic)
-        outEdges[i].last() = edgeCount;
+      if (dynamic) outEdges[i].last() = edgeCount;
     }
 
     outEdges.resize(nextId + !dynamic);
@@ -651,8 +651,7 @@ public:
         }
       }
 
-      if (dynamic)
-        subgraph.outEdges[i].last() = edgeCount;
+      if (dynamic) subgraph.outEdges[i].last() = edgeCount;
     }
 
     subgraph.outEdges.back().last() = edgeCount;
@@ -677,13 +676,12 @@ public:
     // Obtain the indegree for each vertex v and store it in
     // reverse.outEdges[v].first().
     for (int e = 0; e < edgeHeads.size(); ++e)
-      if (isValidEdge(e))
-        ++reverse.outEdges[edgeHeads[e]].first();
+      if (isValidEdge(e)) ++reverse.outEdges[edgeHeads[e]].first();
 
     // Before the loop, reverse.outEdges[v].first() stores the indegree of v.
     // After the loop, reverse.outEdges[v].first() stores the index of the first
     // edge into v.
-    int first = 0; // The index of the first edge into the current/next vertex.
+    int first = 0;  // The index of the first edge into the current/next vertex.
     std::swap(reverse.outEdges[0].first(), first);
     for (int v = 1; v != numVertices(); ++v) {
       std::swap(reverse.outEdges[v].first(), first);
@@ -714,8 +712,7 @@ public:
   template <typename ImporterT = XatfImporter>
   void importFrom(const std::string &filename, ImporterT &im) {
     clear();
-    if (!dynamic)
-      outEdges.front().first() = -1;
+    if (!dynamic) outEdges.front().first() = -1;
 
     // Open the input file(s), read the header line(s), and allocate the vertex
     // and edge arrays.
@@ -754,8 +751,8 @@ public:
     std::vector<int> edgeTails;
     edgeTails.reserve(im.numEdges());
     bool edgesSorted =
-        true; // Indicates if the edges are already sorted by tail ID.
-    int prevTailId = -1; // The tail ID of the previous edge.
+        true;  // Indicates if the edges are already sorted by tail ID.
+    int prevTailId = -1;  // The tail ID of the previous edge.
     while (im.nextEdge()) {
       assert(im.edgeTail() >= 0);
       assert(im.edgeTail() < numVertices());
@@ -778,7 +775,7 @@ public:
     // the loop, outEdges[v].first() stores the index of the first edge out of
     // v.
     int firstEdge =
-        0; // The index of the first edge out of the current/next vertex.
+        0;  // The index of the first edge out of the current/next vertex.
     std::swap(outEdges[0].first(), firstEdge);
     for (int v = 1; v < numVertices(); ++v) {
       std::swap(outEdges[v].first(), firstEdge);
@@ -945,7 +942,7 @@ public:
     return true;
   }
 
-private:
+ private:
   // If a graph is dynamic, its edge arrays may contain "holes". To indicate
   // that an edge is a hole and not an actual edge, we store this value as its
   // head.
@@ -1025,16 +1022,16 @@ private:
   }
 
   AlignedVector<OutEdgeRange>
-      outEdges; // The ranges of outgoing edges of the vertices.
-  AlignedVector<int32_t> edgeHeads; // The head vertices of the edges.
+      outEdges;  // The ranges of outgoing edges of the vertices.
+  AlignedVector<int32_t> edgeHeads;  // The head vertices of the edges.
 
-  int edgeCount; // The number of edges in the graph.
+  int edgeCount;  // The number of edges in the graph.
 };
 
 // Write a textual representation to the specified output stream.
 template <typename VertexAttrs, typename EdgeAttrs, bool dynamic>
-inline std::ostream &
-operator<<(std::ostream &os, const Graph<VertexAttrs, EdgeAttrs, dynamic> &g) {
+inline std::ostream &operator<<(
+    std::ostream &os, const Graph<VertexAttrs, EdgeAttrs, dynamic> &g) {
   os << "#Vertices=" << g.numVertices() << " #Edges=" << g.numEdges()
      << std::endl;
   for (int u = 0; u != g.numVertices(); ++u) {
@@ -1058,10 +1055,10 @@ using DynamicGraph = Graph<VertexAttributes, EdgeAttributes, true>;
 // graph.
 #define FORALL_VERTICES(G, u) for (int u = 0; u < G.numVertices(); ++u)
 #define FORALL_EDGES(G, e) for (int e = 0; e <= G.maxEdgeIndex(); ++e)
-#define FORALL_EDGES_SIMD(G, e, vecSize)                                       \
+#define FORALL_EDGES_SIMD(G, e, vecSize) \
   for (int e = 0; e <= G.maxEdgeIndex(); e += vecSize)
-#define FORALL_VALID_EDGES(G, u, e)                                            \
-  for (int u = 0; u < G.numVertices(); ++u)                                    \
+#define FORALL_VALID_EDGES(G, u, e)         \
+  for (int u = 0; u < G.numVertices(); ++u) \
     for (int e = G.firstEdge(u); e < G.lastEdge(u); ++e)
-#define FORALL_INCIDENT_EDGES(G, u, e)                                         \
+#define FORALL_INCIDENT_EDGES(G, u, e) \
   for (int e = G.firstEdge(u); e < G.lastEdge(u); ++e)

@@ -34,7 +34,7 @@
 // removing elements, and testing elements for membership take constant time.
 // Iterating through and clearing a subset of size k both take time O(k).
 class Subset {
-public:
+ public:
   // Constructs an empty subset of a finite set of the specified size.
   explicit Subset(const int size) : elementsToIndices(size, INVALID_INDEX) {
     elements.reserve(size);
@@ -56,8 +56,7 @@ public:
   // Inserts the specified element into the subset. Invalidates only the
   // past-the-end iterator.
   bool insert(const int element) {
-    if (contains(element))
-      return false;
+    if (contains(element)) return false;
     elementsToIndices[element] = elements.size();
     elements.push_back(element);
     return true;
@@ -66,8 +65,7 @@ public:
   // Removes the specified element from the subset. May invalidate all
   // iterators.
   bool remove(const int element) {
-    if (!contains(element))
-      return false;
+    if (!contains(element)) return false;
     elements[elementsToIndices[element]] = elements.back();
     elementsToIndices[elements.back()] = elementsToIndices[element];
     elements.pop_back();
@@ -89,8 +87,8 @@ public:
     return elementsToIndices[element] != INVALID_INDEX;
   }
 
-private:
-  std::vector<int32_t> elements; // The elements contained in the subset.
+ private:
+  std::vector<int32_t> elements;  // The elements contained in the subset.
   std::vector<int32_t>
-      elementsToIndices; // The index in the element array of each element.
+      elementsToIndices;  // The index in the element array of each element.
 };

@@ -7,7 +7,6 @@
 #include "../../../Helpers/Console/Progress.h"
 #include "../../../Helpers/MultiThreading.h"
 #include "../../../Helpers/Timer.h"
-
 #include "McShortcutSearch.h"
 
 namespace TripBased {
@@ -15,14 +14,13 @@ namespace TripBased {
 template <bool DEBUG = false, bool USE_ARRIVAL_KEY = true,
           bool FULL_ROUTE_SCANS = false>
 class McULTRABuilder {
-
-public:
+ public:
   inline static constexpr bool Debug = DEBUG;
   inline static constexpr bool UseArrivalKey = USE_ARRIVAL_KEY;
   inline static constexpr bool FullRouteScans = FULL_ROUTE_SCANS;
   using Type = McULTRABuilder<Debug, UseArrivalKey, FullRouteScans>;
 
-public:
+ public:
   McULTRABuilder(const Data &data) : data(data) {
     stopEventGraph.addVertices(data.numberOfStopEvents());
   }
@@ -64,12 +62,12 @@ public:
       }
     }
 
-    std::sort(shortcuts.begin(), shortcuts.end(),
-              [](const Shortcut &a, const Shortcut &b) {
-                return (a.origin < b.origin) ||
-                       ((a.origin == b.origin) &&
-                        (a.destination < b.destination));
-              });
+    std::sort(
+        shortcuts.begin(), shortcuts.end(),
+        [](const Shortcut &a, const Shortcut &b) {
+          return (a.origin < b.origin) ||
+                 ((a.origin == b.origin) && (a.destination < b.destination));
+        });
     stopEventGraph
         .addEdge(Vertex(shortcuts[0].origin), Vertex(shortcuts[0].destination))
         .set(TravelTime, shortcuts[0].walkingDistance);
@@ -95,9 +93,9 @@ public:
     return stopEventGraph;
   }
 
-private:
+ private:
   const Data &data;
   DynamicTransferGraph stopEventGraph;
 };
 
-} // namespace TripBased
+}  // namespace TripBased

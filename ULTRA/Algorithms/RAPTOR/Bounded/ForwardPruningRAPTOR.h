@@ -6,18 +6,17 @@
 #include "../../../DataStructures/Container/Set.h"
 #include "../../../DataStructures/RAPTOR/Data.h"
 #include "../../../DataStructures/RAPTOR/Entities/ArrivalLabel.h"
-
 #include "../Profiler.h"
 
 namespace RAPTOR {
 
-template <typename PROFILER = NoProfiler> class ForwardPruningRAPTOR {
-
-public:
+template <typename PROFILER = NoProfiler>
+class ForwardPruningRAPTOR {
+ public:
   using Profiler = PROFILER;
   using Type = ForwardPruningRAPTOR<Profiler>;
 
-private:
+ private:
   struct ArrivalTimes {
     ArrivalTimes() : arrivalTimeByRoute(never), arrivalTimeByTransfer(never) {}
 
@@ -32,13 +31,18 @@ private:
 
   using Round = std::vector<ArrivalTimes>;
 
-public:
+ public:
   ForwardPruningRAPTOR(const Data &data, Profiler &profiler)
-      : data(data), stopsUpdatedByRoute(data.numberOfStops()),
+      : data(data),
+        stopsUpdatedByRoute(data.numberOfStops()),
         stopsUpdatedByTransfer(data.numberOfStops()),
-        routesServingUpdatedStops(data.numberOfRoutes()), sourceStop(noStop),
-        targetStop(noStop), sourceDepartureTime(never), arrivalSlack(INFTY),
-        maxTrips(0), profiler(profiler) {
+        routesServingUpdatedStops(data.numberOfRoutes()),
+        sourceStop(noStop),
+        targetStop(noStop),
+        sourceDepartureTime(never),
+        arrivalSlack(INFTY),
+        maxTrips(0),
+        profiler(profiler) {
     AssertMsg(data.hasImplicitBufferTimes(),
               "Departure buffer times have to be implicit!");
   }
@@ -64,8 +68,7 @@ public:
       profiler.startPhase();
       scanRoutes();
       profiler.donePhase(PHASE_SCAN);
-      if (stopsUpdatedByRoute.empty())
-        break;
+      if (stopsUpdatedByRoute.empty()) break;
       profiler.startPhase();
       relaxTransfers();
       profiler.donePhase(PHASE_TRANSFERS);
@@ -92,7 +95,7 @@ public:
         .arrivalTimeByTransfer;
   }
 
-private:
+ private:
   inline void clear() noexcept {
     stopsUpdatedByRoute.clear();
     stopsUpdatedByTransfer.clear();
@@ -223,8 +226,7 @@ private:
             arrivalSlack <
         time - sourceDepartureTime)
       return;
-    if (currentRound()[stop].arrivalTimeByRoute <= time)
-      return;
+    if (currentRound()[stop].arrivalTimeByRoute <= time) return;
     profiler.countMetric(METRIC_STOPS_BY_TRIP);
     currentRound()[stop].setArrivalTimeByRoute(time);
     stopsUpdatedByRoute.insert(stop);
@@ -237,8 +239,7 @@ private:
             arrivalSlack <
         time - sourceDepartureTime)
       return;
-    if (currentRound()[stop].arrivalTimeByTransfer <= time)
-      return;
+    if (currentRound()[stop].arrivalTimeByTransfer <= time) return;
     profiler.countMetric(METRIC_STOPS_BY_TRANSFER);
     currentRound()[stop].arrivalTimeByTransfer = time;
     stopsUpdatedByTransfer.insert(stop);
@@ -256,7 +257,7 @@ private:
     Vector::reverse(anchorLabels);
   }
 
-private:
+ private:
   const Data &data;
 
   std::vector<Round> rounds;
@@ -276,4 +277,4 @@ private:
   Profiler &profiler;
 };
 
-} // namespace RAPTOR
+}  // namespace RAPTOR

@@ -6,30 +6,30 @@
 #include "../../Helpers/Assert.h"
 
 class ExternalKHeapElement {
-
-public:
+ public:
   inline int getHeapPosition() const noexcept { return heapPosition; }
   inline void setHeapPosition(const int p) noexcept { heapPosition = p; }
   inline bool isOnHeap() const noexcept { return heapPosition != -1; }
   inline bool hasSmallerKey(const ExternalKHeapElement *const) const noexcept {
-    AssertMsg(false, "ExternalKHeapElement keys are compared using a default "
-                     "implementation of hasSmallerKey (This method should be "
-                     "overwritten in a derived class)!");
+    AssertMsg(false,
+              "ExternalKHeapElement keys are compared using a default "
+              "implementation of hasSmallerKey (This method should be "
+              "overwritten in a derived class)!");
     return true;
   }
   ExternalKHeapElement() : heapPosition(-1) {}
 
-private:
+ private:
   int heapPosition;
 };
 
-template <int logK, typename elementType> class ExternalKHeap {
-
-public:
+template <int logK, typename elementType>
+class ExternalKHeap {
+ public:
   using ElementType = elementType;
   static constexpr int K = 1 << logK;
 
-public:
+ public:
   ExternalKHeap(const int initialNumberOfElements = 1000) : heap(0) {
     static_assert(std::is_base_of<ExternalKHeapElement, ElementType>::value,
                   "Element type must inherit from ExternalKHeapElement");
@@ -107,7 +107,8 @@ public:
     return element->getHeapPosition() != -1;
   }
 
-  template <typename Range> inline void build(Range &range) {
+  template <typename Range>
+  inline void build(Range &range) {
     clear();
     for (ElementType &element : range) {
       element.setHeapPosition(heap.size());
@@ -123,7 +124,7 @@ public:
     return heap;
   }
 
-protected:
+ protected:
   inline void initialize() { numberOfElements = 0; }
 
   inline int parent(const int i) const { return (i - 1) >> logK; }
@@ -206,7 +207,7 @@ protected:
     heap[j] = temp;
   }
 
-private:
+ private:
   int numberOfElements;
   std::vector<ElementType *> heap;
 };

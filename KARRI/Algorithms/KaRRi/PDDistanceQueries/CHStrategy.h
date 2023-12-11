@@ -33,14 +33,15 @@ namespace karri::PDDistanceQueryStrategies {
 
 template <typename InputGraphT, typename CHEnvT, typename LabelSetT>
 class CHStrategy {
-
-public:
+ public:
   static constexpr int K = LabelSetT::K;
   using DistanceLabel = typename LabelSetT::DistanceLabel;
 
   CHStrategy(const InputGraphT &inputGraph, const CHEnvT &chEnv,
              PDDistances<LabelSetT> &distances, RequestState &requestState)
-      : inputGraph(inputGraph), ch(chEnv.getCH()), requestState(requestState),
+      : inputGraph(inputGraph),
+        ch(chEnv.getCH()),
+        requestState(requestState),
         distances(distances),
         query(chEnv.template getFullCHQuery<LabelSetT>()) {}
 
@@ -94,7 +95,7 @@ public:
     requestState.stats().pdDistancesStats.initializationTime += time;
   }
 
-private:
+ private:
   void runWithAllDropoffs(const std::array<int, K> &pickupHeadRanks,
                           const int firstPickupIdInBatch) {
     std::array<int, K> dropoffTailRank = {};
@@ -119,4 +120,4 @@ private:
   typename CHEnvT::template FullCHQuery<LabelSetT> query;
 };
 
-} // namespace karri::PDDistanceQueryStrategies
+}  // namespace karri::PDDistanceQueryStrategies

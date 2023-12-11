@@ -32,7 +32,7 @@
 // An edge attribute mapping an edge in a passenger graph to an edge in a car
 // graph.
 class PsgEdgeToCarEdgeAttribute : public AbstractAttribute<int> {
-public:
+ public:
   // Returns the attribute's default value.
   static Type defaultValue() { return INVALID_ID; }
 
@@ -52,7 +52,7 @@ public:
     return values[e];
   }
 
-protected:
+ protected:
   static constexpr const char *NAME =
-      "psg_edge_to_car_edge"; // The attribute's unique name.
+      "psg_edge_to_car_edge";  // The attribute's unique name.
 };

@@ -1,20 +1,18 @@
 #pragma once
 
-#include "../../RAPTOR/InitialTransfers.h"
-
 #include "../../../DataStructures/RAPTOR/Entities/ArrivalLabel.h"
 #include "../../../DataStructures/RAPTOR/Entities/Journey.h"
 #include "../../../DataStructures/TripBased/Data.h"
 #include "../../../DataStructures/TripBased/RouteLabel.h"
-
+#include "../../RAPTOR/InitialTransfers.h"
 #include "Profiler.h"
 #include "ReachedIndex.h"
 
 namespace TripBased {
 
-template <size_t GROUPED_ROUNDS, typename PROFILER = NoProfiler> class UPQuery {
-
-public:
+template <size_t GROUPED_ROUNDS, typename PROFILER = NoProfiler>
+class UPQuery {
+ public:
   constexpr static size_t GroupedRounds = GROUPED_ROUNDS;
   constexpr static bool GroupSweeps = GroupedRounds != 0;
   using Profiler = PROFILER;
@@ -23,12 +21,13 @@ public:
   using InitialAndFinalTransfers =
       RAPTOR::ParetoInitialAndFinalTransfers<false, GroupedRounds>;
 
-private:
+ private:
   struct QueryData {
     QueryData(const Data &oldData, const TransferGraph &oldTransferGraph,
               const CH::CH &oldCHData,
               const IndexedSet<false, Vertex> &oldTargets, const bool reorder)
-        : transferGraph(oldTransferGraph), chData(oldCHData),
+        : transferGraph(oldTransferGraph),
+          chData(oldCHData),
           targets(oldTargets) {
       Order chOrder(Vector::reverse(CH::getOrder(chData)));
       if (reorder) {
@@ -105,7 +104,7 @@ private:
     u_int32_t parent;
   };
 
-public:
+ public:
   UPQuery(const Data &oldData, const TransferGraph &oldTransferGraph,
           const CH::CH &oldCHData, const IndexedSet<false, Vertex> &oldTargets,
           const bool reorder)
@@ -114,9 +113,12 @@ public:
         initialAndFinalTransfers(queryData.transferGraph, queryData.chData,
                                  std::move(queryData.phastOrder),
                                  data.numberOfStops(), queryData.targets),
-        queue(data.numberOfStopEvents()), edgeRanges(data.numberOfStopEvents()),
-        queueSize(0), reachedIndex(data),
-        edgeLabels(data.stopEventGraph.numEdges()), sourceVertex(noVertex),
+        queue(data.numberOfStopEvents()),
+        edgeRanges(data.numberOfStopEvents()),
+        queueSize(0),
+        reachedIndex(data),
+        edgeLabels(data.stopEventGraph.numEdges()),
+        sourceVertex(noVertex),
         sourceDepartureTime(never) {
     for (const Edge edge : data.stopEventGraph.edges()) {
       edgeLabels[edge].stopEvent =
@@ -137,7 +139,7 @@ public:
                               METRIC_ENQUEUES, METRIC_ADD_JOURNEYS});
   }
 
-public:
+ public:
   inline void run(const Vertex source, const int departureTime) noexcept {
     profiler.start();
     clear();
@@ -154,8 +156,8 @@ public:
     profiler.done();
   }
 
-  inline std::vector<RAPTOR::Journey>
-  getJourneys(const Vertex vertex) noexcept {
+  inline std::vector<RAPTOR::Journey> getJourneys(
+      const Vertex vertex) noexcept {
     const Vertex internalVertex(queryData.externalToInternal[vertex]);
     std::vector<RAPTOR::Journey> journeys;
     for (size_t i = 0; i <= stopLabels.size(); i++) {
@@ -164,8 +166,8 @@ public:
     return journeys;
   }
 
-  inline std::vector<RAPTOR::ArrivalLabel>
-  getArrivals(const Vertex vertex) noexcept {
+  inline std::vector<RAPTOR::ArrivalLabel> getArrivals(
+      const Vertex vertex) noexcept {
     const Vertex internalVertex(queryData.externalToInternal[vertex]);
     std::vector<RAPTOR::ArrivalLabel> labels;
     for (size_t i = 0; i <= stopLabels.size(); i++) {
@@ -200,7 +202,7 @@ public:
     return initialAndFinalTransfers.getTargetGraphEdges();
   }
 
-private:
+ private:
   inline void clear() noexcept {
     queueSize = 0;
     reachedIndex.clear();
@@ -233,13 +235,11 @@ private:
         const StopId stop = data.getStop(firstTrip, stopIndex);
         const int stopDepartureTime =
             initialAndFinalTransfers.getDistance(0, stop);
-        if (stopDepartureTime == INFTY)
-          continue;
+        if (stopDepartureTime == INFTY) continue;
         if (!label.findEarliestTrip(stopIndex, stopDepartureTime, tripIndex))
           continue;
         enqueue(firstTrip + tripIndex, StopIndex(stopIndex + 1));
-        if (tripIndex == 0)
-          break;
+        if (tripIndex == 0) break;
       }
     }
     profiler.donePhase(PHASE_EVALUATE_INITIAL);
@@ -266,8 +266,7 @@ private:
           const int arrivalTime = data.arrivalEvents[j].arrivalTime;
           const StopId stop = data.arrivalEvents[j].stop;
           StopLabel &stopLabel = stopLabels.back()[stop];
-          if (stopLabel.arrivalTime <= arrivalTime)
-            continue;
+          if (stopLabel.arrivalTime <= arrivalTime) continue;
           stopLabel.arrivalTime = arrivalTime;
           stopLabel.parent = i;
           initialAndFinalTransfers.template addSource<true>(stop, arrivalTime,
@@ -283,8 +282,7 @@ private:
           const int arrivalTime = data.arrivalEvents[j].arrivalTime;
           const StopId stop = data.arrivalEvents[j].stop;
           const StopLabel &stopLabel = stopLabels.back()[stop];
-          if (stopLabel.arrivalTime < arrivalTime)
-            continue;
+          if (stopLabel.arrivalTime < arrivalTime) continue;
           label.end = StopEventId(j + 1);
         }
         edgeRanges[i].begin =
@@ -313,8 +311,7 @@ private:
 
   inline void enqueue(const TripId trip, const StopIndex index) noexcept {
     profiler.countMetric(METRIC_ENQUEUES);
-    if (reachedIndex.alreadyReached(trip, index))
-      return;
+    if (reachedIndex.alreadyReached(trip, index)) return;
     const StopEventId firstEvent = data.firstStopEventOfTrip[trip];
     queue[queueSize] = TripLabel(StopEventId(firstEvent + index),
                                  StopEventId(firstEvent + reachedIndex(trip)));
@@ -399,9 +396,9 @@ private:
     journeys.emplace_back(result);
   }
 
-  inline std::pair<StopEventId, Edge>
-  getParent(const TripLabel &parentLabel,
-            const StopEventId departureStopEvent) const noexcept {
+  inline std::pair<StopEventId, Edge> getParent(
+      const TripLabel &parentLabel,
+      const StopEventId departureStopEvent) const noexcept {
     for (StopEventId i = parentLabel.begin; i < parentLabel.end; i++) {
       for (const Edge edge : data.stopEventGraph.edgesFrom(Vertex(i))) {
         if (edgeLabels[edge].stopEvent == departureStopEvent)
@@ -412,18 +409,16 @@ private:
     return std::make_pair(noStopEvent, noEdge);
   }
 
-  inline std::pair<StopEventId, Edge>
-  getParent(const TripLabel &parentLabel, const Vertex stop,
-            const StopLabel &stopLabel) noexcept {
+  inline std::pair<StopEventId, Edge> getParent(
+      const TripLabel &parentLabel, const Vertex stop,
+      const StopLabel &stopLabel) noexcept {
     // Final transfer to target may start exactly at parentLabel.end if it has
     // length 0
     const TripId trip = data.tripOfStopEvent[parentLabel.begin];
     const StopEventId end = data.firstStopEventOfTrip[trip + 1];
     for (StopEventId i = parentLabel.begin; i < end; i++) {
-      if (data.arrivalEvents[i].stop != stop)
-        continue;
-      if (stopLabel.arrivalTime != data.arrivalEvents[i].arrivalTime)
-        continue;
+      if (data.arrivalEvents[i].stop != stop) continue;
+      if (stopLabel.arrivalTime != data.arrivalEvents[i].arrivalTime) continue;
       return std::make_pair(i, noEdge);
     }
     Ensure(false, "Could not find parent stop event!");
@@ -439,7 +434,7 @@ private:
     labels.emplace_back(arrivalTime, round);
   }
 
-private:
+ private:
   const QueryData queryData;
   const Data &data;
 
@@ -461,4 +456,4 @@ private:
   Profiler profiler;
 };
 
-} // namespace TripBased
+}  // namespace TripBased

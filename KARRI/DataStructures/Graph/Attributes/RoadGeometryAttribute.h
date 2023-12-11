@@ -32,7 +32,7 @@
 
 // An attribute associating road geometry data with each edge of a graph.
 class RoadGeometryAttribute : public AbstractAttribute<std::vector<LatLng>> {
-public:
+ public:
   // Returns a vector of LatLngs representing the road geometry of edge e.
   const Type &roadGeometry(const int e) const {
     assert(e >= 0);
@@ -48,7 +48,7 @@ public:
     return values[e];
   }
 
-protected:
+ protected:
   static constexpr const char *NAME =
-      "road_geometry"; // The attribute's unique name.
+      "road_geometry";  // The attribute's unique name.
 };

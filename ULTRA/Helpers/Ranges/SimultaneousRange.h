@@ -6,9 +6,9 @@
 
 #include "../Assert.h"
 
-template <typename RANGE_A, typename RANGE_B> class SimultaneousRange {
-
-public:
+template <typename RANGE_A, typename RANGE_B>
+class SimultaneousRange {
+ public:
   using RangeA = RANGE_A;
   using RangeB = RANGE_B;
   using Type = SimultaneousRange<RangeA, RangeB>;
@@ -18,9 +18,9 @@ public:
   using Element = decltype(std::make_tuple(*(std::declval<IteratorA>()),
                                            *(std::declval<IteratorB>())));
 
-public:
+ public:
   class Iterator {
-  public:
+   public:
     Iterator(const IteratorA &a, const IteratorB &b) : a(a), b(b) {}
     inline bool operator!=(const Iterator &other) const noexcept {
       return a != other.a;
@@ -45,7 +45,7 @@ public:
       return std::make_tuple(a[n], b[n]);
     }
 
-  private:
+   private:
     IteratorA a;
     IteratorB b;
   };
@@ -92,7 +92,7 @@ public:
     return std::make_tuple(rangeA->back(), rangeB->back());
   }
 
-private:
+ private:
   const RangeA fallbackRange;
   const RangeA *rangeA;
   const RangeB *rangeB;

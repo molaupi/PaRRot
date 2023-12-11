@@ -1,22 +1,20 @@
 #pragma once
 
+#include <dirent.h>
+#include <limits.h>
+#include <stdio.h>
+#include <sys/stat.h>
+#include <sys/types.h>
+#include <sys/wait.h>
+#include <termios.h>
+#include <unistd.h>
+
 #include <algorithm>
 #include <fstream>
 #include <iostream>
 #include <sstream>
 #include <string>
 #include <vector>
-
-#include <limits.h>
-#include <stdio.h>
-#include <termios.h>
-#include <unistd.h>
-
-#include <dirent.h>
-
-#include <sys/stat.h>
-#include <sys/types.h>
-#include <sys/wait.h>
 
 #include "../Assert.h"
 #include "../String/String.h"
@@ -75,25 +73,20 @@ inline bool isFile(const std::string &path) noexcept {
 
 inline bool renameFile(const std::string &oldName,
                        const std::string &newName) noexcept {
-  if (!isFile(oldName))
-    return false;
-  if (isFile(newName))
-    return false;
+  if (!isFile(oldName)) return false;
+  if (isFile(newName)) return false;
   return rename(oldName.c_str(), newName.c_str()) == 0;
 }
 
 inline void deleteFile(const std::string &fileName) noexcept {
-  if (!isFile(fileName))
-    return;
+  if (!isFile(fileName)) return;
   remove(fileName.c_str());
 }
 
 inline bool copyFile(const std::string &oldName,
                      const std::string &newName) noexcept {
-  if (!isFile(oldName))
-    return false;
-  if (isFile(newName))
-    return false;
+  if (!isFile(oldName)) return false;
+  if (isFile(newName)) return false;
   std::ifstream source(oldName, std::ios::binary);
   AssertMsg(source.is_open(), "cannot open file: " << oldName);
   std::ofstream destination(newName, std::ios::binary);
@@ -109,11 +102,9 @@ inline bool isFileOrDirectory(const std::string &path) noexcept {
 }
 
 inline std::string getParentDirectory(const std::string &fileName) noexcept {
-  if (fileName.size() < 2)
-    return "";
+  if (fileName.size() < 2) return "";
   size_t directoryEnd = fileName.find_last_of('/', fileName.size() - 2);
-  if (directoryEnd >= fileName.size())
-    return "";
+  if (directoryEnd >= fileName.size()) return "";
   return fileName.substr(0, directoryEnd);
 }
 
@@ -162,66 +153,58 @@ inline std::string ensureExtension(const std::string &fileName,
   }
 }
 
-inline std::string
-getFileNameWithoutExtension(const std::string &fileName) noexcept {
+inline std::string getFileNameWithoutExtension(
+    const std::string &fileName) noexcept {
   size_t directoryEnd = fileName.find_last_of('/') + 1;
-  if (directoryEnd >= fileName.size())
-    directoryEnd = 0;
+  if (directoryEnd >= fileName.size()) directoryEnd = 0;
   size_t extensionBegin = fileName.find_last_of('.');
-  if (extensionBegin <= directoryEnd)
-    extensionBegin = fileName.size();
+  if (extensionBegin <= directoryEnd) extensionBegin = fileName.size();
   return fileName.substr(directoryEnd, extensionBegin - directoryEnd);
 }
 
-inline void
-unzip(const std::string &zipFileName, const std::string &ouputDirectory,
-      const bool verbose = true,
-      const std::string &unzipExecutable = "/usr/bin/unzip") noexcept {
-  if (!isFile(zipFileName))
-    return;
-  if (!isDirectory(ouputDirectory))
-    return;
+inline void unzip(
+    const std::string &zipFileName, const std::string &ouputDirectory,
+    const bool verbose = true,
+    const std::string &unzipExecutable = "/usr/bin/unzip") noexcept {
+  if (!isFile(zipFileName)) return;
+  if (!isDirectory(ouputDirectory)) return;
   pid_t pid = fork();
   switch (pid) {
-  case -1:
-    error("Failure during fork()!");
-    exit(1);
-  case 0:
-    if (verbose) {
-      execl(unzipExecutable.c_str(), "unzip", "-o", zipFileName.c_str(), "-d",
-            ouputDirectory.c_str(), nullptr);
-    } else {
-      execl(unzipExecutable.c_str(), "unzip", "-o", "-qq", zipFileName.c_str(),
-            "-d", ouputDirectory.c_str(), nullptr);
-    }
-    error(unzipExecutable + " failed!");
-    exit(1);
-  default:
-    int status = 0;
-    while (!WIFEXITED(status)) {
-      waitpid(pid, &status, 0);
-    }
+    case -1:
+      error("Failure during fork()!");
+      exit(1);
+    case 0:
+      if (verbose) {
+        execl(unzipExecutable.c_str(), "unzip", "-o", zipFileName.c_str(), "-d",
+              ouputDirectory.c_str(), nullptr);
+      } else {
+        execl(unzipExecutable.c_str(), "unzip", "-o", "-qq",
+              zipFileName.c_str(), "-d", ouputDirectory.c_str(), nullptr);
+      }
+      error(unzipExecutable + " failed!");
+      exit(1);
+    default:
+      int status = 0;
+      while (!WIFEXITED(status)) {
+        waitpid(pid, &status, 0);
+      }
   }
 }
 
 inline void makeDirectory(const std::string &path) noexcept {
-  if (path.empty())
-    return;
-  if (isDirectory(path))
-    return;
+  if (path.empty()) return;
+  if (isDirectory(path)) return;
   makeDirectory(getParentDirectory(path));
   mkdir(path.c_str(), S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
 }
 
-inline const std::string &
-ensureDirectoryExists(const std::string &fileName) noexcept {
+inline const std::string &ensureDirectoryExists(
+    const std::string &fileName) noexcept {
   const std::string parentDirectory = getParentDirectory(fileName);
-  if (parentDirectory == "")
-    return fileName;
-  if (isDirectory(parentDirectory))
-    return fileName;
+  if (parentDirectory == "") return fileName;
+  if (isDirectory(parentDirectory)) return fileName;
   makeDirectory(parentDirectory);
   return fileName;
 }
 
-} // namespace FileSystem
+}  // namespace FileSystem

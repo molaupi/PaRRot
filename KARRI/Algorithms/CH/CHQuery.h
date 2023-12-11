@@ -47,17 +47,17 @@ template <typename LabelSetT, bool USE_STALLING = true,
               StampedDistanceLabelContainer,
           typename QueueT = AddressableQuadHeap>
 class CHQuery {
-private:
+ private:
   static constexpr int K =
-      LabelSetT::K; // The number of simultaneous shortest-path computations.
+      LabelSetT::K;  // The number of simultaneous shortest-path computations.
   using DistLabel =
-      typename LabelSetT::DistanceLabel; // The distance label of a vertex.
+      typename LabelSetT::DistanceLabel;  // The distance label of a vertex.
 
-public:
+ public:
   // The pruning criterion for a CH query, also known as stall-on-demand.
   struct PruningCriterion {
-    using LabelMask = typename LabelSetT::LabelMask; // Marks a subset of
-                                                     // components in a label.
+    using LabelMask = typename LabelSetT::LabelMask;  // Marks a subset of
+                                                      // components in a label.
 
     // Constructs a pruning criterion for a CH query.
     PruningCriterion(const CH::SearchGraph &oppositeGraph) noexcept
@@ -74,8 +74,8 @@ public:
       return !continueSearch;
     }
 
-    const CH::SearchGraph
-        &oppositeGraph; // The down (up) graph if we prune the up (down) search.
+    const CH::SearchGraph &
+        oppositeGraph;  // The down (up) graph if we prune the up (down) search.
   };
 
   // Constructs a CH query instance that uses stall-on-demand.
@@ -115,15 +115,17 @@ public:
     return search.getEdgePathFromMeetingVertex(i);
   }
 
-private:
+ private:
   // The stopping criterion for a CH query that computes k shortest paths
   // simultaneously. We can stop the forward search as soon as mu_i <= Qf.minKey
   // for all i = 1, ..., k. The reverse search is stopped in the same way.
-  template <typename> struct StoppingCriterion {
+  template <typename>
+  struct StoppingCriterion {
     // Constructs a stopping criterion for a CH query.
     StoppingCriterion(const QueueT &forwardQueue, const QueueT &reverseQueue,
                       const int &maxTentativeDistance)
-        : forwardQueue(forwardQueue), reverseQueue(reverseQueue),
+        : forwardQueue(forwardQueue),
+          reverseQueue(reverseQueue),
           maxTentativeDistance(maxTentativeDistance) {}
 
     // Returns true if we can stop the forward search.
@@ -138,10 +140,10 @@ private:
              maxTentativeDistance <= reverseQueue.minKey();
     }
 
-    const QueueT &forwardQueue; // The priority queue of the forward search.
-    const QueueT &reverseQueue; // The priority queue of the reverse search.
+    const QueueT &forwardQueue;  // The priority queue of the forward search.
+    const QueueT &reverseQueue;  // The priority queue of the reverse search.
     const int
-        &maxTentativeDistance; // The largest of all k tentative distances.
+        &maxTentativeDistance;  // The largest of all k tentative distances.
   };
 
   using UpwardSearchStall =
@@ -156,5 +158,5 @@ private:
       std::conditional_t<USE_STALLING, UpwardSearchStall, UpwardSearchNoStall>;
 
   BiDijkstra<UpwardSearch, StoppingCriterion>
-      search; // The modified bidirectional search.
+      search;  // The modified bidirectional search.
 };

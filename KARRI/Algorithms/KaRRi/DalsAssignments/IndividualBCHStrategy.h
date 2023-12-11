@@ -32,21 +32,19 @@ namespace karri::DropoffAfterLastStopStrategies {
 template <typename InputGraphT, typename CHEnvT, typename LastStopBucketsEnvT,
           typename CurVehLocToPickupSearchesT, typename LabelSet>
 struct IndividualBCHStrategy {
-private:
+ private:
   static constexpr int K = LabelSet::K;
   using LabelMask = typename LabelSet::LabelMask;
   using DistanceLabel = typename LabelSet::DistanceLabel;
 
   struct DropoffAfterLastStopPruner {
-
     DropoffAfterLastStopPruner(IndividualBCHStrategy &strat,
                                const CostCalculator &calc)
         : strat(strat), calc(calc) {}
 
-    LabelMask
-    isWorseThanUpperBoundCost(const DistanceLabel &distancesToDropoffs,
-                              const bool considerWalkingDists) const {
-
+    LabelMask isWorseThanUpperBoundCost(
+        const DistanceLabel &distancesToDropoffs,
+        const bool considerWalkingDists) const {
       if (strat.upperBoundCost >= INFTY) {
         // If current best is INFTY, only indices i with distancesToDropoffs[i]
         // >= INFTY are worse than the current best.
@@ -77,7 +75,7 @@ private:
               strat.relevantOrdinaryPickups.hasRelevantSpotsFor(vehId));
     }
 
-  private:
+   private:
     IndividualBCHStrategy &strat;
     const CostCalculator &calc;
   };
@@ -86,7 +84,7 @@ private:
       LastStopBCHQuery<CHEnvT, LastStopBucketsEnvT, DropoffAfterLastStopPruner,
                        LabelSet>;
 
-public:
+ public:
   IndividualBCHStrategy(const InputGraphT &inputGraph, const Fleet &fleet,
                         const CHEnvT &chEnv, const CostCalculator &calculator,
                         const LastStopBucketsEnvT &lastStopBucketsEnv,
@@ -95,9 +93,12 @@ public:
                         RequestState &requestState,
                         const RelevantPDLocs &relevantOrdinaryPickups,
                         const RelevantPDLocs &relevantPickupsBeforeNextStop)
-      : inputGraph(inputGraph), fleet(fleet), calculator(calculator),
+      : inputGraph(inputGraph),
+        fleet(fleet),
+        calculator(calculator),
         curVehLocToPickupSearches(curVehLocToPickupSearchesT),
-        routeState(routeState), requestState(requestState),
+        routeState(routeState),
+        requestState(requestState),
         relevantOrdinaryPickups(relevantOrdinaryPickups),
         relevantPickupsBeforeNextStop(relevantPickupsBeforeNextStop),
         checkPBNSForVehicle(fleet.size()),
@@ -112,7 +113,7 @@ public:
     enumerateAssignments();
   }
 
-private:
+ private:
   // Run BCH queries that obtain distances from last stops to dropoffs
   void runBchQueries() {
     Timer timer;
@@ -195,7 +196,7 @@ private:
 
         asgn.distToDropoff = getDistanceToDropoff(vehId, asgn.dropoff->id);
         if (asgn.distToDropoff >= INFTY)
-          continue; // no need to check pickup before next stop
+          continue;  // no need to check pickup before next stop
 
         assert(asgn.distToDropoff >= 0 && asgn.distToDropoff < INFTY);
         int curPickupIndex = numStops - 1;
@@ -207,8 +208,7 @@ private:
             // New smaller pickup index reached: Check if seating capacity and
             // cost lower bound admit any valid assignments at this or earlier
             // indices.
-            if (occupancies[entry.stopIndex] >= asgn.vehicle->capacity)
-              break;
+            if (occupancies[entry.stopIndex] >= asgn.vehicle->capacity) break;
 
             assert(entry.stopIndex < numStops - 1);
             const auto minTripTimeToLastStop =
@@ -220,15 +220,13 @@ private:
                     .calcCostLowerBoundForDropoffAfterLastStopIndependentOfVehicle(
                         asgn.dropoff->walkingDist, asgn.distToDropoff,
                         minTripTimeToLastStop, requestState);
-            if (minCostFromHere > requestState.getBestCost())
-              break;
+            if (minCostFromHere > requestState.getBestCost()) break;
 
             curPickupIndex = entry.stopIndex;
           }
 
           asgn.pickup = &requestState.pickups[entry.pdId];
-          if (asgn.pickup->loc == asgn.dropoff->loc)
-            continue;
+          if (asgn.pickup->loc == asgn.dropoff->loc) continue;
           ++numAssignmentsTried;
           asgn.pickupStopIdx = entry.stopIndex;
           asgn.distToPickup = entry.distToPDLoc;
@@ -254,12 +252,9 @@ private:
 
     for (const auto &vehId :
          relevantPickupsBeforeNextStop.getVehiclesWithRelevantPDLocs()) {
+      if (!vehiclesSeenForDropoffs.contains(vehId)) continue;
 
-      if (!vehiclesSeenForDropoffs.contains(vehId))
-        continue;
-
-      if (!checkPBNSForVehicle.isSet(vehId))
-        continue;
+      if (!checkPBNSForVehicle.isSet(vehId)) continue;
 
       if (routeState.numStopsOf(vehId) == 0 ||
           routeState.occupanciesFor(vehId)[0] >= fleet[vehId].capacity)
@@ -279,12 +274,10 @@ private:
         asgn.distFromPickup = entry.distFromPDLocToNextStop;
         for (const auto &dropoff : requestState.dropoffs) {
           asgn.dropoff = &dropoff;
-          if (asgn.pickup->loc == asgn.dropoff->loc)
-            continue;
+          if (asgn.pickup->loc == asgn.dropoff->loc) continue;
 
           asgn.distToDropoff = getDistanceToDropoff(vehId, asgn.dropoff->id);
-          if (asgn.distToDropoff >= INFTY)
-            continue;
+          if (asgn.distToDropoff >= INFTY) continue;
 
           if (curVehLocToPickupSearches.knowsDistance(vehId, asgn.pickup->id)) {
             asgn.distToPickup =
@@ -325,19 +318,16 @@ private:
 
         asgn.distToPickup =
             curVehLocToPickupSearches.getDistance(vehId, continuation.pickupID);
-        if (asgn.distToPickup >= INFTY)
-          continue;
+        if (asgn.distToPickup >= INFTY) continue;
 
         asgn.distFromPickup = continuation.distFromPickup;
         for (int dropoffID = continuation.fromDropoffID;
              dropoffID < requestState.numDropoffs(); ++dropoffID) {
           asgn.dropoff = &requestState.dropoffs[dropoffID];
-          if (asgn.pickup->loc == asgn.dropoff->loc)
-            continue;
+          if (asgn.pickup->loc == asgn.dropoff->loc) continue;
 
           asgn.distToDropoff = getDistanceToDropoff(vehId, asgn.dropoff->id);
-          if (asgn.distToDropoff >= INFTY)
-            continue;
+          if (asgn.distToDropoff >= INFTY) continue;
 
           ++numAssignmentsTried;
           asgn.dropoffStopIdx = numStops - 1;
@@ -425,4 +415,4 @@ private:
   int totalNumEntriesScanned;
 };
 
-} // namespace karri::DropoffAfterLastStopStrategies
+}  // namespace karri::DropoffAfterLastStopStrategies

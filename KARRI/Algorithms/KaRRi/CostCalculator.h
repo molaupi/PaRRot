@@ -40,16 +40,17 @@ namespace karri {
 
 // A facility for computing the cost of an assignment of a request into a
 // vehicle's route.
-template <typename CostFunctionT> class CostCalculatorTemplate {
-
+template <typename CostFunctionT>
+class CostCalculatorTemplate {
   using F = CostFunctionT;
 
-public:
+ public:
   using CostFunction = CostFunctionT;
 
   explicit CostCalculatorTemplate(const RouteState &routeState,
                                   const InputConfig &inputConfig)
-      : routeState(routeState), inputConfig(inputConfig),
+      : routeState(routeState),
+        inputConfig(inputConfig),
         stopTime(inputConfig.stopTime) {}
 
   template <typename RequestContext>
@@ -68,8 +69,7 @@ public:
   int calcBase(const Assignment &asgn, const RequestContext &context) const {
     using namespace time_utils;
     assert(asgn.vehicle && asgn.pickup && asgn.dropoff);
-    if (!asgn.vehicle || !asgn.pickup || !asgn.dropoff)
-      return INFTY;
+    if (!asgn.vehicle || !asgn.pickup || !asgn.dropoff) return INFTY;
 
     if (asgn.distToPickup == INFTY || asgn.distFromPickup == INFTY ||
         asgn.distToDropoff == INFTY || asgn.distFromDropoff == INFTY)
@@ -118,8 +118,7 @@ public:
                                         const InputConfig &inputConfig) {
     assert(walkingDist >= travelTimeOfDestEdge);
 
-    if (walkingDist >= INFTY)
-      return INFTY;
+    if (walkingDist >= INFTY) return INFTY;
 
     int destSideDist;
     if (walkingDist <= inputConfig.pickupRadius + inputConfig.dropoffRadius) {
@@ -155,8 +154,7 @@ public:
   int calcCostLowerBoundForOrdinaryPairedAssignment(
       const Assignment &asgn, const RequestContext &context) const {
     using namespace time_utils;
-    if (!asgn.vehicle || !asgn.pickup || !asgn.dropoff)
-      return INFTY;
+    if (!asgn.vehicle || !asgn.pickup || !asgn.dropoff) return INFTY;
     assert(asgn.pickupStopIdx == asgn.dropoffStopIdx);
     if (asgn.distToPickup == INFTY || asgn.distFromPickup == INFTY ||
         asgn.distToDropoff == INFTY || asgn.distFromDropoff == INFTY)
@@ -256,8 +254,7 @@ public:
   int calcCostLowerBoundForPickupAfterLastStopIndependentOfVehicle(
       const int distToPickup, const int minDistToDropoff,
       const RequestContext &context) const {
-    if (distToPickup >= INFTY)
-      return INFTY;
+    if (distToPickup >= INFTY) return INFTY;
 
     const int minDetour = distToPickup + minDistToDropoff + stopTime;
 
@@ -413,8 +410,7 @@ public:
       const Vehicle &veh, const PDLoc &pickup, const int distToPickup,
       const int minDistToDropoff, const RequestContext &context) const {
     using namespace time_utils;
-    if (distToPickup >= INFTY || minDistToDropoff >= INFTY)
-      return INFTY;
+    if (distToPickup >= INFTY || minDistToDropoff >= INFTY) return INFTY;
 
     const auto vehId = veh.vehicleId;
 
@@ -461,8 +457,7 @@ public:
       const int dropoffWalkingDist, const int distToDropoff,
       const int minTripTimeToLastStop, const RequestContext &context) const {
     assert(distToDropoff < INFTY);
-    if (distToDropoff >= INFTY)
-      return INFTY;
+    if (distToDropoff >= INFTY) return INFTY;
 
     const int minDetour = distToDropoff + stopTime;
 
@@ -483,7 +478,6 @@ public:
       const typename LabelSet::DistanceLabel &distancesToDropoffs,
       const typename LabelSet::DistanceLabel &dropoffWalkingDists,
       const RequestContext &context) const {
-
     using DistanceLabel = typename LabelSet::DistanceLabel;
     using LabelMask = typename LabelSet::LabelMask;
 
@@ -605,9 +599,8 @@ public:
   }
 
   template <typename RequestContext>
-  inline bool
-  isDropoffCostPromisingForAfterLastStop(const PDLoc &dropoff,
-                                         const RequestContext &context) const {
+  inline bool isDropoffCostPromisingForAfterLastStop(
+      const PDLoc &dropoff, const RequestContext &context) const {
     const auto walkMinCost =
         F::calcTripCost(dropoff.walkingDist, context) +
         F::calcWalkingCost(dropoff.walkingDist, inputConfig.dropoffRadius);
@@ -616,14 +609,13 @@ public:
     return walkMinCost <= vehMinCost;
   }
 
-private:
+ private:
   template <typename RequestContext>
   int calcCost(const Assignment &asgn, const RequestContext &context,
                const int initialPickupDetour, const int residualDetourAtEnd,
                const int depTimeAtPickup, const bool dropoffAtExistingStop,
                const int addedTripTimeForExistingPassengers) const {
-    if (!asgn.vehicle || !asgn.pickup || !asgn.dropoff)
-      return INFTY;
+    if (!asgn.vehicle || !asgn.pickup || !asgn.dropoff) return INFTY;
 
     using namespace time_utils;
     const auto arrTimeAtDropoff =
@@ -655,16 +647,16 @@ private:
 };
 
 static constexpr int PSG_COST_SCALE =
-    KARRI_PSG_COST_SCALE; // CMake compile time parameter
+    KARRI_PSG_COST_SCALE;  // CMake compile time parameter
 static constexpr int VEH_COST_SCALE =
-    KARRI_VEH_COST_SCALE; // CMake compile time parameter
+    KARRI_VEH_COST_SCALE;  // CMake compile time parameter
 static constexpr int WALKING_COST_SCALE =
-    KARRI_WALKING_COST_SCALE; // CMake compile time parameter
+    KARRI_WALKING_COST_SCALE;  // CMake compile time parameter
 static constexpr int WAIT_PENALTY_SCALE =
-    KARRI_WAIT_PENALTY_SCALE; // CMake compile time parameter
+    KARRI_WAIT_PENALTY_SCALE;  // CMake compile time parameter
 static constexpr int TRIP_PENALTY_SCALE =
-    KARRI_TRIP_PENALTY_SCALE; // CMake compile time parameter
+    KARRI_TRIP_PENALTY_SCALE;  // CMake compile time parameter
 using CostCalculator = CostCalculatorTemplate<
     TimeIsMoneyCostFunction<PSG_COST_SCALE, WALKING_COST_SCALE, VEH_COST_SCALE,
                             WAIT_PENALTY_SCALE, TRIP_PENALTY_SCALE>>;
-} // namespace karri
+}  // namespace karri

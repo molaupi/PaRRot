@@ -24,12 +24,14 @@
 
 #pragma once
 
-#include "Algorithms/Dijkstra/Dijkstra.h"
-#include "DataStructures/Graph/Attributes/PsgEdgeToCarEdgeAttribute.h"
-#include <Algorithms/KaRRi/BaseObjects //Request.h>
+#include <Algorithms/KaRRi/BaseObjects  //Request.h>
+
 #include <cstdint>
 #include <random>
 #include <vector>
+
+#include "Algorithms/Dijkstra/Dijkstra.h"
+#include "DataStructures/Graph/Attributes/PsgEdgeToCarEdgeAttribute.h"
 
 namespace karri {
 
@@ -39,8 +41,7 @@ namespace karri {
 // around the center point.
 template <typename PassengerGraphT, typename WeightT = TravelTimeAttribute>
 class FindPDLocsInRadiusQuery {
-
-private:
+ private:
   struct StopWhenRadiusExceeded {
     StopWhenRadiusExceeded(const int radius) : radius(radius) {}
 
@@ -50,12 +51,11 @@ private:
       return distToV[0] > radius;
     }
 
-  private:
+   private:
     const int radius;
   };
 
   struct RememberSearchSpace {
-
     RememberSearchSpace(std::vector<int> &searchSpace)
         : searchSpace(searchSpace) {}
 
@@ -65,7 +65,7 @@ private:
       return false;
     }
 
-  private:
+   private:
     std::vector<int> &searchSpace;
   };
 
@@ -76,19 +76,23 @@ private:
                                  BasicLabelSet<0, ParentInfo::NO_PARENT_INFO>,
                                  StopWhenRadiusExceeded, RememberSearchSpace>;
 
-public:
+ public:
   FindPDLocsInRadiusQuery(const PassengerGraphT &forwardPsgGraph,
                           const PassengerGraphT &reversePsgGraph,
                           const InputConfig &inputConfig,
                           std::vector<PDLoc> &pickups,
                           std::vector<PDLoc> &dropoffs)
-      : forwardGraph(forwardPsgGraph), reverseGraph(reversePsgGraph),
-        inputConfig(inputConfig), pickups(pickups), dropoffs(dropoffs),
+      : forwardGraph(forwardPsgGraph),
+        reverseGraph(reversePsgGraph),
+        inputConfig(inputConfig),
+        pickups(pickups),
+        dropoffs(dropoffs),
         pickupSearch(forwardPsgGraph, {inputConfig.pickupRadius},
                      {searchSpace}),
         dropoffSearch(reversePsgGraph, {inputConfig.dropoffRadius},
                       {searchSpace}),
-        searchSpace(), rand(seed) {}
+        searchSpace(),
+        rand(seed) {}
 
   // Pickups will be collected into the given pickups vector and dropoffs will
   // be collected into the given dropoffs vector
@@ -113,7 +117,7 @@ public:
     finalizePDLocs(destination, dropoffs, inputConfig.maxNumDropoffs);
   }
 
-private:
+ private:
   void turnSearchSpaceIntoPickupLocations() {
     for (const auto &v : searchSpace) {
       const auto distToV = pickupSearch.getDistance(v);
@@ -137,8 +141,7 @@ private:
       FORALL_INCIDENT_EDGES(reverseGraph, v, e) {
         const auto eInForwGraph = reverseGraph.edgeId(e);
         const int eInVehGraph = forwardGraph.toCarEdge(eInForwGraph);
-        if (eInVehGraph == PsgEdgeToCarEdgeAttribute::defaultValue())
-          continue;
+        if (eInVehGraph == PsgEdgeToCarEdgeAttribute::defaultValue()) continue;
         dropoffs.push_back(
             {INVALID_ID, eInVehGraph, eInForwGraph, distToV, INFTY, INFTY});
       }
@@ -203,19 +206,13 @@ private:
 
   static bool sanityCheckPDLocs(const std::vector<PDLoc> &pdLocs,
                                 const int centerInVehGraph) {
-    if (pdLocs.empty())
-      return false;
-    if (pdLocs[0].loc != centerInVehGraph)
-      return false;
-    if (pdLocs[0].walkingDist != 0)
-      return false;
+    if (pdLocs.empty()) return false;
+    if (pdLocs[0].loc != centerInVehGraph) return false;
+    if (pdLocs[0].walkingDist != 0) return false;
     for (int i = 0; i < pdLocs.size(); ++i) {
-      if (pdLocs[i].id != i)
-        return false;
-      if (pdLocs[i].vehDistToCenter != INFTY)
-        return false;
-      if (pdLocs[i].vehDistFromCenter != INFTY)
-        return false;
+      if (pdLocs[i].id != i) return false;
+      if (pdLocs[i].vehDistToCenter != INFTY) return false;
+      if (pdLocs[i].vehDistFromCenter != INFTY) return false;
     }
     return true;
   }
@@ -233,4 +230,4 @@ private:
   static constexpr int seed = 42;
   std::minstd_rand rand;
 };
-} // namespace karri
+}  // namespace karri

@@ -9,8 +9,7 @@
 namespace RAPTOR {
 
 class ArrivalLabel {
-
-public:
+ public:
   ArrivalLabel(const int arrivalTime = never, const size_t numberOfTrips = -1)
       : arrivalTime(arrivalTime), numberOfTrips(numberOfTrips) {}
 
@@ -44,7 +43,7 @@ public:
                << ", numberOfTrips: " << label.numberOfTrips;
   }
 
-public:
+ public:
   int arrivalTime;
   size_t numberOfTrips;
 };
@@ -55,12 +54,14 @@ struct WalkingParetoLabel {
   WalkingParetoLabel(const int arrivalTime = never,
                      const int walkingDistance = INFTY,
                      const int numberOfTrips = -1)
-      : arrivalTime(arrivalTime), walkingDistance(walkingDistance),
+      : arrivalTime(arrivalTime),
+        walkingDistance(walkingDistance),
         numberOfTrips(numberOfTrips) {}
 
   template <typename LABEL>
   WalkingParetoLabel(const LABEL &label, const size_t numberOfTrips)
-      : arrivalTime(label.arrivalTime), walkingDistance(label.walkingDistance),
+      : arrivalTime(label.arrivalTime),
+        walkingDistance(label.walkingDistance),
         numberOfTrips(numberOfTrips) {}
 
   inline int travelTime(const int departureTime) const noexcept {
@@ -91,8 +92,7 @@ struct WalkingParetoLabel {
     for (const ArrivalLabel &anchorLabel : anchorLabels) {
       if (isWithinSlack(anchorLabel, departureTime, arrivalSlack, tripSlack))
         return true;
-      if (anchorLabel.numberOfTrips <= numberOfTrips)
-        break;
+      if (anchorLabel.numberOfTrips <= numberOfTrips) break;
     }
     return false;
   }
@@ -108,8 +108,8 @@ struct WalkingParetoLabel {
     return true;
   }
 
-  inline friend std::ostream &
-  operator<<(std::ostream &out, const WalkingParetoLabel &label) noexcept {
+  inline friend std::ostream &operator<<(
+      std::ostream &out, const WalkingParetoLabel &label) noexcept {
     return out << "arrivalTime: " << label.arrivalTime
                << ", walkingDistance: " << label.walkingDistance
                << ", numberOfTrips: " << label.numberOfTrips;
@@ -145,13 +145,13 @@ int transferTimeBucketThreshold[NUM_TRANSFER_TIME_BUCKETS - 1] = {0, 600, 1200,
 
 inline int getTransferTimeBucketValue(const int transferTime) noexcept {
   for (size_t i = 0; i < NUM_TRANSFER_TIME_BUCKETS - 1; i++) {
-    if (transferTime <= transferTimeBucketThreshold[i])
-      return i;
+    if (transferTime <= transferTimeBucketThreshold[i]) return i;
   }
   return BUCKET_EXTREME;
 }
 
-template <size_t NUM_MODES> struct MultimodalParetoLabel {
+template <size_t NUM_MODES>
+struct MultimodalParetoLabel {
   inline static constexpr size_t NumTransferModes = NUM_MODES;
   inline static constexpr size_t NumberOfCriteria = NumTransferModes + 2;
 
@@ -174,8 +174,7 @@ template <size_t NUM_MODES> struct MultimodalParetoLabel {
     for (const ArrivalLabel &anchorLabel : anchorLabels) {
       if (isWithinSlack(anchorLabel, departureTime, arrivalSlack, tripSlack))
         return true;
-      if (anchorLabel.numberOfTrips <= numberOfTrips)
-        break;
+      if (anchorLabel.numberOfTrips <= numberOfTrips) break;
     }
     return false;
   }
@@ -201,13 +200,10 @@ template <size_t NUM_MODES> struct MultimodalParetoLabel {
   }
 
   inline bool dominates(const MultimodalParetoLabel &other) const noexcept {
-    if (arrivalTime > other.arrivalTime)
-      return false;
-    if (numberOfTrips > other.numberOfTrips)
-      return false;
+    if (arrivalTime > other.arrivalTime) return false;
+    if (numberOfTrips > other.numberOfTrips) return false;
     for (size_t i = 0; i < NumTransferModes; i++) {
-      if (transferTime[i] > other.transferTime[i])
-        return false;
+      if (transferTime[i] > other.transferTime[i]) return false;
     }
     return true;
   }
@@ -219,19 +215,16 @@ template <size_t NUM_MODES> struct MultimodalParetoLabel {
   }
 
   inline bool operator==(const MultimodalParetoLabel &other) const noexcept {
-    if (arrivalTime != other.arrivalTime)
-      return false;
-    if (numberOfTrips != other.numberOfTrips)
-      return false;
+    if (arrivalTime != other.arrivalTime) return false;
+    if (numberOfTrips != other.numberOfTrips) return false;
     for (size_t i = 0; i < NumTransferModes; i++) {
-      if (transferTime[i] != other.transferTime[i])
-        return false;
+      if (transferTime[i] != other.transferTime[i]) return false;
     }
     return true;
   }
 
-  inline friend std::ostream &
-  operator<<(std::ostream &out, const MultimodalParetoLabel &label) noexcept {
+  inline friend std::ostream &operator<<(
+      std::ostream &out, const MultimodalParetoLabel &label) noexcept {
     out << "arrivalTime: " << label.arrivalTime;
     for (size_t i = 0; i < NumTransferModes; i++) {
       out << ", "
@@ -256,4 +249,4 @@ template <size_t NUM_MODES> struct MultimodalParetoLabel {
   size_t numberOfTrips;
 };
 
-} // namespace RAPTOR
+}  // namespace RAPTOR

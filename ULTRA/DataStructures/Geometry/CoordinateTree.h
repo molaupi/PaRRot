@@ -4,18 +4,17 @@
 #include <sstream>
 #include <vector>
 
-#include "Metric.h"
-#include "Point.h"
-#include "Rectangle.h"
-
 #include "../../Helpers/Assert.h"
 #include "../../Helpers/Types.h"
 #include "../../Helpers/Vector/Permutation.h"
 #include "../../Helpers/Vector/Vector.h"
+#include "Metric.h"
+#include "Point.h"
+#include "Rectangle.h"
 
-template <typename METRIC = Geometry::EuclideanMetric> class CoordinateTree {
-
-private:
+template <typename METRIC = Geometry::EuclideanMetric>
+class CoordinateTree {
+ private:
   // Data for leaf nodes: Interval of points represented by the leaf
   struct LeafNodeData {
     int begin;
@@ -45,14 +44,18 @@ private:
     };
   };
 
-public:
+ public:
   CoordinateTree(const METRIC &metric,
                  const std::vector<Geometry::Point> &coordinates,
                  const int maxLeafSize = 10)
-      : metric(metric), coordinates(coordinates),
-        vertexCount(coordinates.size()), maxLeafSize(maxLeafSize),
-        order(Vector::id<Vertex>(numVertices())), nearestVertex(noVertex),
-        nearestDistance(-1), minimumDistance(-1) {
+      : metric(metric),
+        coordinates(coordinates),
+        vertexCount(coordinates.size()),
+        maxLeafSize(maxLeafSize),
+        order(Vector::id<Vertex>(numVertices())),
+        nearestVertex(noVertex),
+        nearestDistance(-1),
+        minimumDistance(-1) {
     Assert(!coordinates.empty());
     nodes.reserve((coordinates.size() / maxLeafSize) * 4);
     makeBoundingBox(0, numVertices(), boundingBox);
@@ -60,9 +63,13 @@ public:
   }
   CoordinateTree(const std::vector<Geometry::Point> &coordinates,
                  const int maxLeafSize = 10)
-      : coordinates(coordinates), vertexCount(coordinates.size()),
-        maxLeafSize(maxLeafSize), order(Vector::id<Vertex>(numVertices())),
-        nearestVertex(noVertex), nearestDistance(-1), minimumDistance(-1) {
+      : coordinates(coordinates),
+        vertexCount(coordinates.size()),
+        maxLeafSize(maxLeafSize),
+        order(Vector::id<Vertex>(numVertices())),
+        nearestVertex(noVertex),
+        nearestDistance(-1),
+        minimumDistance(-1) {
     Assert(!coordinates.empty());
     nodes.reserve((coordinates.size() / maxLeafSize) * 4);
     makeBoundingBox(0, numVertices(), boundingBox);
@@ -88,9 +95,8 @@ public:
     return nearestVertex;
   }
 
-  inline std::vector<Vertex>
-  getNeighbors(const Geometry::Point &p,
-               const double maxDistance) const noexcept {
+  inline std::vector<Vertex> getNeighbors(
+      const Geometry::Point &p, const double maxDistance) const noexcept {
     neighbors.clear();
     nearestDistance = maxDistance * maxDistance;
     this->p = p;
@@ -100,8 +106,8 @@ public:
 
   inline size_t numVertices() const noexcept { return vertexCount; }
 
-  inline const Geometry::Point &
-  getCoordinates(const Vertex vertex) const noexcept {
+  inline const Geometry::Point &getCoordinates(
+      const Vertex vertex) const noexcept {
     return coordinates[vertex];
   }
 
@@ -126,14 +132,14 @@ public:
     }
   }
 
-private:
+ private:
   void divideTree(const int nodeIndex, const int beginIndex, const int endIndex,
                   const Geometry::Rectangle &boundingBox) noexcept {
     AssertMsg(isBoundingBox(beginIndex, endIndex, boundingBox),
               "Invalid bounding box!");
-    AssertMsg(endIndex > beginIndex,
-              "endIndex = " << endIndex << " <= beginIndex = " << beginIndex
-                            << "!");
+    AssertMsg(
+        endIndex > beginIndex,
+        "endIndex = " << endIndex << " <= beginIndex = " << beginIndex << "!");
     AssertMsg(isNode(nodeIndex), "Index = " << nodeIndex << " is not a node!");
 
     Node &node = nodes[nodeIndex];
@@ -161,8 +167,7 @@ private:
                coordinates[order[j]][node.inner.splitDimension] >= splitValue) {
           maxBoundingBox.extend(coordinates[order[j--]]);
         }
-        if (i >= j)
-          break;
+        if (i >= j) break;
         std::swap(order[i], order[j]);
         minBoundingBox.extend(coordinates[order[i++]]);
         maxBoundingBox.extend(coordinates[order[j--]]);
@@ -190,11 +195,9 @@ private:
     if (node.isLeaf()) {
       for (int i = node.leaf.begin; i < node.leaf.end; i++) {
         const double distance = metric.distanceSquare(p, coordinates[order[i]]);
-        if (nearestDistance <= distance)
-          continue;
+        if (nearestDistance <= distance) continue;
         if constexpr (MIN_DISTANCE)
-          if (distance <= minimumDistance)
-            continue;
+          if (distance <= minimumDistance) continue;
         nearestDistance = distance;
         nearestVertex = order[i];
       }
@@ -208,18 +211,14 @@ private:
           std::max(closest[node.inner.splitDimension], node.inner.maxChildMin);
       const double maxChildDistance = metric.distanceSquare(p, maxClosest);
       if (minChildDistance < maxChildDistance) {
-        if (nearestDistance <= minChildDistance)
-          return;
+        if (nearestDistance <= minChildDistance) return;
         searchLevel<MIN_DISTANCE>(node.minChild, minClosest);
-        if (nearestDistance <= maxChildDistance)
-          return;
+        if (nearestDistance <= maxChildDistance) return;
         searchLevel<MIN_DISTANCE>(node.maxChild, maxClosest);
       } else {
-        if (nearestDistance <= maxChildDistance)
-          return;
+        if (nearestDistance <= maxChildDistance) return;
         searchLevel<MIN_DISTANCE>(node.maxChild, maxClosest);
-        if (nearestDistance <= minChildDistance)
-          return;
+        if (nearestDistance <= minChildDistance) return;
         searchLevel<MIN_DISTANCE>(node.minChild, minClosest);
       }
     }
@@ -233,8 +232,7 @@ private:
     if (node.isLeaf()) {
       for (int i = node.leaf.begin; i < node.leaf.end; i++) {
         const double distance = metric.distanceSquare(p, coordinates[order[i]]);
-        if (nearestDistance >= distance)
-          neighbors.emplace_back(order[i]);
+        if (nearestDistance >= distance) neighbors.emplace_back(order[i]);
       }
     } else {
       Geometry::Point minClosest = closest;
@@ -320,7 +318,7 @@ private:
     }
   }
 
-private:
+ private:
   METRIC metric;
 
   const std::vector<Geometry::Point> &coordinates;
@@ -329,7 +327,7 @@ private:
 
   Geometry::Rectangle boundingBox;
   std::vector<Vertex> order;
-  std::vector<Node> nodes; // nodes[0] = root of tree
+  std::vector<Node> nodes;  // nodes[0] = root of tree
 
   mutable Vertex nearestVertex;
   mutable double nearestDistance;

@@ -13,14 +13,13 @@ Sep clear("");
 Sep sep(", ");
 
 class Enumeration {
-
-public:
+ public:
   template <typename T>
   friend inline Enumeration &operator<<(Enumeration &out, const T &en);
   friend inline std::ostream &operator<<(std::ostream &out,
                                          const Enumeration &en);
 
-public:
+ public:
   Enumeration(const std::string &sep = "") : sep(sep) {}
 
   inline operator std::string() const noexcept { return state.str(); }
@@ -29,7 +28,7 @@ public:
 
   inline bool empty() noexcept { return state.str().size() == 0; }
 
-private:
+ private:
   std::stringstream state;
   std::string sep;
 };
@@ -45,7 +44,8 @@ inline Enumeration &operator<<(Enumeration &out, const T &t) {
   return out;
 }
 
-template <> inline Enumeration &operator<<(Enumeration &out, const Sep &sep) {
+template <>
+inline Enumeration &operator<<(Enumeration &out, const Sep &sep) {
   out.sep = sep.sep;
   return out;
 }

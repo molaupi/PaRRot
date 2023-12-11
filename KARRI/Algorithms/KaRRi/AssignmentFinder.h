@@ -39,8 +39,7 @@ template <typename RequestStateInitializerT, typename EllipticBCHSearchesT,
           typename PbnsAssignmentsT, typename PalsAssignmentsT,
           typename DalsAssignmentsT, typename RelevantPDLocsFilterT>
 class AssignmentFinder {
-
-public:
+ public:
   AssignmentFinder(RequestState &requestState,
                    RequestStateInitializerT &requestStateInitializer,
                    EllipticBCHSearchesT &ellipticBchSearches,
@@ -54,12 +53,13 @@ public:
         requestStateInitializer(requestStateInitializer),
         ellipticBchSearches(ellipticBchSearches),
         pdDistanceSearches(pdDistanceSearches),
-        ordAssignments(ordinaryAssigments), pbnsAssignments(pbnsAssignments),
-        palsAssignments(palsAssignments), dalsAssignments(dalsAssignments),
+        ordAssignments(ordinaryAssigments),
+        pbnsAssignments(pbnsAssignments),
+        palsAssignments(palsAssignments),
+        dalsAssignments(dalsAssignments),
         relevantPdLocsFilter(relevantPdLocsFilter) {}
 
   const RequestState &findBestAssignment(const Request &req) {
-
     // Initialize finder for this request:
     initializeForRequest(req);
 
@@ -90,7 +90,7 @@ public:
     return reqState;
   }
 
-private:
+ private:
   void initializeForRequest(const Request &req) {
     requestStateInitializer.initializeRequestState(req);
 
@@ -106,25 +106,26 @@ private:
   RequestState &reqState;
   RequestStateInitializerT &requestStateInitializer;
   EllipticBCHSearchesT
-      &ellipticBchSearches; // Elliptic BCH searches that find distances between
-                            // existing stops and PD-locations (except after
-                            // last stop).
+      &ellipticBchSearches;  // Elliptic BCH searches that find distances
+                             // between existing stops and PD-locations (except
+                             // after last stop).
   PDDistanceSearchesT
-      &pdDistanceSearches; // PD-distance searches that compute distances from
-                           // pickups to dropoffs.
+      &pdDistanceSearches;  // PD-distance searches that compute distances from
+                            // pickups to dropoffs.
   OrdAssignmentsT
-      &ordAssignments; // Tries ordinary assignments where pickup and dropoff
-                       // are inserted between existing stops.
+      &ordAssignments;  // Tries ordinary assignments where pickup and dropoff
+                        // are inserted between existing stops.
   PbnsAssignmentsT
-      &pbnsAssignments; // Tries PBNS assignments where pickup (and possibly
-                        // dropoff) is inserted before the next vehicle stop.
+      &pbnsAssignments;  // Tries PBNS assignments where pickup (and possibly
+                         // dropoff) is inserted before the next vehicle stop.
   PalsAssignmentsT
-      &palsAssignments; // Tries PALS assignments where pickup and dropoff are
-                        // inserted after the last stop.
-  DalsAssignmentsT &dalsAssignments; // Tries DALS assignments where only the
-                                     // dropoff is inserted after the last stop.
+      &palsAssignments;  // Tries PALS assignments where pickup and dropoff are
+                         // inserted after the last stop.
+  DalsAssignmentsT
+      &dalsAssignments;  // Tries DALS assignments where only the
+                         // dropoff is inserted after the last stop.
   RelevantPDLocsFilterT
-      &relevantPdLocsFilter; // Additionally filters feasible pickups/dropoffs
-                             // found by elliptic BCH searches.
+      &relevantPdLocsFilter;  // Additionally filters feasible pickups/dropoffs
+                              // found by elliptic BCH searches.
 };
-} // namespace karri
+}  // namespace karri

@@ -5,8 +5,7 @@
 namespace TripBased {
 
 class ReachedIndexRounds {
-
-public:
+ public:
   ReachedIndexRounds(const Data &data)
       : data(data), defaultLabels(data.numberOfTrips(), -1), currentRound(0) {
     for (const TripId trip : data.trips()) {
@@ -17,7 +16,7 @@ public:
     }
   }
 
-public:
+ public:
   inline void clear() noexcept {
     labels.resize(1);
     labels[0] = defaultLabels;
@@ -60,8 +59,7 @@ public:
               "Trip " << trip << " is out of bounds!");
     const TripId routeEnd = data.firstTripOfRoute[data.routeOfTrip[trip] + 1];
     for (TripId i = trip; i < routeEnd; i++) {
-      if (labels[currentRound][i] <= index)
-        break;
+      if (labels[currentRound][i] <= index) break;
       labels[currentRound][i] = index;
     }
   }
@@ -72,18 +70,16 @@ public:
               "Trip " << trip << " is out of bounds!");
     const TripId routeEnd = data.firstTripOfRoute[data.routeOfTrip[trip] + 1];
     for (TripId i = trip; i < routeEnd; i++) {
-      if (labels[currentRound][i] <= index)
-        break;
+      if (labels[currentRound][i] <= index) break;
       labels[currentRound][i] = index;
       for (size_t round = currentRound + 1; round < labels.size(); round++) {
-        if (labels[round][i] <= index)
-          break;
+        if (labels[round][i] <= index) break;
         labels[round][i] = index;
       }
     }
   }
 
-private:
+ private:
   const Data &data;
 
   std::vector<std::vector<u_int8_t>> labels;
@@ -93,4 +89,4 @@ private:
   size_t currentRound;
 };
 
-} // namespace TripBased
+}  // namespace TripBased

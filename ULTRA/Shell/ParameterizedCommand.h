@@ -5,30 +5,34 @@
 #include <string>
 #include <vector>
 
-#include "BasicShell.h"
-#include "Command.h"
-
 #include "../Helpers/String/Enumeration.h"
 #include "../Helpers/String/String.h"
+#include "BasicShell.h"
+#include "Command.h"
 
 namespace Shell {
 
 class ParameterizedCommand : public Command {
-
-public:
+ public:
   const static inline std::string DescriptionLineBreak = "\n    ";
 
-public:
+ public:
   struct Parameter {
     Parameter(const std::string &name, const std::vector<std::string> &options =
                                            std::vector<std::string>())
-        : name(name), value(""), defaultValue(""), hasDefault(false),
+        : name(name),
+          value(""),
+          defaultValue(""),
+          hasDefault(false),
           options(options) {}
     Parameter(
         const std::string &name, const std::string &defaultValue,
         const std::vector<std::string> &options = std::vector<std::string>())
-        : name(name), value(defaultValue), defaultValue(defaultValue),
-          hasDefault(true), options(options) {}
+        : name(name),
+          value(defaultValue),
+          defaultValue(defaultValue),
+          hasDefault(true),
+          options(options) {}
     inline std::string optionsString() const noexcept {
       Enumeration enumeration;
       for (const std::string &string : options) {
@@ -43,7 +47,7 @@ public:
     std::vector<std::string> options;
   };
 
-public:
+ public:
   ParameterizedCommand(BasicShell &shell, const std::string &name = "",
                        const std::string &description = "")
       : shell(shell), commandName(name), description(description) {
@@ -122,8 +126,8 @@ public:
 
   virtual void execute() = 0;
 
-  virtual std::vector<std::string>
-  parameterSuggestions(const size_t index) const {
+  virtual std::vector<std::string> parameterSuggestions(
+      const size_t index) const {
     if ((index < parameters.size()) && (!parameters[index].options.empty())) {
       return parameters[index].options;
     } else {
@@ -131,7 +135,7 @@ public:
     }
   }
 
-protected:
+ protected:
   inline void setName(const std::string &name) noexcept { commandName = name; }
 
   inline void setDescription(const std::string &newDescription) noexcept {
@@ -145,9 +149,9 @@ protected:
     addParameterToDescription(parameters.back());
   }
 
-  inline void
-  addParameter(const std::string &name,
-               const std::initializer_list<std::string> &options) noexcept {
+  inline void addParameter(
+      const std::string &name,
+      const std::initializer_list<std::string> &options) noexcept {
     addParameter(name, std::vector<std::string>(options));
   }
 
@@ -195,14 +199,14 @@ protected:
     }
   }
 
-protected:
+ protected:
   BasicShell &shell;
 
-private:
+ private:
   std::string commandName;
   std::string description;
 
   std::vector<Parameter> parameters;
 };
 
-} // namespace Shell
+}  // namespace Shell

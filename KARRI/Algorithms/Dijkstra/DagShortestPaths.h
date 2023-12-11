@@ -37,7 +37,8 @@
 
 // Forward declarations for friend
 namespace karri {
-template <typename, typename, bool> class EllipticBucketsEnvironment;
+template <typename, typename, bool>
+class EllipticBucketsEnvironment;
 }
 
 // Implementation of a shortest-path search on a directed acyclic graph. The
@@ -54,17 +55,19 @@ template <typename GraphT, typename WeightT, typename LabelSetT,
               StampedDistanceLabelContainer,
           typename QueueT = AddressableQuadHeap>
 class DagShortestPaths {
-
   template <typename, typename, bool>
   friend class karri::EllipticBucketsEnvironment;
 
-public:
+ public:
   // Constructs a shortest-path search instance for the specified directed
   // acyclic graph.
   explicit DagShortestPaths(const GraphT &graph,
                             PruningCriterionT pruneSearch = {})
-      : graph(graph), distanceLabels(graph.numVertices()), parent(graph),
-        queue(graph.numVertices()), pruneSearch(pruneSearch) {}
+      : graph(graph),
+        distanceLabels(graph.numVertices()),
+        parent(graph),
+        queue(graph.numVertices()),
+        pruneSearch(pruneSearch) {}
 
   // Runs a shortest-path search from s.
   void run(const int s) { runWithOffset(s, 0); }
@@ -73,8 +76,7 @@ public:
   void run(const int s, const int t) {
     init(s);
     while (!queue.empty()) {
-      if (queue.minId() == t)
-        break;
+      if (queue.minId() == t) break;
       settleNextVertex();
     }
   }
@@ -83,8 +85,7 @@ public:
   // the given offset.
   void runWithOffset(const int s, const int offset) {
     init(s, offset);
-    while (!queue.empty())
-      settleNextVertex();
+    while (!queue.empty()) settleNextVertex();
   }
 
   // Returns the shortest-path distance to t.
@@ -114,7 +115,7 @@ public:
     return parent.getReverseEdgePath(t);
   }
 
-private:
+ private:
   // Resets the distance labels and inserts the source into the queue.
   void init(const int s, const int offset = 0) {
     distanceLabels.init();
@@ -133,8 +134,7 @@ private:
     auto &distToV = distanceLabels[v];
 
     // Check whether the search can be pruned at v.
-    if (pruneSearch(v, distToV, distanceLabels))
-      return v;
+    if (pruneSearch(v, distToV, distanceLabels)) return v;
 
     // Relax all edges out of v.
     FORALL_INCIDENT_EDGES(graph, v, e) {
@@ -146,8 +146,7 @@ private:
         distToW.min(distViaV);
         parent.setVertex(w, v, mask);
         parent.setEdge(w, e, mask);
-        if (!queue.contains(w))
-          queue.insert(w, w);
+        if (!queue.contains(w)) queue.insert(w, w);
       }
     }
     return v;
@@ -157,9 +156,9 @@ private:
       DistanceLabelContainerT<typename LabelSetT::DistanceLabel>;
   using ParentLabelCont = ParentLabelContainer<GraphT, LabelSetT>;
 
-  const GraphT &graph; // The graph (DAG) on which we compute shortest paths.
-  DistanceLabelCont distanceLabels; // The distance labels of the vertices.
-  ParentLabelCont parent;           // The parent information for each vertex.
-  QueueT queue;                     // The priority queue of unsettled vertices.
-  PruningCriterionT pruneSearch;    // The criterion used to prune the search.
+  const GraphT &graph;  // The graph (DAG) on which we compute shortest paths.
+  DistanceLabelCont distanceLabels;  // The distance labels of the vertices.
+  ParentLabelCont parent;            // The parent information for each vertex.
+  QueueT queue;                   // The priority queue of unsettled vertices.
+  PruningCriterionT pruneSearch;  // The criterion used to prune the search.
 };

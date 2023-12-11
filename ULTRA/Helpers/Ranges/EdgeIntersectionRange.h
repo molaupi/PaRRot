@@ -2,20 +2,19 @@
 
 #include <vector>
 
+#include "../../DataStructures/Attributes/Attributes.h"
 #include "../Assert.h"
 #include "../Meta.h"
 #include "../Types.h"
 
-#include "../../DataStructures/Attributes/Attributes.h"
-
-template <typename GRAPH_A, typename GRAPH_B> class EdgeIntersectionRange {
-
-public:
+template <typename GRAPH_A, typename GRAPH_B>
+class EdgeIntersectionRange {
+ public:
   using GraphA = GRAPH_A;
   using GraphB = GRAPH_B;
   using Type = EdgeIntersectionRange<GraphA, GraphB>;
 
-private:
+ private:
   using RangeA = decltype(std::declval<const GraphA *>()->edgesFrom(
       std::declval<Vertex>()));
   using RangeB = decltype(std::declval<const GraphB *>()->edgesFrom(
@@ -24,9 +23,9 @@ private:
   using IteratorA = decltype(std::declval<RangeA>().begin());
   using IteratorB = decltype(std::declval<RangeB>().begin());
 
-public:
+ public:
   class Iterator {
-  public:
+   public:
     Iterator(const EdgeIntersectionRange *const outer, const IteratorA &edgeA,
              const IteratorB &edgeB)
         : outer(outer), edgeA(edgeA), edgeB(edgeB) {}
@@ -41,8 +40,7 @@ public:
       return *this;
     }
     inline Iterator &operator+=(const size_t n) noexcept {
-      for (size_t j = 0; j < n; j++)
-        ++(*this);
+      for (size_t j = 0; j < n; j++) ++(*this);
       return *this;
     }
     inline Iterator operator+(const size_t n) const noexcept {
@@ -73,7 +71,7 @@ public:
       return *this;
     }
 
-  private:
+   private:
     const EdgeIntersectionRange *outer;
     IteratorA edgeA;
     IteratorB edgeB;
@@ -83,7 +81,9 @@ public:
 
   EdgeIntersectionRange(const GraphA *const graphA, const GraphB *const graphB,
                         const Vertex vertex)
-      : graphA(graphA), graphB(graphB), rangeA(graphA->edgesFrom(vertex)),
+      : graphA(graphA),
+        graphB(graphB),
+        rangeA(graphA->edgesFrom(vertex)),
         rangeB(graphB->edgesFrom(vertex)) {}
 
   inline Iterator begin() const noexcept {
@@ -123,7 +123,7 @@ public:
     return result;
   }
 
-private:
+ private:
   const GraphA *graphA;
   const GraphB *graphB;
 

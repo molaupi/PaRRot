@@ -1,9 +1,7 @@
-#include "Commands/BenchmarkULTRAPHAST.h"
-
 #include "../Helpers/Console/CommandLineParser.h"
 #include "../Helpers/MultiThreading.h"
-
 #include "../Shell/Shell.h"
+#include "Commands/BenchmarkULTRAPHAST.h"
 using namespace Shell;
 
 int main(int argc, char **argv) {

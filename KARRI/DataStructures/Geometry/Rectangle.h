@@ -33,7 +33,7 @@
 // A rectangle on a two-dimensional plane with sides parallel to the x- and
 // y-axis.
 class Rectangle {
-public:
+ public:
   // Constructs an empty bounding box that can be gradually extended.
   Rectangle() noexcept : sw(INFTY, INFTY), ne(-INFTY, -INFTY) {}
 
@@ -102,11 +102,10 @@ public:
   // Extends this rectangle to contain the specified points.
   template <typename PointIteratorT>
   void extend(PointIteratorT first, PointIteratorT last) {
-    for (; first != last; ++first)
-      extend(*first);
+    for (; first != last; ++first) extend(*first);
   }
 
-private:
-  Point sw; // The south-west corner.
-  Point ne; // The north-east corner.
+ private:
+  Point sw;  // The south-west corner.
+  Point ne;  // The north-east corner.
 };

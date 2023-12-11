@@ -24,11 +24,11 @@
 
 #pragma once
 
+#include <csv.h>
+
 #include <cassert>
 #include <string>
 #include <vector>
-
-#include <csv.h>
 
 #include "Tools/Constants.h"
 
@@ -58,14 +58,10 @@ struct ClusteredOriginDestination : public OriginDestination {
 
   // Compares this clustered OD-pair with rhs lexicographically.
   bool operator<(const ClusteredOriginDestination &rhs) const {
-    if (originZone < rhs.originZone)
-      return true;
-    if (originZone > rhs.originZone)
-      return false;
-    if (destinationZone < rhs.destinationZone)
-      return true;
-    if (destinationZone > rhs.destinationZone)
-      return false;
+    if (originZone < rhs.originZone) return true;
+    if (originZone > rhs.originZone) return false;
+    if (destinationZone < rhs.destinationZone) return true;
+    if (destinationZone > rhs.destinationZone) return false;
     return OriginDestination::operator<(rhs);
   }
 
@@ -100,8 +96,8 @@ std::vector<OriginDestination> importODPairsFrom(const std::string &infile) {
 }
 
 // Reads the specified file into a vector of clustered OD-pairs.
-std::vector<ClusteredOriginDestination>
-importClusteredODPairsFrom(const std::string &infile) {
+std::vector<ClusteredOriginDestination> importClusteredODPairsFrom(
+    const std::string &infile) {
   std::vector<ClusteredOriginDestination> pairs;
   int origin, destination, originZone = INVALID_ID,
                            destinationZone = INVALID_ID;

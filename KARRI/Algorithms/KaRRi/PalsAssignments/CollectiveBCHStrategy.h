@@ -39,7 +39,6 @@ template <typename InputGraphT, typename CHEnvT, typename LastStopBucketsEnvT,
           typename VehicleToPDLocQueryT, typename PDDistancesT,
           typename FallbackLabelSetT>
 class CollectiveBCHStrategy {
-
   using MinCostPairAfterLastStopQueryInst =
       MinCostPairAfterLastStopQuery<InputGraphT, CHEnvT, LastStopBucketsEnvT,
                                     PDDistancesT>;
@@ -48,28 +47,32 @@ class CollectiveBCHStrategy {
       IndividualBCHStrategy<InputGraphT, CHEnvT, LastStopBucketsEnvT,
                             PDDistancesT, FallbackLabelSetT>;
 
-public:
+ public:
   CollectiveBCHStrategy(
       const InputGraphT &inputGraph, const Fleet &fleet, const CHEnvT &chEnv,
       VehicleToPDLocQueryT &vehicleToPDLocQuery,
       const LastStopBucketsEnvT &lastStopBucketsEnv, PDDistancesT &pdDistances,
       const CostCalculator &calculator, const RouteState &routeState,
       RequestState &requestState, const InputConfig &inputConfig)
-      : inputGraph(inputGraph), fleet(fleet), calculator(calculator),
-        ch(chEnv.getCH()), routeState(routeState), requestState(requestState),
+      : inputGraph(inputGraph),
+        fleet(fleet),
+        calculator(calculator),
+        ch(chEnv.getCH()),
+        routeState(routeState),
+        requestState(requestState),
         inputConfig(inputConfig),
         minCostSearch(inputGraph, fleet, chEnv, routeState, pdDistances,
                       calculator, lastStopBucketsEnv, requestState,
                       inputConfig),
-        vehicleToPDLocQuery(vehicleToPDLocQuery), pdDistances(pdDistances),
-        fallbackStrategy(inputGraph, fleet, chEnv, calculator,
-                         lastStopBucketsEnv, pdDistances, routeState,
-                         requestState,
-                         minCostSearch.getUpperBoundCostWithHardConstraints(),
-                         inputConfig) {}
+        vehicleToPDLocQuery(vehicleToPDLocQuery),
+        pdDistances(pdDistances),
+        fallbackStrategy(
+            inputGraph, fleet, chEnv, calculator, lastStopBucketsEnv,
+            pdDistances, routeState, requestState,
+            minCostSearch.getUpperBoundCostWithHardConstraints(), inputConfig) {
+  }
 
   void tryPickupAfterLastStop() {
-
     auto &stats = requestState.stats().palsAssignmentsStats;
     Timer timer;
 
@@ -79,8 +82,7 @@ public:
     int costLowerBound =
         calculator.calcCostLowerBoundForPickupAfterLastStopIndependentOfVehicle(
             0, requestState.minDirectPDDist, requestState);
-    if (costLowerBound > requestState.getBestCost())
-      return;
+    if (costLowerBound > requestState.getBestCost()) return;
 
     std::vector<int> promisingDropoffIds;
 
@@ -99,7 +101,7 @@ public:
         }
       }
       assert(promisingDropoffIds.front() ==
-             0); // Assert destination itself is always promising
+             0);  // Assert destination itself is always promising
       stats.collective_pickupVehDistQueryTime +=
           vehicleToPDLocQuery.getRunTime();
     } else {
@@ -121,8 +123,8 @@ public:
     stats.collective_numInitialLabelsNotPruned +=
         minCostSearch.getNumInitialLabelsNotPruned();
     stats.collective_initializationTime +=
-        minCostSearch.getInitializationTime(); // Also contained in
-                                               // minCostSearch.getRunTime()
+        minCostSearch.getInitializationTime();  // Also contained in
+                                                // minCostSearch.getRunTime()
     stats.collective_numDominationRelationTests +=
         minCostSearch.getNumDominationRelationTests();
     stats.numEdgeRelaxationsInSearchGraph +=
@@ -135,8 +137,7 @@ public:
 
     const int &minCost = minCostSearch.getBestCostWithoutConstraints();
     const auto &asgn = minCostSearch.getBestAssignment();
-    if (!asgn.vehicle)
-      return;
+    if (!asgn.vehicle) return;
 
     const auto totalDetour = asgn.distToPickup + inputConfig.stopTime +
                              asgn.distToDropoff + inputConfig.stopTime;
@@ -162,7 +163,7 @@ public:
     fallbackStrategy.tryPickupAfterLastStop();
   }
 
-private:
+ private:
   const InputGraphT &inputGraph;
   const Fleet &fleet;
   const CostCalculator &calculator;
@@ -179,4 +180,4 @@ private:
   FallbackIndividualBCHStrategy fallbackStrategy;
 };
 
-} // namespace karri::PickupAfterLastStopStrategies
+}  // namespace karri::PickupAfterLastStopStrategies

@@ -7,7 +7,8 @@
 
 namespace RAPTOR {
 
-template <typename LABEL> struct Bag {
+template <typename LABEL>
+struct Bag {
   using Label = LABEL;
   using Iterator = typename std::vector<Label>::const_iterator;
 
@@ -22,8 +23,7 @@ template <typename LABEL> struct Bag {
   template <typename OTHER_LABEL>
   inline bool dominates(const OTHER_LABEL &newLabel) const noexcept {
     for (const Label &label : labels) {
-      if (label.dominates(newLabel))
-        return true;
+      if (label.dominates(newLabel)) return true;
     }
     return false;
   }
@@ -31,8 +31,7 @@ template <typename LABEL> struct Bag {
   template <typename OTHER_LABEL>
   inline bool dominatesStrongly(const OTHER_LABEL &newLabel) const noexcept {
     for (const Label &label : labels) {
-      if (label.dominatesStrongly(newLabel))
-        return true;
+      if (label.dominatesStrongly(newLabel)) return true;
     }
     return false;
   }
@@ -40,8 +39,7 @@ template <typename LABEL> struct Bag {
   template <typename OTHER_LABEL>
   inline bool dominates(const Bag<OTHER_LABEL> &other) const noexcept {
     for (const OTHER_LABEL &label : other.labels) {
-      if (!dominates(label))
-        return false;
+      if (!dominates(label)) return false;
     }
     return true;
   }
@@ -49,8 +47,7 @@ template <typename LABEL> struct Bag {
   inline bool merge(const Label &newLabel) noexcept {
     size_t removedLabels = 0;
     for (size_t i = 0; i < labels.size(); i++) {
-      if (labels[i].dominates(newLabel))
-        return false;
+      if (labels[i].dominates(newLabel)) return false;
       if (newLabel.dominates(labels[i])) {
         removedLabels++;
         continue;
@@ -65,8 +62,7 @@ template <typename LABEL> struct Bag {
   inline bool mergeWithStrongDominance(const Label &newLabel) noexcept {
     size_t removedLabels = 0;
     for (size_t i = 0; i < labels.size(); i++) {
-      if (labels[i].dominatesStrongly(newLabel))
-        return false;
+      if (labels[i].dominatesStrongly(newLabel)) return false;
       if (newLabel.dominates(labels[i])) {
         removedLabels++;
         continue;
@@ -96,8 +92,7 @@ template <typename LABEL> struct Bag {
     AssertMsg(!dominatesStrongly(newLabel), "Trying to merge dominated label!");
     size_t removedLabels = 0;
     for (size_t i = 0; i < labels.size(); i++) {
-      if (labels[i] == newLabel)
-        return false;
+      if (labels[i] == newLabel) return false;
       if (newLabel.dominatesStrongly(labels[i])) {
         removedLabels++;
         continue;
@@ -128,14 +123,14 @@ template <typename LABEL> struct Bag {
   std::vector<Label> labels;
 };
 
-template <typename ROUTE_LABEL> struct RouteBag {
+template <typename ROUTE_LABEL>
+struct RouteBag {
   using RouteLabel = ROUTE_LABEL;
 
   inline void merge(const RouteLabel &newLabel) noexcept {
     size_t removedLabels = 0;
     for (size_t i = 0; i < labels.size(); i++) {
-      if (labels[i].dominates(newLabel))
-        return;
+      if (labels[i].dominates(newLabel)) return;
       if (newLabel.dominates(labels[i])) {
         removedLabels++;
         continue;
@@ -160,7 +155,7 @@ template <typename ROUTE_LABEL> struct RouteBag {
 
 template <typename DIJKSTRA_LABEL>
 class DijkstraBag : public ExternalKHeapElement {
-public:
+ public:
   using DijkstraLabel = DIJKSTRA_LABEL;
   static constexpr int logK = 2;
   static constexpr int K = 1 << logK;
@@ -170,8 +165,7 @@ public:
   template <typename OTHER_LABEL>
   inline bool dominates(const OTHER_LABEL &newLabel) const noexcept {
     for (const DijkstraLabel &label : labels) {
-      if (label.dominates(newLabel))
-        return true;
+      if (label.dominates(newLabel)) return true;
     }
     return false;
   }
@@ -179,8 +173,7 @@ public:
   template <typename OTHER_LABEL>
   inline bool dominates(const Bag<OTHER_LABEL> &other) const noexcept {
     for (const OTHER_LABEL &label : other.labels) {
-      if (!dominates(label))
-        return false;
+      if (!dominates(label)) return false;
     }
     return true;
   }
@@ -219,12 +212,10 @@ public:
     size_t removedLabels = 0;
     size_t removedHeapLabels = 0;
     for (size_t i = 0; i < labels.size(); i++) {
-      if (labels[i].dominates(newLabel))
-        return false;
+      if (labels[i].dominates(newLabel)) return false;
       if (newLabel.dominates(labels[i])) {
         removedLabels++;
-        if (i < heapSize)
-          removedHeapLabels++;
+        if (i < heapSize) removedHeapLabels++;
         continue;
       }
       labels[i - removedLabels] = labels[i];
@@ -237,8 +228,7 @@ public:
       heapSize++;
       heapify();
     } else {
-      if (removedHeapLabels > 0)
-        heapify();
+      if (removedHeapLabels > 0) heapify();
     }
     return true;
   }
@@ -249,10 +239,9 @@ public:
     labels.emplace_back(label);
   }
 
-private:
+ private:
   inline void heapify() noexcept {
-    if (heapSize <= 1)
-      return;
+    if (heapSize <= 1) return;
     for (size_t i = parent(heapSize - 1); i != size_t(-1); i--) {
       siftDown(i);
     }
@@ -269,8 +258,7 @@ private:
           minIndex = j;
         }
       }
-      if (minIndex == i)
-        break;
+      if (minIndex == i) break;
       std::swap(labels[i], labels[minIndex]);
       i = minIndex;
     }
@@ -288,4 +276,4 @@ private:
   size_t heapSize;
 };
 
-} // namespace RAPTOR
+}  // namespace RAPTOR

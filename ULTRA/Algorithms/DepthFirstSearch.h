@@ -5,7 +5,6 @@
 #include <vector>
 
 #include "../DataStructures/Graph/Classes/GraphInterface.h"
-
 #include "../Helpers/Assert.h"
 #include "../Helpers/Vector/Permutation.h"
 
@@ -14,15 +13,14 @@ template <typename GRAPH, typename TRAVERSE_TREE_EDGE = NO_OPERATION,
           typename BACKTRACK = NO_OPERATION, typename ROOT = NO_OPERATION,
           typename FINALIZE = NO_OPERATION>
 class DepthFirstSearch {
-
-private:
+ private:
   struct Item {
     Edge edge;
     Vertex from;
     bool backtrack;
   };
 
-public:
+ public:
   DepthFirstSearch(
       const GRAPH &graph,
       const TRAVERSE_TREE_EDGE &traverseTreeEdge = TRAVERSE_TREE_EDGE(),
@@ -31,8 +29,11 @@ public:
       const BACKTRACK &backtrack = BACKTRACK(), const ROOT &root = ROOT(),
       const FINALIZE &finalize = FINALIZE())
       : traverseTreeEdge(traverseTreeEdge),
-        traverseNonTreeEdge(traverseNonTreeEdge), backtrack(backtrack),
-        root(root), finalize(finalize), graph(graph) {}
+        traverseNonTreeEdge(traverseNonTreeEdge),
+        backtrack(backtrack),
+        root(root),
+        finalize(finalize),
+        graph(graph) {}
 
   inline void initialize() {
     std::vector<bool>(graph.numVertices(), false).swap(settled);
@@ -73,7 +74,7 @@ public:
 
   inline bool hasSettled(Vertex vertex) const { return settled[vertex]; }
 
-private:
+ private:
   inline void settle(Vertex v) {
     Assert(!settled[v]);
     settled[v] = true;
@@ -98,7 +99,7 @@ private:
 
   inline void pop() { stack.pop_back(); }
 
-private:
+ private:
   TRAVERSE_TREE_EDGE traverseTreeEdge;
   TRAVERSE_NON_TREE_EDGE traverseNonTreeEdge;
   BACKTRACK backtrack;
@@ -110,7 +111,8 @@ private:
   std::vector<Item> stack;
 };
 
-template <typename GRAPH, typename OPERATION> struct SimpleOperation {
+template <typename GRAPH, typename OPERATION>
+struct SimpleOperation {
   SimpleOperation(const GRAPH &graph, const OPERATION &operation)
       : operation(operation), graph(graph) {}
   inline void operator()(const Edge edge, const Vertex) {
@@ -128,8 +130,7 @@ class DFS
                               SimpleOperation<GRAPH, TRAVERSE_NON_TREE_EDGE>,
                               SimpleOperation<GRAPH, BACKTRACK>,
                               TRAVERSE_TREE_EDGE, BACKTRACK> {
-
-public:
+ public:
   using DFSType =
       DepthFirstSearch<GRAPH, SimpleOperation<GRAPH, TRAVERSE_TREE_EDGE>,
                        SimpleOperation<GRAPH, TRAVERSE_NON_TREE_EDGE>,
@@ -170,8 +171,8 @@ inline void depthFirstSearch(
 template <typename GRAPH, typename TRAVERSE_TREE_EDGE = NO_OPERATION,
           typename TRAVERSE_NON_TREE_EDGE = NO_OPERATION,
           typename BACKTRACK = NO_OPERATION>
-inline void
-dfs(const GRAPH &graph,
+inline void dfs(
+    const GRAPH &graph,
     const TRAVERSE_TREE_EDGE &traverseTreeEdge = TRAVERSE_TREE_EDGE(),
     const TRAVERSE_NON_TREE_EDGE &traverseNonTreeEdge =
         TRAVERSE_NON_TREE_EDGE(),

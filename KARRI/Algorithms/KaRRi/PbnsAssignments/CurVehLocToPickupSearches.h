@@ -24,6 +24,8 @@
 
 #pragma once
 
+#include <type_traits>
+
 #include "Algorithms/CH/CH.h"
 #include "Algorithms/KaRRi/BaseObjects/VehicleLocation.h"
 #include "Algorithms/KaRRi/RequestState/RequestState.h"
@@ -32,15 +34,13 @@
 #include "DataStructures/Labels/BasicLabelSet.h"
 #include "DataStructures/Labels/SimdLabelSet.h"
 #include "Tools/Timer.h"
-#include <type_traits>
 
 namespace karri {
 
 template <typename InputGraphT, typename VehicleLocatorT, typename CHEnvT,
           typename LabelSetT>
 class CurVehLocToPickupSearches {
-
-private:
+ private:
   static constexpr int K = LabelSetT::K;
   using DistanceLabel = typename LabelSetT::DistanceLabel;
 
@@ -49,7 +49,6 @@ private:
   static constexpr int unknownDist = INFTY + 1;
 
   struct StopWhenMaxDistExceeded {
-
     explicit StopWhenMaxDistExceeded(const int &maxDist) : maxDist(maxDist) {}
 
     template <typename DistLabelT, typename DistLabelContainerT>
@@ -58,7 +57,7 @@ private:
       return !(bool)~(maxDist < distToV);
     }
 
-  private:
+   private:
     const int &maxDist;
   };
 
@@ -73,7 +72,7 @@ private:
       return false;
     }
 
-  private:
+   private:
     CurVehLocToPickupSearches &searches;
   };
 
@@ -85,8 +84,7 @@ private:
     bool operator()(const int v, const DistLabelT &distToV,
                     const DistLabelContT &) {
       const auto &distFromVehLocToV = searches.distFromCurVehLocation[v];
-      if (distFromVehLocToV >= INFTY)
-        return false;
+      if (distFromVehLocToV >= INFTY) return false;
 
       DistanceLabel dists = distToV + DistanceLabel(distFromVehLocToV);
       dists.setIf(DistanceLabel(INFTY), ~(distToV < INFTY));
@@ -97,7 +95,7 @@ private:
       return false;
     }
 
-  private:
+   private:
     CurVehLocToPickupSearches &searches;
   };
 
@@ -107,14 +105,19 @@ private:
   using FindDistancesSearch = typename CHEnvT::template UpwardSearch<
       ScanLabelAndUpdateDistances, StopWhenMaxDistExceeded, LabelSetT>;
 
-public:
+ public:
   CurVehLocToPickupSearches(const InputGraphT &graph, VehicleLocatorT &locator,
                             const CHEnvT &chEnv, const RouteState &routeState,
                             RequestState &requestState, const int fleetSize)
-      : inputGraph(graph), vehicleLocator(locator), ch(chEnv.getCH()),
-        routeState(routeState), requestState(requestState),
-        fleetSize(fleetSize), distances(),
-        currentVehicleLocations(fleetSize, INVALID_LOC), prevNumPickups(0),
+      : inputGraph(graph),
+        vehicleLocator(locator),
+        ch(chEnv.getCH()),
+        routeState(routeState),
+        requestState(requestState),
+        fleetSize(fleetSize),
+        distances(),
+        currentVehicleLocations(fleetSize, INVALID_LOC),
+        prevNumPickups(0),
         vehiclesWithKnownLocation(),
         writeVehLabelsSearch(chEnv.template getForwardSearch<
                              WriteVehicleDistLabel, StopWhenMaxDistExceeded>(
@@ -124,9 +127,12 @@ public:
                                             StopWhenMaxDistExceeded, LabelSetT>(
                 ScanLabelAndUpdateDistances(*this),
                 StopWhenMaxDistExceeded(maxTentativeDist))),
-        maxTentativeDist(INFTY), curPickupIds(), currentTime(-1),
-        waitingQueue(), distFromCurVehLocation(
-                            chEnv.getCH().upwardGraph().numVertices(), INFTY) {}
+        maxTentativeDist(INFTY),
+        curPickupIds(),
+        currentTime(-1),
+        waitingQueue(),
+        distFromCurVehLocation(chEnv.getCH().upwardGraph().numVertices(),
+                               INFTY) {}
 
   void initialize(const int now) {
     currentTime = now;
@@ -178,12 +184,10 @@ public:
   // initialize()). Skips pickups for which the distance via the given vehicle
   // is already known.
   void computeExactDistancesVia(const Vehicle &vehicle) {
-
     assert(routeState.numStopsOf(vehicle.vehicleId) > 1);
     curLeeway = routeState.leewayOfLegStartingAt(
         routeState.stopIdsFor(vehicle.vehicleId)[0]);
-    if (waitingQueue.empty())
-      return;
+    if (waitingQueue.empty()) return;
 
     if (!knowsCurrentLocationOf(vehicle.vehicleId)) {
       currentVehicleLocations[vehicle.vehicleId] = locateVehicle(vehicle);
@@ -285,9 +289,8 @@ public:
     return totalNumCHSearchesRunForRequest;
   }
 
-private:
+ private:
   void clearDistances() {
-
     // Clear the distances for every vehicle for which we computed the current
     // location:
     for (const auto &vehId : vehiclesWithKnownLocation) {
@@ -367,4 +370,4 @@ private:
   TimestampedVector<int> distFromCurVehLocation;
 };
 
-} // namespace karri
+}  // namespace karri

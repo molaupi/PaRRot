@@ -35,10 +35,11 @@
 // The elements are addressed by the IDs. This class is implemented as a
 // min-heap, but can be easily turned into a max-heap by multiplying the keys by
 // -1.
-template <int K> class AddressableKHeap {
+template <int K>
+class AddressableKHeap {
   static_assert(K > 0, "parameter k must be strictly positive");
 
-public:
+ public:
   // Constructs an empty addressable k-heap that can maintain elements with IDs
   // from 0 to n - 1.
   explicit AddressableKHeap(const int n) { resize(n); }
@@ -102,8 +103,7 @@ public:
     elementIdToHeapIndex[id] = INVALID_INDEX;
     heap.front() = heap.back();
     heap.pop_back();
-    if (!empty())
-      siftDown(0);
+    if (!empty()) siftDown(0);
   }
 
   // Decreases the key of the element with the specified ID to newKey.
@@ -128,16 +128,14 @@ public:
   // newKey.
   void decreaseKeyIfPossible(const int id, const int newKey) {
     assert(contains(id));
-    if (newKey < heap[elementIdToHeapIndex[id]].key)
-      decreaseKey(id, newKey);
+    if (newKey < heap[elementIdToHeapIndex[id]].key) decreaseKey(id, newKey);
   }
 
   // Attempts to increase the key of the element with the specified ID to
   // newKey.
   void increaseKeyIfPossible(const int id, const int newKey) {
     assert(contains(id));
-    if (newKey > heap[elementIdToHeapIndex[id]].key)
-      increaseKey(id, newKey);
+    if (newKey > heap[elementIdToHeapIndex[id]].key) increaseKey(id, newKey);
   }
 
   // Updates the key of the element with the specified ID to newKey.
@@ -150,7 +148,7 @@ public:
       increaseKey(id, newKey);
   }
 
-private:
+ private:
   // An element in this heap, with an associated ID and key.
   struct HeapElement {
     // Constructs a heap element with the specified ID and key.
@@ -186,8 +184,7 @@ private:
           std::min(getFirstChild(idx + 1), static_cast<int>(heap.size()));
       int minChild = firstChild;
       for (int i = firstChild + 1; i < lastChild; ++i)
-        if (heap[i].key < heap[minChild].key)
-          minChild = i;
+        if (heap[i].key < heap[minChild].key) minChild = i;
       if (elementToBeSiftedDown.key > heap[minChild].key) {
         move(minChild, idx);
         idx = minChild;
@@ -216,9 +213,9 @@ private:
   }
 
   std::vector<HeapElement>
-      heap; // A vector of all heap elements, being heap-ordered.
+      heap;  // A vector of all heap elements, being heap-ordered.
   std::vector<int>
-      elementIdToHeapIndex; // A map from element IDs to heap indices.
+      elementIdToHeapIndex;  // A map from element IDs to heap indices.
 };
 
 // Aliases for several standard heaps.

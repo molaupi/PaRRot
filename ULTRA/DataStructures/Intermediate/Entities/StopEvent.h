@@ -11,17 +11,18 @@
 namespace Intermediate {
 
 class StopEvent {
-
-public:
+ public:
   static const std::string CSV_HEADER;
 
-public:
+ public:
   StopEvent(const StopId stopId = noStop, const int arrivalTime = -1,
             const int departureTime = -2)
-      : stopId(stopId), arrivalTime(arrivalTime), departureTime(departureTime) {
-  }
+      : stopId(stopId),
+        arrivalTime(arrivalTime),
+        departureTime(departureTime) {}
   StopEvent(const StopEvent &se, const int timeOffset)
-      : stopId(se.stopId), arrivalTime(se.arrivalTime + timeOffset),
+      : stopId(se.stopId),
+        arrivalTime(se.arrivalTime + timeOffset),
         departureTime(se.departureTime + timeOffset) {}
   StopEvent(IO::Deserialization &deserialize) {
     this->deserialize(deserialize);
@@ -72,7 +73,7 @@ public:
     stopId = permutation.permutate(stopId);
   }
 
-public:
+ public:
   StopId stopId{noStop};
   int arrivalTime{-1};
   int departureTime{-2};
@@ -84,8 +85,7 @@ inline bool less(const std::vector<StopEvent> &a,
                  const std::vector<StopEvent> &b) noexcept {
   const size_t size = std::min(a.size(), b.size());
   for (size_t i = 0; i < size; i++) {
-    if (a[i].stopId == b[i].stopId)
-      continue;
+    if (a[i].stopId == b[i].stopId) continue;
     return a[i].stopId < b[i].stopId;
   }
   return a.size() < b.size();
@@ -93,13 +93,11 @@ inline bool less(const std::vector<StopEvent> &a,
 
 inline bool equals(const std::vector<StopEvent> &a,
                    const std::vector<StopEvent> &b) noexcept {
-  if (a.size() != b.size())
-    return false;
+  if (a.size() != b.size()) return false;
   for (size_t i = 0; i < a.size(); i++) {
-    if (a[i].stopId != b[i].stopId)
-      return false;
+    if (a[i].stopId != b[i].stopId) return false;
   }
   return true;
 }
 
-} // namespace Intermediate
+}  // namespace Intermediate

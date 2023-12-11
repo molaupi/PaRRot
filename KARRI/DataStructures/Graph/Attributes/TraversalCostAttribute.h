@@ -31,7 +31,7 @@
 
 // An attribute associating a generic traversal cost with each edge of a graph.
 class TraversalCostAttribute : public AbstractAttribute<int> {
-public:
+ public:
   // Returns the attribute's default value.
   static Type defaultValue() { return INFTY; }
 
@@ -49,7 +49,7 @@ public:
     return values[e];
   }
 
-protected:
+ protected:
   static constexpr const char *NAME =
-      "traversal_cost"; // The attribute's unique name.
+      "traversal_cost";  // The attribute's unique name.
 };

@@ -1,5 +1,8 @@
 #pragma once
 
+#include <string.h>
+#include <strings.h>
+
 #include <algorithm>
 #include <chrono>
 #include <cmath>
@@ -10,9 +13,6 @@
 #include <string>
 #include <thread>
 #include <vector>
-
-#include <string.h>
-#include <strings.h>
 
 #include "HighlightText.h"
 
@@ -41,15 +41,18 @@ inline void sleep(int milliSeconds) {
   std::this_thread::sleep_for(timespan);
 }
 
-template <typename T> inline T floor(const T value, const T unit) noexcept {
+template <typename T>
+inline T floor(const T value, const T unit) noexcept {
   return std::floor((value - unit) / unit) * unit;
 }
 
-template <typename T> inline T ceil(const T value, const T unit) noexcept {
+template <typename T>
+inline T ceil(const T value, const T unit) noexcept {
   return std::ceil((value + unit) / unit) * unit;
 }
 
-template <typename T> inline void sort(std::vector<T> &data) noexcept {
+template <typename T>
+inline void sort(std::vector<T> &data) noexcept {
   std::sort(data.begin(), data.end());
 }
 

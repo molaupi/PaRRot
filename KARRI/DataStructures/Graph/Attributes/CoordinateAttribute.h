@@ -31,7 +31,7 @@
 
 // An attribute associating a coordinate with each vertex of a graph.
 class CoordinateAttribute : public AbstractAttribute<Point> {
-public:
+ public:
   // Returns the coordinate of vertex v.
   const Type &coordinate(const int v) const {
     assert(v >= 0);
@@ -46,7 +46,7 @@ public:
     return values[v];
   }
 
-protected:
+ protected:
   static constexpr const char *NAME =
-      "coordinate"; // The attribute's unique name.
+      "coordinate";  // The attribute's unique name.
 };

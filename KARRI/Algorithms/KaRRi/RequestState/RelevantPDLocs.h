@@ -32,8 +32,8 @@
 namespace karri {
 
 struct RelevantPDLocs {
-
-  template <typename> friend class RelevantPDLocsFilter;
+  template <typename>
+  friend class RelevantPDLocsFilter;
 
   struct RelevantPDLoc {
     int stopIndex;
@@ -44,13 +44,15 @@ struct RelevantPDLocs {
 
   using RelevantPDLocVector = AlignedVector<RelevantPDLoc>;
 
-public:
+ public:
   using It = typename RelevantPDLocVector::const_iterator;
   using RevIt = typename RelevantPDLocVector::const_reverse_iterator;
 
   RelevantPDLocs(const int fleetSize)
-      : fleetSize(fleetSize), startOfRelevantPDLocs(fleetSize + 1),
-        relevantSpots(), vehiclesWithRelevantSpots(fleetSize) {}
+      : fleetSize(fleetSize),
+        startOfRelevantPDLocs(fleetSize + 1),
+        relevantSpots(),
+        vehiclesWithRelevantSpots(fleetSize) {}
 
   const Subset &getVehiclesWithRelevantPDLocs() const {
     return vehiclesWithRelevantSpots;
@@ -74,10 +76,10 @@ public:
     return {relevantSpots.rbegin() + rstart, relevantSpots.rbegin() + rend};
   }
 
-private:
+ private:
   const int fleetSize;
   std::vector<int> startOfRelevantPDLocs;
   RelevantPDLocVector relevantSpots;
   Subset vehiclesWithRelevantSpots;
 };
-} // namespace karri
+}  // namespace karri

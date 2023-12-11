@@ -24,12 +24,12 @@
 
 #pragma once
 
+#include <routingkit/contraction_hierarchy.h>
+
 #include <cassert>
 #include <fstream>
 #include <utility>
 #include <vector>
-
-#include <routingkit/contraction_hierarchy.h>
 
 #include "DataStructures/Graph/Attributes/TraversalCostAttribute.h"
 #include "DataStructures/Graph/Attributes/UnpackingInfoAttribute.h"
@@ -40,7 +40,7 @@
 // A weighted contraction hierarchy. The contraction order is determined online
 // and bottom-up.
 class CH {
-public:
+ public:
   // The type of the upward and downward graph.
   using Weight = TraversalCostAttribute;
   using SearchGraph =
@@ -55,7 +55,8 @@ public:
      PermT &&ranks) noexcept
       : upGraph(std::forward<SearchGraphT>(upGraph)),
         downGraph(std::forward<SearchGraphT>(downGraph)),
-        order(std::forward<PermT>(order)), ranks(std::forward<PermT>(ranks)) {
+        order(std::forward<PermT>(order)),
+        ranks(std::forward<PermT>(ranks)) {
     assert(this->upGraph.numVertices() == this->downGraph.numVertices());
     assert(this->upGraph.numVertices() == this->order.size());
     assert(this->ranks == this->order.getInversePermutation());
@@ -140,11 +141,11 @@ public:
     ranks.writeTo(out);
   }
 
-private:
-  SearchGraph upGraph;   // The upward graph.
-  SearchGraph downGraph; // The downward graph.
+ private:
+  SearchGraph upGraph;    // The upward graph.
+  SearchGraph downGraph;  // The downward graph.
   Permutation
-      order; // order[i] = v indicates that v was the i-th vertex contracted.
+      order;  // order[i] = v indicates that v was the i-th vertex contracted.
   Permutation
-      ranks; // ranks[v] = i indicates that v was the i-th vertex contracted.
+      ranks;  // ranks[v] = i indicates that v was the i-th vertex contracted.
 };

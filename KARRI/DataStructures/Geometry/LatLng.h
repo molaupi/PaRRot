@@ -38,7 +38,7 @@
 // This class represents a geographic point, specified by its latitude and
 // longitude.
 class LatLng {
-public:
+ public:
   // Latitude and longitude are stored internally as integers in units of
   // 1/PRECISION degrees.
   static constexpr int PRECISION = 1000000;
@@ -161,9 +161,9 @@ public:
     return {x, y};
   }
 
-private:
-  int lat; // The latitude in 1/PRECISION degrees.
-  int lng; // The longitude in 1/PRECISION degrees.
+ private:
+  int lat;  // The latitude in 1/PRECISION degrees.
+  int lng;  // The longitude in 1/PRECISION degrees.
 };
 
 // Some useful arithmetic operators. Automatic wrapping takes place.

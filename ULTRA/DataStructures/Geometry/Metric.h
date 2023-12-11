@@ -11,7 +11,6 @@
 namespace Geometry {
 
 struct EuclideanMetric {
-
   EuclideanMetric() {}
 
   inline double distanceSquare(const Point &a, const Point &b) const {
@@ -26,7 +25,6 @@ struct EuclideanMetric {
 };
 
 struct GeoMetric {
-
   GeoMetric() {}
 
   inline double distanceSquare(const Point &a, const Point &b) const {
@@ -48,7 +46,6 @@ struct GeoMetric {
 };
 
 struct GeoMetricAproximation {
-
   GeoMetricAproximation() : correction(Point(Construct::XY, 1, 1)) {}
   inline static GeoMetricAproximation SetCorrection(const Point &c) {
     GeoMetricAproximation metric;
@@ -83,4 +80,4 @@ struct GeoMetricAproximation {
   Point correction;
 };
 
-} // namespace Geometry
+}  // namespace Geometry

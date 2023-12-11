@@ -24,19 +24,19 @@
 
 #pragma once
 
+#include <type_traits>
+
 #include "Algorithms/Buckets/BucketEntry.h"
 #include "Algorithms/Buckets/DynamicBucketContainer.h"
 #include "Algorithms/Buckets/SortedBucketContainer.h"
 #include "Algorithms/CH/CH.h"
 #include "Algorithms/KaRRi/RouteState.h"
 #include "Tools/Timer.h"
-#include <type_traits>
 
 namespace karri {
 
 template <typename InputGraphT, typename CHEnvT, bool SORTED_BUCKETS>
 class LastStopBucketsEnvironment {
-
   using Entry = BucketEntry;
 
   struct IsDistSmaller {
@@ -47,7 +47,7 @@ class LastStopBucketsEnvironment {
     }
   };
 
-public:
+ public:
   static constexpr bool SORTED_BY_DIST = SORTED_BUCKETS;
 
   using BucketContainer =
@@ -55,7 +55,7 @@ public:
                          SortedBucketContainer<Entry, IsDistSmaller>,
                          DynamicBucketContainer<Entry>>;
 
-private:
+ private:
   struct StopWhenDistanceExceeded {
     explicit StopWhenDistanceExceeded(const int &maxDist) : maxDist(maxDist) {}
 
@@ -64,14 +64,15 @@ private:
       return distToV[0] > maxDist;
     }
 
-  private:
+   private:
     const int &maxDist;
   };
 
   struct GenerateEntry {
     explicit GenerateEntry(BucketContainer &bucketContainer, int &curVehId,
                            int &verticesVisited)
-        : bucketContainer(bucketContainer), curVehId(curVehId),
+        : bucketContainer(bucketContainer),
+          curVehId(curVehId),
           verticesVisited(verticesVisited) {}
 
     template <typename DistLabelT, typename DistLabelContT>
@@ -90,8 +91,10 @@ private:
   struct DeleteEntry {
     explicit DeleteEntry(BucketContainer &bucketContainer, int &curVehId,
                          int &verticesVisited, int &entriesVisited)
-        : bucketContainer(bucketContainer), curVehId(curVehId),
-          verticesVisited(verticesVisited), entriesVisited(entriesVisited) {}
+        : bucketContainer(bucketContainer),
+          curVehId(curVehId),
+          verticesVisited(verticesVisited),
+          entriesVisited(entriesVisited) {}
 
     template <typename DistLabelT, typename DistLabelContT>
     bool operator()(const int v, DistLabelT &distToV, const DistLabelContT &) {
@@ -100,8 +103,8 @@ private:
       ++verticesVisited;
       entriesVisited +=
           bucketContainer.getNumEntriesVisitedInLastUpdateOrRemove();
-      return !removed; // Prune if no entry for the vehicle was found at this
-                       // vertex
+      return !removed;  // Prune if no entry for the vehicle was found at this
+                        // vertex
     }
 
     BucketContainer &bucketContainer;
@@ -110,12 +113,14 @@ private:
     int &entriesVisited;
   };
 
-public:
+ public:
   LastStopBucketsEnvironment(const InputGraphT &inputGraph, const CHEnvT &chEnv,
                              const RouteState &routeState,
                              karri::stats::UpdatePerformanceStats &stats)
-      : inputGraph(inputGraph), ch(chEnv.getCH()),
-        searchGraph(ch.upwardGraph()), routeState(routeState),
+      : inputGraph(inputGraph),
+        ch(chEnv.getCH()),
+        searchGraph(ch.upwardGraph()),
+        routeState(routeState),
         bucketContainer(searchGraph.numVertices()),
         entryGenSearch(chEnv.getForwardSearch(
             GenerateEntry(bucketContainer, vehicleId, verticesVisitedInSearch),
@@ -167,7 +172,7 @@ public:
     //        entriesVisitedInSearch << ',' << time << '\n';
   }
 
-private:
+ private:
   using GenerateEntriesSearch =
       typename CHEnvT::template UpwardSearch<GenerateEntry,
                                              StopWhenDistanceExceeded>;
@@ -193,11 +198,10 @@ private:
 };
 
 struct NoOpLastStopBucketsEnvironment {
-
   inline void generateBucketEntries(const Vehicle &, const int) { /* no op */
   }
 
   inline void removeBucketEntries(const Vehicle &, const int) { /* no op */
   }
 };
-} // namespace karri
+}  // namespace karri

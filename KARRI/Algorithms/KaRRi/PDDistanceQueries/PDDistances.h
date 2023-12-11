@@ -30,7 +30,8 @@
 namespace karri {
 
 // Representation of PD-distances, i.e. distances from pickups to dropoffs.
-template <typename LabelSetT> struct PDDistances {
+template <typename LabelSetT>
+struct PDDistances {
   using DistanceLabel = typename LabelSetT::DistanceLabel;
   using LabelMask = typename LabelSetT::LabelMask;
 
@@ -69,9 +70,9 @@ template <typename LabelSetT> struct PDDistances {
     return getDirectDistance(pickup.id, dropoff.id);
   }
 
-  const DistanceLabel &
-  getDirectDistancesForBatchOfPickups(const unsigned int firstPickupIdInBatch,
-                                      const unsigned int &dropoffId) const {
+  const DistanceLabel &getDirectDistancesForBatchOfPickups(
+      const unsigned int firstPickupIdInBatch,
+      const unsigned int &dropoffId) const {
     return labelFor(firstPickupIdInBatch, dropoffId);
   }
 
@@ -121,7 +122,7 @@ template <typename LabelSetT> struct PDDistances {
     }
   }
 
-private:
+ private:
   DistanceLabel &labelFor(const unsigned int pickupId,
                           const unsigned int dropoffId) {
     return distances[(pickupId / K) * requestState.numDropoffs() + dropoffId];
@@ -141,4 +142,4 @@ private:
   int minDirectDist;
   AlignedVector<DistanceLabel> minDirectDistancesPerPickup;
 };
-} // namespace karri
+}  // namespace karri

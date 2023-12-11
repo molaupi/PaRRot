@@ -4,15 +4,15 @@
 
 #include "../Assert.h"
 
-template <typename RANGE> class ReverseRange {
-
-public:
+template <typename RANGE>
+class ReverseRange {
+ public:
   using Range = RANGE;
   using Type = ReverseRange<Range>;
 
-public:
+ public:
   class Iterator {
-  public:
+   public:
     Iterator(const Range *const range, const size_t i) : range(range), i(i) {}
     inline bool operator!=(const Iterator &other) const noexcept {
       return i != other.i;
@@ -33,7 +33,7 @@ public:
       return (*range)[i - n];
     }
 
-  private:
+   private:
     const Range *range;
     size_t i;
   };
@@ -69,7 +69,7 @@ public:
     return range->front();
   }
 
-private:
+ private:
   const Range *range;
 };
 

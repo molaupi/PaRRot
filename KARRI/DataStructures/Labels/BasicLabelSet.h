@@ -36,8 +36,9 @@
 // A set of consistent distance and parent labels for Dijkstra's algorithm. The
 // template arguments specify the number of shortest paths computed
 // simultaneously and the kind of parent information that should be collected.
-template <int logSearches, ParentInfo parentInfo> struct BasicLabelSet {
-public:
+template <int logSearches, ParentInfo parentInfo>
+struct BasicLabelSet {
+ public:
   // The number of simultaneous shortest-path computations.
   static constexpr int logK = logSearches;
   static constexpr int K = 1 << logK;
@@ -54,7 +55,7 @@ public:
   // distance labels a and b is a mask that indicates for which components i it
   // holds that a[i] < b[i].
   class LabelMask {
-  public:
+   public:
     // Constructs an uninitialized mask.
     LabelMask() = default;
 
@@ -66,8 +67,7 @@ public:
 
     // Takes the logical AND of this and the specified mask.
     LabelMask &operator&=(const LabelMask &rhs) {
-      for (int i = 0; i < K; ++i)
-        isMarked[i] &= rhs.isMarked[i];
+      for (int i = 0; i < K; ++i) isMarked[i] &= rhs.isMarked[i];
       return *this;
     }
 
@@ -80,8 +80,7 @@ public:
 
     // Takes the logical AND of this and the specified mask.
     LabelMask &operator|=(const LabelMask &rhs) {
-      for (int i = 0; i < K; ++i)
-        isMarked[i] |= rhs.isMarked[i];
+      for (int i = 0; i < K; ++i) isMarked[i] |= rhs.isMarked[i];
       return *this;
     }
 
@@ -96,8 +95,7 @@ public:
     // Returns the logical NOT of this mask.
     LabelMask operator~() const {
       LabelMask res = *this;
-      for (int i = 0; i < K; ++i)
-        res.isMarked[i] = !res.isMarked[i];
+      for (int i = 0; i < K; ++i) res.isMarked[i] = !res.isMarked[i];
       return res;
     }
 
@@ -118,8 +116,7 @@ public:
     // Returns true if this mask marks at least one component.
     operator bool() const {
       bool res = isMarked[0];
-      for (int i = 1; i < K; ++i)
-        res |= isMarked[i];
+      for (int i = 1; i < K; ++i) res |= isMarked[i];
       return res;
     }
 
@@ -128,13 +125,13 @@ public:
     friend bool allSet(const LabelMask &mask) { return !anySet(~mask); }
 
     std::array<bool, K>
-        isMarked; // Flags indicating for each component if it is marked.
+        isMarked;  // Flags indicating for each component if it is marked.
   };
 
   // A packed distance label for a vertex, storing k distance values. Each value
   // maintains the tentative distance from a different simultaneous source.
   class DistanceLabel {
-  public:
+   public:
     static constexpr int K = BasicLabelSet::K;
 
     // Constructs an uninitialized distance label.
@@ -164,8 +161,7 @@ public:
     friend DistanceLabel operator+(const DistanceLabel &lhs,
                                    const DistanceLabel &rhs) {
       DistanceLabel sum;
-      for (int i = 0; i < K; ++i)
-        sum.values[i] = lhs.values[i] + rhs.values[i];
+      for (int i = 0; i < K; ++i) sum.values[i] = lhs.values[i] + rhs.values[i];
       return sum;
     }
 
@@ -223,16 +219,14 @@ public:
     // if mask[i] = true and l'[i] = 0 if mask[i] = false
     friend DistanceLabel operator&(const DistanceLabel &l, const LabelMask &m) {
       DistanceLabel res;
-      for (int i = 0; i < K; ++i)
-        res[i] = m.isMarked[i] ? l[i] : 0;
+      for (int i = 0; i < K; ++i) res[i] = m.isMarked[i] ? l[i] : 0;
       return res;
     }
 
     // Returns the priority of this label.
     int getKey() const {
       int min = values[0];
-      for (int i = 1; i < K; ++i)
-        min = std::min(min, values[i]);
+      for (int i = 1; i < K; ++i) min = std::min(min, values[i]);
       return min;
     }
 
@@ -240,8 +234,7 @@ public:
     // label.
     int horizontalMin() const {
       int min = values[0];
-      for (int i = 1; i < K; ++i)
-        min = std::min(min, values[i]);
+      for (int i = 1; i < K; ++i) min = std::min(min, values[i]);
       return min;
     }
 
@@ -249,8 +242,7 @@ public:
     // label.
     int horizontalMax() const {
       int max = values[0];
-      for (int i = 1; i < K; ++i)
-        max = std::max(max, values[i]);
+      for (int i = 1; i < K; ++i) max = std::max(max, values[i]);
       return max;
     }
 
@@ -268,8 +260,7 @@ public:
 
     // Multiply all entries in this label with a scalar factor
     void multiplyWithScalar(const int s) {
-      for (int i = 0; i < K; ++i)
-        values[i] = s * values[i];
+      for (int i = 0; i < K; ++i) values[i] = s * values[i];
     }
 
     // Sets this label at all slots i where mask[i] = true.
@@ -283,21 +274,19 @@ public:
     friend DistanceLabel select(const LabelMask &mask, const DistanceLabel &l1,
                                 const DistanceLabel &l2) {
       DistanceLabel result;
-      for (int i = 0; i < K; ++i)
-        result[i] = mask[i] ? l1[i] : l2[i];
+      for (int i = 0; i < K; ++i) result[i] = mask[i] ? l1[i] : l2[i];
       return result;
     }
 
-  private:
+   private:
     std::array<int, K>
-        values; // The k distance values, one for each simultaneous source.
+        values;  // The k distance values, one for each simultaneous source.
   };
 
-private:
+ private:
   // A packed label for a vertex, storing k parent edges.
   class ParentEdge {
-
-  public:
+   public:
     ParentEdge() { edges.fill(INVALID_ID); }
 
     // Returns the parent edge on the shortest path from the i-th source.
@@ -309,21 +298,20 @@ private:
 
     // Sets the parent edge to e on all shortest paths specified by mask.
     void setEdge(const int e, const LabelMask &mask) {
-      for (int i = 0; i < K; ++i)
-        edges[i] = mask.isMarked[i] ? e : edges[i];
+      for (int i = 0; i < K; ++i) edges[i] = mask.isMarked[i] ? e : edges[i];
     }
 
-  private:
+   private:
     std::array<int, K>
-        edges; // The k parent edges, one for each simultaneous source.
+        edges;  // The k parent edges, one for each simultaneous source.
   };
 
-public:
+ public:
   // A packed label for a vertex, storing k parent vertices and possibly k
   // parent edges.
   class ParentLabel
       : public std::conditional_t<KEEP_PARENT_EDGES, ParentEdge, EmptyClass> {
-  public:
+   public:
     ParentLabel() = default;
 
     ParentLabel(const int val) {
@@ -347,8 +335,8 @@ public:
         vertices[i] = mask.isMarked[i] ? u : vertices[i];
     }
 
-  private:
+   private:
     std::array<int, K>
-        vertices; // The k parent vertices, one for each simultaneous source.
+        vertices;  // The k parent vertices, one for each simultaneous source.
   };
 };

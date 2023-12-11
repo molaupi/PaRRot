@@ -24,14 +24,14 @@
 
 #pragma once
 
-#include "DataStructures/Utilities/DynamicRagged2DArrays.h"
 #include <cassert>
 #include <vector>
 
+#include "DataStructures/Utilities/DynamicRagged2DArrays.h"
+
 template <typename BucketEntryT, typename BucketEntryComparatorT>
 class SortedBucketContainer {
-
-public:
+ public:
   using SortedBucket = ConstantVectorRange<BucketEntryT>;
 
   explicit SortedBucketContainer(const int numVertices)
@@ -74,8 +74,7 @@ public:
       const bool transformed = transform(entries[i]);
       anyUpdated |= transformed;
     }
-    if (!anyUpdated)
-      return false;
+    if (!anyUpdated) return false;
 
     // If any entries were updated, fix sorting of bucket:
     std::sort(entries.begin() + pos.start, entries.begin() + pos.end,
@@ -99,8 +98,7 @@ public:
       }
       ++i;
     }
-    if (i == pos.end)
-      return false;
+    if (i == pos.end) return false;
 
     stableRemoval(v, i - pos.start, bucketPositions, entries);
     return true;
@@ -115,8 +113,7 @@ public:
 
     int posInBucket = -1;
     const bool found = findPosOfExistingEntryInBucket(v, entry, posInBucket);
-    if (!found)
-      return false;
+    if (!found) return false;
 
     stableRemoval(v, posInBucket, bucketPositions, entries);
     return true;
@@ -128,12 +125,11 @@ public:
 
   // Removes all entries from all buckets.
   void clear() {
-    for (auto &bucketPos : bucketPositions)
-      bucketPos.end = bucketPos.start;
+    for (auto &bucketPos : bucketPositions) bucketPos.end = bucketPos.start;
     std::fill(entries.begin(), entries.end(), BucketEntryT());
   }
 
-private:
+ private:
   int findInsertionPosForEntryInBucket(const int v, const BucketEntryT &entry) {
     assert(v >= 0);
     assert(v < bucketPositions.size());
@@ -142,12 +138,10 @@ private:
 
     // Check if bucket is currently empty or new entry needs to become first
     // element:
-    if (pos.end == pos.start || comp(entry, entries[pos.start]))
-      return 0;
+    if (pos.end == pos.start || comp(entry, entries[pos.start])) return 0;
 
     // Check if new entry needs to become last element:
-    if (!comp(entry, entries[pos.end - 1]))
-      return pos.end - pos.start;
+    if (!comp(entry, entries[pos.end - 1])) return pos.end - pos.start;
 
     // Binary search with invariant: !comp(entry, entries[pos.start + l]) &&
     // comp(entry, entries[pos.start + r])

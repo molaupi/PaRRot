@@ -4,25 +4,23 @@
 #include <string>
 #include <vector>
 
-#include "Preprocessing/CHBuilder.h"
-#include "Preprocessing/CHData.h"
-
 #include "../../DataStructures/Graph/Graph.h"
 #include "../../Helpers/Ranges/ConcatenatedRange.h"
 #include "../../Helpers/Ranges/Range.h"
+#include "Preprocessing/CHBuilder.h"
+#include "Preprocessing/CHData.h"
 
 namespace CH {
 
 class CH {
-
-public:
+ public:
   using EdgeRange = ConcatenatedRange<Range<Edge>, Edge>;
 
   template <AttributeNameType ATTRIBUTE_NAME>
   using AttributeConstReferenceType =
       typename CHGraph::AttributeConstReferenceType<ATTRIBUTE_NAME>;
 
-public:
+ public:
   CH() {}
 
   CH(const CH &) = default;
@@ -91,8 +89,8 @@ public:
   }
 
   template <AttributeNameType ATTRIBUTE_NAME>
-  inline AttributeConstReferenceType<ATTRIBUTE_NAME>
-  get(const AttributeNameWrapper<ATTRIBUTE_NAME> attributeName,
+  inline AttributeConstReferenceType<ATTRIBUTE_NAME> get(
+      const AttributeNameWrapper<ATTRIBUTE_NAME> attributeName,
       const Edge edge) const noexcept {
     return (edge < forward.numEdges())
                ? forward.get(attributeName, edge)
@@ -113,8 +111,7 @@ public:
     for (const Edge forwardEdge : forward.edgesFrom(vertex)) {
       for (const Edge backwardEdge :
            backward.edgesFrom(forward.get(ToVertex, forwardEdge))) {
-        if (backward.get(ToVertex, backwardEdge) == vertex)
-          return true;
+        if (backward.get(ToVertex, backwardEdge) == vertex) return true;
       }
     }
     return false;
@@ -133,9 +130,9 @@ public:
     backward.readBinary(fileName + separator + "backward", separator);
   }
 
-public:
+ public:
   CHGraph forward;
   CHGraph backward;
 };
 
-} // namespace CH
+}  // namespace CH

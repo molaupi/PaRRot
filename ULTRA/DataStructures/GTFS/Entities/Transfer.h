@@ -9,11 +9,11 @@
 namespace GTFS {
 
 class Transfer {
-
-public:
+ public:
   Transfer(const std::string &fromStopId = "", const std::string &toStopId = "",
            const int minTransferTime = 0)
-      : fromStopId(fromStopId), toStopId(toStopId),
+      : fromStopId(fromStopId),
+        toStopId(toStopId),
         minTransferTime(minTransferTime) {}
   Transfer(IO::Deserialization &deserialize) { this->deserialize(deserialize); }
 
@@ -35,10 +35,10 @@ public:
     deserialize(fromStopId, toStopId, minTransferTime);
   }
 
-public:
+ public:
   std::string fromStopId{""};
   std::string toStopId{""};
   int minTransferTime{0};
 };
 
-} // namespace GTFS
+}  // namespace GTFS

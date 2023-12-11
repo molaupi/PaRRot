@@ -9,18 +9,25 @@
 namespace CSA {
 
 class JourneyLeg {
-
-public:
+ public:
   JourneyLeg(const Vertex from = noVertex, const Vertex to = noVertex,
              const int departureTime = never, const int arrivalTime = never,
              const Edge transferId = noEdge)
-      : from(from), to(to), departureTime(departureTime),
-        arrivalTime(arrivalTime), usesTrip(false), transferId(transferId) {}
+      : from(from),
+        to(to),
+        departureTime(departureTime),
+        arrivalTime(arrivalTime),
+        usesTrip(false),
+        transferId(transferId) {}
 
   JourneyLeg(const Vertex from, const Vertex to, const int departureTime,
              const int arrivalTime, const TripId tripId)
-      : from(from), to(to), departureTime(departureTime),
-        arrivalTime(arrivalTime), usesTrip(true), tripId(tripId) {}
+      : from(from),
+        to(to),
+        departureTime(departureTime),
+        arrivalTime(arrivalTime),
+        usesTrip(true),
+        tripId(tripId) {}
 
   inline friend std::ostream &operator<<(std::ostream &out,
                                          const JourneyLeg &leg) noexcept {
@@ -30,7 +37,7 @@ public:
                << (leg.usesTrip ? ", trip: " : ", transfer: ") << leg.tripId;
   }
 
-public:
+ public:
   Vertex from;
   Vertex to;
   int departureTime;
@@ -53,4 +60,4 @@ inline std::vector<Vertex> journeyToPath(const Journey &journey) noexcept {
   return path;
 }
 
-} // namespace CSA
+}  // namespace CSA

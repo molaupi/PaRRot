@@ -4,11 +4,6 @@
 #include <string>
 #include <vector>
 
-#include "../../Helpers/Vector/Vector.h"
-
-#include "InitialTransfers.h"
-#include "Profiler.h"
-
 #include "../../DataStructures/Container/ExternalKHeap.h"
 #include "../../DataStructures/Container/Map.h"
 #include "../../DataStructures/Container/Set.h"
@@ -16,24 +11,29 @@
 #include "../../DataStructures/RAPTOR/Data.h"
 #include "../../DataStructures/RAPTOR/Entities/ArrivalLabel.h"
 #include "../../DataStructures/RAPTOR/Entities/Journey.h"
+#include "../../Helpers/Vector/Vector.h"
+#include "InitialTransfers.h"
+#include "Profiler.h"
 
 namespace RAPTOR {
 
 template <typename INITIAL_TRANSFERS, typename PROFILER>
 class OneToAllDijkstraRAPTOR {
-
-public:
+ public:
   using InitialTransferType = INITIAL_TRANSFERS;
   using InitialTransferGraph = typename InitialTransferType::Graph;
   using Profiler = PROFILER;
   using Type = OneToAllDijkstraRAPTOR<InitialTransferType, Profiler>;
   using SourceType = Vertex;
 
-public:
+ public:
   struct EarliestArrivalLabel {
     EarliestArrivalLabel()
-        : arrivalTime(never), parentDepartureTime(never), parent(noVertex),
-          usesRoute(false), routeId(noRouteId) {}
+        : arrivalTime(never),
+          parentDepartureTime(never),
+          parent(noVertex),
+          usesRoute(false),
+          routeId(noRouteId) {}
     int arrivalTime;
     int parentDepartureTime;
     Vertex parent;
@@ -51,19 +51,21 @@ public:
     }
   };
 
-public:
+ public:
   template <typename ATTRIBUTE>
   OneToAllDijkstraRAPTOR(const Data &data,
                          const InitialTransferGraph &forwardGraph,
                          const InitialTransferGraph &backwardGraph,
                          const ATTRIBUTE weight,
                          const Profiler &profilerTemplate = Profiler())
-      : data(data), initialTransfers(forwardGraph, backwardGraph,
-                                     data.transferGraph.numVertices(), weight),
+      : data(data),
+        initialTransfers(forwardGraph, backwardGraph,
+                         data.transferGraph.numVertices(), weight),
         stopsUpdatedByRoute(data.numberOfStops()),
         stopsUpdatedByTransfer(data.numberOfStops()),
         routesServingUpdatedStops(data.numberOfRoutes()),
-        sourceVertex(noVertex), sourceDepartureTime(intMax),
+        sourceVertex(noVertex),
+        sourceDepartureTime(intMax),
         earliestArrival(data.transferGraph.numVertices(), never),
         profiler(profilerTemplate) {
     AssertMsg(data.hasImplicitBufferTimes(),
@@ -148,8 +150,8 @@ public:
     return journeys.empty() ? Journey() : journeys.back();
   }
 
-  inline std::vector<ArrivalLabel>
-  getArrivals(const Vertex vertex) const noexcept {
+  inline std::vector<ArrivalLabel> getArrivals(
+      const Vertex vertex) const noexcept {
     std::vector<ArrivalLabel> labels;
     for (size_t i = 0; i < rounds.size(); i++) {
       getArrival(labels, i, vertex);
@@ -185,17 +187,17 @@ public:
     return journeyToPath(getJourneys(vertex).back());
   }
 
-  inline std::vector<std::string>
-  getRouteDescription(const Vertex vertex) const {
+  inline std::vector<std::string> getRouteDescription(
+      const Vertex vertex) const {
     return data.journeyToText(getJourneys(vertex).back());
   }
 
   inline int getArrivalTime(const Vertex vertex,
                             const size_t round) const noexcept {
     if (data.isStop(vertex)) {
-      AssertMsg(rounds[round][vertex].arrivalTime < never,
-                "No label found for stop " << vertex << " in round " << round
-                                           << "!");
+      AssertMsg(
+          rounds[round][vertex].arrivalTime < never,
+          "No label found for stop " << vertex << " in round " << round << "!");
       return rounds[round][vertex].arrivalTime;
     } else {
       AssertMsg(dijkstraLabels[round][vertex].arrivalTime < never,
@@ -218,7 +220,7 @@ public:
 
   inline Profiler &getProfiler() noexcept { return profiler; }
 
-private:
+ private:
   inline void initialize(const Vertex source,
                          const int departureTime) noexcept {
     sourceVertex = source;
@@ -378,8 +380,7 @@ private:
                   << sourceDepartureTime
                   << "], arrival time: " << String::secToTime(arrivalTime)
                   << " [" << arrivalTime << "], stop: " << stop << ")!");
-    if (earliestArrival[stop] <= arrivalTime)
-      return false;
+    if (earliestArrival[stop] <= arrivalTime) return false;
     profiler.countMetric(METRIC_STOPS_BY_TRIP);
     currentRound()[stop].arrivalTime = arrivalTime;
     earliestArrival[stop] = arrivalTime;
@@ -398,8 +399,7 @@ private:
                   << sourceDepartureTime
                   << "], arrival time: " << String::secToTime(arrivalTime)
                   << " [" << arrivalTime << "])!");
-    if (earliestArrival[vertex] <= arrivalTime)
-      return false;
+    if (earliestArrival[vertex] <= arrivalTime) return false;
     DijkstraLabel &label = dijkstraLabels.back()[vertex];
     label.arrivalTime = arrivalTime;
     label.parent = parent;
@@ -421,8 +421,7 @@ private:
                   << " [" << arrivalTime << "])!");
     EarliestArrivalLabel &label = currentRound()[stop];
     stopsUpdatedByTransfer.insert(stop);
-    if (label.arrivalTime <= arrivalTime)
-      return;
+    if (label.arrivalTime <= arrivalTime) return;
     profiler.countMetric(METRIC_STOPS_BY_TRANSFER);
     label.arrivalTime = arrivalTime;
     label.parent = parent;
@@ -459,8 +458,7 @@ private:
       journey.emplace_back(label.parent, vertex, label.parentDepartureTime,
                            label.arrivalTime, label.usesRoute, label.routeId);
       vertex = label.parent;
-      if (label.usesRoute)
-        round--;
+      if (label.usesRoute) round--;
     }
     journeys.emplace_back(Vector::reverse(journey));
   }
@@ -480,8 +478,7 @@ private:
     const int arrivalTime = data.isStop(vertex)
                                 ? rounds[round][vertex].arrivalTime
                                 : dijkstraLabels[round][vertex].arrivalTime;
-    if (arrivalTime >= (labels.empty() ? never : labels.back()))
-      return;
+    if (arrivalTime >= (labels.empty() ? never : labels.back())) return;
     labels.emplace_back(arrivalTime);
   }
 
@@ -497,7 +494,7 @@ private:
     }
   }
 
-private:
+ private:
   const Data &data;
 
   InitialTransferType initialTransfers;
@@ -519,4 +516,4 @@ private:
   Profiler profiler;
 };
 
-} // namespace RAPTOR
+}  // namespace RAPTOR

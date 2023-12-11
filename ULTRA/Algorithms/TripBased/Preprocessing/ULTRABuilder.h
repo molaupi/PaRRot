@@ -7,22 +7,20 @@
 #include "../../../Helpers/Console/Progress.h"
 #include "../../../Helpers/MultiThreading.h"
 #include "../../../Helpers/Timer.h"
-
 #include "ShortcutSearch.h"
 
 namespace TripBased {
 
 template <bool DEBUG = false, bool IGNORE_ISOLATED_CANDIDATES = false>
 class ULTRABuilder {
-
-public:
+ public:
   inline static constexpr bool Debug = DEBUG;
   inline static constexpr bool IgnoreIsolatedCandidates =
       IGNORE_ISOLATED_CANDIDATES;
   using Type = ULTRABuilder<Debug, IgnoreIsolatedCandidates>;
   using ShortcutSearchType = ShortcutSearch<Debug, IgnoreIsolatedCandidates>;
 
-public:
+ public:
   ULTRABuilder(const Data &data) : data(data) {
     stopEventGraph.addVertices(data.numberOfStopEvents());
   }
@@ -63,12 +61,12 @@ public:
     }
 
     if (!shortcuts.empty()) {
-      std::sort(shortcuts.begin(), shortcuts.end(),
-                [](const Shortcut &a, const Shortcut &b) {
-                  return (a.origin < b.origin) ||
-                         ((a.origin == b.origin) &&
-                          (a.destination < b.destination));
-                });
+      std::sort(
+          shortcuts.begin(), shortcuts.end(),
+          [](const Shortcut &a, const Shortcut &b) {
+            return (a.origin < b.origin) ||
+                   ((a.origin == b.origin) && (a.destination < b.destination));
+          });
       stopEventGraph
           .addEdge(Vertex(shortcuts[0].origin),
                    Vertex(shortcuts[0].destination))
@@ -96,9 +94,9 @@ public:
     return stopEventGraph;
   }
 
-private:
+ private:
   const Data &data;
   DynamicTransferGraph stopEventGraph;
 };
 
-} // namespace TripBased
+}  // namespace TripBased

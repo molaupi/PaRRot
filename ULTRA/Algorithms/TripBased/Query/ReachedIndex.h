@@ -7,10 +7,10 @@
 namespace TripBased {
 
 class ReachedIndex {
-
-public:
+ public:
   ReachedIndex(const Data &data)
-      : data(data), labels(data.numberOfTrips(), -1),
+      : data(data),
+        labels(data.numberOfTrips(), -1),
         defaultLabels(data.numberOfTrips(), -1) {
     for (const TripId trip : data.trips()) {
       if (data.numberOfStopsInTrip(trip) > 255)
@@ -20,7 +20,7 @@ public:
     }
   }
 
-public:
+ public:
   inline void clear() noexcept { labels = defaultLabels; }
 
   inline void clear(const RouteId route) noexcept {
@@ -44,8 +44,7 @@ public:
     AssertMsg(trip < labels.size(), "Trip " << trip << " is out of bounds!");
     const TripId routeEnd = data.firstTripOfRoute[data.routeOfTrip[trip] + 1];
     for (TripId i = trip; i < routeEnd; i++) {
-      if (labels[i] <= index)
-        break;
+      if (labels[i] <= index) break;
       labels[i] = index;
     }
   }
@@ -58,7 +57,7 @@ public:
     std::fill(labels.begin() + trip, labels.begin() + tripEnd, index);
   }
 
-private:
+ private:
   const Data &data;
 
   std::vector<u_int8_t> labels;
@@ -66,4 +65,4 @@ private:
   std::vector<u_int8_t> defaultLabels;
 };
 
-} // namespace TripBased
+}  // namespace TripBased

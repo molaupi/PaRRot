@@ -8,13 +8,12 @@ namespace TripBased {
 using TransferGraph = ::TransferGraph;
 
 class MultimodalData {
-
-public:
+ public:
   MultimodalData(const std::string &fileName) { deserialize(fileName); }
 
   MultimodalData(const Data &data) : tripData(data) {}
 
-public:
+ public:
   inline void serialize(const std::string &fileName) const noexcept {
     IO::serialize(fileName, modes);
     tripData.serialize(fileName + ".trip");
@@ -52,8 +51,8 @@ public:
     stopEventGraphs[mode] = graph;
   }
 
-  inline const TransferGraph &
-  getTransferGraph(const size_t mode) const noexcept {
+  inline const TransferGraph &getTransferGraph(
+      const size_t mode) const noexcept {
     AssertMsg(Vector::contains(modes, mode), "Mode is not supported!");
     return stopEventGraphs[mode];
   }
@@ -66,8 +65,8 @@ public:
 
   inline Data getPruningData() const noexcept { return getPruningData(modes); }
 
-  inline Data
-  getPruningData(const std::vector<size_t> &pruningModes) const noexcept {
+  inline Data getPruningData(
+      const std::vector<size_t> &pruningModes) const noexcept {
     AssertMsg(!pruningModes.empty(),
               "Cannot build pruning data without transfer modes!");
     Data resultData(tripData);
@@ -94,10 +93,10 @@ public:
     return resultData;
   }
 
-public:
+ public:
   Data tripData;
   std::vector<size_t> modes;
   TransferGraph stopEventGraphs[RAPTOR::NUM_TRANSFER_MODES];
 };
 
-} // namespace TripBased
+}  // namespace TripBased

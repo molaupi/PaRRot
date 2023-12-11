@@ -24,6 +24,8 @@
 
 #pragma once
 
+#include <csv.h>
+
 #include <algorithm>
 #include <cassert>
 #include <cmath>
@@ -31,8 +33,6 @@
 #include <string>
 #include <unordered_map>
 #include <utility>
-
-#include <csv.h>
 
 #include "DataStructures/Geometry/CoordinateTransformation.h"
 #include "DataStructures/Geometry/LatLng.h"
@@ -56,7 +56,7 @@
 // attributes. Then, it repeatedly calls nextEdge to read the next edge from
 // disk and fetches various edge attributes.
 class VisumImporter {
-public:
+ public:
   // Constructs an importer to read the specified system's network.
   VisumImporter(const std::string &filename, const std::string &system,
                 const int epsgCode, const double coordinatePrecision,
@@ -64,9 +64,11 @@ public:
       : vertexReader(filename + "/KNOTEN.csv"),
         edgeReader(filename + "/STRECKE.csv"),
         interPointReader(filename + "/STRECKENPOLY.csv"),
-        transportSystem(system), coordinatePrecision(coordinatePrecision),
+        transportSystem(system),
+        coordinatePrecision(coordinatePrecision),
         analysisPeriod(analysisPeriod),
-        trans(epsgCode, CoordinateTransformation::WGS_84), nextVertexId(0) {
+        trans(epsgCode, CoordinateTransformation::WGS_84),
+        nextVertexId(0) {
     assert(coordinatePrecision > 0);
     assert(analysisPeriod > 0);
   }
@@ -78,7 +80,9 @@ public:
         interPointReader(im.interPointReader.get_truncated_file_name()),
         transportSystem(im.transportSystem),
         coordinatePrecision(im.coordinatePrecision),
-        analysisPeriod(im.analysisPeriod), trans(im.trans), nextVertexId(0) {}
+        analysisPeriod(im.analysisPeriod),
+        trans(im.trans),
+        nextVertexId(0) {}
 
   // Opens the input file(s) and reads the header line(s).
   void init(const std::string &filename) {
@@ -170,8 +174,7 @@ public:
       auto j = 0;
       for (auto i = 0; permittedSystems[i] != '\0'; ++i)
         if (permittedSystems[i] == ',') {
-          if (open && transportSystem[j] == '\0')
-            break;
+          if (open && transportSystem[j] == '\0') break;
           open = true;
           j = 0;
         } else if (open) {
@@ -244,7 +247,8 @@ public:
   // Returns the value of the specified attribute for the current vertex/edge,
   // or the attribute's default value if the attribute is not part of the file
   // format.
-  template <typename Attr> typename Attr::Type getValue() const {
+  template <typename Attr>
+  typename Attr::Type getValue() const {
     return Attr::defaultValue();
   }
 
@@ -252,7 +256,7 @@ public:
   void close() { /* do nothing */
   }
 
-private:
+ private:
   // The CSV dialect used by Visum.
   template <int numFields>
   using VisumFileReader =
@@ -286,37 +290,39 @@ private:
   using IdMap = std::unordered_map<int, int>;
 
   VisumFileReader<3>
-      vertexReader; // The CSV file that contains the vertex records.
-  VisumFileReader<8> edgeReader; // The CSV file that contains the edge records.
-  VisumFileReader<5> interPointReader; // The CSV file that contains the
-                                       // intermediate point records.
-  const std::string transportSystem; // The system (car, bicycle) whose network
-                                     // is to be imported.
-  const double coordinatePrecision;  // The number of digits to consider after
-                                     // the decimal point.
-  const double analysisPeriod; // The analysis period in hours (capacity is in
-                               // vehicles/AP).
+      vertexReader;  // The CSV file that contains the vertex records.
+  VisumFileReader<8>
+      edgeReader;  // The CSV file that contains the edge records.
+  VisumFileReader<5> interPointReader;  // The CSV file that contains the
+                                        // intermediate point records.
+  const std::string transportSystem;  // The system (car, bicycle) whose network
+                                      // is to be imported.
+  const double coordinatePrecision;   // The number of digits to consider after
+                                      // the decimal point.
+  const double analysisPeriod;  // The analysis period in hours (capacity is in
+                                // vehicles/AP).
   CoordinateTransformation
-      trans; // Transformation from the input coordinate system to WGS84.
+      trans;  // Transformation from the input coordinate system to WGS84.
 
-  int maxSpeed[100]; // The maximum speed of the selected system for each of the
-                     // 100 edge types.
-  IdMap origToNewId; // A map from original vertex IDs to new sequential IDs.
-  int nextVertexId;  // The next free vertex ID.
+  int maxSpeed[100];  // The maximum speed of the selected system for each of
+                      // the 100 edge types.
+  IdMap origToNewId;  // A map from original vertex IDs to new sequential IDs.
+  int nextVertexId;   // The next free vertex ID.
 
-  VertexRecord currentVertex; // The vertex read by the last call of nextVertex.
-  EdgeRecord currentEdge;     // The edge read by the last call of nextEdge.
+  VertexRecord
+      currentVertex;       // The vertex read by the last call of nextVertex.
+  EdgeRecord currentEdge;  // The edge read by the last call of nextEdge.
   InterPointRecord
-      currentInterPoint; // The last intermediate point record read.
-  std::vector<LatLng> currentPolyline; // The last edge polyline read.
-  std::pair<int, int>
-      currentPolylineEndpoints; // The endpoints of the last edge polyline read.
+      currentInterPoint;  // The last intermediate point record read.
+  std::vector<LatLng> currentPolyline;           // The last edge polyline read.
+  std::pair<int, int> currentPolylineEndpoints;  // The endpoints of the last
+                                                 // edge polyline read.
 };
 
 // Returns the value of the coordinate attribute for the current vertex.
 template <>
-inline CoordinateAttribute::Type
-VisumImporter::getValue<CoordinateAttribute>() const {
+inline CoordinateAttribute::Type VisumImporter::getValue<CoordinateAttribute>()
+    const {
   return currentVertex.coordinate;
 }
 
@@ -328,8 +334,8 @@ inline LatLngAttribute::Type VisumImporter::getValue<LatLngAttribute>() const {
 
 // Returns the value of the capacity attribute for the current edge.
 template <>
-inline CapacityAttribute::Type
-VisumImporter::getValue<CapacityAttribute>() const {
+inline CapacityAttribute::Type VisumImporter::getValue<CapacityAttribute>()
+    const {
   return std::round(currentEdge.capacity / analysisPeriod);
 }
 
@@ -348,8 +354,8 @@ inline LengthAttribute::Type VisumImporter::getValue<LengthAttribute>() const {
 
 // Returns the value of the number of lanes attribute for the current edge.
 template <>
-inline NumLanesAttribute::Type
-VisumImporter::getValue<NumLanesAttribute>() const {
+inline NumLanesAttribute::Type VisumImporter::getValue<NumLanesAttribute>()
+    const {
   return currentEdge.numLanes;
 }
 
@@ -368,14 +374,14 @@ VisumImporter::getValue<RoadGeometryAttribute>() const {
 
 // Returns the value of the travel time attribute for the current edge.
 template <>
-inline TravelTimeAttribute::Type
-VisumImporter::getValue<TravelTimeAttribute>() const {
+inline TravelTimeAttribute::Type VisumImporter::getValue<TravelTimeAttribute>()
+    const {
   return std::round(36.0 * currentEdge.length / currentEdge.freeFlowSpeed);
 }
 
 // Returns the value of the vertex ID attribute for the current vertex.
 template <>
-inline VertexIdAttribute::Type
-VisumImporter::getValue<VertexIdAttribute>() const {
+inline VertexIdAttribute::Type VisumImporter::getValue<VertexIdAttribute>()
+    const {
   return currentVertex.id;
 }

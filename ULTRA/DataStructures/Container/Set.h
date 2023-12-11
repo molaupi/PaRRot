@@ -10,16 +10,16 @@
 #include "../../Helpers/Vector/Permutation.h"
 #include "../../Helpers/Vector/Vector.h"
 
-template <typename VALUE> class Set : public std::set<VALUE> {
-
-public:
+template <typename VALUE>
+class Set : public std::set<VALUE> {
+ public:
   using Value = VALUE;
   using Type = Set<Value>;
 
-private:
+ private:
   using Super = std::set<Value>;
 
-public:
+ public:
   inline bool contains(const Value &value) const noexcept {
     return Super::count(value) == 1;
   }
@@ -27,8 +27,7 @@ public:
 
 template <bool RESIZEABLE = false, typename VALUE_TYPE = size_t>
 class IndexedSet {
-
-public:
+ public:
   static constexpr bool Resizeable = RESIZEABLE;
   using ValueType = VALUE_TYPE;
   using Type = IndexedSet<Resizeable, ValueType>;
@@ -37,7 +36,7 @@ public:
       std::numeric_limits<size_t>::max();
   using Iterator = typename std::vector<ValueType>::const_iterator;
 
-public:
+ public:
   IndexedSet(const size_t initialCapacity = 0)
       : indices(initialCapacity, NotContained) {}
 
@@ -52,14 +51,15 @@ public:
       : IndexedSet(ValueType(Vector::max(values) + 1), values) {}
 
   IndexedSet(const Construct::CompleteTag, const size_t size)
-      : indices(Vector::id<size_t>(size)), values(Vector::id<ValueType>(size)) {
-  }
+      : indices(Vector::id<size_t>(size)),
+        values(Vector::id<ValueType>(size)) {}
 
   IndexedSet(IO::Deserialization &deserialize) {
     this->deserialize(deserialize);
   }
 
-  template <typename T> inline operator std::vector<T>() const noexcept {
+  template <typename T>
+  inline operator std::vector<T>() const noexcept {
     std::vector<T> result;
     result.reserve(values.size());
     for (const ValueType value : values) {
@@ -106,8 +106,7 @@ public:
 
   inline bool contains(const ValueType value) noexcept {
     if (Resizeable) {
-      if ((size_t)value >= capacity())
-        indices.resize(value + 1, NotContained);
+      if ((size_t)value >= capacity()) indices.resize(value + 1, NotContained);
     } else {
       AssertMsg((size_t)value < capacity(),
                 "Value " << value << " is out of range!");
@@ -116,8 +115,7 @@ public:
   }
 
   inline bool insert(const ValueType value) noexcept {
-    if (contains(value))
-      return false;
+    if (contains(value)) return false;
     indices[value] = values.size();
     values.emplace_back(value);
     return true;
@@ -131,8 +129,7 @@ public:
   }
 
   inline bool remove(const ValueType value) noexcept {
-    if (!contains(value))
-      return false;
+    if (!contains(value)) return false;
     values[indices[value]] = values.back();
     indices[values.back()] = indices[value];
     indices[value] = NotContained;
@@ -160,11 +157,9 @@ public:
   }
 
   inline bool operator==(const Type &other) const noexcept {
-    if (size() != other.size())
-      return false;
+    if (size() != other.size()) return false;
     for (const ValueType id : other) {
-      if (!contains(id))
-        return false;
+      if (!contains(id)) return false;
     }
     return true;
   }
@@ -183,7 +178,7 @@ public:
     return result;
   }
 
-private:
+ private:
   std::vector<size_t> indices;
   std::vector<ValueType> values;
 };

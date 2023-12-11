@@ -2,13 +2,6 @@
 
 #include <vector>
 
-#include "../../Helpers/Vector/Vector.h"
-
-#include "InitialTransfers.h"
-#include "Profiler.h"
-
-#include "../CH/CH.h"
-
 #include "../../DataStructures/Container/ExternalKHeap.h"
 #include "../../DataStructures/Container/Map.h"
 #include "../../DataStructures/Container/Set.h"
@@ -16,13 +9,16 @@
 #include "../../DataStructures/RAPTOR/Entities/Bags.h"
 #include "../../DataStructures/RAPTOR/Entities/Journey.h"
 #include "../../DataStructures/RAPTOR/MultimodalData.h"
+#include "../../Helpers/Vector/Vector.h"
+#include "../CH/CH.h"
+#include "InitialTransfers.h"
+#include "Profiler.h"
 
 namespace RAPTOR {
 
 template <bool TARGET_PRUNING, size_t NUM_MODES, typename PROFILER = NoProfiler>
 class MultimodalMCR {
-
-public:
+ public:
   inline static constexpr bool TargetPruning = TARGET_PRUNING;
   inline static constexpr size_t NumTransferModes = NUM_MODES;
   using Profiler = PROFILER;
@@ -31,22 +27,31 @@ public:
   using SourceType = Vertex;
   using ParetoLabel = MultimodalParetoLabel<NumTransferModes>;
 
-public:
+ public:
   struct Label {
     Label()
-        : arrivalTime(never), transferTime{INFTY}, parentStop(noStop),
-          parentIndex(-1), parentDepartureTime(never), routeId(noRouteId) {}
+        : arrivalTime(never),
+          transferTime{INFTY},
+          parentStop(noStop),
+          parentIndex(-1),
+          parentDepartureTime(never),
+          routeId(noRouteId) {}
 
     Label(const int sourceDepartureTime, const StopId sourceStop)
-        : arrivalTime(sourceDepartureTime), transferTime{0},
-          parentStop(sourceStop), parentIndex(-1),
-          parentDepartureTime(sourceDepartureTime), routeId(noRouteId) {}
+        : arrivalTime(sourceDepartureTime),
+          transferTime{0},
+          parentStop(sourceStop),
+          parentIndex(-1),
+          parentDepartureTime(sourceDepartureTime),
+          routeId(noRouteId) {}
 
     Label(const Label &parentLabel, const StopId stop, const size_t parentIndex,
           const int extraTime = 0)
-        : arrivalTime(parentLabel.arrivalTime + extraTime), parentStop(stop),
+        : arrivalTime(parentLabel.arrivalTime + extraTime),
+          parentStop(stop),
           parentIndex(parentIndex),
-          parentDepartureTime(parentLabel.arrivalTime), transferId(noEdge) {
+          parentDepartureTime(parentLabel.arrivalTime),
+          transferId(noEdge) {
       std::copy(std::begin(parentLabel.transferTime),
                 std::end(parentLabel.transferTime), std::begin(transferTime));
     }
@@ -55,7 +60,8 @@ public:
     Label(const ROUTE_LABEL &routeLabel, const StopIndex stopIndex,
           const StopId parentStop, const RouteId route)
         : arrivalTime(routeLabel.getArrivalTime(stopIndex)),
-          parentStop(parentStop), parentIndex(routeLabel.parentIndex),
+          parentStop(parentStop),
+          parentIndex(routeLabel.parentIndex),
           parentDepartureTime(routeLabel.parentDepartureTime()),
           routeId(route) {
       std::copy(std::begin(routeLabel.transferTime),
@@ -67,7 +73,8 @@ public:
         : arrivalTime(parentLabel.arrivalTime),
           parentStop(parentLabel.parentStop),
           parentIndex(parentLabel.parentIndex),
-          parentDepartureTime(parentDepartureTime), transferId(noEdge) {
+          parentDepartureTime(parentDepartureTime),
+          transferId(noEdge) {
       std::copy(std::begin(parentLabel.transferTime),
                 std::end(parentLabel.transferTime), std::begin(transferTime));
     }
@@ -85,11 +92,9 @@ public:
 
     template <typename OTHER_LABEL>
     inline bool dominates(const OTHER_LABEL &other) const noexcept {
-      if (arrivalTime > other.arrivalTime)
-        return false;
+      if (arrivalTime > other.arrivalTime) return false;
       for (size_t i = 0; i < NumTransferModes; i++) {
-        if (transferTime[i] > other.transferTime[i])
-          return false;
+        if (transferTime[i] > other.transferTime[i]) return false;
       }
       return true;
     }
@@ -109,11 +114,9 @@ public:
 
     template <typename LABEL>
     inline bool dominates(const LABEL &other) const noexcept {
-      if (arrivalTime > other.arrivalTime)
-        return false;
+      if (arrivalTime > other.arrivalTime) return false;
       for (size_t i = 0; i < NumTransferModes; i++) {
-        if (transferTime[i] > other.transferTime[i])
-          return false;
+        if (transferTime[i] > other.transferTime[i]) return false;
       }
       return true;
     }
@@ -133,11 +136,9 @@ public:
     }
 
     inline bool dominates(const RouteLabel &other) const noexcept {
-      if (trip > other.trip)
-        return false;
+      if (trip > other.trip) return false;
       for (size_t i = 0; i < NumTransferModes; i++) {
-        if (transferTime[i] > other.transferTime[i])
-          return false;
+        if (transferTime[i] > other.transferTime[i]) return false;
       }
       return true;
     }
@@ -158,13 +159,17 @@ public:
 
   struct DijkstraLabel {
     DijkstraLabel()
-        : arrivalTime(never), transferTime{INFTY}, parentStop(noStop),
+        : arrivalTime(never),
+          transferTime{INFTY},
+          parentStop(noStop),
           parentIndex(-1) {}
 
     DijkstraLabel(const int departureTime, const StopId sourceStop,
                   const size_t mode)
         : arrivalTime(departureTime + TransferModeOverhead[mode]),
-          transferTime{0}, parentStop(sourceStop), parentIndex(0) {
+          transferTime{0},
+          parentStop(sourceStop),
+          parentIndex(0) {
       transferTime[mode] = TransferModeOverhead[mode];
     }
 
@@ -183,7 +188,8 @@ public:
                   const int travelTime = 0)
         : arrivalTime(parentLabel.arrivalTime + TransferModeOverhead[mode] +
                       travelTime),
-          parentStop(parentStop), parentIndex(parentIndex) {
+          parentStop(parentStop),
+          parentIndex(parentIndex) {
       std::copy(std::begin(parentLabel.transferTime),
                 std::end(parentLabel.transferTime), std::begin(transferTime));
       transferTime[mode] += TransferModeOverhead[mode] + travelTime;
@@ -203,11 +209,9 @@ public:
 
     template <typename OTHER_LABEL>
     inline bool dominates(const OTHER_LABEL &other) const noexcept {
-      if (arrivalTime > other.arrivalTime)
-        return false;
+      if (arrivalTime > other.arrivalTime) return false;
       for (size_t i = 0; i < NumTransferModes; i++) {
-        if (transferTime[i] > other.transferTime[i])
-          return false;
+        if (transferTime[i] > other.transferTime[i]) return false;
       }
       return true;
     }
@@ -224,16 +228,20 @@ public:
   using RouteBagType = RouteBag<RouteLabel>;
   using DijkstraBagType = DijkstraBag<DijkstraLabel>;
 
-public:
+ public:
   MultimodalMCR(const MultimodalData &data, const std::vector<CH::CH> &chData,
                 const Profiler &profilerTemplate = Profiler())
-      : data(data), bestBagByRoute(data.raptorData.numberOfStops() + 1),
+      : data(data),
+        bestBagByRoute(data.raptorData.numberOfStops() + 1),
         bestBagByTransfer(data.raptorData.numberOfStops() + 1),
         stopsUpdatedByRoute(data.raptorData.numberOfStops() + 1),
         stopsUpdatedByTransfer(data.raptorData.numberOfStops() + 1),
         routesServingUpdatedStops(data.raptorData.numberOfRoutes()),
-        sourceVertex(noVertex), targetVertex(noVertex), targetStop(noStop),
-        sourceDepartureTime(intMax), profiler(profilerTemplate) {
+        sourceVertex(noVertex),
+        targetVertex(noVertex),
+        targetStop(noStop),
+        sourceDepartureTime(intMax),
+        profiler(profilerTemplate) {
     AssertMsg(data.raptorData.hasImplicitBufferTimes(),
               "Departure buffer times have to be implicit!");
     AssertMsg(data.modes.size() == NumTransferModes, "Wrong number of modes");
@@ -343,7 +351,8 @@ public:
     return result;
   }
 
-  template <bool RESET_CAPACITIES = false> inline void clear() noexcept {
+  template <bool RESET_CAPACITIES = false>
+  inline void clear() noexcept {
     stopsUpdatedByRoute.clear();
     stopsUpdatedByTransfer.clear();
     routesServingUpdatedStops.clear();
@@ -375,7 +384,7 @@ public:
 
   inline Profiler &getProfiler() noexcept { return profiler; }
 
-private:
+ private:
   inline void initialize(const Vertex source, const int departureTime,
                          const Vertex target) noexcept {
     sourceVertex = source;
@@ -448,8 +457,7 @@ private:
                  (trip[stopIndex].departureTime < label.arrivalTime)) {
             trip += tripSize;
           }
-          if (trip[stopIndex].departureTime < label.arrivalTime)
-            continue;
+          if (trip[stopIndex].departureTime < label.arrivalTime) continue;
           routeBag.merge(RouteLabel(trip, label, stopIndex, i));
         }
         stopIndex++;
@@ -469,8 +477,7 @@ private:
     dijkstraBags[mode][sourceVertex].initialize(sourceLabel);
     initialTransfers[mode].template run<true>(sourceVertex, targetVertex);
     for (const Vertex stop : initialTransfers[mode].getForwardPOIs()) {
-      if (stop == targetStop || stop == sourceVertex)
-        continue;
+      if (stop == targetStop || stop == sourceVertex) continue;
       AssertMsg(data.raptorData.isStop(stop),
                 "Reached POI " << stop << " is not a stop!");
       AssertMsg(initialTransfers[mode].getForwardDistance(stop) != INFTY,
@@ -520,8 +527,7 @@ private:
     AssertMsg(queue[mode].empty(),
               "Queue still has " << queue[mode].size() << " elements!");
     for (const StopId stop : stopsUpdatedByRoute) {
-      if (initialTransfers[mode].getBackwardDistance(stop) == INFTY)
-        continue;
+      if (initialTransfers[mode].getBackwardDistance(stop) == INFTY) continue;
       const BagType &bag = previousRound()[stop];
       for (size_t i = 0; i < bag.size(); i++) {
         const DijkstraLabel targetLabel(
@@ -546,13 +552,11 @@ private:
     while (!queue[mode].empty()) {
       DijkstraBagType *uBag = queue[mode].extractFront();
       const DijkstraLabel &uLabel = uBag->extractFront();
-      if (!uBag->heapEmpty())
-        queue[mode].update(uBag);
+      if (!uBag->heapEmpty()) queue[mode].update(uBag);
       const Vertex u = Vertex(uBag - &(dijkstraBags[mode][0]));
       for (const Edge edge : getTransferGraph(mode).edgesFrom(u)) {
         const Vertex v = getTransferGraph(mode).get(ToVertex, edge);
-        if (v == targetVertex || v == uLabel.parentStop)
-          continue;
+        if (v == targetVertex || v == uLabel.parentStop) continue;
         profiler.countMetric(METRIC_EDGES);
         const DijkstraLabel vLabel(
             uLabel, mode, getTransferGraph(mode).get(TravelTime, edge));
@@ -565,8 +569,8 @@ private:
     }
   }
 
-  inline const TransferGraph &
-  getTransferGraph(const size_t mode) const noexcept {
+  inline const TransferGraph &getTransferGraph(
+      const size_t mode) const noexcept {
     return data.getTransferGraph(data.modes[mode]);
   }
 
@@ -589,10 +593,8 @@ private:
 
   template <typename LABEL>
   inline bool checkTargetPruning(const LABEL &label) noexcept {
-    if (bestBagByRoute[targetStop].dominates(label))
-      return true;
-    if (bestBagByTransfer[targetStop].dominates(label))
-      return true;
+    if (bestBagByRoute[targetStop].dominates(label)) return true;
+    if (bestBagByTransfer[targetStop].dominates(label)) return true;
     return false;
   }
 
@@ -600,10 +602,8 @@ private:
     AssertMsg(data.raptorData.isStop(stop),
               "Stop " << stop << " is out of range!");
     if constexpr (TargetPruning)
-      if (checkTargetPruning(label))
-        return;
-    if (!bestBagByRoute[stop].merge(BestLabel(label)))
-      return;
+      if (checkTargetPruning(label)) return;
+    if (!bestBagByRoute[stop].merge(BestLabel(label))) return;
     currentRound()[stop].mergeUndominated(label);
     profiler.countMetric(METRIC_STOPS_BY_TRIP);
     stopsUpdatedByRoute.insert(stop);
@@ -619,10 +619,8 @@ private:
                   << "], arrival time: " << String::secToTime(label.arrivalTime)
                   << " [" << label.arrivalTime << "])!");
     if constexpr (TargetPruning)
-      if (checkTargetPruning(label))
-        return false;
-    if (!dijkstraBags[mode][vertex].template merge<true>(label))
-      return false;
+      if (checkTargetPruning(label)) return false;
+    if (!dijkstraBags[mode][vertex].template merge<true>(label)) return false;
     queue[mode].update(&dijkstraBags[mode][vertex]);
     return true;
   }
@@ -639,18 +637,15 @@ private:
                   << sourceDepartureTime
                   << "], arrival time: " << String::secToTime(label.arrivalTime)
                   << " [" << label.arrivalTime << "])!");
-    if (bestBagByRoute[stop].dominates(label))
-      return;
-    if (!bestBagByTransfer[stop].merge(BestLabel(label)))
-      return;
+    if (bestBagByRoute[stop].dominates(label)) return;
+    if (!bestBagByTransfer[stop].merge(BestLabel(label))) return;
     profiler.countMetric(METRIC_STOPS_BY_TRANSFER);
     const int parentDepartureTime =
         (label.parentStop == sourceVertex)
             ? sourceDepartureTime
             : previousRound()[label.parentStop][label.parentIndex].arrivalTime;
     currentRound()[stop].mergeUndominated(Label(label, parentDepartureTime));
-    if (data.raptorData.isStop(stop))
-      stopsUpdatedByTransfer.insert(stop);
+    if (data.raptorData.isStop(stop)) stopsUpdatedByTransfer.insert(stop);
   }
 
   inline void getJourney(std::vector<Journey> &journeys, size_t round,
@@ -670,7 +665,7 @@ private:
     journeys.emplace_back(Vector::reverse(journey));
   }
 
-private:
+ private:
   const MultimodalData &data;
 
   std::vector<CoreCHInitialTransfers> initialTransfers;
@@ -694,4 +689,4 @@ private:
   Profiler profiler;
 };
 
-} // namespace RAPTOR
+}  // namespace RAPTOR

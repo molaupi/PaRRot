@@ -24,6 +24,10 @@
 
 #pragma once
 
+#include <routingkit/id_mapper.h>
+#include <routingkit/osm_graph_builder.h>
+#include <routingkit/tag_map.h>
+
 #include <cassert>
 #include <cmath>
 #include <cstdint>
@@ -33,10 +37,6 @@
 #include <tuple>
 #include <utility>
 #include <vector>
-
-#include <routingkit/id_mapper.h>
-#include <routingkit/osm_graph_builder.h>
-#include <routingkit/tag_map.h>
 
 #include "DataStructures/Containers/BitVector.h"
 #include "DataStructures/Graph/Attributes/CapacityAttribute.h"
@@ -62,8 +62,7 @@
 // vertex attributes. Then it repeatedly calls nextEdge to read the next edge
 // and fetches various edge attributes.
 class PedestrianOsmImporter {
-
-public:
+ public:
   PedestrianOsmImporter(
       const IsRoadAccessibleByCategory &isPedestrianAccessible =
           defaultIsPedestrianAccessible,
@@ -103,8 +102,7 @@ public:
       // todo: be more specific than only OSM category (e.g. for path, check
       // whether it is pedestrian accessible using tags)
       const auto highway = tags["highway"];
-      if (highway)
-        try {
+      if (highway) try {
           const auto cat = parseOsmRoadCategory(highway);
           return isPedestrianAccessible(cat);
         } catch (std::invalid_argument & /*e*/) {
@@ -124,15 +122,15 @@ public:
       wayCategory[seqId] = cat;
 
       switch (dir) {
-      case RoadDirection::OPEN_IN_BOTH:
-        return RoutingKit::OSMWayDirectionCategory::open_in_both;
-      case RoadDirection::FORWARD:
-        return RoutingKit::OSMWayDirectionCategory::only_open_forwards;
-      case RoadDirection::REVERSE:
-        return RoutingKit::OSMWayDirectionCategory::only_open_backwards;
-      default:
-        assert(false);
-        return RoutingKit::OSMWayDirectionCategory::closed;
+        case RoadDirection::OPEN_IN_BOTH:
+          return RoutingKit::OSMWayDirectionCategory::open_in_both;
+        case RoadDirection::FORWARD:
+          return RoutingKit::OSMWayDirectionCategory::only_open_forwards;
+        case RoadDirection::REVERSE:
+          return RoutingKit::OSMWayDirectionCategory::only_open_backwards;
+        default:
+          assert(false);
+          return RoutingKit::OSMWayDirectionCategory::closed;
       }
     };
 
@@ -194,7 +192,8 @@ public:
   // Returns the value of the specified attribute for the current vertex/edge,
   // or the attribute's default value if the attribute is not part of the file
   // format.
-  template <typename Attr> typename Attr::Type getValue() const {
+  template <typename Attr>
+  typename Attr::Type getValue() const {
     return Attr::defaultValue();
   }
 
@@ -212,12 +211,13 @@ public:
     return {osm_way_id, osm_node_id};
   }
 
-private:
+ private:
   // A struct that carries standard values for a set of static road properties.
   struct RoadDefaults {
     double
-        walkingSpeed; // The walking speed for a road of this category in km/h.
-    RoadDirection direction; // The direction in which the road segment is open.
+        walkingSpeed;  // The walking speed for a road of this category in km/h.
+    RoadDirection
+        direction;  // The direction in which the road segment is open.
   };
 
   // A map that contains default road properties for a set of OSM road
@@ -259,27 +259,28 @@ private:
   std::function<bool(uint64_t osm_node_id, const RoutingKit::TagMap &node_tags)>
       make_routing_node;
 
-  RoutingKit::OSMRoutingGraph osmGraph; // The graph extracted from OSM data.
+  RoutingKit::OSMRoutingGraph osmGraph;  // The graph extracted from OSM data.
   RoutingKit::OSMRoutingIDMapping
-      idMapping; // Mapping used in OSM Graph creation and used by edgeIDMapper.
+      idMapping;  // Mapping used in OSM Graph creation and used by
+                  // edgeIDMapper.
   RoutingKit::IDMapper
-      edgeIDMapper; // Mapping from osm way ids (global ids) to graph way ids
-                    // (local ids) and vice versa.
+      edgeIDMapper;  // Mapping from osm way ids (global ids) to graph way ids
+                     // (local ids) and vice versa.
   RoutingKit::IDMapper
-      nodeIDMapper; // Mapping from osm node ids (global ids) to graph vertex
-                    // ids (local ids) and vice versa.
+      nodeIDMapper;  // Mapping from osm node ids (global ids) to graph vertex
+                     // ids (local ids) and vice versa.
   std::vector<OsmRoadCategory>
-      wayCategory; // The OSM road category for each way.
+      wayCategory;  // The OSM road category for each way.
 
-  int currentVertex = -1; // The index of the current vertex in the OSM graph.
-  int currentEdge = -1;   // The index of the current edge in the OSM graph.
-  int currentTail = -1;   // The tail of the current edge.
+  int currentVertex = -1;  // The index of the current vertex in the OSM graph.
+  int currentEdge = -1;    // The index of the current edge in the OSM graph.
+  int currentTail = -1;    // The tail of the current edge.
 };
 
 // Returns the value of the LatLng attribute for the current vertex.
 template <>
-inline LatLngAttribute::Type
-PedestrianOsmImporter::getValue<LatLngAttribute>() const {
+inline LatLngAttribute::Type PedestrianOsmImporter::getValue<LatLngAttribute>()
+    const {
   assert(currentVertex >= 0);
   assert(currentVertex < osmGraph.node_count());
   return {osmGraph.latitude[currentVertex], osmGraph.longitude[currentVertex]};
@@ -296,8 +297,8 @@ PedestrianOsmImporter::getValue<OsmNodeIdAttribute>() const {
 
 // Returns the value of the length attribute for the current edge.
 template <>
-inline LengthAttribute::Type
-PedestrianOsmImporter::getValue<LengthAttribute>() const {
+inline LengthAttribute::Type PedestrianOsmImporter::getValue<LengthAttribute>()
+    const {
   assert(currentEdge >= 0);
   assert(currentEdge < osmGraph.arc_count());
   return osmGraph.geo_distance[currentEdge];
@@ -341,8 +342,7 @@ PedestrianOsmImporter::getValue<FreeFlowSpeedAttribute>() const {
 template <>
 inline TravelTimeAttribute::Type
 PedestrianOsmImporter::getValue<TravelTimeAttribute>() const {
-  if (getValue<FreeFlowSpeedAttribute>() == 0)
-    return INFTY;
+  if (getValue<FreeFlowSpeedAttribute>() == 0) return INFTY;
   return std::round(36.0 * getValue<LengthAttribute>() /
                     getValue<FreeFlowSpeedAttribute>());
 }

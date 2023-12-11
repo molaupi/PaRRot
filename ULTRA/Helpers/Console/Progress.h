@@ -9,11 +9,16 @@
 #include "../Timer.h"
 
 class Progress {
-
-public:
+ public:
   Progress(const long long n, const bool v = true, std::ostream &o = std::cout)
-      : verbose(v), os(o), numSteps(n), stepsDone(0), lastDrawnStep(0),
-        lastDrawnTime(0.0), checkTimeStep(n / 1000), redrawTime(500),
+      : verbose(v),
+        os(o),
+        numSteps(n),
+        stepsDone(0),
+        lastDrawnStep(0),
+        lastDrawnTime(0.0),
+        checkTimeStep(n / 1000),
+        redrawTime(500),
         redrawStep(std::max<int>(1, n / 20)) {
     init(n);
   }
@@ -24,8 +29,7 @@ public:
     lastDrawnStep = 0;
     timer.restart();
     lastDrawnTime = timer.elapsedMilliseconds();
-    if (verbose)
-      os << "0% " << std::flush;
+    if (verbose) os << "0% " << std::flush;
   }
 
   inline void iterate() {
@@ -51,8 +55,7 @@ public:
   inline void finished() {
     stepsDone = numSteps;
     draw();
-    if (verbose)
-      os << std::endl;
+    if (verbose) os << std::endl;
   }
 
   inline void SetCheckTimeStep(const int s) { checkTimeStep = s; }
@@ -61,7 +64,7 @@ public:
 
   inline int getNumberOfStepsDone() const noexcept { return stepsDone; }
 
-protected:
+ protected:
   inline void checkDraw() {
     if (numSteps <= stepsDone) {
       draw();
@@ -76,11 +79,9 @@ protected:
   }
 
   inline void draw() {
-    if (verbose)
-      os << "\r                                                \r";
+    if (verbose) os << "\r                                                \r";
     double percent = stepsDone / static_cast<double>(numSteps);
-    if (verbose)
-      os << String::percent(percent);
+    if (verbose) os << String::percent(percent);
     if (stepsDone < numSteps) {
       const double time = timer.elapsedMilliseconds();
       const double estimate = time * (1 - percent) / percent;
@@ -90,12 +91,11 @@ protected:
       lastDrawnTime = time;
     } else {
       const double time = timer.elapsedMilliseconds();
-      if (verbose)
-        os << " (" << String::msToString(time) << ")" << std::flush;
+      if (verbose) os << " (" << String::msToString(time) << ")" << std::flush;
     }
   }
 
-private:
+ private:
   bool verbose;
   std::ostream &os;
   Timer timer;

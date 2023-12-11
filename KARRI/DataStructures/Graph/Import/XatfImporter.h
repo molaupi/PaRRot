@@ -49,7 +49,7 @@
 // various vertex attributes. Then it repeatedly calls nextEdge to read the next
 // edge from disk and fetches various edge attributes.
 class XatfImporter {
-public:
+ public:
   // Constructs an importer to read graphs in XATF file format.
   XatfImporter() : returnReverse(false), nextVertexId(0) {}
 
@@ -73,8 +73,7 @@ public:
   // vertices.
   bool nextVertex() {
     int fieldsRead = nextRecord(vertexFile);
-    if (fieldsRead == 0)
-      return false;
+    if (fieldsRead == 0) return false;
     assert(fieldsRead == NUM_VERTEX_FIELDS);
 
     // Map the original vertex ID to a sequential ID.
@@ -106,8 +105,7 @@ public:
     }
 
     int fieldsRead = nextRecord(edgeFile);
-    if (fieldsRead == 0)
-      return false;
+    if (fieldsRead == 0) return false;
     assert(fieldsRead == NUM_EDGE_FIELDS);
 
     currentEdge.edgeTail = lexicalCast<int>(currentRecord[EDGE_TAIL]);
@@ -128,8 +126,7 @@ public:
     assert(dir == BIDIRECTED || dir == FORWARD || dir == REVERSE ||
            dir == CLOSED);
     returnReverse = dir == BIDIRECTED || dir == CLOSED;
-    if (dir == REVERSE)
-      std::swap(currentEdge.edgeTail, currentEdge.edgeHead);
+    if (dir == REVERSE) std::swap(currentEdge.edgeTail, currentEdge.edgeHead);
     return true;
   }
 
@@ -142,7 +139,8 @@ public:
   // Returns the value of the specified attribute for the current vertex/edge,
   // or the attribute's default value if the attribute is not part of the file
   // format.
-  template <typename Attr> typename Attr::Type getValue() const {
+  template <typename Attr>
+  typename Attr::Type getValue() const {
     return Attr::defaultValue();
   }
 
@@ -152,7 +150,7 @@ public:
     edgeFile.close();
   }
 
-private:
+ private:
   // A vertex record in XATF file format.
   struct VertexRecord {
     int id;
@@ -198,45 +196,45 @@ private:
   // The free-flow speed in km/h for each XATF road category.
   static constexpr const int (&FREE_FLOW_SPEED)[16] = {
       -1,
-      130, // Motorway, fast
-      120, // Motorway, medium
-      110, // Motorway, slow
-      100, // National road, fast
-      90,  // National road, medium
-      80,  // National road, slow
-      70,  // Regional road, fast
-      60,  // Regional road, medium
-      50,  // Regional road, slow
-      40,  // Urban street, fast
-      30,  // Urban street, medium
-      20,  // Urban street, slow
-      -1,  // Ferry
-      -1,  // Unused
-      10,  // Forest road
+      130,  // Motorway, fast
+      120,  // Motorway, medium
+      110,  // Motorway, slow
+      100,  // National road, fast
+      90,   // National road, medium
+      80,   // National road, slow
+      70,   // Regional road, fast
+      60,   // Regional road, medium
+      50,   // Regional road, slow
+      40,   // Urban street, fast
+      30,   // Urban street, medium
+      20,   // Urban street, slow
+      -1,   // Ferry
+      -1,   // Unused
+      10,   // Forest road
   };
 
   // The number of lanes for each XATF road category.
   static constexpr const int (&NUM_LANES)[16] = {
       -1,
-      2,  // Motorway, fast
-      2,  // Motorway, medium
-      2,  // Motorway, slow
-      2,  // National road, fast
-      1,  // National road, medium
-      1,  // National road, slow
-      1,  // Regional road, fast
-      1,  // Regional road, medium
-      1,  // Regional road, slow
-      1,  // Urban street, fast
-      1,  // Urban street, medium
-      1,  // Urban street, slow
-      -1, // Ferry
-      -1, // Unused
-      1,  // Forest road
+      2,   // Motorway, fast
+      2,   // Motorway, medium
+      2,   // Motorway, slow
+      2,   // National road, fast
+      1,   // National road, medium
+      1,   // National road, slow
+      1,   // Regional road, fast
+      1,   // Regional road, medium
+      1,   // Regional road, slow
+      1,   // Urban street, fast
+      1,   // Urban street, medium
+      1,   // Urban street, slow
+      -1,  // Ferry
+      -1,  // Unused
+      1,   // Forest road
   };
 
   static constexpr int VEHICLE_LENGTH =
-      5; // The average vehicle length in meters.
+      5;  // The average vehicle length in meters.
 
   // Reads the next record from the specified input file. Returns the number of
   // fields read, or 0 if the end of the file has been reached.
@@ -244,8 +242,7 @@ private:
     std::string lineStr;
     getline(file, lineStr);
     std::istringstream line(lineStr);
-    if (!file)
-      return 0;
+    if (!file) return 0;
 
     // Read the line field by field.
     int i = 0;
@@ -257,20 +254,20 @@ private:
   using Record = std::array<std::string, MAX_NUM_FIELDS>;
   using IdMap = std::unordered_map<int, int>;
 
-  std::ifstream vertexFile; // The input file containing the vertex records.
-  std::ifstream edgeFile;   // The input file containing the edge records.
+  std::ifstream vertexFile;  // The input file containing the vertex records.
+  std::ifstream edgeFile;    // The input file containing the edge records.
 
   Record
-      currentRecord; // A string array storing the current vertex/edge record.
+      currentRecord;  // A string array storing the current vertex/edge record.
   VertexRecord
-      currentVertex; // The vertex record read by the last call of nextVertex.
-  EdgeRecord currentEdge; // The edge record read by the last call of nextEdge.
-  bool returnReverse; // Indicates that next edge to be returned is reverse of
-                      // the current.
+      currentVertex;  // The vertex record read by the last call of nextVertex.
+  EdgeRecord currentEdge;  // The edge record read by the last call of nextEdge.
+  bool returnReverse;  // Indicates that next edge to be returned is reverse of
+                       // the current.
 
-  std::vector<LatLng> latLngs; // The LatLngs of the vertices.
-  IdMap origToNewIds; // A map from original vertex IDs to new sequential IDs.
-  int nextVertexId;   // The next free vertex ID.
+  std::vector<LatLng> latLngs;  // The LatLngs of the vertices.
+  IdMap origToNewIds;  // A map from original vertex IDs to new sequential IDs.
+  int nextVertexId;    // The next free vertex ID.
 };
 
 // Returns the value of the LatLng attribute for the current vertex.
@@ -300,8 +297,8 @@ XatfImporter::getValue<XatfRoadCategoryAttribute>() const {
 
 // Returns the value of the travel time attribute for the current edge.
 template <>
-inline TravelTimeAttribute::Type
-XatfImporter::getValue<TravelTimeAttribute>() const {
+inline TravelTimeAttribute::Type XatfImporter::getValue<TravelTimeAttribute>()
+    const {
   assert(currentEdge.xatfRoadCategory != XatfRoadCategory::UNUSED);
   const int cat = static_cast<int>(currentEdge.xatfRoadCategory);
   if (currentEdge.xatfRoadCategory != XatfRoadCategory::FERRY)
@@ -312,16 +309,16 @@ XatfImporter::getValue<TravelTimeAttribute>() const {
 
 // Returns the value of the number of lanes attribute for the current edge.
 template <>
-inline NumLanesAttribute::Type
-XatfImporter::getValue<NumLanesAttribute>() const {
+inline NumLanesAttribute::Type XatfImporter::getValue<NumLanesAttribute>()
+    const {
   assert(currentEdge.xatfRoadCategory != XatfRoadCategory::UNUSED);
   return NUM_LANES[static_cast<int>(currentEdge.xatfRoadCategory)];
 }
 
 // Returns the value of the capacity attribute for the current edge.
 template <>
-inline CapacityAttribute::Type
-XatfImporter::getValue<CapacityAttribute>() const {
+inline CapacityAttribute::Type XatfImporter::getValue<CapacityAttribute>()
+    const {
   // Due to lack of data, the capacity is computed from the number of lanes and
   // free-flow speed of the current edge, using the well-known two-second rule
   // to determine a safe following distance. Hence, capacity = numLanes *

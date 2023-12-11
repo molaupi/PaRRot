@@ -4,37 +4,37 @@
 #include <string>
 #include <vector>
 
-#include "CHData.h"
-#include "WitnessSearch.h"
-
 #include "../../../Helpers/Assert.h"
 #include "../../../Helpers/Ranges/Range.h"
 #include "../../../Helpers/Vector/Permutation.h"
+#include "CHData.h"
+#include "WitnessSearch.h"
 
 namespace CH {
 
-template <typename WITNESS_SEARCH> class GreedyKey {
-
-public:
+template <typename WITNESS_SEARCH>
+class GreedyKey {
+ public:
   using WitnessSearch = WITNESS_SEARCH;
   using KeyType = int;
   using Type = GreedyKey<WitnessSearch>;
 
-public:
+ public:
   GreedyKey(const int shortcutWeight = 1024, const int levelWeight = 1024,
             const int degreeWeight = 0)
-      : data(nullptr), witnessSearch(nullptr), shortcutWeight(shortcutWeight),
-        levelWeight(levelWeight), degreeWeight(degreeWeight) {}
+      : data(nullptr),
+        witnessSearch(nullptr),
+        shortcutWeight(shortcutWeight),
+        levelWeight(levelWeight),
+        degreeWeight(degreeWeight) {}
 
   inline KeyType operator()(const Vertex vertex) noexcept {
     const int inDegree = data->core.inDegree(vertex);
     const int outDegree = data->core.outDegree(vertex);
     if (inDegree <= 2 && outDegree <= 2) {
       const int degree = data->core.degree(vertex);
-      if (degree <= 1)
-        return data->level[vertex] - 1000;
-      if (degree == 2)
-        return data->level[vertex] - 100000;
+      if (degree <= 1) return data->level[vertex] - 1000;
+      if (degree == 2) return data->level[vertex] - 100000;
     }
     const int shortcutsAdded = simulateContract(vertex);
     const int key =
@@ -45,22 +45,22 @@ public:
     return key;
   }
 
-  template <typename T> inline void update(T &) noexcept {}
+  template <typename T>
+  inline void update(T &) noexcept {}
 
   inline void initialize(const Data *data, WITNESS_SEARCH *witnessSearch) {
     this->data = data;
     this->witnessSearch = witnessSearch;
   }
 
-private:
+ private:
   inline int simulateContract(const Vertex vertex) noexcept {
     int shortcutsAdded = 0;
     for (Edge first : data->core.edgesTo(vertex)) {
       Vertex from = data->core.get(FromVertex, first);
       for (Edge second : data->core.edgesFrom(vertex)) {
         Vertex to = data->core.get(ToVertex, second);
-        if (from == to)
-          continue;
+        if (from == to) continue;
         if (witnessSearch->shortcutIsNecessary(
                 from, to, vertex,
                 data->core.get(Weight, first) +
@@ -72,7 +72,7 @@ private:
     return shortcutsAdded;
   }
 
-private:
+ private:
   const Data *data;
   WITNESS_SEARCH *witnessSearch;
   const int shortcutWeight;
@@ -80,14 +80,14 @@ private:
   const int degreeWeight;
 };
 
-template <typename WITNESS_SEARCH> class PermutationKey {
-
-public:
+template <typename WITNESS_SEARCH>
+class PermutationKey {
+ public:
   using WitnessSearch = WITNESS_SEARCH;
   using KeyType = int;
   using Type = PermutationKey<WitnessSearch>;
 
-public:
+ public:
   PermutationKey() { Assert(false); }
   PermutationKey(const Permutation &permutation) : permutation(permutation) {}
 
@@ -95,7 +95,8 @@ public:
     return permutation[vertex];
   }
 
-  template <typename T> inline void update(T &) noexcept {}
+  template <typename T>
+  inline void update(T &) noexcept {}
 
   inline void initialize(const Data *data, WitnessSearch *) noexcept {
     AssertMsg(permutation.size() == data->numVertices,
@@ -104,14 +105,13 @@ public:
                                      << data->numVertices << " vertices!");
   }
 
-private:
+ private:
   const Permutation permutation;
 };
 
 template <typename WITNESS_SEARCH>
 class OrderKey : public PermutationKey<WITNESS_SEARCH> {
-
-public:
+ public:
   OrderKey() : PermutationKey<WITNESS_SEARCH>() { Assert(false); }
   OrderKey(const Order &order)
       : PermutationKey<WITNESS_SEARCH>(Permutation(Construct::Invert, order)) {}
@@ -123,17 +123,18 @@ public:
 template <typename WITNESS_SEARCH,
           typename KEY_FUNCTION = GreedyKey<WITNESS_SEARCH>>
 class PartialKey {
-
-public:
+ public:
   using WitnessSearch = WITNESS_SEARCH;
   using KeyFunction = KEY_FUNCTION;
   using KeyType = typename KeyFunction::KeyType;
   using Type = PartialKey<WitnessSearch, KeyFunction>;
 
-public:
+ public:
   PartialKey(const std::vector<bool> &contractable, const size_t minOrderIndex,
              const KeyFunction &keyFunction = KeyFunction())
-      : data(nullptr), contractable(contractable), keyFunction(keyFunction),
+      : data(nullptr),
+        contractable(contractable),
+        keyFunction(keyFunction),
         minOrderIndex(minOrderIndex) {}
   PartialKey(const std::vector<bool> &contractable,
              const KeyFunction &keyFunction = KeyFunction())
@@ -143,7 +144,8 @@ public:
     return contractable[vertex] ? keyFunction(vertex) : intMax;
   }
 
-  template <typename T> inline void update(T &t) noexcept {
+  template <typename T>
+  inline void update(T &t) noexcept {
     if (data->order.size() >= minOrderIndex) {
       for (Vertex v = Vertex(contractable.size() - 1); v < contractable.size();
            v--) {
@@ -162,7 +164,7 @@ public:
     keyFunction.initialize(data, witnessSearch);
   }
 
-private:
+ private:
   const Data *data;
   std::vector<bool> contractable;
   KeyFunction keyFunction;
@@ -172,26 +174,29 @@ private:
 template <typename WITNESS_SEARCH,
           typename KEY_FUNCTION = GreedyKey<WITNESS_SEARCH>>
 class StaggeredKey {
-
-public:
+ public:
   using WitnessSearch = WITNESS_SEARCH;
   using KeyFunction = KEY_FUNCTION;
   using KeyType = typename KeyFunction::KeyType;
   using Type = StaggeredKey<WitnessSearch, KeyFunction>;
 
-public:
+ public:
   StaggeredKey(const std::vector<size_t> &firstContractableRound,
                const std::vector<size_t> &coreSizes,
                const KeyFunction &keyFunction = KeyFunction())
-      : data(nullptr), firstContractableRound(firstContractableRound),
-        keyFunction(keyFunction), coreSizes(coreSizes), round(0) {}
+      : data(nullptr),
+        firstContractableRound(firstContractableRound),
+        keyFunction(keyFunction),
+        coreSizes(coreSizes),
+        round(0) {}
 
   inline KeyType operator()(const Vertex vertex) noexcept {
     return (firstContractableRound[vertex] <= round) ? keyFunction(vertex)
                                                      : intMax;
   }
 
-  template <typename T> inline void update(T &t) noexcept {
+  template <typename T>
+  inline void update(T &t) noexcept {
     if (round < coreSizes.size() && data->coreSize() <= coreSizes[round]) {
       round++;
       for (Vertex v = Vertex(firstContractableRound.size() - 1);
@@ -209,7 +214,7 @@ public:
     keyFunction.initialize(data, witnessSearch);
   }
 
-private:
+ private:
   const Data *data;
   std::vector<size_t> firstContractableRound;
   KeyFunction keyFunction;
@@ -220,14 +225,13 @@ private:
 template <typename WITNESS_SEARCH,
           typename KEY_FUNCTION = GreedyKey<WITNESS_SEARCH>>
 class FactorKey {
-
-public:
+ public:
   using WitnessSearch = WITNESS_SEARCH;
   using KeyFunction = KEY_FUNCTION;
   using KeyType = typename KeyFunction::KeyType;
   using Type = FactorKey<WitnessSearch, KeyFunction>;
 
-public:
+ public:
   FactorKey(std::vector<float> factor,
             const KeyFunction &keyFunction = KeyFunction())
       : data(nullptr), factor(factor), keyFunction(keyFunction) {}
@@ -236,13 +240,13 @@ public:
     KeyType key = keyFunction(vertex);
     if (key > 0) {
       key *= factor[vertex];
-      if (key < 0)
-        key = intMax;
+      if (key < 0) key = intMax;
     }
     return key;
   }
 
-  template <typename T> inline void update(T &) noexcept {}
+  template <typename T>
+  inline void update(T &) noexcept {}
 
   inline void initialize(const Data *data,
                          WitnessSearch *witnessSearch) noexcept {
@@ -250,10 +254,10 @@ public:
     keyFunction.initialize(data, witnessSearch);
   }
 
-private:
+ private:
   const Data *data;
   std::vector<float> factor;
   KeyFunction keyFunction;
 };
 
-} // namespace CH
+}  // namespace CH

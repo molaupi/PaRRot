@@ -26,35 +26,44 @@
 
 #include <stack>
 
+#include "Algorithms/KaRRi/BaseObjects/Assignment.h"
+#include "Algorithms/KaRRi/BaseObjects/Vehicle.h"
 #include "DataStructures/Containers/BitVector.h"
 #include "DataStructures/Utilities/DynamicRagged2DArrays.h"
 #include "Tools/Constants.h"
-
-#include "Algorithms/KaRRi/BaseObjects/Assignment.h"
-#include "Algorithms/KaRRi/BaseObjects/Vehicle.h"
 
 namespace karri {
 
 // Represents the state of all vehicle routes including the stop locations and
 // schedules.
 class RouteState {
-
-public:
+ public:
   RouteState(const Fleet &fleet, const int stopTime)
-      : pos(fleet.size()), stopIds(fleet.size()), stopLocations(fleet.size()),
-        schedArrTimes(fleet.size()), schedDepTimes(fleet.size()),
-        maxArrTimes(fleet.size()), occupancies(fleet.size()),
+      : pos(fleet.size()),
+        stopIds(fleet.size()),
+        stopLocations(fleet.size()),
+        schedArrTimes(fleet.size()),
+        schedDepTimes(fleet.size()),
+        maxArrTimes(fleet.size()),
+        occupancies(fleet.size()),
         vehWaitTimesPrefixSum(fleet.size()),
         vehWaitTimesUntilDropoffsPrefixSum(fleet.size()),
         numDropoffsPrefixSum(fleet.size()),
         stopIdToIdOfPrevStop(fleet.size(), INVALID_ID),
-        stopIdToPosition(fleet.size(), 0), stopIdToLeeway(fleet.size(), 0),
+        stopIdToPosition(fleet.size(), 0),
+        stopIdToLeeway(fleet.size(), 0),
         stopIdToVehicleId(fleet.size(), INVALID_ID),
-        rangeOfRequestsPickedUpAtStop(fleet.size()), requestsPickedUpAtStop(),
+        rangeOfRequestsPickedUpAtStop(fleet.size()),
+        requestsPickedUpAtStop(),
         rangeOfRequestsDroppedOffAtStop(fleet.size()),
-        requestsDroppedOffAtStop(), maxLeeway(0), stopIdOfMaxLeeway(INVALID_ID),
-        maxLegLength(0), stopIdOfMaxLegLength(INVALID_ID), unusedStopIds(),
-        nextUnusedStopId(fleet.size()), maxStopId(fleet.size() - 1),
+        requestsDroppedOffAtStop(),
+        maxLeeway(0),
+        stopIdOfMaxLeeway(INVALID_ID),
+        maxLegLength(0),
+        stopIdOfMaxLegLength(INVALID_ID),
+        unusedStopIds(),
+        nextUnusedStopId(fleet.size()),
+        maxStopId(fleet.size() - 1),
         stopTime(stopTime) {
     for (auto i = 0; i < fleet.size(); ++i) {
       pos[i].start = i;
@@ -171,8 +180,8 @@ public:
   // stop. Let N_d(l) be the number of dropoffs at stop l. Then
   // vehWaitTimesUntilDropoffsPrefixSumsFor(vehId)[i] = \sum_{z = 0}^{i} N_d(z)
   // * vehWaitTimesPrefixSumFor(vehId)[z - 1]
-  ConstantVectorRange<int>
-  vehWaitTimesUntilDropoffsPrefixSumsFor(const int vehId) const {
+  ConstantVectorRange<int> vehWaitTimesUntilDropoffsPrefixSumsFor(
+      const int vehId) const {
     assert(vehId >= 0);
     assert(vehId < pos.size());
     const auto start = pos[vehId].start;
@@ -439,8 +448,7 @@ public:
       assert(stopIdToPosition[stopIds[i]] == i - startAfterRemoval);
     }
 
-    if (haveToRecomputeMaxLeeway)
-      recomputeMaxLeeway();
+    if (haveToRecomputeMaxLeeway) recomputeMaxLeeway();
   }
 
   void updateStartOfCurrentLeg(const int vehId, const int location,
@@ -479,7 +487,7 @@ public:
     return getScheduledStop(vehId, 0);
   }
 
-private:
+ private:
   ScheduledStop getScheduledStop(const int vehId, const int stopIndex) const {
     assert(numStopsOf(vehId) > stopIndex);
     const auto id = stopIdsFor(vehId)[stopIndex];
@@ -529,9 +537,8 @@ private:
       const auto oldMinDepTime = schedDepTimes[l];
       schedDepTimes[l] =
           schedArrTimes[l] +
-          stopTime; // = max(schedDepTimes[l], schedArrTimes[l] + stopTime);
-      if (l < toIdx)
-        distPrevToCurrent = schedArrTimes[l + 1] - oldMinDepTime;
+          stopTime;  // = max(schedDepTimes[l], schedArrTimes[l] + stopTime);
+      if (l < toIdx) distPrevToCurrent = schedArrTimes[l + 1] - oldMinDepTime;
     }
   }
 
@@ -542,7 +549,7 @@ private:
       const auto propagatedMaxArrTime =
           maxArrTimes[l + 1] - distToNext - stopTime;
       if (maxArrTimes[l] <= propagatedMaxArrTime)
-        break; // Stop propagating if known maxArrTime at l is stricter already
+        break;  // Stop propagating if known maxArrTime at l is stricter already
       maxArrTimes[l] = propagatedMaxArrTime;
     }
   }
@@ -595,13 +602,10 @@ private:
       }
     };
 
-    if (pickupIndex > 0)
-      updateLegLengthAt(pickupIndex - 1);
-    if (pickupIndex + 1 != dropoffIndex)
-      updateLegLengthAt(pickupIndex);
+    if (pickupIndex > 0) updateLegLengthAt(pickupIndex - 1);
+    if (pickupIndex + 1 != dropoffIndex) updateLegLengthAt(pickupIndex);
     updateLegLengthAt(dropoffIndex - 1);
-    if (start + dropoffIndex < end - 1)
-      updateLegLengthAt(dropoffIndex);
+    if (start + dropoffIndex < end - 1) updateLegLengthAt(dropoffIndex);
 
     // If we did not find a new maximum leg length but the length of the
     // formerly longest leg changed, we need to recompute the max leg length
@@ -756,4 +760,4 @@ private:
 
   const int stopTime;
 };
-} // namespace karri
+}  // namespace karri

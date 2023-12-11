@@ -11,15 +11,12 @@
 #include "../../Algorithms/TripBased/Preprocessing/ShortcutAugmenter.h"
 #include "../../Algorithms/TripBased/Preprocessing/StopEventGraphBuilder.h"
 #include "../../Algorithms/TripBased/Preprocessing/ULTRABuilder.h"
-
 #include "../../DataStructures/Graph/Graph.h"
 #include "../../DataStructures/RAPTOR/Data.h"
 #include "../../DataStructures/RAPTOR/TransferModes.h"
 #include "../../DataStructures/TripBased/Data.h"
-
 #include "../../Helpers/MultiThreading.h"
 #include "../../Helpers/String/String.h"
-
 #include "../../Shell/Shell.h"
 
 using namespace Shell;
@@ -50,8 +47,7 @@ inline TransferGraph getOverheadGraph(const RAPTOR::Data &raptorData,
 }
 
 class ComputeStopToStopShortcuts : public ParameterizedCommand {
-
-public:
+ public:
   ComputeStopToStopShortcuts(BasicShell &shell)
       : ParameterizedCommand(
             shell, "computeStopToStopShortcuts",
@@ -73,7 +69,7 @@ public:
     }
   }
 
-private:
+ private:
   inline size_t getNumberOfThreads() const noexcept {
     if (getParameter("Number of threads") == "max") {
       return numberOfCores();
@@ -121,8 +117,7 @@ private:
 };
 
 class ComputeMcStopToStopShortcuts : public ParameterizedCommand {
-
-public:
+ public:
   ComputeMcStopToStopShortcuts(BasicShell &shell)
       : ParameterizedCommand(
             shell, "computeMcStopToStopShortcuts",
@@ -145,7 +140,7 @@ public:
     }
   }
 
-private:
+ private:
   inline size_t getNumberOfThreads() const noexcept {
     if (getParameter("Number of threads") == "max") {
       return numberOfCores();
@@ -197,8 +192,7 @@ private:
 };
 
 class ComputeMultimodalMcStopToStopShortcuts : public ParameterizedCommand {
-
-public:
+ public:
   ComputeMultimodalMcStopToStopShortcuts(BasicShell &shell)
       : ParameterizedCommand(shell, "computeMultimodalMcStopToStopShortcuts",
                              "Computes multimodal multicriteria stop-to-stop "
@@ -216,22 +210,22 @@ public:
 
   virtual void execute() noexcept {
     switch (getParameter<int>("Discretization factor")) {
-    case 1:
-      run<1>();
-      break;
-    case 300:
-      run<300>();
-      break;
-    case 600:
-      run<600>();
-      break;
-    case 900:
-      run<900>();
-      break;
+      case 1:
+        run<1>();
+        break;
+      case 300:
+        run<300>();
+        break;
+      case 600:
+        run<600>();
+        break;
+      case 900:
+        run<900>();
+        break;
     }
   }
 
-private:
+ private:
   inline int getNumberOfThreads() const noexcept {
     if (getParameter("Number of threads") == "max") {
       return numberOfCores();
@@ -240,7 +234,8 @@ private:
     }
   }
 
-  template <int TIME_FACTOR> inline void run() const noexcept {
+  template <int TIME_FACTOR>
+  inline void run() const noexcept {
     const std::string inputFile = getParameter("RAPTOR data");
     const size_t mode = RAPTOR::getTransferModeFromName(getParameter("Mode"));
     const std::string outputFile = getParameter("Output file");
@@ -277,8 +272,7 @@ private:
 };
 
 class RAPTORToTripBased : public ParameterizedCommand {
-
-public:
+ public:
   RAPTORToTripBased(BasicShell &shell)
       : ParameterizedCommand(
             shell, "raptorToTripBased",
@@ -321,7 +315,7 @@ public:
     data.serialize(outputFile);
   }
 
-private:
+ private:
   inline int getNumberOfThreads() const noexcept {
     if (getParameter("Number of threads") == "max") {
       return numberOfCores();
@@ -332,8 +326,7 @@ private:
 };
 
 class ComputeEventToEventShortcuts : public ParameterizedCommand {
-
-public:
+ public:
   ComputeEventToEventShortcuts(BasicShell &shell)
       : ParameterizedCommand(
             shell, "computeEventToEventShortcuts",
@@ -355,7 +348,7 @@ public:
     }
   }
 
-private:
+ private:
   inline int getNumberOfThreads() const noexcept {
     if (getParameter("Number of threads") == "max") {
       return numberOfCores();
@@ -364,7 +357,8 @@ private:
     }
   }
 
-  template <bool IGNORE_ISOLATED_CANDIDATES> inline void run() noexcept {
+  template <bool IGNORE_ISOLATED_CANDIDATES>
+  inline void run() noexcept {
     const std::string inputFile = getParameter("Input file");
     const std::string outputFile = getParameter("Output file");
     const int witnessLimit = getParameter<int>("Witness limit");
@@ -390,8 +384,7 @@ private:
 };
 
 class ComputeMcEventToEventShortcuts : public ParameterizedCommand {
-
-public:
+ public:
   ComputeMcEventToEventShortcuts(BasicShell &shell)
       : ParameterizedCommand(
             shell, "computeMcEventToEventShortcuts",
@@ -415,7 +408,7 @@ public:
     }
   }
 
-private:
+ private:
   inline int getNumberOfThreads() const noexcept {
     if (getParameter("Number of threads") == "max") {
       return numberOfCores();
@@ -464,8 +457,7 @@ private:
 };
 
 class ComputeMultimodalMcEventToEventShortcuts : public ParameterizedCommand {
-
-public:
+ public:
   ComputeMultimodalMcEventToEventShortcuts(BasicShell &shell)
       : ParameterizedCommand(shell, "computeMultimodalMcEventToEventShortcuts",
                              "Computes multimodal multicriteria event-to-event "
@@ -484,22 +476,22 @@ public:
 
   virtual void execute() noexcept {
     switch (getParameter<int>("Discretization factor")) {
-    case 1:
-      run<1>();
-      break;
-    case 300:
-      run<300>();
-      break;
-    case 600:
-      run<600>();
-      break;
-    case 900:
-      run<900>();
-      break;
+      case 1:
+        run<1>();
+        break;
+      case 300:
+        run<300>();
+        break;
+      case 600:
+        run<600>();
+        break;
+      case 900:
+        run<900>();
+        break;
     }
   }
 
-private:
+ private:
   inline int getNumberOfThreads() const noexcept {
     if (getParameter("Number of threads") == "max") {
       return numberOfCores();
@@ -508,7 +500,8 @@ private:
     }
   }
 
-  template <int TIME_FACTOR> inline void run() const noexcept {
+  template <int TIME_FACTOR>
+  inline void run() const noexcept {
     const std::string inputFile = getParameter("RAPTOR data");
     const size_t mode = RAPTOR::getTransferModeFromName(getParameter("Mode"));
     const std::string outputFile = getParameter("Output file");
@@ -543,8 +536,7 @@ private:
 };
 
 class AugmentTripBasedShortcuts : public ParameterizedCommand {
-
-public:
+ public:
   AugmentTripBasedShortcuts(BasicShell &shell)
       : ParameterizedCommand(
             shell, "augmentTripBasedData",
@@ -582,12 +574,10 @@ inline void validateShortcutGraph(const TransferGraph &original,
   size_t missingCount = 0;
   Progress progress(shortcuts.numVertices());
   for (const Vertex vertex : shortcuts.vertices()) {
-    if (vertex == maxVertex)
-      break;
+    if (vertex == maxVertex) break;
     for (const Edge edge : shortcuts.edgesFrom(vertex)) {
       const Vertex target = shortcuts.get(ToVertex, edge);
-      if (target >= maxVertex)
-        continue;
+      if (target >= maxVertex) continue;
       shortcutDistance[target] = shortcuts.get(TravelTime, edge);
       targets.insert(target);
     }
@@ -656,8 +646,7 @@ inline void validateShortcutGraph(const TransferGraph &original,
 }
 
 class ValidateStopToStopShortcuts : public ParameterizedCommand {
-
-public:
+ public:
   ValidateStopToStopShortcuts(BasicShell &shell)
       : ParameterizedCommand(shell, "validateStopToStopShortcuts",
                              "Compares stop-to-stop ULTRA shortcuts to paths "
@@ -682,8 +671,7 @@ public:
 };
 
 class ValidateEventToEventShortcuts : public ParameterizedCommand {
-
-public:
+ public:
   ValidateEventToEventShortcuts(BasicShell &shell)
       : ParameterizedCommand(shell, "validateEventToEventShortcuts",
                              "Compares event-to-event ULTRA shortcuts to paths "

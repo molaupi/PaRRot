@@ -6,19 +6,18 @@
 #include "../../../Helpers/Console/Progress.h"
 #include "../../../Helpers/MultiThreading.h"
 #include "../../../Helpers/Timer.h"
-
 #include "MultimodalMcShortcutSearch.h"
 
 namespace RAPTOR::ULTRA {
 
-template <bool DEBUG = false, int TIME_FACTOR = 1> class MultimodalMcBuilder {
-
-public:
+template <bool DEBUG = false, int TIME_FACTOR = 1>
+class MultimodalMcBuilder {
+ public:
   inline static constexpr bool Debug = DEBUG;
   inline static constexpr int TimeFactor = TIME_FACTOR;
   using Type = MultimodalMcBuilder<Debug, TimeFactor>;
 
-public:
+ public:
   MultimodalMcBuilder(const Data &data,
                       const TransferGraph &transitiveTransferGraph)
       : data(data), transitiveTransferGraph(transitiveTransferGraph) {
@@ -91,10 +90,10 @@ public:
     return shortcutGraph;
   }
 
-private:
+ private:
   const Data &data;
   const TransferGraph &transitiveTransferGraph;
   DynamicTransferGraph shortcutGraph;
 };
 
-} // namespace RAPTOR::ULTRA
+}  // namespace RAPTOR::ULTRA

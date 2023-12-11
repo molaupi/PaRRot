@@ -11,20 +11,23 @@
 namespace GTFS {
 
 class Calendar {
-
-public:
+ public:
   Calendar(const std::string &serviceId = "",
            const std::array<bool, 7> &operatesOnWeekday = {false, false, false,
                                                            false, false, false,
                                                            false},
            const int startDate = -1, const int endDate = -2)
-      : serviceId(serviceId), operatesOnWeekday(operatesOnWeekday),
-        startDate(startDate), endDate(endDate) {}
+      : serviceId(serviceId),
+        operatesOnWeekday(operatesOnWeekday),
+        startDate(startDate),
+        endDate(endDate) {}
   Calendar(const std::string &serviceId,
            const std::array<bool, 7> &operatesOnWeekday,
            const std::string &startDate, const std::string &endDate)
-      : serviceId(serviceId), operatesOnWeekday(operatesOnWeekday),
-        startDate(stringToDay(startDate)), endDate(stringToDay(endDate)) {}
+      : serviceId(serviceId),
+        operatesOnWeekday(operatesOnWeekday),
+        startDate(stringToDay(startDate)),
+        endDate(stringToDay(endDate)) {}
   Calendar(IO::Deserialization &deserialize) { this->deserialize(deserialize); }
 
   inline bool validate() noexcept {
@@ -33,8 +36,7 @@ public:
 
   friend std::ostream &operator<<(std::ostream &out, const Calendar &c) {
     out << "Calendar{" << c.serviceId << ", ";
-    for (const int day : week)
-      out << c.operatesOnWeekday[day] << ", ";
+    for (const int day : week) out << c.operatesOnWeekday[day] << ", ";
     return out << c.startDate << ", " << c.endDate << "}";
   }
 
@@ -46,7 +48,7 @@ public:
     deserialize(serviceId, operatesOnWeekday, startDate, endDate);
   }
 
-public:
+ public:
   std::string serviceId{""};
   std::array<bool, 7> operatesOnWeekday{
       {false, false, false, false, false, false, false}};
@@ -54,4 +56,4 @@ public:
   int endDate{-2};
 };
 
-} // namespace GTFS
+}  // namespace GTFS

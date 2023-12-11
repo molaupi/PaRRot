@@ -4,19 +4,17 @@
 #include <string>
 #include <vector>
 
-#include "InitialTransfers.h"
-
 #include "../../DataStructures/Container/Map.h"
 #include "../../DataStructures/Container/Set.h"
 #include "../../DataStructures/RAPTOR/Data.h"
+#include "InitialTransfers.h"
 #include "Profiler.h"
 
 namespace RAPTOR {
 
 template <size_t GROUPED_ROUNDS, typename PROFILER = NoProfiler>
 class UPRAPTOR {
-
-public:
+ public:
   constexpr static size_t GroupedRounds = GROUPED_ROUNDS;
   constexpr static bool GroupSweeps = GroupedRounds != 0;
   using Profiler = PROFILER;
@@ -25,7 +23,7 @@ public:
   using InitialAndFinalTransfers =
       ParetoInitialAndFinalTransfers<false, GroupedRounds>;
 
-private:
+ private:
   inline static Order vertexOrder(const CH::CH &chData,
                                   const bool useDFSOrder) noexcept {
     if (useDFSOrder) {
@@ -40,7 +38,9 @@ private:
               const CH::CH &oldCHData,
               const IndexedSet<false, Vertex> &oldTargets, const bool reorder,
               const bool useDFSOrder)
-        : data(oldData), transferGraph(oldTransferGraph), chData(oldCHData),
+        : data(oldData),
+          transferGraph(oldTransferGraph),
+          chData(oldCHData),
           targets(oldTargets) {
       const Order chOrder = vertexOrder(chData, useDFSOrder);
       if (reorder) {
@@ -81,8 +81,11 @@ private:
 
   struct EarliestArrivalLabel {
     EarliestArrivalLabel()
-        : arrivalTime(never), parentDepartureTime(never), parent(noVertex),
-          usesRoute(false), routeId(noRouteId) {}
+        : arrivalTime(never),
+          parentDepartureTime(never),
+          parent(noVertex),
+          usesRoute(false),
+          routeId(noRouteId) {}
     int arrivalTime;
     int parentDepartureTime;
     Vertex parent;
@@ -94,7 +97,7 @@ private:
   };
   using Round = std::vector<EarliestArrivalLabel>;
 
-public:
+ public:
   UPRAPTOR(const Data &oldData, const TransferGraph &oldTransferGraph,
            const CH::CH &oldCHData, const IndexedSet<false, Vertex> &oldTargets,
            const bool reorder, const bool useDFSOrder,
@@ -105,7 +108,8 @@ public:
         initialAndFinalTransfers(queryData.transferGraph, queryData.chData,
                                  std::move(queryData.phastOrder),
                                  data.numberOfStops(), queryData.targets),
-        sourceVertex(noVertex), sourceDepartureTime(never),
+        sourceVertex(noVertex),
+        sourceDepartureTime(never),
         targetVertices(queryData.targets),
         earliestArrival(data.numberOfStops()),
         stopsUpdatedByRoute(data.numberOfStops()),
@@ -228,8 +232,8 @@ public:
     return journeyToPath(getJourneys(internalVertex).back());
   }
 
-  inline std::vector<std::string>
-  getRouteDescription(const Vertex vertex) noexcept {
+  inline std::vector<std::string> getRouteDescription(
+      const Vertex vertex) noexcept {
     const Vertex internalVertex(queryData.externalToInternal[vertex]);
     AssertMsg(targetVertices.contains(internalVertex),
               "Vertex " << internalVertex << " is not a target!");
@@ -262,8 +266,9 @@ public:
     return initialAndFinalTransfers.getTargetGraphEdges();
   }
 
-private:
-  template <bool RESET_CAPACITIES = false> inline void clear() noexcept {
+ private:
+  template <bool RESET_CAPACITIES = false>
+  inline void clear() noexcept {
     stopsUpdatedByRoute.clear();
     stopsUpdatedByTransfer.clear();
     routesServingUpdatedStops.clear();
@@ -435,8 +440,7 @@ private:
 
   inline bool arrivalByRoute(const StopId stop, const int time) noexcept {
     AssertMsg(data.isStop(stop), "Stop " << stop << " is out of range!");
-    if (earliestArrival[stop] <= time)
-      return false;
+    if (earliestArrival[stop] <= time) return false;
     profiler.countMetric(METRIC_STOPS_BY_TRIP);
     currentRound()[stop].arrivalTime = time;
     earliestArrival[stop] = time;
@@ -446,8 +450,7 @@ private:
 
   inline bool arrivalByTransfer(const StopId stop, const int time) noexcept {
     AssertMsg(data.isStop(stop), "Stop " << stop << " is out of range!");
-    if (earliestArrival[stop] <= time)
-      return false;
+    if (earliestArrival[stop] <= time) return false;
     profiler.countMetric(METRIC_STOPS_BY_TRANSFER);
     currentRound()[stop].arrivalTime = time;
     earliestArrival[stop] = time;
@@ -486,8 +489,7 @@ private:
                 "Backtracking parent pointers reached a vertex ("
                     << label.parent << ")!");
       vertex = label.parent;
-      if (label.usesRoute)
-        round--;
+      if (label.usesRoute) round--;
     }
     Vector::reverse(journey);
     for (JourneyLeg &leg : journey) {
@@ -518,7 +520,7 @@ private:
         std::min(arrivalTime, (labels.empty() ? never : labels.back())));
   }
 
-private:
+ private:
   const QueryData queryData;
   const Data &data;
 
@@ -539,4 +541,4 @@ private:
   Profiler profiler;
 };
 
-} // namespace RAPTOR
+}  // namespace RAPTOR

@@ -10,16 +10,14 @@
 namespace GTFS {
 
 class Stop {
-
-public:
+ public:
   Stop(const std::string &stopId = "", const std::string &name = "",
        const Geometry::Point &coordinates = Geometry::Point())
       : stopId(stopId), name(name), coordinates(coordinates) {}
   Stop(IO::Deserialization &deserialize) { this->deserialize(deserialize); }
 
   inline bool validate() noexcept {
-    if (name.empty())
-      name = "NOT_NAMED";
+    if (name.empty()) name = "NOT_NAMED";
     return !stopId.empty();
   }
 
@@ -36,10 +34,10 @@ public:
     deserialize(stopId, name, coordinates);
   }
 
-public:
+ public:
   std::string stopId{""};
   std::string name{""};
   Geometry::Point coordinates{};
 };
 
-} // namespace GTFS
+}  // namespace GTFS

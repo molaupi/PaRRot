@@ -52,11 +52,12 @@ struct PruningCriterion {
   }
 };
 
-} // namespace elimintree
+}  // namespace elimintree
 
 // Forward declarations for friend
 namespace karri {
-template <typename, typename, bool> class EllipticBucketsEnvironment;
+template <typename, typename, bool>
+class EllipticBucketsEnvironment;
 }
 
 // Implementation of an upward elimination tree search. It enumerates all
@@ -72,29 +73,33 @@ template <typename LabelSetT,
 class UpwardEliminationTreeSearch {
   // Some classes are allowed to execute an upward elimination tree search step
   // by step.
-  template <typename> friend class EliminationTreeQuery;
+  template <typename>
+  friend class EliminationTreeQuery;
 
   template <typename, typename, bool>
   friend class karri::EllipticBucketsEnvironment;
 
-private:
+ private:
   using DistanceLabel =
-      typename LabelSetT::DistanceLabel; // The distance label of a vertex.
+      typename LabelSetT::DistanceLabel;  // The distance label of a vertex.
   using ParentLabel =
-      typename LabelSetT::ParentLabel;        // The parent label of a vertex.
-  using PruningCriterion = PruningCriterionT; // The criterion to prune search.
+      typename LabelSetT::ParentLabel;         // The parent label of a vertex.
+  using PruningCriterion = PruningCriterionT;  // The criterion to prune search.
 
   static constexpr int K =
-      LabelSetT::K; // The number of simultaneous shortest-path computations.
+      LabelSetT::K;  // The number of simultaneous shortest-path computations.
 
-public:
+ public:
   // Constructs an upward elimination tree search instance.
   UpwardEliminationTreeSearch(const CH::SearchGraph &searchGraph,
                               const std::vector<int32_t> &eliminationTree,
                               PruningCriterionT pruneSearch = {})
-      : searchGraph(searchGraph), eliminationTree(eliminationTree),
-        distanceLabels(searchGraph.numVertices()), parent(searchGraph),
-        nextVertices({}), pruneSearch(pruneSearch) {
+      : searchGraph(searchGraph),
+        eliminationTree(eliminationTree),
+        distanceLabels(searchGraph.numVertices()),
+        parent(searchGraph),
+        nextVertices({}),
+        pruneSearch(pruneSearch) {
     assert(searchGraph.numVertices() == eliminationTree.size());
     lastSources.fill(INVALID_VERTEX);
   }
@@ -109,8 +114,7 @@ public:
     resetDistanceLabels();
     init(sources);
     while (nextVertices.minKey() != INVALID_VERTEX) {
-      if (nextVertices.minKey() == t)
-        break;
+      if (nextVertices.minKey() == t) break;
       settleNextVertex();
     }
   }
@@ -122,8 +126,7 @@ public:
     assert(std::is_sorted(firstSource, lastSource));
     resetDistanceLabels();
     init(firstSource, lastSource);
-    while (nextVertices.minKey() != INVALID_VERTEX)
-      settleNextVertex();
+    while (nextVertices.minKey() != INVALID_VERTEX) settleNextVertex();
   }
 
   // Runs an elimination tree search from s, with the distance of s initialized
@@ -142,8 +145,7 @@ public:
                      const std::array<int, K> &offsets) {
     resetDistanceLabels();
     init(sources, offsets);
-    while (nextVertices.minKey() != INVALID_VERTEX)
-      settleNextVertex();
+    while (nextVertices.minKey() != INVALID_VERTEX) settleNextVertex();
   }
 
   //    // Runs an elimination tree search that computes a shortest-path tree
@@ -165,8 +167,7 @@ public:
                                     const std::array<int, K> &offsets) {
     resetDistanceLabels();
     init(sources, offsets);
-    while (nextVertices.minKey() != INVALID_VERTEX)
-      settleNextVertex();
+    while (nextVertices.minKey() != INVALID_VERTEX) settleNextVertex();
   }
 
   void runWithOffsetUntilExhaustion(const int s, const int offset) {
@@ -204,7 +205,7 @@ public:
 
   int getNumVerticesSettled() const { return numVerticesSettled; }
 
-private:
+ private:
   // Initializes the labels for computing multiple shortest-path trees
   // simultaneously.
   void init(const std::array<int, K> &sources,
@@ -292,8 +293,7 @@ private:
     const auto v = nextVertices.minKey();
     nextVertices.deleteMin(eliminationTree[v]);
     // If two or more of the k searches merged at v, block all but one of them.
-    while (nextVertices.minKey() == v)
-      nextVertices.deleteMin(INFTY);
+    while (nextVertices.minKey() == v) nextVertices.deleteMin(INFTY);
     return v;
   }
 
@@ -306,17 +306,18 @@ private:
   using ParentLabelCont = ParentLabelContainer<CH::SearchGraph, LabelSetT>;
 
   const CH::SearchGraph
-      &searchGraph; // The upward or downward graph we work on.
+      &searchGraph;  // The upward or downward graph we work on.
   const std::vector<int32_t>
-      &eliminationTree; // eliminationTree[v] is the parent of v in the tree.
+      &eliminationTree;  // eliminationTree[v] is the parent of v in the tree.
 
-  DistanceLabelCont distanceLabels; // The distance labels of the vertices.
-  ParentLabelCont parent;           // The parent information for each vertex.
+  DistanceLabelCont distanceLabels;  // The distance labels of the vertices.
+  ParentLabelCont parent;            // The parent information for each vertex.
   TournamentTree<LabelSetT::logK>
-      nextVertices; // The vertices settled next by the k searches.
-  std::array<int, K> lastSources; // The source vertices of the last k searches.
+      nextVertices;  // The vertices settled next by the k searches.
+  std::array<int, K>
+      lastSources;                // The source vertices of the last k searches.
   PruningCriterionT pruneSearch;  // The criterion used to prune the search.
 
-  int numEdgeRelaxations; // Number of edge relaxations in last run.
-  int numVerticesSettled; // Number of vertices settled in last run.
+  int numEdgeRelaxations;  // Number of edge relaxations in last run.
+  int numVerticesSettled;  // Number of vertices settled in last run.
 };

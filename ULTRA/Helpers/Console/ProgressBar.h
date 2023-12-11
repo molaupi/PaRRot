@@ -6,8 +6,7 @@
 #include "../Assert.h"
 
 class ProgressBar {
-
-public:
+ public:
   ProgressBar(const long long n, const bool v = true,
               std::ostream &o = std::cout)
       : verbose(v), os(o), percentOutputStep(20), dotOutputStep(5) {
@@ -18,8 +17,7 @@ public:
     numSteps = n;
     stepsDone = 0;
     lastDrawnPercent = 0;
-    if (verbose)
-      os << "0% " << std::flush;
+    if (verbose) os << "0% " << std::flush;
   }
 
   void iterate() {
@@ -47,23 +45,21 @@ public:
   inline void SetDotOutputStep(const int d) { dotOutputStep = d; }
   inline void SetPercentOutputStep(const int p) { percentOutputStep = p; }
 
-protected:
+ protected:
   inline void draw(unsigned int until) {
     if (verbose) {
       for (unsigned short i = (lastDrawnPercent + 1); i <= until; ++i) {
         if (i % percentOutputStep == 0) {
-          if (i > 0)
-            os << " " << i << "% " << std::flush;
+          if (i > 0) os << " " << i << "% " << std::flush;
         } else {
-          if (i % dotOutputStep == 0)
-            os << "." << std::flush;
+          if (i % dotOutputStep == 0) os << "." << std::flush;
         }
       }
     }
     lastDrawnPercent = until;
   }
 
-private:
+ private:
   bool verbose;
   std::ostream &os;
   long long numSteps;

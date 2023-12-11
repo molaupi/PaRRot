@@ -5,25 +5,25 @@
 #include <utility>
 #include <vector>
 
-#include "Attribute.h"
-#include "AttributeHandle.h"
-#include "AttributeNames.h"
-#include "AttributeRecord.h"
-
 #include "../../Helpers/Assert.h"
 #include "../../Helpers/IO/Serialization.h"
 #include "../../Helpers/Meta.h"
 #include "../../Helpers/String/String.h"
 #include "../../Helpers/Vector/Vector.h"
+#include "Attribute.h"
+#include "AttributeHandle.h"
+#include "AttributeNames.h"
+#include "AttributeRecord.h"
 using Meta::List;
 
 // Introduction of Attributes: A class which, given a list of Attributes, holds
 // one std::vector of equal size for every attribute in the list
-template <typename ATTRIBUTE_LIST> class Attributes;
+template <typename ATTRIBUTE_LIST>
+class Attributes;
 
-template <> class Attributes<List<>> {
-
-public:
+template <>
+class Attributes<List<>> {
+ public:
   using Type = Attributes<List<>>;
   inline constexpr static size_t NumberOfAttributes = 0;
 
@@ -32,12 +32,12 @@ public:
       typename Meta::FindAttributeType<ATTRIBUTE_NAME, List<>>;
 
   template <AttributeNameType ATTRIBUTE_NAME>
-  inline constexpr static bool
-  HasAttribute(const AttributeNameWrapper<ATTRIBUTE_NAME>) noexcept {
+  inline constexpr static bool HasAttribute(
+      const AttributeNameWrapper<ATTRIBUTE_NAME>) noexcept {
     return false;
   }
 
-public:
+ public:
   Attributes() : attributesSize(0) {}
   Attributes(const size_t n) : attributesSize(n) {}
   template <typename DEFAULT_VALUE_HEAD, typename... DEFAULT_VALUE_TAIL>
@@ -65,7 +65,8 @@ public:
   inline Type &operator=(const OTHER &other) noexcept {
     return assign(other);
   }
-  template <typename OTHER> inline Type &operator=(OTHER &&other) noexcept {
+  template <typename OTHER>
+  inline Type &operator=(OTHER &&other) noexcept {
     return assign(std::move(other));
   }
 
@@ -109,7 +110,8 @@ public:
   }
 
   inline void emplaceBack() noexcept { attributesSize++; }
-  template <typename RECORD> inline void emplaceBack(const RECORD &) noexcept {
+  template <typename RECORD>
+  inline void emplaceBack(const RECORD &) noexcept {
     attributesSize++;
   }
   template <AttributeNameType HEAD_NAME, typename HEAD_TYPE,
@@ -119,7 +121,8 @@ public:
     attributesSize++;
   }
 
-  template <typename FUNCTION> inline void forEach(FUNCTION &) noexcept {}
+  template <typename FUNCTION>
+  inline void forEach(FUNCTION &) noexcept {}
   template <typename FUNCTION>
   inline void forEach(const FUNCTION &) const noexcept {}
 
@@ -153,24 +156,24 @@ public:
   inline void swap(Type &) noexcept {}
   inline void swap(Type &&) noexcept {}
 
-protected:
+ protected:
   void serialize(const std::string &, const std::string &,
                  const bool) const noexcept {}
   void deserialize(const std::string &, const std::string &,
                    const bool) noexcept {}
 
-protected:
+ protected:
   size_t attributesSize;
 };
 
 template <typename ATTRIBUTE, typename... ATTRIBUTE_LIST>
 class Attributes<List<ATTRIBUTE, ATTRIBUTE_LIST...>>
     : public Attributes<List<ATTRIBUTE_LIST...>> {
+ public:
+  template <typename T>
+  friend class Attributes;
 
-public:
-  template <typename T> friend class Attributes;
-
-private:
+ private:
   using Attribute = ATTRIBUTE;
   using Super = Attributes<List<ATTRIBUTE_LIST...>>;
   using ValueType = typename Attribute::Type;
@@ -182,7 +185,8 @@ private:
   using SuperByName =
       Attributes<Meta::FindAttributeList<ATTRIBUTE_NAME, AttributeList>>;
 
-  template <typename T, typename = void> struct IsApplicable : Meta::False {};
+  template <typename T, typename = void>
+  struct IsApplicable : Meta::False {};
 
   template <typename T>
   struct IsApplicable<T, decltype(std::declval<T>()(
@@ -198,7 +202,7 @@ private:
                                     AttributeNameType()),
                   void())> : Meta::True {};
 
-public:
+ public:
   using Type = Attributes<AttributeList>;
   inline constexpr static size_t NumberOfAttributes =
       Super::NumberOfAttributes + 1;
@@ -218,8 +222,8 @@ public:
       Meta::FindAttributeType<ATTRIBUTE_NAME, AttributeList>>::const_reference;
 
   template <AttributeNameType ATTRIBUTE_NAME>
-  inline constexpr static bool
-  HasAttribute(const AttributeNameWrapper<ATTRIBUTE_NAME>) noexcept {
+  inline constexpr static bool HasAttribute(
+      const AttributeNameWrapper<ATTRIBUTE_NAME>) noexcept {
     return Meta::ContainsAttribute<ATTRIBUTE_NAME, AttributeList>();
   }
 
@@ -234,7 +238,7 @@ public:
   static_assert(!HasAttribute(AnyAttribute),
                 "'AnyAttribute' cannot be used as an Attribute Name!");
 
-public:
+ public:
   Attributes() : Super(), defaultValue(ValueType()), values() {}
   Attributes(const size_t size)
       : Super(size), defaultValue(ValueType()), values(size, ValueType()) {}
@@ -247,7 +251,8 @@ public:
         values(size, defaultValue) {}
   Attributes(const Type &other)
       : Super(static_cast<const Super &>(other)),
-        defaultValue(other.defaultValue), values(other.values) {}
+        defaultValue(other.defaultValue),
+        values(other.values) {}
   Attributes(Type &&other)
       : Super(std::move(static_cast<Super &&>(other))),
         defaultValue(std::move(other.defaultValue)),
@@ -409,9 +414,9 @@ public:
   }
   template <AttributeNameType HEAD_NAME, typename HEAD_TYPE,
             typename... DEFAULT_VALUE_TAIL>
-  inline Handle
-  emplaceBack(const AttributeValueWrapper<HEAD_NAME, HEAD_TYPE> &head,
-              const DEFAULT_VALUE_TAIL &...tail) noexcept {
+  inline Handle emplaceBack(
+      const AttributeValueWrapper<HEAD_NAME, HEAD_TYPE> &head,
+      const DEFAULT_VALUE_TAIL &...tail) noexcept {
     values.emplace_back(
         getAttributeValue(ThisAttribute, defaultValue, head, tail...));
     Super::emplaceBack(head, tail...);
@@ -444,8 +449,8 @@ public:
     return Handle(*this, i);
   }
   template <AttributeNameType ATTRIBUTE_NAME>
-  inline const std::vector<AttributeType<ATTRIBUTE_NAME>> &
-  operator[](const AttributeNameWrapper<ATTRIBUTE_NAME>) const noexcept {
+  inline const std::vector<AttributeType<ATTRIBUTE_NAME>> &operator[](
+      const AttributeNameWrapper<ATTRIBUTE_NAME>) const noexcept {
     static_assert(HasAttribute(AttributeNameWrapper<ATTRIBUTE_NAME>()),
                   "Current instantiation of Attributes<List<ATTRIBUTE, "
                   "ATTRIBUTE_LIST...>> does not contain an Attribute named "
@@ -453,8 +458,8 @@ public:
     return SuperByName<ATTRIBUTE_NAME>::values;
   }
   template <AttributeNameType ATTRIBUTE_NAME>
-  inline std::vector<AttributeType<ATTRIBUTE_NAME>> &
-  operator[](const AttributeNameWrapper<ATTRIBUTE_NAME>) noexcept {
+  inline std::vector<AttributeType<ATTRIBUTE_NAME>> &operator[](
+      const AttributeNameWrapper<ATTRIBUTE_NAME>) noexcept {
     static_assert(HasAttribute(AttributeNameWrapper<ATTRIBUTE_NAME>()),
                   "Current instantiation of Attributes<List<ATTRIBUTE, "
                   "ATTRIBUTE_LIST...>> does not contain an Attribute named "
@@ -469,8 +474,8 @@ public:
     return Handle(*this, i);
   }
   template <AttributeNameType ATTRIBUTE_NAME>
-  inline AttributeConstReferenceType<ATTRIBUTE_NAME>
-  get(const AttributeNameWrapper<ATTRIBUTE_NAME>,
+  inline AttributeConstReferenceType<ATTRIBUTE_NAME> get(
+      const AttributeNameWrapper<ATTRIBUTE_NAME>,
       const size_t i) const noexcept {
     static_assert(HasAttribute(AttributeNameWrapper<ATTRIBUTE_NAME>()),
                   "Current instantiation of Attributes<List<ATTRIBUTE, "
@@ -482,8 +487,8 @@ public:
     return SuperByName<ATTRIBUTE_NAME>::values[i];
   }
   template <AttributeNameType ATTRIBUTE_NAME>
-  inline AttributeReferenceType<ATTRIBUTE_NAME>
-  get(const AttributeNameWrapper<ATTRIBUTE_NAME>, const size_t i) noexcept {
+  inline AttributeReferenceType<ATTRIBUTE_NAME> get(
+      const AttributeNameWrapper<ATTRIBUTE_NAME>, const size_t i) noexcept {
     static_assert(HasAttribute(AttributeNameWrapper<ATTRIBUTE_NAME>()),
                   "Current instantiation of Attributes<List<ATTRIBUTE, "
                   "ATTRIBUTE_LIST...>> does not contain an Attribute named "
@@ -494,8 +499,8 @@ public:
     return SuperByName<ATTRIBUTE_NAME>::values[i];
   }
   template <AttributeNameType ATTRIBUTE_NAME>
-  inline const std::vector<AttributeType<ATTRIBUTE_NAME>> &
-  get(const AttributeNameWrapper<ATTRIBUTE_NAME>) const noexcept {
+  inline const std::vector<AttributeType<ATTRIBUTE_NAME>> &get(
+      const AttributeNameWrapper<ATTRIBUTE_NAME>) const noexcept {
     static_assert(HasAttribute(AttributeNameWrapper<ATTRIBUTE_NAME>()),
                   "Current instantiation of Attributes<List<ATTRIBUTE, "
                   "ATTRIBUTE_LIST...>> does not contain an Attribute named "
@@ -503,8 +508,8 @@ public:
     return SuperByName<ATTRIBUTE_NAME>::values;
   }
   template <AttributeNameType ATTRIBUTE_NAME>
-  inline std::vector<AttributeType<ATTRIBUTE_NAME>> &
-  get(const AttributeNameWrapper<ATTRIBUTE_NAME>) noexcept {
+  inline std::vector<AttributeType<ATTRIBUTE_NAME>> &get(
+      const AttributeNameWrapper<ATTRIBUTE_NAME>) noexcept {
     static_assert(HasAttribute(AttributeNameWrapper<ATTRIBUTE_NAME>()),
                   "Current instantiation of Attributes<List<ATTRIBUTE, "
                   "ATTRIBUTE_LIST...>> does not contain an Attribute named "
@@ -512,8 +517,8 @@ public:
     return SuperByName<ATTRIBUTE_NAME>::values;
   }
   template <AttributeNameType ATTRIBUTE_NAME>
-  inline const AttributeType<ATTRIBUTE_NAME> &
-  getDefaultValue(const AttributeNameWrapper<ATTRIBUTE_NAME>) const noexcept {
+  inline const AttributeType<ATTRIBUTE_NAME> &getDefaultValue(
+      const AttributeNameWrapper<ATTRIBUTE_NAME>) const noexcept {
     static_assert(HasAttribute(AttributeNameWrapper<ATTRIBUTE_NAME>()),
                   "Current instantiation of Attributes<List<ATTRIBUTE, "
                   "ATTRIBUTE_LIST...>> does not contain an Attribute named "
@@ -521,8 +526,8 @@ public:
     return SuperByName<ATTRIBUTE_NAME>::defaultValue;
   }
   template <AttributeNameType ATTRIBUTE_NAME>
-  inline AttributeType<ATTRIBUTE_NAME> &
-  getDefaultValue(const AttributeNameWrapper<ATTRIBUTE_NAME>) noexcept {
+  inline AttributeType<ATTRIBUTE_NAME> &getDefaultValue(
+      const AttributeNameWrapper<ATTRIBUTE_NAME>) noexcept {
     static_assert(HasAttribute(AttributeNameWrapper<ATTRIBUTE_NAME>()),
                   "Current instantiation of Attributes<List<ATTRIBUTE, "
                   "ATTRIBUTE_LIST...>> does not contain an Attribute named "
@@ -552,8 +557,8 @@ public:
     SuperByName<ATTRIBUTE_NAME>::values[i] = value;
   }
   template <AttributeNameType ATTRIBUTE_NAME>
-  inline void
-  set(const AttributeNameWrapper<ATTRIBUTE_NAME>,
+  inline void set(
+      const AttributeNameWrapper<ATTRIBUTE_NAME>,
       const std::vector<AttributeType<ATTRIBUTE_NAME>> &value) noexcept {
     static_assert(HasAttribute(AttributeNameWrapper<ATTRIBUTE_NAME>()),
                   "Current instantiation of Attributes<List<ATTRIBUTE, "
@@ -586,9 +591,9 @@ public:
     Super::setToDefault(i);
   }
   template <AttributeNameType ATTRIBUTE_NAME>
-  inline void
-  setDefaultValue(const AttributeNameWrapper<ATTRIBUTE_NAME>,
-                  const AttributeType<ATTRIBUTE_NAME> &value) noexcept {
+  inline void setDefaultValue(
+      const AttributeNameWrapper<ATTRIBUTE_NAME>,
+      const AttributeType<ATTRIBUTE_NAME> &value) noexcept {
     static_assert(HasAttribute(AttributeNameWrapper<ATTRIBUTE_NAME>()),
                   "Current instantiation of Attributes<List<ATTRIBUTE, "
                   "ATTRIBUTE_LIST...>> does not contain an Attribute named "
@@ -629,8 +634,7 @@ public:
     AssertMsg(to < values.size(),
               "Invalid Index to = " << to << ", Attributes contains only "
                                     << values.size() << " values!");
-    if (from == to)
-      return;
+    if (from == to) return;
     values[to] = values[from];
     Super::copy(from, to);
   }
@@ -655,27 +659,27 @@ public:
     Super::swap(std::move(static_cast<Super &&>(other)));
   }
 
-protected:
+ protected:
   inline void serialize(const std::string &fileNameBase,
                         const std::string &separator,
                         const bool) const noexcept {
-    IO::serialize(fileNameBase + separator +
-                      String::firstToLower(Attribute::String),
-                  values);
+    IO::serialize(
+        fileNameBase + separator + String::firstToLower(Attribute::String),
+        values);
     Super::serialize(fileNameBase, separator, false);
     AssertMsg(hasSize(size()), "Inconsistent attribute vector sizes!");
   }
   inline void deserialize(const std::string &fileNameBase,
                           const std::string &separator, const bool) noexcept {
-    IO::deserialize(fileNameBase + separator +
-                        String::firstToLower(Attribute::String),
-                    values);
+    IO::deserialize(
+        fileNameBase + separator + String::firstToLower(Attribute::String),
+        values);
     Super::deserialize(fileNameBase, separator, false);
     this->attributesSize = size();
     AssertMsg(hasSize(size()), "Inconsistent attribute vector sizes!");
   }
 
-protected:
+ protected:
   ValueType defaultValue{ValueType()};
   std::vector<ValueType> values{};
 };

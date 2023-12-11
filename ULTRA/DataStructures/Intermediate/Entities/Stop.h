@@ -12,21 +12,22 @@
 namespace Intermediate {
 
 class Stop {
-
-public:
+ public:
   static const std::string CSV_HEADER;
 
-public:
+ public:
   Stop(const std::string &name = "",
        const Geometry::Point &coordinates = Geometry::Point(),
        const int minTransferTime = 0)
-      : name(name), coordinates(coordinates), minTransferTime(minTransferTime) {
-  }
+      : name(name),
+        coordinates(coordinates),
+        minTransferTime(minTransferTime) {}
   Stop(const GTFS::Stop &s)
       : name(s.name), coordinates(s.coordinates), minTransferTime(0) {}
   template <typename STOP_TYPE>
   Stop(const STOP_TYPE &s)
-      : name(s.name), coordinates(s.coordinates),
+      : name(s.name),
+        coordinates(s.coordinates),
         minTransferTime(s.minTransferTime) {}
   Stop(IO::Deserialization &deserialize) { this->deserialize(deserialize); }
 
@@ -65,7 +66,7 @@ public:
     minTransferTime = std::max(minTransferTime, other.minTransferTime);
   }
 
-public:
+ public:
   std::string name{""};
   Geometry::Point coordinates{};
   int minTransferTime{0};
@@ -73,4 +74,4 @@ public:
 
 const std::string Stop::CSV_HEADER = "lon,lat,name,change_time";
 
-} // namespace Intermediate
+}  // namespace Intermediate

@@ -5,8 +5,7 @@
 #include <string>
 
 class StreamWrapper {
-
-public:
+ public:
   StreamWrapper() : flushed(false) {}
 
   StreamWrapper(const StreamWrapper &stream) : flushed(false) {
@@ -18,12 +17,14 @@ public:
     std::cout << std::flush;
   }
 
-  template <typename T> inline void append(const T &t) const {
+  template <typename T>
+  inline void append(const T &t) const {
     text.precision(std::cout.precision());
     text << t;
   }
 
-  template <typename T> inline std::ostream &operator<<(const T &t) const {
+  template <typename T>
+  inline std::ostream &operator<<(const T &t) const {
     flush(std::cout);
     return std::cout << t << std::flush;
   }
@@ -40,7 +41,7 @@ public:
     return ss.str();
   }
 
-protected:
+ protected:
   inline void flush(std::ostream &stream) const {
     if (!flushed) {
       stream << text.str();
@@ -48,7 +49,7 @@ protected:
     }
   }
 
-private:
+ private:
   mutable std::stringstream text;
   mutable bool flushed;
 };
@@ -66,40 +67,51 @@ inline void concatenate(StreamWrapper &stream, const T &t, const U &...u) {
   concatenate(stream, u...);
 }
 
-template <typename... T> inline StreamWrapper concatenate(const T &...t) {
+template <typename... T>
+inline StreamWrapper concatenate(const T &...t) {
   StreamWrapper stream;
   concatenate(stream, t...);
   return stream;
 }
 
-template <typename... T> inline StreamWrapper red(const T &...t) {
+template <typename... T>
+inline StreamWrapper red(const T &...t) {
   return concatenate("\033[1;31m", t..., "\033[0m");
 }
-template <typename... T> inline StreamWrapper green(const T &...t) {
+template <typename... T>
+inline StreamWrapper green(const T &...t) {
   return concatenate("\033[1;32m", t..., "\033[0m");
 }
-template <typename... T> inline StreamWrapper yellow(const T &...t) {
+template <typename... T>
+inline StreamWrapper yellow(const T &...t) {
   return concatenate("\033[1;33m", t..., "\033[0m");
 }
-template <typename... T> inline StreamWrapper blue(const T &...t) {
+template <typename... T>
+inline StreamWrapper blue(const T &...t) {
   return concatenate("\033[1;34m", t..., "\033[0m");
 }
-template <typename... T> inline StreamWrapper magenta(const T &...t) {
+template <typename... T>
+inline StreamWrapper magenta(const T &...t) {
   return concatenate("\033[1;35m", t..., "\033[0m");
 }
-template <typename... T> inline StreamWrapper cyan(const T &...t) {
+template <typename... T>
+inline StreamWrapper cyan(const T &...t) {
   return concatenate("\033[1;36m", t..., "\033[0m");
 }
-template <typename... T> inline StreamWrapper white(const T &...t) {
+template <typename... T>
+inline StreamWrapper white(const T &...t) {
   return concatenate("\033[1;37m", t..., "\033[0m");
 }
-template <typename... T> inline StreamWrapper grey(const T &...t) {
+template <typename... T>
+inline StreamWrapper grey(const T &...t) {
   return concatenate("\033[1;30m", t..., "\033[0m");
 }
 
-template <typename... T> inline StreamWrapper warning(const T &...t) {
+template <typename... T>
+inline StreamWrapper warning(const T &...t) {
   return concatenate("\n\033[33mWARNING: ", t..., "\033[0m\n");
 }
-template <typename... T> inline StreamWrapper error(const T &...t) {
+template <typename... T>
+inline StreamWrapper error(const T &...t) {
   return concatenate("\n\033[31mERROR: ", t..., "\033[0m\n");
 }

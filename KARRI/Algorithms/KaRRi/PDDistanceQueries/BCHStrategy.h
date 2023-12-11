@@ -37,23 +37,21 @@ namespace karri::PDDistanceQueryStrategies {
 template <typename InputGraphT, typename CHEnvT, typename VehicleToPDLocQueryT,
           typename LabelSetT>
 class BCHStrategy {
-
-public:
+ public:
   static constexpr int K = LabelSetT::K;
   using DistanceLabel = typename LabelSetT::DistanceLabel;
 
-private:
+ private:
   struct DropoffBatchLabel {
-
     static constexpr unsigned int invalid_target =
         std::numeric_limits<unsigned int>::max();
 
     unsigned int targetId =
-        invalid_target; // the batch id for this batch of K dropoffs with
-                        // sequential ids (i.e. targetId ranges from 0 to
-                        // numDropoffs / K ( + 1)).
+        invalid_target;  // the batch id for this batch of K dropoffs with
+                         // sequential ids (i.e. targetId ranges from 0 to
+                         // numDropoffs / K ( + 1)).
     DistanceLabel distToDropoff =
-        INFTY; // the distances from this vertex to the K dropoffs
+        INFTY;  // the distances from this vertex to the K dropoffs
 
     friend bool operator==(const DropoffBatchLabel &lhs,
                            const DropoffBatchLabel &rhs) noexcept {
@@ -63,15 +61,13 @@ private:
     void cmpAndUpdate(const DropoffBatchLabel &other) {
       assert(targetId == invalid_target || targetId == other.targetId);
       distToDropoff.min(other.distToDropoff);
-      if (targetId == invalid_target)
-        targetId = other.targetId;
+      if (targetId == invalid_target) targetId = other.targetId;
     }
   };
 
   using BucketContainer = SharedSearchSpaceBucketContainer<DropoffBatchLabel>;
 
   struct StopWhenMaxDistExceeded {
-
     explicit StopWhenMaxDistExceeded(const int &maxDist) : maxDist(maxDist) {}
 
     template <typename DistLabelT, typename DistLabelContainerT>
@@ -80,7 +76,7 @@ private:
       return !(bool)~(maxDist < distToV);
     }
 
-  private:
+   private:
     const int &maxDist;
   };
 
@@ -95,7 +91,7 @@ private:
       return false;
     }
 
-  private:
+   private:
     BCHStrategy &computer;
   };
 
@@ -123,7 +119,7 @@ private:
       return false;
     }
 
-  private:
+   private:
     BCHStrategy &computer;
   };
 
@@ -137,12 +133,15 @@ private:
   friend ScanDropoffBucketAndUpdatePDDistances;
   friend StopWhenMaxDistExceeded;
 
-public:
+ public:
   BCHStrategy(const InputGraphT &inputGraph, const CHEnvT &chEnv,
               PDDistances<LabelSetT> &distances, RequestState &requestState,
               VehicleToPDLocQueryT &vehicleToPDLocQuery)
-      : inputGraph(inputGraph), ch(chEnv.getCH()), requestState(requestState),
-        vehicleToPDLocQuery(vehicleToPDLocQuery), distances(distances),
+      : inputGraph(inputGraph),
+        ch(chEnv.getCH()),
+        requestState(requestState),
+        vehicleToPDLocQuery(vehicleToPDLocQuery),
+        distances(distances),
         dropoffBuckets(inputGraph.numVertices()),
         fillBucketsSearch(
             chEnv.template getReverseSearch<WriteBucketEntry,
@@ -196,7 +195,7 @@ public:
     } else {
       upperBoundDirectPDDist =
           maxPickupToOriginVehDist + requestState.originalReqDirectDist +
-          maxDestToDropoffVehDist; // read by stopping criterion of searches
+          maxDestToDropoffVehDist;  // read by stopping criterion of searches
     }
 
     // Fill dropoff buckets:
@@ -219,7 +218,7 @@ public:
     if (dropoffId % K != 0) {
       while (dropoffId % K != 0) {
         tailRanks[dropoffId % K] =
-            tailRanks[0]; // fill with copies of first in batch
+            tailRanks[0];  // fill with copies of first in batch
         dropoffOffsets[dropoffId % K] = dropoffOffsets[0];
         ++dropoffId;
       }
@@ -254,7 +253,7 @@ public:
     if (pickupId % K != 0) {
       while (pickupId % K != 0) {
         headRanks[pickupId % K] =
-            headRanks[0]; // fill with copies of first in batch
+            headRanks[0];  // fill with copies of first in batch
         ++pickupId;
       }
       curFirstPickupId = pickupId - K;
@@ -277,7 +276,7 @@ public:
     requestState.stats().pdDistancesStats.initializationTime += time;
   }
 
-private:
+ private:
   void updatePDDistances(const unsigned int firstPickupId,
                          const unsigned int dropoffId,
                          const DistanceLabel &dist) {
@@ -300,4 +299,4 @@ private:
   unsigned int dropoffBatchId;
 };
 
-} // namespace karri::PDDistanceQueryStrategies
+}  // namespace karri::PDDistanceQueryStrategies

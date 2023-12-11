@@ -12,27 +12,31 @@
 namespace CSA {
 
 class Connection {
-
-public:
+ public:
   static const std::string CSV_HEADER;
 
-public:
+ public:
   Connection(const StopId departureStopId = noStop,
              const StopId arrivalStopId = noStop, const int departureTime = -1,
              const int arrivalTime = 0, const TripId tripId = noTripId)
-      : departureStopId(departureStopId), arrivalStopId(arrivalStopId),
-        departureTime(departureTime), arrivalTime(arrivalTime), tripId(tripId) {
-  }
+      : departureStopId(departureStopId),
+        arrivalStopId(arrivalStopId),
+        departureTime(departureTime),
+        arrivalTime(arrivalTime),
+        tripId(tripId) {}
   template <typename CONNECTION_TYPE>
   Connection(const CONNECTION_TYPE &c)
-      : departureStopId(c.departureStopId), arrivalStopId(c.arrivalStopId),
-        departureTime(c.departureTime), arrivalTime(c.arrivalTime),
+      : departureStopId(c.departureStopId),
+        arrivalStopId(c.arrivalStopId),
+        departureTime(c.departureTime),
+        arrivalTime(c.arrivalTime),
         tripId(c.tripId) {}
   Connection(const Connection &c, const int timeOffset, const int tripOffset)
-      : departureStopId(c.departureStopId), arrivalStopId(c.arrivalStopId),
+      : departureStopId(c.departureStopId),
+        arrivalStopId(c.arrivalStopId),
         departureTime(c.departureTime + timeOffset),
-        arrivalTime(c.arrivalTime + timeOffset), tripId(c.tripId + tripOffset) {
-  }
+        arrivalTime(c.arrivalTime + timeOffset),
+        tripId(c.tripId + tripOffset) {}
   Connection(IO::Deserialization &deserialize) {
     this->deserialize(deserialize);
   }
@@ -79,7 +83,7 @@ public:
     arrivalStopId = permutation.permutate(arrivalStopId);
   }
 
-public:
+ public:
   StopId departureStopId{noStop};
   StopId arrivalStopId{noStop};
   int departureTime{-1};
@@ -90,4 +94,4 @@ public:
 const std::string Connection::CSV_HEADER =
     "dep_stop,arr_stop,dep_time,arr_time,trip_id";
 
-} // namespace CSA
+}  // namespace CSA

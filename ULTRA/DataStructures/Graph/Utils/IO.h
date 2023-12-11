@@ -2,18 +2,14 @@
 
 #include <vector>
 
-#include "../Classes/GraphInterface.h"
-
-#include "../Classes/DynamicGraph.h"
-#include "../Classes/EdgeList.h"
-#include "../Classes/StaticGraph.h"
-
-#include "Conversion.h"
-
-#include "../../Geometry/Point.h"
-
 #include "../../../Helpers/Assert.h"
 #include "../../../Helpers/IO/Serialization.h"
+#include "../../Geometry/Point.h"
+#include "../Classes/DynamicGraph.h"
+#include "../Classes/EdgeList.h"
+#include "../Classes/GraphInterface.h"
+#include "../Classes/StaticGraph.h"
+#include "Conversion.h"
 
 namespace Graph {
 
@@ -71,22 +67,14 @@ inline void toEdgeListCSV(const std::string &fileBaseName,
 
   csv << "FromVertex,ToVertex";
 
-  if constexpr (GRAPH::HasEdgeAttribute(TravelTime))
-    csv << ",TravelTime";
-  if constexpr (GRAPH::HasEdgeAttribute(Distance))
-    csv << ",Distance";
-  if constexpr (GRAPH::HasEdgeAttribute(ViaVertex))
-    csv << ",ViaVertex";
-  if constexpr (GRAPH::HasEdgeAttribute(Weight))
-    csv << ",Weight";
-  if constexpr (GRAPH::HasEdgeAttribute(Capacity))
-    csv << ",Capacity";
-  if constexpr (GRAPH::HasEdgeAttribute(BundleSize))
-    csv << ",BundleSize";
-  if constexpr (GRAPH::HasEdgeAttribute(ReverseEdge))
-    csv << ",ReverseEdge";
-  if constexpr (GRAPH::HasEdgeAttribute(EdgeFlags))
-    csv << ",EdgeFlags";
+  if constexpr (GRAPH::HasEdgeAttribute(TravelTime)) csv << ",TravelTime";
+  if constexpr (GRAPH::HasEdgeAttribute(Distance)) csv << ",Distance";
+  if constexpr (GRAPH::HasEdgeAttribute(ViaVertex)) csv << ",ViaVertex";
+  if constexpr (GRAPH::HasEdgeAttribute(Weight)) csv << ",Weight";
+  if constexpr (GRAPH::HasEdgeAttribute(Capacity)) csv << ",Capacity";
+  if constexpr (GRAPH::HasEdgeAttribute(BundleSize)) csv << ",BundleSize";
+  if constexpr (GRAPH::HasEdgeAttribute(ReverseEdge)) csv << ",ReverseEdge";
+  if constexpr (GRAPH::HasEdgeAttribute(EdgeFlags)) csv << ",EdgeFlags";
 
   csv << "\n";
 
@@ -276,9 +264,9 @@ inline void fromStrasserBinary(const std::string &fileName, GRAPH &graph,
             static_cast<int>((geo_distance[i] * distanceFactor * 10) + 5) / 10);
       }
       if constexpr (GRAPH::HasEdgeAttribute(TravelTime)) {
-        graph.set(TravelTime, edge,
-                  static_cast<int>((travel_time[i] * timeFactor * 10) + 5) /
-                      10);
+        graph.set(
+            TravelTime, edge,
+            static_cast<int>((travel_time[i] * timeFactor * 10) + 5) / 10);
       }
       (void)edge;
     }
@@ -286,4 +274,4 @@ inline void fromStrasserBinary(const std::string &fileName, GRAPH &graph,
   Assert(graph.satisfiesInvariants());
 }
 
-} // namespace Graph
+}  // namespace Graph

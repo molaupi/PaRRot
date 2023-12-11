@@ -84,11 +84,10 @@ struct LineLengthLimitExceeded : Base, WithFileName, WithFileLine {
   }
 };
 
-} // namespace Error
+}  // namespace Error
 
 class LineReader {
-
-private:
+ private:
   static constexpr int BLOCK_LENGTH = 1 << 24;
   std::future<int> bytesRead;
   FILE *file;
@@ -127,7 +126,7 @@ private:
     }
   }
 
-public:
+ public:
   LineReader() = delete;
   LineReader(const LineReader &) = delete;
   LineReader &operator=(const LineReader &) = delete;
@@ -170,8 +169,7 @@ public:
   unsigned getFileLine() const { return fileLine; }
 
   char *nextLine() {
-    if (dataBegin == dataEnd)
-      return 0;
+    if (dataBegin == dataEnd) return 0;
 
     fileLine++;
 
@@ -223,8 +221,7 @@ public:
   }
 
   ~LineReader() {
-    if (bytesRead.valid())
-      bytesRead.get();
+    if (bytesRead.valid()) bytesRead.get();
     delete[] buffer;
     std::fclose(file);
   }
@@ -379,16 +376,16 @@ struct InvalidSingleCharacter : Base,
   }
 };
 
-} // namespace Error
+}  // namespace Error
 
 using IgnoreColumn = unsigned;
 static constexpr IgnoreColumn IGNORE_NO_COLUMN = 0;
 static constexpr IgnoreColumn IGNORE_EXTRA_COLUMN = 1;
 static constexpr IgnoreColumn IGNORE_MISSING_COLUMN = 2;
 
-template <char... TRIM_CHAR_LIST> struct TrimChars {
-
-private:
+template <char... TRIM_CHAR_LIST>
+struct TrimChars {
+ private:
   constexpr static bool isTrimChar(const char) { return false; }
 
   template <class... OtherTrimChars>
@@ -397,7 +394,7 @@ private:
     return (c == trimChar) || isTrimChar(c, otherTrimChars...);
   }
 
-public:
+ public:
   static void trim(char *&strBegin, char *&strEnd) {
     while (isTrimChar(*strBegin, TRIM_CHAR_LIST...) && strBegin != strEnd) {
       ++strBegin;
@@ -413,20 +410,20 @@ struct NoComment {
   static bool isComment(const char *) { return false; }
 };
 
-template <char... COMMENT_START_CHAR_LIST> struct SingleLineComment {
-
-private:
+template <char... COMMENT_START_CHAR_LIST>
+struct SingleLineComment {
+ private:
   constexpr static bool isCommentStartChar(const char) { return false; }
 
   template <class... OtherCommentStartChars>
-  constexpr static bool
-  isCommentStartChar(const char c, const char commentStartChar,
-                     OtherCommentStartChars... otherCommentStartChars) {
+  constexpr static bool isCommentStartChar(
+      const char c, const char commentStartChar,
+      OtherCommentStartChars... otherCommentStartChars) {
     return c == commentStartChar ||
            isCommentStartChar(c, otherCommentStartChars...);
   }
 
-public:
+ public:
   static bool isComment(const char *line) {
     return isCommentStartChar(*line, COMMENT_START_CHAR_LIST...);
   }
@@ -434,25 +431,25 @@ public:
 
 struct EmptyLineComment {
   static bool isComment(const char *line) {
-    if (*line == '\0')
-      return true;
+    if (*line == '\0') return true;
     while (*line == ' ' || *line == '\t') {
       ++line;
-      if (*line == 0)
-        return true;
+      if (*line == 0) return true;
     }
     return false;
   }
 };
 
-template <char... COMMENT_START_CHAR_LIST> struct SingleAndEmptyLineComment {
+template <char... COMMENT_START_CHAR_LIST>
+struct SingleAndEmptyLineComment {
   static bool isComment(const char *line) {
     return SingleLineComment<COMMENT_START_CHAR_LIST...>::isComment(line) ||
            EmptyLineComment::isComment(line);
   }
 };
 
-template <char SEP> struct NoQuoteEscape {
+template <char SEP>
+struct NoQuoteEscape {
   constexpr static char Sep = SEP;
 
   static const char *findNextColumnEnd(const char *colBegin) {
@@ -465,7 +462,8 @@ template <char SEP> struct NoQuoteEscape {
   static void unescape(char *&, char *&) noexcept {}
 };
 
-template <char SEP, char QUOTE> struct DoubleQuoteEscape {
+template <char SEP, char QUOTE>
+struct DoubleQuoteEscape {
   constexpr static char Sep = SEP;
 
   static const char *findNextColumnEnd(const char *colBegin) {
@@ -476,8 +474,7 @@ template <char SEP, char QUOTE> struct DoubleQuoteEscape {
         do {
           colBegin++;
           while (*colBegin != QUOTE) {
-            if (*colBegin == '\0')
-              throw Error::EscapedStringNotClosed();
+            if (*colBegin == '\0') throw Error::EscapedStringNotClosed();
             colBegin++;
           }
           colBegin++;
@@ -508,27 +505,33 @@ template <char SEP, char QUOTE> struct DoubleQuoteEscape {
 };
 
 struct ThrowOnOverflow {
-  template <class T> static void onOverflow(T &) {
+  template <class T>
+  static void onOverflow(T &) {
     throw Error::IntegerOverflow();
   }
 
-  template <class T> static void onUnderflow(T &) {
+  template <class T>
+  static void onUnderflow(T &) {
     throw Error::IntegerUnderflow();
   }
 };
 
 struct IgnoreOverflow {
-  template <class T> static void onOverflow(T &) {}
+  template <class T>
+  static void onOverflow(T &) {}
 
-  template <class T> static void onUnderflow(T &) {}
+  template <class T>
+  static void onUnderflow(T &) {}
 };
 
 struct SetToMaxOnOverflow {
-  template <class T> static void onOverflow(T &x) {
+  template <class T>
+  static void onOverflow(T &x) {
     x = std::numeric_limits<T>::max();
   }
 
-  template <class T> static void onUnderflow(T &x) {
+  template <class T>
+  static void onUnderflow(T &x) {
     x = std::numeric_limits<T>::min();
   }
 };
@@ -569,8 +572,7 @@ std::vector<std::string> parseLine(char *line) {
 template <class TRIM_POLICY, class QUOTE_POLICY>
 void parseLine(char *line, char **sortedCol, const std::vector<int> &colOrder) {
   for (std::size_t i = 0; i < colOrder.size(); ++i) {
-    if (line == nullptr)
-      throw ::IO::Error::TooFewColumns();
+    if (line == nullptr) throw ::IO::Error::TooFewColumns();
     char *colBegin;
     char *colEnd;
     chopNextColumn<QUOTE_POLICY>(line, colBegin, colEnd);
@@ -582,8 +584,7 @@ void parseLine(char *line, char **sortedCol, const std::vector<int> &colOrder) {
       sortedCol[colOrder[i]] = colBegin;
     }
   }
-  if (line != nullptr)
-    throw ::IO::Error::TooManyColumns();
+  if (line != nullptr) throw ::IO::Error::TooManyColumns();
 }
 
 template <unsigned COLUMN_COUNT, class TRIM_POLICY, class QUOTE_POLICY>
@@ -638,20 +639,21 @@ void parseHeaderLine(
   }
 }
 
-template <class OVERFLOW_POLICY> void parse(const char *col, char &x) {
-  if (!*col)
-    throw Error::InvalidSingleCharacter();
+template <class OVERFLOW_POLICY>
+void parse(const char *col, char &x) {
+  if (!*col) throw Error::InvalidSingleCharacter();
   x = *col;
   col++;
-  if (*col)
-    throw Error::InvalidSingleCharacter();
+  if (*col) throw Error::InvalidSingleCharacter();
 }
 
-template <class OVERFLOW_POLICY> void parse(const char *col, std::string &x) {
+template <class OVERFLOW_POLICY>
+void parse(const char *col, std::string &x) {
   x = col;
 }
 
-template <class OVERFLOW_POLICY> void parse(const char *col, const char *&x) {
+template <class OVERFLOW_POLICY>
+void parse(const char *col, const char *&x) {
   x = col;
 }
 
@@ -678,17 +680,20 @@ void parseUnsignedInteger(const char *col, T &x) {
   }
 }
 
-template <class OVERFLOW_POLICY> void parse(const char *col, unsigned char &x) {
+template <class OVERFLOW_POLICY>
+void parse(const char *col, unsigned char &x) {
   parseUnsignedInteger<OVERFLOW_POLICY>(col, x);
 }
 template <class OVERFLOW_POLICY>
 void parse(const char *col, unsigned short &x) {
   parseUnsignedInteger<OVERFLOW_POLICY>(col, x);
 }
-template <class OVERFLOW_POLICY> void parse(const char *col, unsigned int &x) {
+template <class OVERFLOW_POLICY>
+void parse(const char *col, unsigned int &x) {
   parseUnsignedInteger<OVERFLOW_POLICY>(col, x);
 }
-template <class OVERFLOW_POLICY> void parse(const char *col, unsigned long &x) {
+template <class OVERFLOW_POLICY>
+void parse(const char *col, unsigned long &x) {
   parseUnsignedInteger<OVERFLOW_POLICY>(col, x);
 }
 template <class OVERFLOW_POLICY>
@@ -722,23 +727,28 @@ void parseSignedInteger(const char *col, T &x) {
   parseUnsignedInteger<OVERFLOW_POLICY>(col, x);
 }
 
-template <class OVERFLOW_POLICY> void parse(const char *col, signed char &x) {
+template <class OVERFLOW_POLICY>
+void parse(const char *col, signed char &x) {
   parseSignedInteger<OVERFLOW_POLICY>(col, x);
 }
-template <class OVERFLOW_POLICY> void parse(const char *col, signed short &x) {
+template <class OVERFLOW_POLICY>
+void parse(const char *col, signed short &x) {
   parseSignedInteger<OVERFLOW_POLICY>(col, x);
 }
-template <class OVERFLOW_POLICY> void parse(const char *col, signed int &x) {
+template <class OVERFLOW_POLICY>
+void parse(const char *col, signed int &x) {
   parseSignedInteger<OVERFLOW_POLICY>(col, x);
 }
-template <class OVERFLOW_POLICY> void parse(const char *col, signed long &x) {
+template <class OVERFLOW_POLICY>
+void parse(const char *col, signed long &x) {
   parseSignedInteger<OVERFLOW_POLICY>(col, x);
 }
 template <class OVERFLOW_POLICY>
 void parse(const char *col, signed long long &x) {
   parseSignedInteger<OVERFLOW_POLICY>(col, x);
 }
-template <class OVERFLOW_POLICY> void parse(const char *col, bool &x) {
+template <class OVERFLOW_POLICY>
+void parse(const char *col, bool &x) {
   parseUnsignedInteger<OVERFLOW_POLICY>(col, x);
 }
 
@@ -752,7 +762,8 @@ void parse(
   x = TaggedInteger<TAG, VALUE_TYPE, INVALID, DEFAULT, ADDITIONAL_CASTS...>(y);
 }
 
-template <class T> void parseFloat(const char *col, T &x) {
+template <class T>
+void parseFloat(const char *col, T &x) {
   bool isNegative = false;
   if (*col == '-') {
     isNegative = true;
@@ -816,40 +827,41 @@ template <class T> void parseFloat(const char *col, T &x) {
       x *= base;
     }
   } else {
-    if (*col != '\0')
-      throw Error::NoDigit();
+    if (*col != '\0') throw Error::NoDigit();
   }
 
-  if (isNegative)
-    x = -x;
+  if (isNegative) x = -x;
 }
 
-template <class OVERFLOW_POLICY> void parse(const char *col, float &x) {
+template <class OVERFLOW_POLICY>
+void parse(const char *col, float &x) {
   parseFloat(col, x);
 }
-template <class OVERFLOW_POLICY> void parse(const char *col, double &x) {
+template <class OVERFLOW_POLICY>
+void parse(const char *col, double &x) {
   parseFloat(col, x);
 }
-template <class OVERFLOW_POLICY> void parse(const char *col, long double &x) {
+template <class OVERFLOW_POLICY>
+void parse(const char *col, long double &x) {
   parseFloat(col, x);
 }
 
-template <class OVERFLOW_POLICY, class T> void parse(const char *, T &) {
+template <class OVERFLOW_POLICY, class T>
+void parse(const char *, T &) {
   static_assert(
       sizeof(T) != sizeof(T),
       "Can not parse this type. Only builtin integrals, TaggedInteger, floats, "
       "char, char*, const char* and std::string are supported");
 }
 
-} // namespace Detail
+}  // namespace Detail
 
 template <unsigned COLUMN_COUNT, class TRIM_POLICY = TrimChars<>,
           class QUOTE_POLICY = NoQuoteEscape<','>,
           class OVERFLOW_POLICY = ThrowOnOverflow,
           class COMMENT_POLICY = EmptyLineComment>
 class CSVReader {
-
-private:
+ private:
   LineReader in;
 
   char *row[COLUMN_COUNT];
@@ -858,7 +870,7 @@ private:
 
   std::vector<int> colOrder;
 
-public:
+ public:
   CSVReader() = delete;
   CSVReader(const CSVReader &) = delete;
   CSVReader &operator=(const CSVReader &);
@@ -886,7 +898,8 @@ public:
     readHeader(ignorePolicy);
   }
 
-  template <class... COLUMN_TYPE> bool readRow(COLUMN_TYPE &...cols) {
+  template <class... COLUMN_TYPE>
+  bool readRow(COLUMN_TYPE &...cols) {
     static_assert(sizeof...(COLUMN_TYPE) >= COLUMN_COUNT,
                   "not enough columns specified");
     static_assert(sizeof...(COLUMN_TYPE) <= COLUMN_COUNT,
@@ -896,8 +909,7 @@ public:
         char *line;
         do {
           line = in.nextLine();
-          if (!line)
-            return false;
+          if (!line) return false;
         } while (COMMENT_POLICY::isComment(line));
         Detail::parseLine<TRIM_POLICY, QUOTE_POLICY>(line, row, colOrder);
         parseHelper(0, cols...);
@@ -929,7 +941,7 @@ public:
 
   unsigned getFileLine() const { return in.getFileLine(); }
 
-private:
+ private:
   void init() noexcept {
     std::fill(row, row + COLUMN_COUNT, nullptr);
     colOrder.resize(COLUMN_COUNT);
@@ -967,8 +979,7 @@ private:
       char *line = nullptr;
       do {
         line = in.nextLine();
-        if (!line)
-          throw Error::HeaderMissing();
+        if (!line) throw Error::HeaderMissing();
       } while (COMMENT_POLICY::isComment(line));
       Detail::parseHeaderLine<COLUMN_COUNT, TRIM_POLICY, QUOTE_POLICY>(
           line, colOrder, columnNameAliases, ignorePolicy);
@@ -980,9 +991,10 @@ private:
 };
 
 template <typename PARSE_CONTENT>
-inline void
-readFile(const std::string &fileName, const std::string &contentName,
-         const PARSE_CONTENT &parseContent, const bool verbose = true) {
+inline void readFile(const std::string &fileName,
+                     const std::string &contentName,
+                     const PARSE_CONTENT &parseContent,
+                     const bool verbose = true) {
   if (verbose)
     std::cout << "Reading " << contentName << " from CSV file (" << fileName
               << ")..." << std::flush;
@@ -995,8 +1007,7 @@ readFile(const std::string &fileName, const std::string &contentName,
                 << String::msToString(timer.elapsedMilliseconds()) << ")."
                 << std::endl;
   } else {
-    if (verbose)
-      std::cout << " file not found." << std::endl;
+    if (verbose) std::cout << " file not found." << std::endl;
   }
 }
 
@@ -1017,4 +1028,4 @@ inline void readFile(const std::vector<std::string> &fileNameAliases,
               << std::endl;
 }
 
-} // namespace IO
+}  // namespace IO

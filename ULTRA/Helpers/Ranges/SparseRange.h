@@ -5,15 +5,15 @@
 #include "../Assert.h"
 #include "../Vector/Vector.h"
 
-template <typename ELEMENT> class SparseRange {
-
-public:
+template <typename ELEMENT>
+class SparseRange {
+ public:
   using Element = ELEMENT;
   using Type = SparseRange<Element>;
 
-public:
+ public:
   class Iterator {
-  public:
+   public:
     Iterator(const std::vector<bool> *const flag, const Element i)
         : flag(flag), i(i) {}
     inline bool operator!=(const Iterator &other) const noexcept {
@@ -27,8 +27,7 @@ public:
       return *this;
     }
     inline Iterator &operator+=(const size_t n) noexcept {
-      for (size_t j = 0; j < n; j++)
-        ++(*this);
+      for (size_t j = 0; j < n; j++) ++(*this);
       return *this;
     }
     inline Iterator operator+(const size_t n) const noexcept {
@@ -38,7 +37,7 @@ public:
       return *(*this + n);
     }
 
-  private:
+   private:
     const std::vector<bool> *flag;
     Element i;
   };
@@ -47,10 +46,8 @@ public:
 
   SparseRange(const std::vector<bool> &flag)
       : flag(&flag), beginIndex(0), endIndex(flag.size()) {
-    while (beginIndex < endIndex && !flag[beginIndex])
-      beginIndex++;
-    while (beginIndex < endIndex && !flag[endIndex - 1])
-      endIndex--;
+    while (beginIndex < endIndex && !flag[beginIndex]) beginIndex++;
+    while (beginIndex < endIndex && !flag[endIndex - 1]) endIndex--;
   }
 
   SparseRange(const std::vector<bool> &&) = delete;
@@ -82,7 +79,7 @@ public:
     return endIndex - Element(1);
   }
 
-private:
+ private:
   const std::vector<bool> *flag;
   Element beginIndex;
   Element endIndex;

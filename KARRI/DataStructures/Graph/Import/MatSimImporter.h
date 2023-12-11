@@ -29,10 +29,9 @@
 #include <filesystem>
 #include <fstream>
 #include <memory>
+#include <rapidxml.hpp>
 #include <string>
 #include <unordered_map>
-
-#include <rapidxml.hpp>
 
 #include "DataStructures/Geometry/CoordinateTransformation.h"
 #include "DataStructures/Geometry/LatLng.h"
@@ -57,16 +56,18 @@
 // Then, it repeatedly calls nextEdge to read the next edge from disk and
 // fetches various edge attributes.
 class MatSimImporter {
-public:
+ public:
   MatSimImporter(const std::string &system, const int epsgCode)
       : transportSystem(system),
-        trans(epsgCode, CoordinateTransformation::WGS_84), analysisPeriod(1) {
+        trans(epsgCode, CoordinateTransformation::WGS_84),
+        analysisPeriod(1) {
     currentVertex.id = -1;
   }
 
   // Copy constructor.
   MatSimImporter(const MatSimImporter &im)
-      : transportSystem(im.transportSystem), trans(im.trans),
+      : transportSystem(im.transportSystem),
+        trans(im.trans),
         analysisPeriod(1) {
     currentVertex.id = -1;
   }
@@ -115,8 +116,7 @@ public:
   // Reads the next vertex from disk. Returns false if there are no more
   // vertices.
   bool nextVertex() {
-    if (currentVertexElem == nullptr)
-      return false;
+    if (currentVertexElem == nullptr) return false;
     assert(stringEq(currentVertexElem->name(), "node"));
 
     const auto idAttr = currentVertexElem->first_attribute();
@@ -168,8 +168,7 @@ public:
       auto j = 0;
       for (auto i = 0; permittedSystems[i] != '\0'; ++i)
         if (permittedSystems[i] == ',') {
-          if (open && transportSystem[j] == '\0')
-            break;
+          if (open && transportSystem[j] == '\0') break;
           open = true;
           j = 0;
         } else if (open) {
@@ -236,7 +235,8 @@ public:
   // Returns the value of the specified attribute for the current vertex/edge,
   // or the attribute's default value if the attribute is not part of the file
   // format.
-  template <typename Attr> typename Attr::Type getValue() const {
+  template <typename Attr>
+  typename Attr::Type getValue() const {
     return Attr::defaultValue();
   }
 
@@ -246,7 +246,7 @@ public:
     networkBuffer.reset();
   }
 
-private:
+ private:
   // A vertex record in MATSim network file format.
   struct VertexRecord {
     int id;
@@ -267,31 +267,31 @@ private:
 
   using IdMap = std::unordered_map<std::string, int>;
 
-  const std::string &transportSystem; // The system (car, freight) whose network
-                                      // is to be imported.
+  const std::string &transportSystem;  // The system (car, freight) whose
+                                       // network is to be imported.
   CoordinateTransformation
-      trans; // Transformation from the input coordinate system to WGS84.
+      trans;  // Transformation from the input coordinate system to WGS84.
 
   std::unique_ptr<char[]>
-      networkBuffer; // A buffer in which the network file content is stored.
-  rapidxml::xml_document<> networkDocument; // The XML-based network document.
+      networkBuffer;  // A buffer in which the network file content is stored.
+  rapidxml::xml_document<> networkDocument;  // The XML-based network document.
 
   const rapidxml::xml_node<>
-      *currentVertexElem; // The current vertex element in the XML document.
+      *currentVertexElem;  // The current vertex element in the XML document.
   const rapidxml::xml_node<>
-      *currentEdgeElem;       // The current edge element in the XML document.
-  VertexRecord currentVertex; // The current vertex record.
-  EdgeRecord currentEdge;     // The current edge record.
+      *currentEdgeElem;        // The current edge element in the XML document.
+  VertexRecord currentVertex;  // The current vertex record.
+  EdgeRecord currentEdge;      // The current edge record.
 
-  IdMap origIdToSeqId;   // A map from original vertex IDs to sequential IDs.
-  double analysisPeriod; // The analysis period in hours (capacity is given in
-                         // vehicles/AP).
+  IdMap origIdToSeqId;    // A map from original vertex IDs to sequential IDs.
+  double analysisPeriod;  // The analysis period in hours (capacity is given in
+                          // vehicles/AP).
 };
 
 // Returns the value of the coordinate attribute for the current vertex.
 template <>
-inline CoordinateAttribute::Type
-MatSimImporter::getValue<CoordinateAttribute>() const {
+inline CoordinateAttribute::Type MatSimImporter::getValue<CoordinateAttribute>()
+    const {
   return currentVertex.coordinate;
 }
 
@@ -309,8 +309,8 @@ inline LatLngAttribute::Type MatSimImporter::getValue<LatLngAttribute>() const {
 
 // Returns the value of the capacity attribute for the current edge.
 template <>
-inline CapacityAttribute::Type
-MatSimImporter::getValue<CapacityAttribute>() const {
+inline CapacityAttribute::Type MatSimImporter::getValue<CapacityAttribute>()
+    const {
   return currentEdge.capacity;
 }
 
@@ -329,15 +329,15 @@ inline LengthAttribute::Type MatSimImporter::getValue<LengthAttribute>() const {
 
 // Returns the value of the number of lanes attribute for the current edge.
 template <>
-inline NumLanesAttribute::Type
-MatSimImporter::getValue<NumLanesAttribute>() const {
+inline NumLanesAttribute::Type MatSimImporter::getValue<NumLanesAttribute>()
+    const {
   return currentEdge.numLanes;
 }
 
 // Returns the value of the travel time attribute for the current edge.
 template <>
-inline TravelTimeAttribute::Type
-MatSimImporter::getValue<TravelTimeAttribute>() const {
+inline TravelTimeAttribute::Type MatSimImporter::getValue<TravelTimeAttribute>()
+    const {
   if (currentEdge.freeFlowSpeed != 0)
     return static_cast<int>(3.6 * currentEdge.length /
                             currentEdge.freeFlowSpeed) *

@@ -31,7 +31,7 @@
 
 // An attribute associating a physical length with each edge of a graph.
 class LengthAttribute : public AbstractAttribute<int> {
-public:
+ public:
   // Returns the attribute's default value.
   static Type defaultValue() { return INFTY; }
 
@@ -49,6 +49,6 @@ public:
     return values[e];
   }
 
-protected:
-  static constexpr const char *NAME = "length"; // The attribute's unique name.
+ protected:
+  static constexpr const char *NAME = "length";  // The attribute's unique name.
 };

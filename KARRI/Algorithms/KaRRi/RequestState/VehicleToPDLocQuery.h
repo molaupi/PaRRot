@@ -32,9 +32,7 @@ namespace karri {
 // pickups/dropoffs using a Dijkstra search on the vehicle graph.
 template <typename VehGraphT, typename WeightT = TravelTimeAttribute>
 class VehicleToPDLocQuery {
-
   struct StopWhenAllFound {
-
     explicit StopWhenAllFound(const VehicleToPDLocQuery &query)
         : query(query) {}
 
@@ -48,14 +46,12 @@ class VehicleToPDLocQuery {
   };
 
   struct CheckForPDLoc {
-
     explicit CheckForPDLoc(VehicleToPDLocQuery &query) : query(query) {}
 
     template <typename DistLabelT, typename DistLabelContT>
     bool operator()(const int v, DistLabelT &,
                     const DistLabelContT & /* distanceLabels */) {
-      if (query.vertexHasPDLoc.isSet(v))
-        --query.numVerticesToFind;
+      if (query.vertexHasPDLoc.isSet(v)) --query.numVerticesToFind;
       return false;
     }
 
@@ -66,18 +62,19 @@ class VehicleToPDLocQuery {
   using Search =
       Dijkstra<VehGraphT, WeightT, LabelSet, StopWhenAllFound, CheckForPDLoc>;
 
-public:
+ public:
   VehicleToPDLocQuery(const VehGraphT &graph, const VehGraphT &revGraph)
       : forwardGraph(graph),
         forwardSearch(graph, StopWhenAllFound(*this), CheckForPDLoc(*this)),
         reverseSearch(revGraph, StopWhenAllFound(*this), CheckForPDLoc(*this)),
-        vertexHasPDLoc(graph.numVertices()), runTime(0) {}
+        vertexHasPDLoc(graph.numVertices()),
+        runTime(0) {}
 
   // Takes a vector of PDLoc and a center point and finds the vehicle distances
   // from the center to every PD loc. Stores the found distances in the
   // vehDistFromCenter field of each PD loc.
-  template <typename VectorT> void runForward(VectorT &pdLocs) {
-
+  template <typename VectorT>
+  void runForward(VectorT &pdLocs) {
     Timer timer;
 
     const auto center = forwardGraph.edgeHead(pdLocs[0].loc);
@@ -89,8 +86,7 @@ public:
     for (int i = 1; i < pdLocs.size(); ++i) {
       const auto &pdLoc = pdLocs[i];
       const auto vertexOfSpot = forwardGraph.edgeTail(pdLoc.loc);
-      if (!vertexHasPDLoc.isSet(vertexOfSpot))
-        ++numVerticesToFind;
+      if (!vertexHasPDLoc.isSet(vertexOfSpot)) ++numVerticesToFind;
       vertexHasPDLoc.set(vertexOfSpot);
     }
 
@@ -110,8 +106,8 @@ public:
   // Takes a vector of PDLoc and a center point and finds the vehicle distances
   // from every PD loc to the center. Stores the found distances in the
   // vehDistToCenter field of each PD loc.
-  template <typename VectorT> void runReverse(VectorT &pdLocs) {
-
+  template <typename VectorT>
+  void runReverse(VectorT &pdLocs) {
     Timer timer;
 
     const auto center = forwardGraph.edgeTail(pdLocs[0].loc);
@@ -124,8 +120,7 @@ public:
     for (int i = 1; i < pdLocs.size(); ++i) {
       const auto &pdLoc = pdLocs[i];
       const auto vertexOfSpot = forwardGraph.edgeHead(pdLoc.loc);
-      if (!vertexHasPDLoc.isSet(vertexOfSpot))
-        ++numVerticesToFind;
+      if (!vertexHasPDLoc.isSet(vertexOfSpot)) ++numVerticesToFind;
       vertexHasPDLoc.set(vertexOfSpot);
     }
 
@@ -159,7 +154,7 @@ public:
     return reverseSearch.getNumVerticesSettled();
   }
 
-private:
+ private:
   const VehGraphT &forwardGraph;
   Search forwardSearch;
   Search reverseSearch;
@@ -169,4 +164,4 @@ private:
 
   int64_t runTime;
 };
-} // namespace karri
+}  // namespace karri

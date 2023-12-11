@@ -5,12 +5,11 @@
 namespace TripBased {
 
 class WalkingDistanceData {
-
-public:
+ public:
   WalkingDistanceData(const Data &data)
       : data(data), labels(data.numberOfStopEvents(), INFTY) {}
 
-public:
+ public:
   inline void clear() noexcept {
     std::fill(labels.begin(), labels.end(), INFTY);
   }
@@ -25,8 +24,7 @@ public:
                                 const StopEventId tripEnd,
                                 const int walkingDistance) const noexcept {
     for (StopEventId event = stopEvent; event < tripEnd; event++) {
-      if (labels[event] <= walkingDistance)
-        return event;
+      if (labels[event] <= walkingDistance) return event;
     }
     return tripEnd;
   }
@@ -39,17 +37,16 @@ public:
     for (; currentStart < routeEnd;
          currentStart += tripLength, currentEnd += tripLength) {
       for (StopEventId event = currentStart; event < currentEnd; event++) {
-        if (labels[event] <= walkingDistance)
-          break;
+        if (labels[event] <= walkingDistance) break;
         labels[event] = walkingDistance;
       }
     }
   }
 
-private:
+ private:
   const Data &data;
 
   std::vector<int> labels;
 };
 
-} // namespace TripBased
+}  // namespace TripBased

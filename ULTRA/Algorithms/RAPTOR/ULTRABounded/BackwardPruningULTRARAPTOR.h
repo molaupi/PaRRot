@@ -6,9 +6,7 @@
 #include "../../../DataStructures/Container/Set.h"
 #include "../../../DataStructures/RAPTOR/Data.h"
 #include "../../../DataStructures/RAPTOR/Entities/ArrivalLabel.h"
-
 #include "../Profiler.h"
-
 #include "ForwardPruningULTRARAPTOR.h"
 
 namespace RAPTOR {
@@ -16,13 +14,12 @@ namespace RAPTOR {
 template <typename PROFILER,
           typename INITIAL_TRANSFERS = BucketCHInitialTransfers>
 class BackwardPruningULTRARAPTOR {
-
-public:
+ public:
   using Profiler = PROFILER;
   using InitialTransferType = INITIAL_TRANSFERS;
   using Type = BackwardPruningULTRARAPTOR<Profiler, InitialTransferType>;
 
-public:
+ public:
   struct EarliestArrivalLabel {
     EarliestArrivalLabel() : arrivalTime(never), timestamp(0) {}
     int arrivalTime;
@@ -30,19 +27,27 @@ public:
   };
   using Round = std::vector<EarliestArrivalLabel>;
 
-public:
+ public:
   BackwardPruningULTRARAPTOR(
       const Data &data, const InitialTransferType &initialTransfers,
       const ForwardPruningULTRARAPTOR<Profiler, InitialTransferType>
           &forwardPruningRAPTOR,
       Profiler &profiler)
-      : data(data), initialTransfers(initialTransfers),
-        forwardPruningRAPTOR(forwardPruningRAPTOR), roundOffset(-1),
-        roundIndex(-1), maxTrips(-1), stopsUpdatedByRoute(data.numberOfStops()),
+      : data(data),
+        initialTransfers(initialTransfers),
+        forwardPruningRAPTOR(forwardPruningRAPTOR),
+        roundOffset(-1),
+        roundIndex(-1),
+        maxTrips(-1),
+        stopsUpdatedByRoute(data.numberOfStops()),
         stopsUpdatedByTransfer(data.numberOfStops()),
         routesServingUpdatedStops(data.numberOfRoutes()),
-        sourceVertex(noVertex), targetVertex(noVertex), sourceStop(noStop),
-        targetStop(noStop), sourceDepartureTime(intMax), timestamp(0),
+        sourceVertex(noVertex),
+        targetVertex(noVertex),
+        sourceStop(noStop),
+        targetStop(noStop),
+        sourceDepartureTime(intMax),
+        timestamp(0),
         profiler(profiler) {
     AssertMsg(data.hasImplicitBufferTimes(),
               "Departure buffer times have to be implicit!");
@@ -81,8 +86,9 @@ public:
         .arrivalTime;
   }
 
-private:
-  template <bool RESET = true> inline void clear() noexcept {
+ private:
+  template <bool RESET = true>
+  inline void clear() noexcept {
     roundIndex = roundOffset - 1;
     stopsUpdatedByRoute.clear();
     stopsUpdatedByTransfer.clear();
@@ -194,21 +200,19 @@ private:
 
   inline void relaxInitialTransfers() noexcept {
     for (const Vertex stop : initialTransfers.getBackwardPOIs()) {
-      if (stop == targetStop)
-        continue;
+      if (stop == targetStop) continue;
       AssertMsg(data.isStop(stop), "Reached POI " << stop << " is not a stop!");
       AssertMsg(initialTransfers.getBackwardDistance(stop) != INFTY,
                 "Vertex " << stop << " was not reached!");
-      arrivalByTransfer(StopId(stop),
-                        sourceDepartureTime +
-                            initialTransfers.getBackwardDistance(stop));
+      arrivalByTransfer(
+          StopId(stop),
+          sourceDepartureTime + initialTransfers.getBackwardDistance(stop));
     }
     if (initialTransfers.getDistance() != INFTY) {
       arrivalByTransfer(targetStop,
                         sourceDepartureTime + initialTransfers.getDistance());
     }
-    if (data.isStop(sourceStop))
-      stopsUpdatedByTransfer.insert(sourceStop);
+    if (data.isStop(sourceStop)) stopsUpdatedByTransfer.insert(sourceStop);
   }
 
   inline void relaxIntermediateTransfers() noexcept {
@@ -219,9 +223,9 @@ private:
       const int earliestArrivalTime = previousRoundLabel(stop).arrivalTime;
       relaxShortcuts(stop, earliestArrivalTime);
       if (initialTransfers.getForwardDistance(stop) != INFTY) {
-        arrivalByTransfer(targetStop,
-                          earliestArrivalTime +
-                              initialTransfers.getForwardDistance(stop));
+        arrivalByTransfer(
+            targetStop,
+            earliestArrivalTime + initialTransfers.getForwardDistance(stop));
       }
       stopsUpdatedByTransfer.insert(stop);
     }
@@ -292,12 +296,10 @@ private:
         -arrivalTime)
       return;
     EarliestArrivalLabel &label = currentRoundLabel(stop);
-    if (label.arrivalTime <= arrivalTime)
-      return;
+    if (label.arrivalTime <= arrivalTime) return;
     profiler.countMetric(metric);
     label.arrivalTime = arrivalTime;
-    if (data.isStop(stop))
-      updatedStops.insert(stop);
+    if (data.isStop(stop)) updatedStops.insert(stop);
   }
 
   inline void arrivalByRoute(const StopId stop, const int time) noexcept {
@@ -308,7 +310,7 @@ private:
     arrival(stop, time, stopsUpdatedByTransfer, METRIC_STOPS_BY_TRANSFER);
   }
 
-private:
+ private:
   const Data &data;
   const InitialTransferType &initialTransfers;
   const ForwardPruningULTRARAPTOR<Profiler, InitialTransferType>
@@ -333,4 +335,4 @@ private:
   Profiler &profiler;
 };
 
-} // namespace RAPTOR
+}  // namespace RAPTOR

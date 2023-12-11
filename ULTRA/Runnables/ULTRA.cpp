@@ -1,14 +1,11 @@
-#include "Commands/CH.h"
-#include "Commands/ULTRAPreprocessing.h"
-
+#include "../Helpers/Console/CommandLineParser.h"
+#include "../Helpers/MultiThreading.h"
+#include "../Shell/Shell.h"
 #include "Commands/BenchmarkMcULTRA.h"
 #include "Commands/BenchmarkMultimodal.h"
 #include "Commands/BenchmarkULTRA.h"
-
-#include "../Helpers/Console/CommandLineParser.h"
-#include "../Helpers/MultiThreading.h"
-
-#include "../Shell/Shell.h"
+#include "Commands/CH.h"
+#include "Commands/ULTRAPreprocessing.h"
 using namespace Shell;
 
 int main(int argc, char **argv) {

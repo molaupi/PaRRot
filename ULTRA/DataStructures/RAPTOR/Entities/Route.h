@@ -9,8 +9,7 @@
 namespace RAPTOR {
 
 class Route {
-
-public:
+ public:
   Route(const std::string &name = "", const int type = -1)
       : name(name), type(type) {}
   Route(IO::Deserialization &deserialize) { this->deserialize(deserialize); }
@@ -27,9 +26,9 @@ public:
     deserialize(name, type);
   }
 
-public:
+ public:
   std::string name{""};
   int type{-1};
 };
 
-} // namespace RAPTOR
+}  // namespace RAPTOR

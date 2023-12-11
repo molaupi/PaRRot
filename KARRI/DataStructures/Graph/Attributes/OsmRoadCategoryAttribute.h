@@ -80,7 +80,8 @@ static IsRoadAccessibleByCategory defaultIsCyclistAccessible =
     };
 
 // Make EnumParser usable with OsmRoadCategory.
-template <> void EnumParser<OsmRoadCategory>::initNameToEnumMap() {
+template <>
+void EnumParser<OsmRoadCategory>::initNameToEnumMap() {
   nameToEnum = {{"motorway", OsmRoadCategory::MOTORWAY},
                 {"motorway_link", OsmRoadCategory::MOTORWAY_LINK},
                 {"trunk", OsmRoadCategory::TRUNK},
@@ -126,7 +127,7 @@ inline std::ostream &operator<<(std::ostream &os, const OsmRoadCategory cat) {
 
 // An attribute associating an OSM road category with each edge of a graph.
 class OsmRoadCategoryAttribute : public AbstractAttribute<OsmRoadCategory> {
-public:
+ public:
   // Returns the attribute's default value.
   static Type defaultValue() { return OsmRoadCategory::ROAD; }
 
@@ -144,7 +145,7 @@ public:
     return values[e];
   }
 
-protected:
+ protected:
   static constexpr const char *NAME =
-      "osm_road_category"; // The attribute's unique name.
+      "osm_road_category";  // The attribute's unique name.
 };

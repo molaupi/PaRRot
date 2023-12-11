@@ -5,32 +5,29 @@
 #include <vector>
 
 #include "../../../DataStructures/CH/UPGraphs.h"
-#include "../CH.h"
-#include "../CHUtils.h"
-
+#include "../../../DataStructures/Container/ExternalKHeap.h"
+#include "../../../DataStructures/Container/Set.h"
 #include "../../../Helpers/Console/Progress.h"
 #include "../../../Helpers/Helpers.h"
 #include "../../../Helpers/String/String.h"
 #include "../../../Helpers/Timer.h"
 #include "../../../Helpers/Types.h"
 #include "../../../Helpers/Vector/Vector.h"
-
-#include "../../../DataStructures/Container/ExternalKHeap.h"
-#include "../../../DataStructures/Container/Set.h"
+#include "../CH.h"
+#include "../CHUtils.h"
 
 namespace CH {
 
 template <bool STALL_ON_DEMAND = true, bool DEBUG = false,
           size_t GROUPED_ROUNDS = 6>
 class GroupedParetoUPQuery {
-
-public:
+ public:
   constexpr static bool StallOnDemand = STALL_ON_DEMAND;
   constexpr static bool Debug = DEBUG;
   constexpr static size_t GroupedRounds = GROUPED_ROUNDS;
   using Type = GroupedParetoUPQuery<StallOnDemand, Debug, GroupedRounds>;
 
-private:
+ private:
   struct GroupedLabel {
     GroupedLabel() { clear(); }
 
@@ -50,7 +47,9 @@ private:
 
   struct Distance : public ExternalKHeapElement {
     Distance()
-        : ExternalKHeapElement(), distance(never), parent(noVertex),
+        : ExternalKHeapElement(),
+          distance(never),
+          parent(noVertex),
           timestamp(0) {}
     inline bool hasSmallerKey(const Distance *other) const noexcept {
       return distance < other->distance;
@@ -69,20 +68,24 @@ private:
     int timestamp;
   };
 
-public:
+ public:
   GroupedParetoUPQuery(const TransferGraph &transferGraph,
                        const CHGraph &forward, const CHGraph &backward,
                        const Order &&order,
                        const Vertex::ValueType numberOfStops,
                        const IndexedSet<false, Vertex> &originalTargets)
-      : graph{forward, backward}, searchGraph(transferGraph),
+      : graph{forward, backward},
+        searchGraph(transferGraph),
         contractionOrder(std::move(order)),
         positionInOrder(Construct::Invert, contractionOrder),
         sweepStart(noVertex),
         stops(graph[FORWARD].numVertices(), Vector::id<Vertex>(numberOfStops)),
-        targets(originalTargets), Q(graph[FORWARD].numVertices()),
+        targets(originalTargets),
+        Q(graph[FORWARD].numVertices()),
         distance(graph[FORWARD].numVertices()),
-        groupedLabel(graph[FORWARD].numVertices()), round(-1), timestamp(0),
+        groupedLabel(graph[FORWARD].numVertices()),
+        round(-1),
+        timestamp(0),
         targetId(graph[FORWARD].numVertices(), -1) {
     reorderVertices();
     buildUpwardSweepGraph();
@@ -255,7 +258,7 @@ public:
       for (const Edge edge : targetGraph.graph.edgesFrom(sweepV)) {
         const Vertex u = targetGraph.toVertex[edge];
         const GroupedLabel &uLabel =
-            groupedLabel[u]; // Already known to be up to date
+            groupedLabel[u];  // Already known to be up to date
         const int weight = targetGraph.graph.get(Weight, edge);
         for (size_t i = 0; i <= round; i++) {
           const int newDistance = uLabel.distance[i] + weight;
@@ -286,8 +289,8 @@ public:
       for (const Edge edge : stopGraph.graph.edgesFrom(sweepV)) {
         const Vertex u = stopGraph.toVertex[edge];
         const int weight = stopGraph.graph.get(Weight, edge);
-        GroupedLabel &uLabel = groupedLabel[u]; // Already known to be up to
-                                                // date
+        GroupedLabel &uLabel = groupedLabel[u];  // Already known to be up to
+                                                 // date
         const int newDistance = uLabel.distance[0] + weight;
         const bool update = newDistance < vLabel.distance[0];
         vLabel.distance[0] =
@@ -357,7 +360,7 @@ public:
     return targetGraph.graph.numEdges();
   }
 
-private:
+ private:
   inline void reorderVertices() noexcept {
     reorder(graph[FORWARD]);
     reorder(graph[BACKWARD]);
@@ -366,7 +369,8 @@ private:
     targets.applyPermutation(positionInOrder);
   }
 
-  template <typename GRAPH> inline void reorder(GRAPH &graph) noexcept {
+  template <typename GRAPH>
+  inline void reorder(GRAPH &graph) noexcept {
     graph.applyVertexPermutation(positionInOrder);
     graph.sortEdges(ToVertex);
   }
@@ -377,8 +381,7 @@ private:
     for (const Vertex to : upwardSweepGraph.graph.vertices()) {
       for (const Edge edge : upwardSweepGraph.graph.edgesFrom(to)) {
         const Vertex from = upwardSweepGraph.graph.get(ToVertex, edge);
-        if (sweepStartOf[from] != noVertex)
-          continue;
+        if (sweepStartOf[from] != noVertex) continue;
         sweepStartOf[from] = to;
       }
     }
@@ -390,8 +393,7 @@ private:
                                        const Vertex parentVertex,
                                        const size_t numTrips) noexcept {
     GroupedLabel &vertexLabel = getGroupedLabel(vertex);
-    if (initialDistance >= vertexLabel.distance[numTrips])
-      return;
+    if (initialDistance >= vertexLabel.distance[numTrips]) return;
     vertexLabel.distance[numTrips] = initialDistance;
     vertexLabel.parent[numTrips] = parentVertex;
     if constexpr (FOR_SWEEP) {
@@ -415,8 +417,7 @@ private:
                                         const int initialDistance,
                                         const Vertex parentVertex) noexcept {
     updateDistance(vertex);
-    if (initialDistance >= distance[vertex].distance)
-      return;
+    if (initialDistance >= distance[vertex].distance) return;
     distance[vertex].distance = initialDistance;
     distance[vertex].parent = parentVertex;
     distance[vertex].timestamp = timestamp;
@@ -482,15 +483,13 @@ private:
   }
 
   inline void updateDistanceInitial(const Vertex vertex) noexcept {
-    if (distance[vertex].timestamp == timestamp)
-      return;
+    if (distance[vertex].timestamp == timestamp) return;
     distance[vertex].distance = never;
     distance[vertex].timestamp = timestamp;
   }
 
   inline void updateDistance(const Vertex vertex) noexcept {
-    if (distance[vertex].timestamp == timestamp)
-      return;
+    if (distance[vertex].timestamp == timestamp) return;
     GroupedLabel &label = groupedLabel[vertex];
     distance[vertex].distance = (label.timestamp < queryStartTimestamp)
                                     ? never
@@ -498,7 +497,7 @@ private:
     distance[vertex].timestamp = timestamp;
   }
 
-private:
+ private:
   CHGraph graph[2];
   SweepGraph upwardSweepGraph;
   SweepGraph stopGraph;
@@ -526,4 +525,4 @@ private:
   Timer timer;
 };
 
-} // namespace CH
+}  // namespace CH

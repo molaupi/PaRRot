@@ -2,11 +2,6 @@
 
 #include <vector>
 
-#include "../../Helpers/Vector/Vector.h"
-
-#include "InitialTransfers.h"
-#include "Profiler.h"
-
 #include "../../DataStructures/Container/ExternalKHeap.h"
 #include "../../DataStructures/Container/Map.h"
 #include "../../DataStructures/Container/Set.h"
@@ -14,23 +9,30 @@
 #include "../../DataStructures/RAPTOR/Entities/ArrivalLabel.h"
 #include "../../DataStructures/RAPTOR/Entities/Bags.h"
 #include "../../DataStructures/RAPTOR/Entities/Journey.h"
+#include "../../Helpers/Vector/Vector.h"
+#include "InitialTransfers.h"
+#include "Profiler.h"
 
 namespace RAPTOR {
 
-template <bool TARGET_PRUNING, typename PROFILER = NoProfiler> class MCR {
-
-public:
+template <bool TARGET_PRUNING, typename PROFILER = NoProfiler>
+class MCR {
+ public:
   static constexpr bool TargetPruning = TARGET_PRUNING;
   using Profiler = PROFILER;
   using Type = MCR<TargetPruning, Profiler>;
   using InitialTransferGraph = CHGraph;
   using SourceType = Vertex;
 
-public:
+ public:
   struct Label {
     Label()
-        : arrivalTime(never), walkingDistance(INFTY), parentStop(noStop),
-          parentIndex(-1), parentDepartureTime(never), routeId(noRouteId) {}
+        : arrivalTime(never),
+          walkingDistance(INFTY),
+          parentStop(noStop),
+          parentIndex(-1),
+          parentDepartureTime(never),
+          routeId(noRouteId) {}
 
     template <typename OTHER_LABEL>
     Label(const OTHER_LABEL &parentLabel, const int parentDepartureTime)
@@ -38,18 +40,24 @@ public:
           walkingDistance(parentLabel.walkingDistance),
           parentStop(parentLabel.parentStop),
           parentIndex(parentLabel.parentIndex),
-          parentDepartureTime(parentDepartureTime), transferId(noEdge) {}
+          parentDepartureTime(parentDepartureTime),
+          transferId(noEdge) {}
 
     Label(const Label &parentLabel, const StopId stop, const size_t parentIndex)
         : arrivalTime(parentLabel.arrivalTime),
-          walkingDistance(parentLabel.walkingDistance), parentStop(stop),
+          walkingDistance(parentLabel.walkingDistance),
+          parentStop(stop),
           parentIndex(parentIndex),
-          parentDepartureTime(parentLabel.arrivalTime), transferId(noEdge) {}
+          parentDepartureTime(parentLabel.arrivalTime),
+          transferId(noEdge) {}
 
     Label(const int departureTime, const StopId sourceStop)
-        : arrivalTime(departureTime), walkingDistance(0),
-          parentStop(sourceStop), parentIndex(-1),
-          parentDepartureTime(departureTime), routeId(noRouteId) {}
+        : arrivalTime(departureTime),
+          walkingDistance(0),
+          parentStop(sourceStop),
+          parentIndex(-1),
+          parentDepartureTime(departureTime),
+          routeId(noRouteId) {}
 
     int arrivalTime;
     int walkingDistance;
@@ -81,7 +89,9 @@ public:
 
   struct DijkstraLabel {
     DijkstraLabel()
-        : arrivalTime(never), walkingDistance(INFTY), parentStop(noStop),
+        : arrivalTime(never),
+          walkingDistance(INFTY),
+          parentStop(noStop),
           parentIndex(-1) {}
 
     template <typename LABEL>
@@ -95,11 +105,14 @@ public:
                   const size_t parentIndex, const int travelTime = 0)
         : arrivalTime(parentLabel.arrivalTime + travelTime),
           walkingDistance(parentLabel.walkingDistance + travelTime),
-          parentStop(parentStop), parentIndex(parentIndex) {}
+          parentStop(parentStop),
+          parentIndex(parentIndex) {}
 
     DijkstraLabel(const int departureTime, const StopId sourceStop)
-        : arrivalTime(departureTime), walkingDistance(0),
-          parentStop(sourceStop), parentIndex(0) {}
+        : arrivalTime(departureTime),
+          walkingDistance(0),
+          parentStop(sourceStop),
+          parentIndex(0) {}
 
     inline int getKey() const noexcept { return arrivalTime + walkingDistance; }
 
@@ -124,14 +137,17 @@ public:
   using RouteBagType = RouteBag<RouteLabel>;
   using DijkstraBagType = DijkstraBag<DijkstraLabel>;
 
-public:
+ public:
   MCR(const Data &data, const CH::CH &chData,
       const Profiler &profilerTemplate = Profiler())
-      : data(data), initialTransfers(chData, FORWARD, data.numberOfStops()),
+      : data(data),
+        initialTransfers(chData, FORWARD, data.numberOfStops()),
         stopsUpdatedByRoute(data.numberOfStops() + 1),
         stopsUpdatedByTransfer(data.numberOfStops() + 1),
         routesServingUpdatedStops(data.numberOfRoutes()),
-        sourceVertex(noVertex), targetVertex(noVertex), targetStop(noStop),
+        sourceVertex(noVertex),
+        targetVertex(noVertex),
+        targetStop(noStop),
         sourceDepartureTime(intMax),
         dijkstraBags(data.transferGraph.numVertices()),
         profiler(profilerTemplate) {
@@ -212,8 +228,8 @@ public:
     return getResults(targetStop);
   }
 
-  inline std::vector<WalkingParetoLabel>
-  getResults(const StopId stop) const noexcept {
+  inline std::vector<WalkingParetoLabel> getResults(
+      const StopId stop) const noexcept {
     std::vector<WalkingParetoLabel> result;
     for (size_t round = 0; round < rounds.size(); round += 2) {
       const size_t trueRound = std::min(round + 1, rounds.size() - 1);
@@ -224,7 +240,8 @@ public:
     return result;
   }
 
-  template <bool RESET_CAPACITIES = false> inline void clear() noexcept {
+  template <bool RESET_CAPACITIES = false>
+  inline void clear() noexcept {
     stopsUpdatedByRoute.clear();
     stopsUpdatedByTransfer.clear();
     routesServingUpdatedStops.clear();
@@ -245,7 +262,7 @@ public:
 
   inline Profiler &getProfiler() noexcept { return profiler; }
 
-private:
+ private:
   inline void initialize(const Vertex source, const int departureTime,
                          const Vertex target) noexcept {
     sourceVertex = source;
@@ -311,8 +328,7 @@ private:
                  (trip[stopIndex].departureTime < label.arrivalTime)) {
             trip += tripSize;
           }
-          if (trip[stopIndex].departureTime < label.arrivalTime)
-            continue;
+          if (trip[stopIndex].departureTime < label.arrivalTime) continue;
 
           RouteLabel newLabel;
           newLabel.trip = trip;
@@ -349,8 +365,7 @@ private:
     }
     initialTransfers.template run<true>(sourceVertex, targetVertex);
     for (const Vertex stop : initialTransfers.getForwardPOIs()) {
-      if (stop == targetStop || stop == sourceVertex)
-        continue;
+      if (stop == targetStop || stop == sourceVertex) continue;
       AssertMsg(data.isStop(stop), "Reached POI " << stop << " is not a stop!");
       AssertMsg(initialTransfers.getForwardDistance(stop) != INFTY,
                 "Vertex " << stop << " was not reached!");
@@ -373,8 +388,7 @@ private:
               "Queue still has " << queue.size() << " elements!");
     for (const StopId stop : stopsUpdatedByRoute) {
       stopsUpdatedByTransfer.insert(stop);
-      if (initialTransfers.getBackwardDistance(stop) == INFTY)
-        continue;
+      if (initialTransfers.getBackwardDistance(stop) == INFTY) continue;
       const BagType &bag = previousRound()[stop];
       for (size_t i = 0; i < bag.size(); i++) {
         DijkstraLabel targetLabel(bag[i], stop, i,
@@ -397,13 +411,11 @@ private:
     while (!queue.empty()) {
       DijkstraBagType *uBag = queue.extractFront();
       const DijkstraLabel &uLabel = uBag->extractFront();
-      if (!uBag->heapEmpty())
-        queue.update(uBag);
+      if (!uBag->heapEmpty()) queue.update(uBag);
       const Vertex u = Vertex(uBag - &(dijkstraBags[0]));
       for (Edge edge : data.transferGraph.edgesFrom(u)) {
         const Vertex v = data.transferGraph.get(ToVertex, edge);
-        if (v == targetVertex || v == uLabel.parentStop)
-          continue;
+        if (v == targetVertex || v == uLabel.parentStop) continue;
         profiler.countMetric(METRIC_EDGES);
         DijkstraLabel vLabel(uLabel, data.transferGraph.get(TravelTime, edge));
         arrivalByEdge(v, vLabel);
@@ -435,15 +447,11 @@ private:
   inline void arrivalByRoute(const StopId stop, const Label &label) noexcept {
     AssertMsg(data.isStop(stop), "Stop " << stop << " is out of range!");
     if constexpr (TargetPruning) {
-      if (dijkstraBags[targetVertex].dominates(label))
-        return;
-      if (currentRound()[targetStop].dominates(label))
-        return;
+      if (dijkstraBags[targetVertex].dominates(label)) return;
+      if (currentRound()[targetStop].dominates(label)) return;
     }
-    if (dijkstraBags[stop].dominates(label))
-      return;
-    if (!currentRound()[stop].merge(label))
-      return;
+    if (dijkstraBags[stop].dominates(label)) return;
+    if (!currentRound()[stop].merge(label)) return;
     profiler.countMetric(METRIC_STOPS_BY_TRIP);
     stopsUpdatedByRoute.insert(stop);
   }
@@ -458,10 +466,8 @@ private:
                   << "], arrival time: " << String::secToTime(label.arrivalTime)
                   << " [" << label.arrivalTime << "])!");
     if constexpr (TargetPruning)
-      if (dijkstraBags[targetVertex].dominates(label))
-        return false;
-    if (!dijkstraBags[vertex].template merge<true>(label))
-      return false;
+      if (dijkstraBags[targetVertex].dominates(label)) return false;
+    if (!dijkstraBags[vertex].template merge<true>(label)) return false;
     queue.update(&dijkstraBags[vertex]);
     return true;
   }
@@ -483,8 +489,7 @@ private:
             ? sourceDepartureTime
             : previousRound()[label.parentStop][label.parentIndex].arrivalTime;
     currentRound()[stop].mergeUndominated(Label(label, parentDepartureTime));
-    if (data.isStop(stop))
-      stopsUpdatedByTransfer.insert(stop);
+    if (data.isStop(stop)) stopsUpdatedByTransfer.insert(stop);
   }
 
   inline void getJourney(std::vector<Journey> &journeys, size_t round,
@@ -504,7 +509,7 @@ private:
     journeys.emplace_back(Vector::reverse(journey));
   }
 
-private:
+ private:
   const Data &data;
 
   CoreCHInitialTransfers initialTransfers;
@@ -526,4 +531,4 @@ private:
   Profiler profiler;
 };
 
-} // namespace RAPTOR
+}  // namespace RAPTOR

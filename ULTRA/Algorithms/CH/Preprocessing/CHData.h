@@ -9,8 +9,7 @@
 namespace CH {
 
 class Data {
-
-public:
+ public:
   Data() : numVertices(0) {}
 
   Data(const Data &) = default;
@@ -63,7 +62,7 @@ public:
     applyVertexPermutation(Permutation(Construct::Invert, vertexOrder));
   }
 
-public:
+ public:
   size_t numVertices;
   CHCoreGraph core;
   CHConstructionGraph forwardCH;
@@ -72,4 +71,4 @@ public:
   std::vector<uint16_t> level;
 };
 
-} // namespace CH
+}  // namespace CH

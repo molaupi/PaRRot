@@ -34,14 +34,14 @@ namespace karri {
 
 // Maintains a CH for a fixed edge weight and input graph and offers factory
 // methods for certain kinds of queries on the CH.
-template <typename InputGraphT, typename WeightAttributeT> class CHEnvironment {
-
+template <typename InputGraphT, typename WeightAttributeT>
+class CHEnvironment {
   using DefaultLabelSet = BasicLabelSet<0, ParentInfo::FULL_PARENT_INFO>;
 
   template <typename LabelSetT>
   using StallOnDemandCriterion = typename CHQuery<LabelSetT>::PruningCriterion;
 
-public:
+ public:
   template <typename LabelSetT = DefaultLabelSet>
   using FullCHQuery = CHQuery<LabelSetT>;
 
@@ -119,7 +119,7 @@ public:
                                               {stop, prune});
   }
 
-private:
+ private:
   CH ch;
 };
-} // namespace karri
+}  // namespace karri

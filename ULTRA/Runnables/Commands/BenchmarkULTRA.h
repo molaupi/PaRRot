@@ -18,15 +18,13 @@ using namespace Shell;
 #include "../../Algorithms/RAPTOR/ULTRARAPTOR.h"
 #include "../../Algorithms/TripBased/Query/Query.h"
 #include "../../Algorithms/TripBased/Query/TransitiveQuery.h"
-
 #include "../../DataStructures/CSA/Data.h"
 #include "../../DataStructures/Queries/Queries.h"
 #include "../../DataStructures/RAPTOR/Data.h"
 #include "../../DataStructures/TripBased/Data.h"
 
 class RunTransitiveCSAQueries : public ParameterizedCommand {
-
-public:
+ public:
   RunTransitiveCSAQueries(BasicShell &shell)
       : ParameterizedCommand(
             shell, "runTransitiveCSAQueries",
@@ -57,8 +55,7 @@ public:
 };
 
 class RunDijkstraCSAQueries : public ParameterizedCommand {
-
-public:
+ public:
   RunDijkstraCSAQueries(BasicShell &shell)
       : ParameterizedCommand(
             shell, "runDijkstraCSAQueries",
@@ -89,8 +86,7 @@ public:
 };
 
 class RunHLCSAQueries : public ParameterizedCommand {
-
-public:
+ public:
   RunHLCSAQueries(BasicShell &shell)
       : ParameterizedCommand(
             shell, "runHLCSAQueries",
@@ -121,8 +117,7 @@ public:
 };
 
 class RunULTRACSAQueries : public ParameterizedCommand {
-
-public:
+ public:
   RunULTRACSAQueries(BasicShell &shell)
       : ParameterizedCommand(
             shell, "runULTRACSAQueries",
@@ -151,8 +146,7 @@ public:
 };
 
 class RunTransitiveRAPTORQueries : public ParameterizedCommand {
-
-public:
+ public:
   RunTransitiveRAPTORQueries(BasicShell &shell)
       : ParameterizedCommand(
             shell, "runTransitiveRAPTORQueries",
@@ -185,8 +179,7 @@ public:
 };
 
 class RunDijkstraRAPTORQueries : public ParameterizedCommand {
-
-public:
+ public:
   RunDijkstraRAPTORQueries(BasicShell &shell)
       : ParameterizedCommand(
             shell, "runDijkstraRAPTORQueries",
@@ -222,8 +215,7 @@ public:
 };
 
 class RunHLRAPTORQueries : public ParameterizedCommand {
-
-public:
+ public:
   RunHLRAPTORQueries(BasicShell &shell)
       : ParameterizedCommand(
             shell, "runHLRAPTORQueries",
@@ -260,8 +252,7 @@ public:
 };
 
 class RunULTRARAPTORQueries : public ParameterizedCommand {
-
-public:
+ public:
   RunULTRARAPTORQueries(BasicShell &shell)
       : ParameterizedCommand(
             shell, "runULTRARAPTORQueries",
@@ -296,8 +287,7 @@ public:
 };
 
 class RunTransitiveTBQueries : public ParameterizedCommand {
-
-public:
+ public:
   RunTransitiveTBQueries(BasicShell &shell)
       : ParameterizedCommand(
             shell, "runTransitiveTBQueries",
@@ -328,8 +318,7 @@ public:
 };
 
 class RunULTRATBQueries : public ParameterizedCommand {
-
-public:
+ public:
   RunULTRATBQueries(BasicShell &shell)
       : ParameterizedCommand(
             shell, "runULTRATBQueries",

@@ -7,35 +7,43 @@
 #include "../../../DataStructures/RAPTOR/Data.h"
 #include "../../../DataStructures/RAPTOR/Entities/ArrivalLabel.h"
 #include "../../../DataStructures/RAPTOR/Entities/Bags.h"
+#include "../Profiler.h"
 #include "BackwardPruningRAPTOR.h"
 #include "ForwardPruningRAPTOR.h"
 
-#include "../Profiler.h"
-
 namespace RAPTOR {
 
-template <typename PROFILER = NoProfiler> class BoundedMcRAPTOR {
-
-public:
+template <typename PROFILER = NoProfiler>
+class BoundedMcRAPTOR {
+ public:
   using Profiler = PROFILER;
   using Type = BoundedMcRAPTOR<Profiler>;
 
-private:
+ private:
   struct Label {
     Label()
-        : arrivalTime(never), walkingDistance(INFTY), parentStop(noStop),
-          parentIndex(-1), parentDepartureTime(never), routeId(noRouteId) {}
+        : arrivalTime(never),
+          walkingDistance(INFTY),
+          parentStop(noStop),
+          parentIndex(-1),
+          parentDepartureTime(never),
+          routeId(noRouteId) {}
 
     Label(const Label &parentLabel, const StopId stop, const size_t parentIndex)
         : arrivalTime(parentLabel.arrivalTime),
-          walkingDistance(parentLabel.walkingDistance), parentStop(stop),
+          walkingDistance(parentLabel.walkingDistance),
+          parentStop(stop),
           parentIndex(parentIndex),
-          parentDepartureTime(parentLabel.arrivalTime), transferId(noEdge) {}
+          parentDepartureTime(parentLabel.arrivalTime),
+          transferId(noEdge) {}
 
     Label(const int departureTime, const StopId sourceStop)
-        : arrivalTime(departureTime), walkingDistance(0),
-          parentStop(sourceStop), parentIndex(-1),
-          parentDepartureTime(departureTime), routeId(noRouteId) {}
+        : arrivalTime(departureTime),
+          walkingDistance(0),
+          parentStop(sourceStop),
+          parentIndex(-1),
+          parentDepartureTime(departureTime),
+          routeId(noRouteId) {}
 
     int arrivalTime;
     int walkingDistance;
@@ -91,18 +99,22 @@ private:
   using Round = std::vector<BagType>;
   using RouteBagType = RouteBag<RouteLabel>;
 
-public:
+ public:
   BoundedMcRAPTOR(const Data &data, const Data &backwardData,
                   const Profiler &profilerTemplate = Profiler())
-      : data(data), profiler(profilerTemplate),
+      : data(data),
+        profiler(profilerTemplate),
         forwardPruningRAPTOR(data, profiler),
         backwardPruningRAPTOR(backwardData, forwardPruningRAPTOR, profiler),
-        maxTrips(-1), bestLabelsByRoute(data.numberOfStops()),
+        maxTrips(-1),
+        bestLabelsByRoute(data.numberOfStops()),
         bestLabelsByTransfer(data.numberOfStops()),
         stopsUpdatedByRoute(data.numberOfStops()),
         stopsUpdatedByTransfer(data.numberOfStops()),
-        routesServingUpdatedStops(data.numberOfRoutes()), sourceStop(noStop),
-        targetStop(noStop), sourceDepartureTime(never) {
+        routesServingUpdatedStops(data.numberOfRoutes()),
+        sourceStop(noStop),
+        targetStop(noStop),
+        sourceDepartureTime(never) {
     AssertMsg(data.hasImplicitBufferTimes(),
               "Departure buffer times have to be implicit!");
     profiler.registerExtraRounds(
@@ -128,8 +140,7 @@ public:
     forwardPruningRAPTOR.run(source, departureTime, target, arrivalSlack,
                              tripSlack);
     profiler.doneRound();
-    if (forwardPruningRAPTOR.getAnchorLabels().empty())
-      return;
+    if (forwardPruningRAPTOR.getAnchorLabels().empty()) return;
     profiler.startExtraRound(EXTRA_ROUND_BACKWARD_PRUNING);
     backwardPruningRAPTOR.run(target, source, departureTime, arrivalSlack,
                               tripSlack);
@@ -220,8 +231,8 @@ public:
     return getResults(targetStop);
   }
 
-  inline std::vector<WalkingParetoLabel>
-  getResults(const StopId stop) const noexcept {
+  inline std::vector<WalkingParetoLabel> getResults(
+      const StopId stop) const noexcept {
     std::vector<WalkingParetoLabel> result;
     for (size_t round = 0; round < rounds.size(); round += 2) {
       const size_t trueRound = std::min(round + 1, rounds.size() - 1);
@@ -232,7 +243,8 @@ public:
     return result;
   }
 
-  template <bool RESET_CAPACITIES = false> inline void clear() noexcept {
+  template <bool RESET_CAPACITIES = false>
+  inline void clear() noexcept {
     stopsUpdatedByRoute.clear();
     stopsUpdatedByTransfer.clear();
     routesServingUpdatedStops.clear();
@@ -253,7 +265,7 @@ public:
 
   inline const Profiler &getProfiler() const noexcept { return profiler; }
 
-private:
+ private:
   inline void initialize() noexcept {
     startNewRound();
     Label initialLabel(sourceDepartureTime, sourceStop);
@@ -309,8 +321,7 @@ private:
                  (trip[stopIndex].departureTime < label.arrivalTime)) {
             trip += tripSize;
           }
-          if (trip[stopIndex].departureTime < label.arrivalTime)
-            continue;
+          if (trip[stopIndex].departureTime < label.arrivalTime) continue;
 
           RouteLabel newLabel;
           newLabel.trip = trip;
@@ -398,10 +409,8 @@ private:
     if (-backwardPruningRAPTOR.getArrivalTimeByRoute(
             stop, maxTrips - currentNumberOfTrips()) < label.arrivalTime)
       return;
-    if (bestLabelsByTransfer[targetStop].dominates(label))
-      return;
-    if (!bestLabelsByTransfer[stop].merge(BestLabel(label)))
-      return;
+    if (bestLabelsByTransfer[targetStop].dominates(label)) return;
+    if (!bestLabelsByTransfer[stop].merge(BestLabel(label))) return;
     profiler.countMetric(METRIC_STOPS_BY_TRANSFER);
     currentRound()[stop].mergeUndominated(label);
     AssertMsg(bestLabelsByTransfer[stop].dominates(currentRound()[stop]),
@@ -414,10 +423,8 @@ private:
     if (-backwardPruningRAPTOR.getArrivalTimeByTransfer(
             stop, maxTrips - currentNumberOfTrips()) < label.arrivalTime)
       return;
-    if (bestLabelsByTransfer[targetStop].dominates(label))
-      return;
-    if (!bestLabelsByRoute[stop].merge(BestLabel(label)))
-      return;
+    if (bestLabelsByTransfer[targetStop].dominates(label)) return;
+    if (!bestLabelsByRoute[stop].merge(BestLabel(label))) return;
     bestLabelsByTransfer[stop].merge(BestLabel(label));
     profiler.countMetric(METRIC_STOPS_BY_TRIP);
     currentRound()[stop].mergeUndominated(label);
@@ -449,13 +456,12 @@ private:
     const size_t round =
         std::min(anchorLabel.numberOfTrips * 2 + 1, rounds.size() - 1);
     for (const Label &label : rounds[round][targetStop]) {
-      if (label.arrivalTime == anchorLabel.arrivalTime)
-        return true;
+      if (label.arrivalTime == anchorLabel.arrivalTime) return true;
     }
     return false;
   }
 
-private:
+ private:
   const Data &data;
   Profiler profiler;
   ForwardPruningRAPTOR<Profiler> forwardPruningRAPTOR;
@@ -477,4 +483,4 @@ private:
   int sourceDepartureTime;
 };
 
-} // namespace RAPTOR
+}  // namespace RAPTOR

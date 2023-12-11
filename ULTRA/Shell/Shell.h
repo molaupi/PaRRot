@@ -5,17 +5,15 @@
 #include <string>
 #include <vector>
 
-#include "BasicShell.h"
-#include "ParameterizedCommand.h"
-
 #include "../Helpers/Assert.h"
 #include "../Helpers/FileSystem/FileSystem.h"
+#include "BasicShell.h"
+#include "ParameterizedCommand.h"
 
 namespace Shell {
 
 class Quit : public ParameterizedCommand {
-
-public:
+ public:
   Quit(BasicShell &shell)
       : ParameterizedCommand(shell, "quit",
                              "Type ['Quit' | 'quit' | 'Q' | 'q' | 'Exit' | "
@@ -35,8 +33,7 @@ public:
 };
 
 class Help : public ParameterizedCommand {
-
-public:
+ public:
   Help(BasicShell &shell)
       : ParameterizedCommand(shell, "help",
                              "Type ['Help' | 'help' | 'H' | 'h'] to get an "
@@ -79,8 +76,7 @@ public:
 };
 
 class Dir : public ParameterizedCommand {
-
-public:
+ public:
   Dir(BasicShell &shell)
       : ParameterizedCommand(shell, "dir",
                              "Displays the current working directory.") {}
@@ -89,8 +85,7 @@ public:
 };
 
 class Ls : public ParameterizedCommand {
-
-public:
+ public:
   Ls(BasicShell &shell)
       : ParameterizedCommand(
             shell, "ls",
@@ -118,8 +113,7 @@ public:
 };
 
 class Cd : public ParameterizedCommand {
-
-public:
+ public:
   Cd(BasicShell &shell)
       : ParameterizedCommand(
             shell, "cd",
@@ -138,15 +132,14 @@ public:
     }
   }
 
-private:
+ private:
   inline void error(const std::string &s) {
     shell << "Unknown path / wrong syntax (" << s << ")." << newLine;
   }
 };
 
 class RunScript : public ParameterizedCommand {
-
-public:
+ public:
   RunScript(BasicShell &shell)
       : ParameterizedCommand(shell, "runScript",
                              "Runs all the commands in the script file.") {
@@ -161,8 +154,7 @@ public:
     while (!script.eof()) {
       std::string line;
       getline(script, line);
-      if (line == "")
-        continue;
+      if (line == "") continue;
       shell.printPrompt();
       shell << line << newLine;
       shell.interpretCommand(line);
@@ -171,8 +163,7 @@ public:
 };
 
 class ToggleCommandTimeReporting : public ParameterizedCommand {
-
-public:
+ public:
   ToggleCommandTimeReporting(BasicShell &shell)
       : ParameterizedCommand(shell, "toggleCommandTimeReporting",
                              "Toggles whether the execution time of commands "
@@ -200,8 +191,7 @@ public:
 };
 
 class ToggleParameterReporting : public ParameterizedCommand {
-
-public:
+ public:
   ToggleParameterReporting(BasicShell &shell)
       : ParameterizedCommand(
             shell, "toggleParameterReporting",
@@ -230,8 +220,7 @@ public:
 };
 
 class Shell : public BasicShell {
-
-public:
+ public:
   Shell(std::string programName = "", std::string prompt = "> ")
       : BasicShell(programName, prompt) {
     new Quit(*this);
@@ -245,4 +234,4 @@ public:
   }
 };
 
-} // namespace Shell
+}  // namespace Shell

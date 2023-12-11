@@ -1,12 +1,10 @@
 #pragma once
 
-#include "Classes/GraphInterface.h"
-
-#include "Utils/Utils.h"
-
 #include "Classes/DynamicGraph.h"
 #include "Classes/EdgeList.h"
+#include "Classes/GraphInterface.h"
 #include "Classes/StaticGraph.h"
+#include "Utils/Utils.h"
 
 using NoVertexAttributes = List<>;
 using WithCoordinates = List<Attribute<Coordinates, Geometry::Point>>;
@@ -68,6 +66,30 @@ using CondensationGraph = DynamicGraph<WithSize, WithTravelTime>;
 using BundledGraph = StaticGraph<WithCoordinates, WithTravelTimeAndBundleSize>;
 using DynamicBundledGraph =
     DynamicGraph<WithCoordinates, WithTravelTimeAndBundleSize>;
+
+// ********************************
+// currently, we take the defs from louis
+// ********************************
+// First the Attributes for the Graph
+// using WithPositionAndDistanceLabelsForToAndFrom =
+//     List<Attribute<Position, size_t>, Attribute<DistanceLabelTo, size_t>,
+//          Attribute<DistanceLabelFrom, size_t>>;
+
+// Define the Ride Transfer Graph (for now, as dynamic graph => maybe in the
+// future change to vector<vector<>>?)
+// using RideTransferGraph = DynamicGraph<NoVertexAttributes,
+// WithPositionAndDistanceLabelsForToAndFrom>;
+
+// Helper for the KaRRiCHGraph
+using WithWeightAndUnpackingInfo =
+    List<Attribute<Weight, int>, Attribute<UnpackingInfo, std::pair<int, int>>>;
+using KaRRiCHGraph =
+    StaticGraph<NoVertexAttributes, WithWeightAndUnpackingInfo>;
+using KaRRiGraph =
+    StaticGraph<WithCoordinates,
+                List<Attribute<FromVertex, Vertex>, Attribute<TravelTime, int>,
+                     Attribute<EdgeId, int>>>;
+// ********************************
 
 #include "Utils/Conversion.h"
 #include "Utils/IO.h"

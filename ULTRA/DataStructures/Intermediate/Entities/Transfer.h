@@ -11,11 +11,11 @@ static_assert(false, "Deprecated!");
 namespace Intermediate {
 
 class Transfer {
-
-public:
+ public:
   Transfer(const StopId fromStopId = noStop, const StopId toStopId = noStop,
            const int minTransferTime = 0)
-      : fromStopId(fromStopId), toStopId(toStopId),
+      : fromStopId(fromStopId),
+        toStopId(toStopId),
         minTransferTime(minTransferTime) {}
   Transfer(IO::Deserialization &deserialize) { this->deserialize(deserialize); }
 
@@ -37,10 +37,10 @@ public:
     deserialize(fromStopId, toStopId, minTransferTime);
   }
 
-public:
+ public:
   StopId fromStopId{noStop};
   StopId toStopId{noStop};
   int minTransferTime{0};
 };
 
-} // namespace Intermediate
+}  // namespace Intermediate

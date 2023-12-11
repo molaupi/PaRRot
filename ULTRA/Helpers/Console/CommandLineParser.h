@@ -7,15 +7,13 @@
 #include "../String/String.h"
 
 class CommandLineParser {
-
-public:
+ public:
   CommandLineParser(int argc, char **argv) {
     for (int currentIndex = 1; currentIndex < argc; ++currentIndex) {
       if (argv[currentIndex][0] == '-') {
         std::string key(&argv[currentIndex][1]);
         std::string value("");
-        if ((currentIndex + 1) < argc)
-          value.assign(argv[currentIndex + 1]);
+        if ((currentIndex + 1) < argc) value.assign(argv[currentIndex + 1]);
         arguments[key] = value;
       }
     }
@@ -54,6 +52,6 @@ public:
 
   inline size_t numberOfArguments() const noexcept { return arguments.size(); }
 
-private:
+ private:
   std::map<std::string, std::string> arguments;
 };

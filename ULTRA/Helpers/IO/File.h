@@ -1,9 +1,10 @@
 #pragma once
 
+#include <stdio.h>
+
 #include <fstream>
 #include <iomanip>
 #include <iostream>
-#include <stdio.h>
 #include <string>
 #include <vector>
 
@@ -21,8 +22,8 @@ inline FILE *openFile(const std::string &fileName) noexcept {
   return file;
 }
 
-inline FILE *
-openFile(const std::vector<std::string> &fileNameAliases) noexcept {
+inline FILE *openFile(
+    const std::vector<std::string> &fileNameAliases) noexcept {
   FILE *file;
   for (const std::string &fileName : fileNameAliases) {
     file = std::fopen(fileName.c_str(), "rb");
@@ -43,8 +44,7 @@ openFile(const std::vector<std::string> &fileNameAliases) noexcept {
 // ################################################## IFStream
 // ###################################################################//
 class IFStream {
-
-public:
+ public:
   IFStream(const IFStream &other) = delete;
   IFStream &operator=(const IFStream &other) = delete;
 
@@ -97,15 +97,14 @@ public:
   }
   inline void read(char *s, std::streamsize n) noexcept { stream->read(s, n); }
 
-private:
+ private:
   std::ifstream *stream;
 };
 
 // ################################################## OFStream
 // ###################################################################//
 class OFStream {
-
-public:
+ public:
   OFStream(const OFStream &other) = delete;
   OFStream &operator=(const OFStream &other) = delete;
 
@@ -152,7 +151,8 @@ public:
     return *this;
   }
 
-  template <typename T> OFStream &operator<<(const T &t) noexcept {
+  template <typename T>
+  OFStream &operator<<(const T &t) noexcept {
     (*stream) << t;
     return *this;
   }
@@ -172,8 +172,8 @@ public:
     stream->write(s, n);
   }
 
-private:
+ private:
   std::ofstream *stream;
 };
 
-} // namespace IO
+}  // namespace IO

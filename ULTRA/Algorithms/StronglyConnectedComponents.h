@@ -4,22 +4,20 @@
 #include <string>
 #include <vector>
 
-#include "DepthFirstSearch.h"
-
 #include "../Helpers/Assert.h"
 #include "../Helpers/Meta.h"
 #include "../Helpers/Types.h"
+#include "DepthFirstSearch.h"
 
 template <typename GRAPH, bool DEBUG = true, bool IGNORE_REVERSE_EDGES = false>
 class StronglyConnectedComponents {
-
-public:
+ public:
   using Graph = GRAPH;
   constexpr static bool Debug = DEBUG;
   constexpr static bool IgnoreReverseEdges = IGNORE_REVERSE_EDGES;
   using Type = StronglyConnectedComponents<Graph, Debug, IgnoreReverseEdges>;
 
-public:
+ public:
   struct VertexLabelWithoutParent {
     VertexLabelWithoutParent() : index(-1), lowlink(-1), onStack(false) {}
     inline void setParent(const Vertex) const noexcept {}
@@ -45,7 +43,7 @@ public:
   using VertexLabel = Meta::IF<IgnoreReverseEdges, VertexLabelWithParent,
                                VertexLabelWithoutParent>;
 
-public:
+ public:
   StronglyConnectedComponents(const Graph &graph)
       : graph(graph), index(0), componentCount(0) {}
 
@@ -70,11 +68,11 @@ public:
       AssertMsg(vertex < component.size(),
                 "vertex " << vertex << " is out of range (0, "
                           << component.size() << ")!");
-      AssertMsg(component[vertex] >= 0 &&
-                    size_t(component[vertex]) < sizes.size(),
-                "Component of vertex " << vertex << " is " << component[vertex]
-                                       << ", but should be less than "
-                                       << sizes.size() << "!");
+      AssertMsg(
+          component[vertex] >= 0 && size_t(component[vertex]) < sizes.size(),
+          "Component of vertex " << vertex << " is " << component[vertex]
+                                 << ", but should be less than " << sizes.size()
+                                 << "!");
       sizes[component[vertex]]++;
     }
     return sizes;
@@ -133,7 +131,7 @@ public:
       std::cout << "done (" << numComponents() << " components)." << std::endl;
   }
 
-private:
+ private:
   inline void initialize() noexcept {
     std::vector<VertexLabel>(graph.numVertices()).swap(label);
     std::vector<int>(graph.numVertices(), -1).swap(component);
@@ -176,8 +174,7 @@ private:
           const Vertex w = graph.get(ToVertex, edge);
           label[w].index = index;
           label[w].lowlink = index;
-          if (IgnoreReverseEdges)
-            label[w].setParent(v);
+          if (IgnoreReverseEdges) label[w].setParent(v);
           index++;
           push(w);
         },
@@ -185,11 +182,9 @@ private:
           // Traverse non tree Edge
           const Vertex w = graph.get(ToVertex, edge);
           if (IgnoreReverseEdges) {
-            if (label[v].hasParent(w))
-              return;
+            if (label[v].hasParent(w)) return;
           }
-          if (!contains(w))
-            return;
+          if (!contains(w)) return;
           label[v].lowlink = std::min(label[v].lowlink, label[w].index);
         },
         [&](const Edge edge, const Vertex v) {
@@ -244,7 +239,7 @@ private:
     return v;
   }
 
-private:
+ private:
   const Graph &graph;
 
   std::vector<VertexLabel> label;

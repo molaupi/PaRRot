@@ -24,6 +24,8 @@
 
 #pragma once
 
+#include <routingkit/nested_dissection.h>
+
 #include "Algorithms/CCH/CCHMetric.h"
 #include "Algorithms/CCH/EliminationTreeQuery.h"
 #include "Algorithms/CH/CH.h"
@@ -32,18 +34,15 @@
 #include "Algorithms/Dijkstra/Dijkstra.h"
 #include "DataStructures/Labels/BasicLabelSet.h"
 
-#include <routingkit/nested_dissection.h>
-
 namespace karri {
 
 // Maintains a CH for a fixed edge weight and input graph and offers factory
 // methods for certain kinds of queries on the CH.
 template <typename InputGraphT, typename WeightAttributeT>
 class CCHEnvironment {
-
   using DefaultLabelSet = BasicLabelSet<0, ParentInfo::FULL_PARENT_INFO>;
 
-public:
+ public:
   template <typename LabelSetT = DefaultLabelSet>
   using FullCHQuery = EliminationTreeQuery<LabelSetT>;
 
@@ -170,10 +169,10 @@ public:
     minimumWeightedCH = currentMetric.buildMinimumWeightedCH();
   }
 
-private:
+ private:
   const InputGraphT &inputGraph;
   CCH cch;
   CCHMetric currentMetric;
   CH minimumWeightedCH;
 };
-} // namespace karri
+}  // namespace karri

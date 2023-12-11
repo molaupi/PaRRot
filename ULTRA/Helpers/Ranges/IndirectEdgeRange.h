@@ -2,13 +2,13 @@
 
 #include "../../DataStructures/Graph/Classes/GraphInterface.h"
 
-template <typename GRAPH> class IndirectEdgeRange {
-
-public:
+template <typename GRAPH>
+class IndirectEdgeRange {
+ public:
   using Graph = GRAPH;
   using Type = IndirectEdgeRange<Graph>;
 
-private:
+ private:
   using VertexRange = decltype(std::declval<Graph>().vertices());
   using VertexIterator = decltype(std::declval<VertexRange>().begin());
 
@@ -16,19 +16,20 @@ private:
       decltype(std::declval<Graph>().edgesFrom(std::declval<Vertex>()));
   using EdgeIterator = decltype(std::declval<EdgeRange>().begin());
 
-public:
+ public:
   class Iterator {
-  private:
+   private:
     struct InnerIerator {
       EdgeRange currentEdgeRange;
       EdgeIterator currentEdge;
       EdgeIterator endEdge;
     };
 
-  public:
+   public:
     Iterator(const IndirectEdgeRange *const indirectEdgeRange,
              const VertexIterator &currentVertex)
-        : indirectEdgeRange(indirectEdgeRange), currentVertex(currentVertex),
+        : indirectEdgeRange(indirectEdgeRange),
+          currentVertex(currentVertex),
           undefined(true) {
       if (currentVertex != indirectEdgeRange->endVertex) {
         inner.currentEdgeRange =
@@ -63,7 +64,7 @@ public:
       return *(*this + n);
     }
 
-  private:
+   private:
     inline void checkCurrentEdge() noexcept {
       if (!(inner.currentEdge != inner.endEdge)) {
         ++currentVertex;
@@ -80,7 +81,7 @@ public:
       }
     }
 
-  private:
+   private:
     const IndirectEdgeRange *indirectEdgeRange;
     VertexIterator currentVertex;
     union {
@@ -121,7 +122,7 @@ public:
     return begin()[size() - 1];
   }
 
-private:
+ private:
   const Graph *graph;
   VertexRange vertices;
   VertexIterator endVertex;

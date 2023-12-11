@@ -7,20 +7,18 @@
 #include "../../../Helpers/Console/Progress.h"
 #include "../../../Helpers/MultiThreading.h"
 #include "../../../Helpers/Timer.h"
-
 #include "MultimodalMcShortcutSearch.h"
 
 namespace TripBased {
 
 template <bool DEBUG = false, int TIME_FACTOR = 1>
 class MultimodalMcULTRABuilder {
-
-public:
+ public:
   inline static constexpr bool Debug = DEBUG;
   inline static constexpr int TimeFactor = TIME_FACTOR;
   using Type = MultimodalMcULTRABuilder<Debug, TimeFactor>;
 
-public:
+ public:
   MultimodalMcULTRABuilder(const Data &data,
                            const TransferGraph &transitiveTransferGraph)
       : data(data), transitiveTransferGraph(transitiveTransferGraph) {
@@ -65,12 +63,12 @@ public:
       }
     }
 
-    std::sort(shortcuts.begin(), shortcuts.end(),
-              [](const Shortcut &a, const Shortcut &b) {
-                return (a.origin < b.origin) ||
-                       ((a.origin == b.origin) &&
-                        (a.destination < b.destination));
-              });
+    std::sort(
+        shortcuts.begin(), shortcuts.end(),
+        [](const Shortcut &a, const Shortcut &b) {
+          return (a.origin < b.origin) ||
+                 ((a.origin == b.origin) && (a.destination < b.destination));
+        });
     stopEventGraph
         .addEdge(Vertex(shortcuts[0].origin), Vertex(shortcuts[0].destination))
         .set(TravelTime, shortcuts[0].walkingDistance);
@@ -96,10 +94,10 @@ public:
     return stopEventGraph;
   }
 
-private:
+ private:
   const Data &data;
   const TransferGraph &transitiveTransferGraph;
   DynamicTransferGraph stopEventGraph;
 };
 
-} // namespace TripBased
+}  // namespace TripBased

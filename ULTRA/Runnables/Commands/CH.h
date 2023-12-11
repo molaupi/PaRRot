@@ -3,15 +3,13 @@
 #include <string>
 #include <vector>
 
-#include "../../Helpers/MultiThreading.h"
-
-#include "../../DataStructures/CSA/Data.h"
-#include "../../DataStructures/Intermediate/Data.h"
-#include "../../DataStructures/RAPTOR/Data.h"
-
 #include "../../Algorithms/CH/CH.h"
 #include "../../Algorithms/CH/Preprocessing/BidirectionalWitnessSearch.h"
 #include "../../Algorithms/CH/Preprocessing/CHBuilder.h"
+#include "../../DataStructures/CSA/Data.h"
+#include "../../DataStructures/Intermediate/Data.h"
+#include "../../DataStructures/RAPTOR/Data.h"
+#include "../../Helpers/MultiThreading.h"
 #include "../../Shell/Shell.h"
 using namespace Shell;
 
@@ -53,10 +51,10 @@ inline CH::CH finalizeCH(CH_BUILDER &&chBuilder,
 
 template <typename PROFILER, typename WITNESS_SEARCH, typename GRAPH,
           typename KEY_FUNCTION, typename STOP_CRITERION = StopCriterion>
-inline CH::CH
-buildCH(GRAPH &originalGraph, const std::string &orderOutputFile,
-        const std::string &chOutputFile, const KEY_FUNCTION &keyFunction,
-        const STOP_CRITERION &stopCriterion = StopCriterion()) noexcept {
+inline CH::CH buildCH(
+    GRAPH &originalGraph, const std::string &orderOutputFile,
+    const std::string &chOutputFile, const KEY_FUNCTION &keyFunction,
+    const STOP_CRITERION &stopCriterion = StopCriterion()) noexcept {
   TravelTimeGraph graph;
   Graph::copy(originalGraph, graph);
   Graph::printInfo(graph);
@@ -69,8 +67,7 @@ buildCH(GRAPH &originalGraph, const std::string &orderOutputFile,
 }
 
 class BuildCH : public ParameterizedCommand {
-
-public:
+ public:
   BuildCH(BasicShell &shell)
       : ParameterizedCommand(
             shell, "buildCH",
@@ -92,7 +89,7 @@ public:
     }
   }
 
-private:
+ private:
   template <typename PROFILER>
   inline void chooseWitnessSearch() const noexcept {
     if (getParameter("Witness search type") == "normal") {
@@ -114,8 +111,7 @@ private:
 };
 
 class BuildCoreCH : public ParameterizedCommand {
-
-public:
+ public:
   BuildCoreCH(BasicShell &shell)
       : ParameterizedCommand(shell, "buildCoreCH",
                              "Computes a core-CH for the input network, where "
@@ -140,8 +136,9 @@ public:
     }
   }
 
-private:
-  template <typename PROFILER> inline void chooseWitnessSearch() noexcept {
+ private:
+  template <typename PROFILER>
+  inline void chooseWitnessSearch() noexcept {
     const std::string witnessSearchType = getParameter("Witness search type");
     if (witnessSearchType == "normal") {
       chooseNetworkType<PROFILER, UnidirectionalWitnessSearch<PROFILER>>();

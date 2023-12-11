@@ -24,6 +24,8 @@
 
 #pragma once
 
+#include <type_traits>
+
 #include "Algorithms/Buckets/DynamicBucketContainer.h"
 #include "Algorithms/Buckets/SortedBucketContainer.h"
 #include "Algorithms/CH/CH.h"
@@ -34,13 +36,11 @@
 #include "BucketEntryWithLeeway.h"
 #include "DataStructures/Containers/Subset.h"
 #include "Tools/Timer.h"
-#include <type_traits>
 
 namespace karri {
 
 template <typename InputGraphT, typename CHEnvT, bool SORTED_BUCKETS>
 class EllipticBucketsEnvironment {
-
   using Entry = BucketEntryWithLeeway;
 
   struct DoesEntryHaveLargerRemainingLeeway {
@@ -76,7 +76,7 @@ class EllipticBucketsEnvironment {
     std::vector<int> &searchSpace;
   };
 
-public:
+ public:
   static constexpr bool SORTED_BY_REM_LEEWAY = SORTED_BUCKETS;
 
   using BucketContainer = std::conditional_t<
@@ -88,8 +88,11 @@ public:
                              const RouteState &routeState,
                              const InputConfig &inputConfig,
                              karri::stats::UpdatePerformanceStats &stats)
-      : inputGraph(inputGraph), ch(chEnv.getCH()), routeState(routeState),
-        inputConfig(inputConfig), sourceBuckets(inputGraph.numVertices()),
+      : inputGraph(inputGraph),
+        ch(chEnv.getCH()),
+        routeState(routeState),
+        inputConfig(inputConfig),
+        sourceBuckets(inputGraph.numVertices()),
         targetBuckets(inputGraph.numVertices()),
         forwardSearchFromNewStop(chEnv.getForwardTopologicalSearch(
             StoreSearchSpace(searchSpace),
@@ -101,9 +104,11 @@ public:
             chEnv.getForwardSearch({}, StopWhenLeewayExceeded(currentLeeway))),
         reverseSearchFromNextStop(
             chEnv.getReverseSearch({}, StopWhenLeewayExceeded(currentLeeway))),
-        currentLeeway(INFTY), searchSpace(),
+        currentLeeway(INFTY),
+        searchSpace(),
         descendentHasEntry(inputGraph.numVertices()),
-        deleteSearchSpace(inputGraph.numVertices()), stats(stats) {}
+        deleteSearchSpace(inputGraph.numVertices()),
+        stats(stats) {}
 
   const BucketContainer &getSourceBuckets() const { return sourceBuckets; }
 
@@ -163,13 +168,11 @@ public:
 
   void updateLeewayInSourceBucketsForAllStopsOf(const Vehicle &veh) {
     const auto numStops = routeState.numStopsOf(veh.vehicleId);
-    if (numStops <= 1)
-      return;
+    if (numStops <= 1) return;
     int64_t numVerticesVisited = 0, numEntriesScanned = 0;
     Timer timer;
     auto updateSourceLeeway = [&](BucketEntryWithLeeway &e) {
-      if (routeState.vehicleIdOf(e.targetId) != veh.vehicleId)
-        return false;
+      if (routeState.vehicleIdOf(e.targetId) != veh.vehicleId) return false;
       const auto oldLeeway = e.leeway;
       e.leeway = routeState.leewayOfLegStartingAt(e.targetId);
       return e.leeway != oldLeeway;
@@ -201,13 +204,11 @@ public:
 
   void updateLeewayInTargetBucketsForAllStopsOf(const Vehicle &veh) {
     const auto numStops = routeState.numStopsOf(veh.vehicleId);
-    if (numStops <= 1)
-      return;
+    if (numStops <= 1) return;
     int64_t numVerticesVisited = 0, numEntriesScanned = 0;
     Timer timer;
     auto updateTargetLeeway = [&](BucketEntryWithLeeway &e) {
-      if (routeState.vehicleIdOf(e.targetId) != veh.vehicleId)
-        return false;
+      if (routeState.vehicleIdOf(e.targetId) != veh.vehicleId) return false;
       const auto oldLeeway = e.leeway;
       e.leeway = routeState.leewayOfLegStartingAt(
           routeState.idOfPreviousStopOf(e.targetId));
@@ -252,7 +253,7 @@ public:
     deleteBucketEntries(stopId, root, ch.downwardGraph(), targetBuckets);
   }
 
-private:
+ private:
   // Searches for inserting new stops: Topo search from/to new stop, regular CH
   // searches to/from neighboring stops.
   using SearchFromNewStop =
@@ -373,4 +374,4 @@ private:
 
   karri::stats::UpdatePerformanceStats &stats;
 };
-} // namespace karri
+}  // namespace karri

@@ -6,12 +6,11 @@
 #include <string>
 #include <vector>
 
-#include "Vector.h"
-
 #include "../Assert.h"
 #include "../ConstructorTags.h"
 #include "../IO/Serialization.h"
 #include "../Meta.h"
+#include "Vector.h"
 
 /*
  * Permutation = maps old IDs to new IDs
@@ -26,12 +25,11 @@ inline void swap(std::vector<bool>::reference a,
   a = b;
   b = temp;
 }
-} // namespace std
+}  // namespace std
 #endif
 
 class IdMapping : public std::vector<size_t> {
-
-protected:
+ protected:
   IdMapping(const size_t n = 0) : std::vector<size_t>(n) {}
   IdMapping(const std::vector<size_t> &data) : std::vector<size_t>(data) {}
   IdMapping(std::vector<size_t> &&data)
@@ -97,8 +95,7 @@ protected:
     AssertMsg(isValid(), "The original is not valid!");
     std::vector<bool> seen(size(), false);
     for (size_t i = 0; i < size(); i++) {
-      if (seen[i])
-        continue;
+      if (seen[i]) continue;
       size_t value = i;
       size_t index = (*this)[value];
       while (!seen[index]) {
@@ -115,14 +112,12 @@ protected:
 
   inline const std::vector<size_t> &vector() const noexcept { return *this; }
 
-public:
+ public:
   inline bool isValid() const noexcept {
     std::vector<bool> seen(size(), false);
     for (const size_t entry : (*this)) {
-      if (entry >= size())
-        return false;
-      if (seen[entry])
-        return false;
+      if (entry >= size()) return false;
+      if (seen[entry]) return false;
       seen[entry] = true;
     }
     return true;
@@ -148,8 +143,7 @@ public:
 class Order;
 
 class Permutation : public IdMapping {
-
-public:
+ public:
   Permutation(const size_t n = 0) : IdMapping(n) {}
   explicit Permutation(const std::vector<size_t> &data) : IdMapping(data) {}
   explicit Permutation(std::vector<size_t> &&data)
@@ -174,10 +168,10 @@ public:
   Permutation(const Construct::InvertTag, Order &&order)
       : IdMapping(Construct::Invert, std::move(order)) {}
 
-public:
+ public:
   template <typename T>
-  inline std::vector<T>
-  getPermuted(const std::vector<T> &vector) const noexcept {
+  inline std::vector<T> getPermuted(
+      const std::vector<T> &vector) const noexcept {
     AssertMsg(vector.size() == size(), "Cannot permute a vector of size "
                                            << vector.size()
                                            << " with a permutation of size "
@@ -190,7 +184,8 @@ public:
     return result;
   }
 
-  template <typename T> inline T permutate(const T element) const noexcept {
+  template <typename T>
+  inline T permutate(const T element) const noexcept {
     return T((*this)[element]);
   }
 
@@ -217,10 +212,10 @@ public:
     return result;
   }
 
-protected:
+ protected:
   template <typename T>
-  inline void
-  mapPermutationImplementation(std::vector<T> &vector) const noexcept {
+  inline void mapPermutationImplementation(
+      std::vector<T> &vector) const noexcept {
     for (size_t i = 0; i < vector.size(); i++) {
       const size_t element = vector[i];
       if (element < size()) {
@@ -239,8 +234,7 @@ protected:
 };
 
 class Order : public IdMapping {
-
-public:
+ public:
   Order(const size_t n = 0) : IdMapping(n) {}
   explicit Order(const std::vector<size_t> &data) : IdMapping(data) {}
   explicit Order(std::vector<size_t> &&data) : IdMapping(std::move(data)) {}
@@ -279,10 +273,10 @@ public:
     }
   }
 
-public:
+ public:
   template <typename T>
-  inline std::vector<T>
-  getOrdered(const std::vector<T> &vector) const noexcept {
+  inline std::vector<T> getOrdered(
+      const std::vector<T> &vector) const noexcept {
     std::vector<T> result;
     result.reserve(size());
     for (size_t i = 0; i < size(); i++) {

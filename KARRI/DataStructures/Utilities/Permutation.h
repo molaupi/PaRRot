@@ -37,7 +37,7 @@
 // A permutation is a rearrangement of members of a sequence into a new
 // sequence.
 class Permutation {
-public:
+ public:
   // A const iterator type referring to a new location.
   using ConstIterator = std::vector<int32_t>::const_iterator;
 
@@ -118,7 +118,8 @@ public:
 
   // Reorders the elements in the specified container according to this
   // permutation.
-  template <typename ContT> void applyTo(ContT &cont) const {
+  template <typename ContT>
+  void applyTo(ContT &cont) const {
     assert(validate());
     assert(cont.size() == size());
     ContT temp(cont.size());
@@ -144,7 +145,7 @@ public:
   // Writes the permutation to the specified binary file.
   void writeTo(std::ofstream &out) const { bio::write(out, permutation); }
 
-private:
+ private:
   std::vector<int32_t>
-      permutation; // permutation[i] is the new location of the element at i.
+      permutation;  // permutation[i] is the new location of the element at i.
 };

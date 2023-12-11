@@ -66,4 +66,4 @@ struct RouteLabel {
   std::vector<int> departureTimes;
 };
 
-} // namespace TripBased
+}  // namespace TripBased

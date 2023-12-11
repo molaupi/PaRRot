@@ -3,7 +3,7 @@ FLAGS=-std=c++17 -pipe
 OPTIMIZATION=-march=native -O3
 DEBUG=-rdynamic -Werror -Wpedantic -pedantic-errors -Wall -Wextra -Wparentheses -Wfatal-errors -D_GLIBCXX_DEBUG -g -fno-omit-frame-pointer
 RELEASE=-ffast-math -ftree-vectorize -Wfatal-errors -DNDEBUG
-
+LIBRARY_PATH=-L /usr/lib
 
 all: NetworkRelease ULTRARelease ULTRAPHASTRelease
 
@@ -25,3 +25,8 @@ ULTRAPHASTDebug:
 ULTRAPHASTRelease:
 	$(CC) $(FLAGS) $(OPTIMIZATION) $(RELEASE) -o ULTRAPHAST ULTRAPHAST.cpp
 
+KaRRiDebug:
+	$(CC) $(INCLUDE) -I /usr/include/routingkit $(LIBRARY_PATH) $(FLAGS) $(OPTIMIZATION) $(RELEASE) -g -O0 -o KaRRi KaRRi.cpp -lroutingkit
+
+KaRRiRelease:
+	$(CC) $(INCLUDE) -I /usr/include/routingkit $(LIBRARY_PATH) $(FLAGS) $(OPTIMIZATION) $(RELEASE) -o KaRRi KaRRi.cpp -lroutingkit

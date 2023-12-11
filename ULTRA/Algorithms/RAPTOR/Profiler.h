@@ -6,7 +6,6 @@
 #include <vector>
 
 #include "../../DataStructures/RAPTOR/Data.h"
-
 #include "../../Helpers/Timer.h"
 
 namespace RAPTOR {
@@ -70,14 +69,13 @@ constexpr const char *MetricNames[] = {
 };
 
 class NoProfiler {
-
-public:
+ public:
   inline void registerExtraRounds(
       const std::initializer_list<ExtraRound> &) const noexcept {}
-  inline void
-  registerPhases(const std::initializer_list<Phase> &) const noexcept {}
-  inline void
-  registerMetrics(const std::initializer_list<Metric> &) const noexcept {}
+  inline void registerPhases(
+      const std::initializer_list<Phase> &) const noexcept {}
+  inline void registerMetrics(
+      const std::initializer_list<Metric> &) const noexcept {}
 
   inline void initialize() const noexcept {}
 
@@ -95,13 +93,16 @@ public:
 };
 
 class BasicProfiler : public NoProfiler {
-
-public:
+ public:
   BasicProfiler()
-      : numQueries(0), metricValue(NUM_METRICS, 0), roundCount(0),
-        initialTime(0), measureInitialTime(false), totalTime(0) {}
+      : numQueries(0),
+        metricValue(NUM_METRICS, 0),
+        roundCount(0),
+        initialTime(0),
+        measureInitialTime(false),
+        totalTime(0) {}
 
-public:
+ public:
   inline void reset() noexcept {
     numQueries = 0;
     Vector::fill(metricValue, (long long)0);
@@ -156,7 +157,7 @@ public:
               << std::endl;
   }
 
-private:
+ private:
   size_t numQueries;
   std::vector<long long> metricValue;
   size_t roundCount;
@@ -171,7 +172,8 @@ private:
 
 struct RoundData {
   RoundData()
-      : metricValue(NUM_METRICS, 0), phaseTime(NUM_PHASES, 0.0),
+      : metricValue(NUM_METRICS, 0),
+        phaseTime(NUM_PHASES, 0.0),
         totalTime(0.0) {}
 
   inline RoundData &operator+=(const RoundData &other) noexcept {
@@ -248,10 +250,10 @@ struct RoundData {
 };
 
 class SimpleProfiler : public NoProfiler {
-
-public:
+ public:
   SimpleProfiler()
-      : totalTime(0.0), extraRoundData(NUM_EXTRA_ROUNDS),
+      : totalTime(0.0),
+        extraRoundData(NUM_EXTRA_ROUNDS),
         currentRoundData(NULL) {}
 
   inline void registerExtraRounds(
@@ -261,15 +263,15 @@ public:
     }
   }
 
-  inline void
-  registerPhases(const std::initializer_list<Phase> &phaseList) noexcept {
+  inline void registerPhases(
+      const std::initializer_list<Phase> &phaseList) noexcept {
     for (const Phase phase : phaseList) {
       phases.push_back(phase);
     }
   }
 
-  inline void
-  registerMetrics(const std::initializer_list<Metric> &metricList) noexcept {
+  inline void registerMetrics(
+      const std::initializer_list<Metric> &metricList) noexcept {
     for (const Metric metric : metricList) {
       metrics.push_back(metric);
     }
@@ -324,27 +326,24 @@ public:
   }
 
   inline double getPhaseTime(const Phase phase) const noexcept {
-    double result =
-        Vector::sum<long long>(roundData, [&](const RoundData &data) {
-          return data.phaseTime[phase];
-        });
+    double result = Vector::sum<long long>(
+        roundData,
+        [&](const RoundData &data) { return data.phaseTime[phase]; });
     for (const ExtraRound extraRound : extraRounds) {
       result += extraRoundData[extraRound].phaseTime[phase];
     }
     return result;
   }
 
-  inline double
-  getPhaseTimeInExtraRound(const Phase phase,
-                           const ExtraRound extraRound) const noexcept {
+  inline double getPhaseTimeInExtraRound(
+      const Phase phase, const ExtraRound extraRound) const noexcept {
     return extraRoundData[extraRound].phaseTime[phase];
   }
 
   inline long long getMetric(const Metric metric) const noexcept {
-    long long result =
-        Vector::sum<long long>(roundData, [&](const RoundData &data) {
-          return data.metricValue[metric];
-        });
+    long long result = Vector::sum<long long>(
+        roundData,
+        [&](const RoundData &data) { return data.metricValue[metric]; });
     for (const ExtraRound extraRound : extraRounds) {
       result += extraRoundData[extraRound].metricValue[metric];
     }
@@ -365,7 +364,7 @@ public:
     return *this;
   }
 
-private:
+ private:
   inline void printStatistics() const noexcept {
     RoundData::printHeader(metrics, phases);
     RoundData total;
@@ -395,12 +394,15 @@ private:
 };
 
 class AggregateProfiler : public NoProfiler {
-
-public:
+ public:
   AggregateProfiler()
-      : totalTime(0.0), extraRoundData(NUM_EXTRA_ROUNDS),
-        currentRoundData(NULL), inExtraRound(false), numQueries(0),
-        numRounds(0), totalNumRounds(0) {}
+      : totalTime(0.0),
+        extraRoundData(NUM_EXTRA_ROUNDS),
+        currentRoundData(NULL),
+        inExtraRound(false),
+        numQueries(0),
+        numRounds(0),
+        totalNumRounds(0) {}
 
   inline void registerExtraRounds(
       const std::initializer_list<ExtraRound> &extraRoundList) noexcept {
@@ -409,15 +411,15 @@ public:
     }
   }
 
-  inline void
-  registerPhases(const std::initializer_list<Phase> &phaseList) noexcept {
+  inline void registerPhases(
+      const std::initializer_list<Phase> &phaseList) noexcept {
     for (const Phase phase : phaseList) {
       phases.push_back(phase);
     }
   }
 
-  inline void
-  registerMetrics(const std::initializer_list<Metric> &metricList) noexcept {
+  inline void registerMetrics(
+      const std::initializer_list<Metric> &metricList) noexcept {
     for (const Metric metric : metricList) {
       metrics.push_back(metric);
     }
@@ -486,27 +488,24 @@ public:
   }
 
   inline double getPhaseTime(const Phase phase) const noexcept {
-    double result =
-        Vector::sum<long long>(roundData, [&](const RoundData &data) {
-          return data.phaseTime[phase];
-        });
+    double result = Vector::sum<long long>(
+        roundData,
+        [&](const RoundData &data) { return data.phaseTime[phase]; });
     for (const ExtraRound extraRound : extraRounds) {
       result += extraRoundData[extraRound].phaseTime[phase];
     }
     return result / numQueries;
   }
 
-  inline double
-  getPhaseTimeInExtraRound(const Phase phase,
-                           const ExtraRound extraRound) const noexcept {
+  inline double getPhaseTimeInExtraRound(
+      const Phase phase, const ExtraRound extraRound) const noexcept {
     return extraRoundData[extraRound].phaseTime[phase] / numQueries;
   }
 
   inline double getMetric(const Metric metric) const noexcept {
-    double result =
-        Vector::sum<long long>(roundData, [&](const RoundData &data) {
-          return data.metricValue[metric];
-        });
+    double result = Vector::sum<long long>(
+        roundData,
+        [&](const RoundData &data) { return data.metricValue[metric]; });
     for (const ExtraRound extraRound : extraRounds) {
       result += extraRoundData[extraRound].metricValue[metric];
     }
@@ -537,8 +536,8 @@ public:
               << std::endl;
   }
 
-  inline AggregateProfiler &
-  operator+=(const AggregateProfiler &other) noexcept {
+  inline AggregateProfiler &operator+=(
+      const AggregateProfiler &other) noexcept {
     totalTime += other.totalTime;
     if (roundData.size() < other.roundData.size()) {
       roundData.resize(other.roundData.size());
@@ -569,4 +568,4 @@ public:
   size_t totalNumRounds;
 };
 
-} // namespace RAPTOR
+}  // namespace RAPTOR

@@ -6,8 +6,7 @@
 namespace TripBased {
 
 class ShortcutAugmenter {
-
-public:
+ public:
   struct RouteSegmentData {
     RouteSegmentData(const Edge edge, const TripId fromTrip,
                      const StopEventId toEvent)
@@ -61,8 +60,7 @@ public:
             }
           }
           for (const RouteSegmentData &d : reachedRouteSegments.getValues()) {
-            if (d.fromTrip > fromTrip + tripLimit)
-              continue;
+            if (d.fromTrip > fromTrip + tripLimit) continue;
             const Edge edge = d.edge;
             const Vertex toVertex = data.stopEventGraph.get(ToVertex, edge);
             const int travelTime = data.stopEventGraph.get(TravelTime, edge);
@@ -110,4 +108,4 @@ public:
   }
 };
 
-} // namespace TripBased
+}  // namespace TripBased

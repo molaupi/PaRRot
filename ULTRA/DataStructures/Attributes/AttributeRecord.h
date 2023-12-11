@@ -5,22 +5,22 @@
 #include <utility>
 #include <vector>
 
-#include "Attribute.h"
-#include "AttributeHandle.h"
-#include "AttributeNames.h"
-
 #include "../../Helpers/Assert.h"
 #include "../../Helpers/IO/Serialization.h"
 #include "../../Helpers/Meta.h"
 #include "../../Helpers/String/Enumeration.h"
 #include "../../Helpers/Vector/Vector.h"
+#include "Attribute.h"
+#include "AttributeHandle.h"
+#include "AttributeNames.h"
 using Meta::List;
 
-template <typename ATTRIBUTE_LIST> class AttributeRecord;
+template <typename ATTRIBUTE_LIST>
+class AttributeRecord;
 
-template <> class AttributeRecord<List<>> {
-
-public:
+template <>
+class AttributeRecord<List<>> {
+ public:
   using Type = AttributeRecord<List<>>;
   inline constexpr static size_t NumberOfAttributes = 0;
 
@@ -29,47 +29,54 @@ public:
       typename Meta::FindAttributeType<ATTRIBUTE_NAME, List<>>;
 
   template <AttributeNameType ATTRIBUTE_NAME>
-  inline constexpr static bool
-  HasAttribute(const AttributeNameWrapper<ATTRIBUTE_NAME>) noexcept {
+  inline constexpr static bool HasAttribute(
+      const AttributeNameWrapper<ATTRIBUTE_NAME>) noexcept {
     return false;
   }
 
-public:
+ public:
   AttributeRecord() {}
   AttributeRecord(const Type &) {}
   AttributeRecord(Type &&) {}
   Type &operator=(const Type &) noexcept { return *this; }
   Type &operator=(Type &&) noexcept { return *this; }
 
-  template <typename OTHER> AttributeRecord(const OTHER &) {}
-  template <typename OTHER> AttributeRecord(OTHER &&) {}
-  template <typename OTHER> Type &operator=(const OTHER &) noexcept {
+  template <typename OTHER>
+  AttributeRecord(const OTHER &) {}
+  template <typename OTHER>
+  AttributeRecord(OTHER &&) {}
+  template <typename OTHER>
+  Type &operator=(const OTHER &) noexcept {
     return *this;
   }
-  template <typename OTHER> Type &operator=(OTHER &&) noexcept { return *this; }
+  template <typename OTHER>
+  Type &operator=(OTHER &&) noexcept {
+    return *this;
+  }
 
   AttributeRecord(const Type &, const Type &) {}
   template <typename ATTRIBUTES>
   AttributeRecord(const ATTRIBUTES &, const size_t) {}
 
-  template <typename FUNCTION> inline void forEach(FUNCTION &) noexcept {}
+  template <typename FUNCTION>
+  inline void forEach(FUNCTION &) noexcept {}
   template <typename FUNCTION>
   inline void forEach(const FUNCTION &) const noexcept {}
 
   inline std::string toString() const noexcept { return ""; }
 
-protected:
+ protected:
   inline void toString(Enumeration &) const noexcept {}
 };
 
 template <typename ATTRIBUTE, typename... ATTRIBUTE_LIST>
 class AttributeRecord<List<ATTRIBUTE, ATTRIBUTE_LIST...>>
     : public AttributeRecord<List<ATTRIBUTE_LIST...>> {
+ public:
+  template <typename T>
+  friend class AttributeRecord;
 
-public:
-  template <typename T> friend class AttributeRecord;
-
-private:
+ private:
   using Attribute = ATTRIBUTE;
   using Super = AttributeRecord<List<ATTRIBUTE_LIST...>>;
   using ValueType = typename Attribute::Type;
@@ -81,7 +88,8 @@ private:
   using SuperByName =
       AttributeRecord<Meta::FindAttributeList<ATTRIBUTE_NAME, AttributeList>>;
 
-  template <typename T, typename = void> struct IsApplicable : Meta::False {};
+  template <typename T, typename = void>
+  struct IsApplicable : Meta::False {};
 
   template <typename T>
   struct IsApplicable<
@@ -97,7 +105,7 @@ private:
                                               AttributeNameType()),
                                           void())> : Meta::True {};
 
-public:
+ public:
   using Type = AttributeRecord<AttributeList>;
   inline constexpr static size_t NumberOfAttributes =
       Super::NumberOfAttributes + 1;
@@ -107,8 +115,8 @@ public:
       typename Meta::FindAttributeType<ATTRIBUTE_NAME, AttributeList>;
 
   template <AttributeNameType ATTRIBUTE_NAME>
-  inline constexpr static bool
-  HasAttribute(const AttributeNameWrapper<ATTRIBUTE_NAME>) noexcept {
+  inline constexpr static bool HasAttribute(
+      const AttributeNameWrapper<ATTRIBUTE_NAME>) noexcept {
     return Meta::ContainsAttribute<ATTRIBUTE_NAME, AttributeList>();
   }
 
@@ -116,7 +124,7 @@ public:
                                      sizeof...(ATTRIBUTE_LIST) + 1>
       AttributeNames = {ATTRIBUTE::Name, ATTRIBUTE_LIST::Name...};
 
-public:
+ public:
   AttributeRecord() : Super(), value() {}
   AttributeRecord(ValueType value, typename ATTRIBUTE_LIST::Type... values)
       : Super(values...), value(value) {}
@@ -152,7 +160,8 @@ public:
       value = ValueType();
     }
   }
-  template <typename OTHER> Type &operator=(const OTHER &other) noexcept {
+  template <typename OTHER>
+  Type &operator=(const OTHER &other) noexcept {
     Super::operator=(other);
     if constexpr (AttributeRecord<OTHER>::HasAttribute(ThisAttribute)) {
       value = other[ThisAttribute];
@@ -161,7 +170,8 @@ public:
     }
     return *this;
   }
-  template <typename OTHER> Type &operator=(OTHER &&other) noexcept {
+  template <typename OTHER>
+  Type &operator=(OTHER &&other) noexcept {
     Super::operator=(std::move(other));
     if constexpr (AttributeRecord<OTHER>::HasAttribute(ThisAttribute)) {
       value = std::move(other[ThisAttribute]);
@@ -206,8 +216,8 @@ public:
   }
 
   template <AttributeNameType ATTRIBUTE_NAME>
-  inline const AttributeType<ATTRIBUTE_NAME> &
-  operator[](const AttributeNameWrapper<ATTRIBUTE_NAME>) const noexcept {
+  inline const AttributeType<ATTRIBUTE_NAME> &operator[](
+      const AttributeNameWrapper<ATTRIBUTE_NAME>) const noexcept {
     static_assert(HasAttribute(AttributeNameWrapper<ATTRIBUTE_NAME>()),
                   "Current instantiation of AttributeRecord<List<ATTRIBUTE, "
                   "ATTRIBUTE_LIST...>> does not contain an Attribute named "
@@ -215,8 +225,8 @@ public:
     return SuperByName<ATTRIBUTE_NAME>::value;
   }
   template <AttributeNameType ATTRIBUTE_NAME>
-  inline AttributeType<ATTRIBUTE_NAME> &
-  operator[](const AttributeNameWrapper<ATTRIBUTE_NAME>) noexcept {
+  inline AttributeType<ATTRIBUTE_NAME> &operator[](
+      const AttributeNameWrapper<ATTRIBUTE_NAME>) noexcept {
     static_assert(HasAttribute(AttributeNameWrapper<ATTRIBUTE_NAME>()),
                   "Current instantiation of AttributeRecord<List<ATTRIBUTE, "
                   "ATTRIBUTE_LIST...>> does not contain an Attribute named "
@@ -225,8 +235,8 @@ public:
   }
 
   template <AttributeNameType ATTRIBUTE_NAME>
-  inline const AttributeType<ATTRIBUTE_NAME> &
-  get(const AttributeNameWrapper<ATTRIBUTE_NAME>) const noexcept {
+  inline const AttributeType<ATTRIBUTE_NAME> &get(
+      const AttributeNameWrapper<ATTRIBUTE_NAME>) const noexcept {
     static_assert(HasAttribute(AttributeNameWrapper<ATTRIBUTE_NAME>()),
                   "Current instantiation of AttributeRecord<List<ATTRIBUTE, "
                   "ATTRIBUTE_LIST...>> does not contain an Attribute named "
@@ -234,8 +244,8 @@ public:
     return SuperByName<ATTRIBUTE_NAME>::value;
   }
   template <AttributeNameType ATTRIBUTE_NAME>
-  inline AttributeType<ATTRIBUTE_NAME> &
-  get(const AttributeNameWrapper<ATTRIBUTE_NAME>) noexcept {
+  inline AttributeType<ATTRIBUTE_NAME> &get(
+      const AttributeNameWrapper<ATTRIBUTE_NAME>) noexcept {
     static_assert(HasAttribute(AttributeNameWrapper<ATTRIBUTE_NAME>()),
                   "Current instantiation of AttributeRecord<List<ATTRIBUTE, "
                   "ATTRIBUTE_LIST...>> does not contain an Attribute named "
@@ -259,12 +269,12 @@ public:
     return result;
   }
 
-protected:
+ protected:
   inline void toString(Enumeration &enumeration) const noexcept {
     enumeration << Attribute::String << ": " << value << sep;
     Super::toString(enumeration);
   }
 
-protected:
+ protected:
   ValueType value{};
 };

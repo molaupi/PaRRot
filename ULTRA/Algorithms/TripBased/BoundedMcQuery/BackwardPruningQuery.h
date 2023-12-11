@@ -1,10 +1,8 @@
 #pragma once
 
-#include "../../CH/Query/BucketQuery.h"
-
 #include "../../../DataStructures/RAPTOR/Entities/ArrivalLabel.h"
 #include "../../../DataStructures/TripBased/Data.h"
-
+#include "../../CH/Query/BucketQuery.h"
 #include "../Query/Profiler.h"
 #include "ForwardPruningQuery.h"
 #include "ReachedIndexRounds.h"
@@ -15,13 +13,12 @@ namespace TripBased {
 template <typename PROFILER = NoProfiler,
           typename INITIAL_TRANSFERS = RAPTOR::BucketCHInitialTransfers>
 class BackwardPruningQuery {
-
-public:
+ public:
   using Profiler = PROFILER;
   using InitialTransferType = INITIAL_TRANSFERS;
   using Type = BackwardPruningQuery<Profiler, InitialTransferType>;
 
-private:
+ private:
   struct TripLabel {
     TripLabel(const StopEventId begin = noStopEvent,
               const StopEventId end = noStopEvent)
@@ -45,19 +42,29 @@ private:
     int departureTime;
   };
 
-public:
+ public:
   BackwardPruningQuery(const Data &data,
                        const ForwardPruningQuery<Profiler, InitialTransferType>
                            &forwardPruningQuery,
                        const InitialTransferType &bucketQuery,
                        Profiler &profiler)
-      : data(data), forwardPruningQuery(forwardPruningQuery),
-        bucketQuery(bucketQuery), queue(data.numberOfStopEvents()),
-        edgeRanges(data.numberOfStopEvents()), queueSize(0), reachedIndex(data),
-        stopArrivalTimes(data), minArrivalTime(INFTY),
-        edgeLabels(data.stopEventGraph.numEdges()), sourceVertex(noVertex),
-        targetVertex(noVertex), sourceDepartureTime(never), roundOffset(-1),
-        round(-1), maxTrips(-1), properArrivalTimes(data.numberOfStopEvents()),
+      : data(data),
+        forwardPruningQuery(forwardPruningQuery),
+        bucketQuery(bucketQuery),
+        queue(data.numberOfStopEvents()),
+        edgeRanges(data.numberOfStopEvents()),
+        queueSize(0),
+        reachedIndex(data),
+        stopArrivalTimes(data),
+        minArrivalTime(INFTY),
+        edgeLabels(data.stopEventGraph.numEdges()),
+        sourceVertex(noVertex),
+        targetVertex(noVertex),
+        sourceDepartureTime(never),
+        roundOffset(-1),
+        round(-1),
+        maxTrips(-1),
+        properArrivalTimes(data.numberOfStopEvents()),
         profiler(profiler) {
     for (const Edge edge : data.stopEventGraph.edges()) {
       const StopEventId departureStopEvent(
@@ -126,19 +133,19 @@ public:
     return TripId(data.firstTripOfRoute[route + 1] - tripOffset - 1);
   }
 
-private:
+ private:
   inline void runIteration() noexcept {
     clear<false>();
     for (size_t i = round; i <= maxTrips; i++) {
-      if (departureTimes[i] < sourceDepartureTime)
-        break;
+      if (departureTimes[i] < sourceDepartureTime) break;
       departureTimes[i] = sourceDepartureTime;
     }
     evaluateInitialTransfers();
     scanTrips();
   }
 
-  template <bool RESET> inline void clear() noexcept {
+  template <bool RESET>
+  inline void clear() noexcept {
     queueSize = 0;
     round = roundOffset;
     if constexpr (RESET) {
@@ -158,8 +165,7 @@ private:
           sourceDepartureTime + bucketQuery.getBackwardDistance(stop);
       const int arrivalTime =
           forwardPruningQuery.getArrivalTime(StopId(stop), maxTrips - round);
-      if (-stopDepartureTime < arrivalTime)
-        continue;
+      if (-stopDepartureTime < arrivalTime) continue;
       for (const RAPTOR::RouteSegment &segment :
            data.routesContainingStop(StopId(stop))) {
         const TripId trip = data.getEarliestTrip(segment, stopDepartureTime);
@@ -183,8 +189,7 @@ private:
         profiler.countMetric(METRIC_SCANNED_TRIPS);
         for (StopEventId j = label.begin; j < label.end; j++) {
           profiler.countMetric(METRIC_SCANNED_STOPS);
-          if (properArrivalTimes[j] > minArrivalTime)
-            label.end = j;
+          if (properArrivalTimes[j] > minArrivalTime) label.end = j;
         }
         edgeRanges[i].begin =
             data.stopEventGraph.beginEdgeFrom(Vertex(label.begin));
@@ -212,8 +217,7 @@ private:
 
   inline void enqueue(const TripId trip, const StopIndex index) noexcept {
     profiler.countMetric(METRIC_ENQUEUES);
-    if (reachedIndex.alreadyReached(trip, index))
-      return;
+    if (reachedIndex.alreadyReached(trip, index)) return;
     const StopEventId firstEvent = data.firstStopEventOfTrip[trip];
     queue[queueSize] = TripLabel(StopEventId(firstEvent + index),
                                  StopEventId(firstEvent + reachedIndex(trip)));
@@ -240,7 +244,7 @@ private:
         label.trip, StopIndex(label.stopEvent - label.firstEvent));
   }
 
-private:
+ private:
   const Data &data;
   const ForwardPruningQuery<Profiler, InitialTransferType> &forwardPruningQuery;
   const InitialTransferType &bucketQuery;
@@ -269,4 +273,4 @@ private:
   Profiler &profiler;
 };
 
-} // namespace TripBased
+}  // namespace TripBased

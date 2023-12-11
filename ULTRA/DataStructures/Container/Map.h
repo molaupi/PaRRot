@@ -8,16 +8,15 @@
 
 template <typename KEY, typename VALUE>
 class Map : public std::map<KEY, VALUE> {
-
-public:
+ public:
   using Key = KEY;
   using Value = VALUE;
   using Type = Map<Key, Value>;
 
-private:
+ private:
   using Super = std::map<Key, Value>;
 
-public:
+ public:
   inline bool contains(const Key &key) const noexcept {
     return Super::count(key) == 1;
   }
@@ -29,8 +28,7 @@ public:
 
 template <typename VALUE, bool RESIZEABLE = false, typename KEY_TYPE = size_t>
 class IndexedMap {
-
-public:
+ public:
   using Value = VALUE;
   static constexpr bool Resizeable = RESIZEABLE;
   using KeyType = KEY_TYPE;
@@ -40,7 +38,7 @@ public:
       std::numeric_limits<size_t>::max();
   using Iterator = typename std::vector<Value>::const_iterator;
 
-public:
+ public:
   IndexedMap(const size_t initialCapacity)
       : indices(initialCapacity, NotContained) {}
 
@@ -48,8 +46,8 @@ public:
 
   inline const std::vector<Value> &getValues() const noexcept { return values; }
 
-  inline SimultaneousRange<std::vector<KeyType>, std::vector<Value>>
-  map() const noexcept {
+  inline SimultaneousRange<std::vector<KeyType>, std::vector<Value>> map()
+      const noexcept {
     return SimultaneousRange<std::vector<KeyType>, std::vector<Value>>(keys,
                                                                        values);
   }
@@ -70,8 +68,7 @@ public:
 
   inline bool contains(const KeyType key) noexcept {
     if (Resizeable) {
-      if ((size_t)key >= capacity())
-        indices.resize(key + 1, NotContained);
+      if ((size_t)key >= capacity()) indices.resize(key + 1, NotContained);
     } else {
       AssertMsg((size_t)key < capacity(), "Key " << key << " is out of range!");
     }
@@ -102,8 +99,7 @@ public:
   }
 
   inline bool remove(const KeyType key) noexcept {
-    if (!contains(key))
-      return false;
+    if (!contains(key)) return false;
     keys[indices[key]] = keys.back();
     values[indices[key]] = values.back();
     indices[keys.back()] = indices[key];
@@ -141,8 +137,7 @@ public:
     AssertMsg(n <= indices.size(),
               "n = " << n << " is greater than the number of keys = "
                      << indices.size());
-    if (n == 0)
-      return;
+    if (n == 0) return;
     std::sort(keys.end() - n, keys.end(), less);
     std::vector<Value> valuesCopy(values.end() - n, values.end());
     size_t firstIndex = keys.size() - n;
@@ -152,7 +147,7 @@ public:
     }
   }
 
-private:
+ private:
   std::vector<size_t> indices;
   std::vector<KeyType> keys;
   std::vector<Value> values;

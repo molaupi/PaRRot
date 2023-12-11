@@ -40,4 +40,4 @@ struct VehicleLocation {
     return !(l1 == l2);
   }
 };
-} // namespace karri
+}  // namespace karri

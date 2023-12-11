@@ -17,11 +17,11 @@
 struct SeparatorDecomposition {
   // A node in the separator decomposition.
   struct Node {
-    int32_t leftChild;            // The index of the left child.
-    int32_t rightSibling;         // The index of the right sibling.
-    int32_t firstSeparatorVertex; // The index of the first separator vertex.
+    int32_t leftChild;             // The index of the left child.
+    int32_t rightSibling;          // The index of the right sibling.
+    int32_t firstSeparatorVertex;  // The index of the first separator vertex.
     int32_t
-        lastSeparatorVertex; // The index one past the last separator vertex.
+        lastSeparatorVertex;  // The index one past the last separator vertex.
   };
 
   // Returns the index in the tree of the left child of this node.
@@ -67,6 +67,6 @@ struct SeparatorDecomposition {
   }
 
   std::vector<Node>
-      tree; // The rooted tree representing this separator decomposition.
-  Permutation order; // The associated nested dissection order.
+      tree;  // The rooted tree representing this separator decomposition.
+  Permutation order;  // The associated nested dissection order.
 };

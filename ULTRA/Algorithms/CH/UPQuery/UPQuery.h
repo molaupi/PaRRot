@@ -5,18 +5,16 @@
 #include <vector>
 
 #include "../../../DataStructures/CH/UPGraphs.h"
-#include "../CH.h"
-#include "../CHUtils.h"
-
+#include "../../../DataStructures/Container/ExternalKHeap.h"
+#include "../../../DataStructures/Container/Set.h"
 #include "../../../Helpers/Console/Progress.h"
 #include "../../../Helpers/Helpers.h"
 #include "../../../Helpers/String/String.h"
 #include "../../../Helpers/Timer.h"
 #include "../../../Helpers/Types.h"
 #include "../../../Helpers/Vector/Vector.h"
-
-#include "../../../DataStructures/Container/ExternalKHeap.h"
-#include "../../../DataStructures/Container/Set.h"
+#include "../CH.h"
+#include "../CHUtils.h"
 #include "BucketBuilder.h"
 
 namespace CH {
@@ -24,8 +22,7 @@ namespace CH {
 template <bool USE_STOP_BUCKETS, bool USE_TARGET_BUCKETS,
           bool STALL_ON_DEMAND = true, bool DEBUG = false>
 class UPQuery {
-
-public:
+ public:
   constexpr static bool UseStopBuckets = USE_STOP_BUCKETS;
   constexpr static bool UseTargetBuckets = USE_TARGET_BUCKETS;
   constexpr static bool StallOnDemand = STALL_ON_DEMAND;
@@ -35,7 +32,7 @@ public:
   using Type = UPQuery<UseStopBuckets, UseTargetBuckets, StallOnDemand, Debug>;
   using BucketBuilderType = BucketBuilder<StallOnDemand, Debug>;
 
-private:
+ private:
   struct DijkstraLabel : public ExternalKHeapElement {
     DijkstraLabel(int *const distance)
         : ExternalKHeapElement(), distance(distance) {}
@@ -53,20 +50,22 @@ private:
     int *const distance;
   };
 
-public:
+ public:
   UPQuery(const CHGraph &forward, const CHGraph &backward, const Order &order,
           const Vertex::ValueType numberOfStops,
           const IndexedSet<false, Vertex> &originalTargets)
-      : graph{forward, backward}, contractionOrder(order),
+      : graph{forward, backward},
+        contractionOrder(order),
         positionInOrder(Construct::Invert, contractionOrder),
         sweepStart(noVertex),
         stops(graph[FORWARD].numVertices(), Vector::id<Vertex>(numberOfStops)),
-        targets(originalTargets), Q(graph[FORWARD].numVertices()),
+        targets(originalTargets),
+        Q(graph[FORWARD].numVertices()),
         distance(graph[FORWARD].numVertices(), never),
         parent(graph[FORWARD].numVertices(), noVertex),
-        timestamp(graph[FORWARD].numVertices(), 0), currentTimestamp(0),
+        timestamp(graph[FORWARD].numVertices(), 0),
+        currentTimestamp(0),
         bucketSources(graph[FORWARD].numVertices()) {
-
     std::cout << "Reordering vertices... " << std::endl;
     timer.restart();
     reorderVertices();
@@ -167,8 +166,7 @@ public:
         parent[v] = branchlessConditional(update, parent[u], parent[v]);
       }
       if constexpr (UseTargetBuckets) {
-        if (distance[v] < oldDistance)
-          bucketSources.insert(v);
+        if (distance[v] < oldDistance) bucketSources.insert(v);
       } else {
         suppressUnusedParameterWarning(oldDistance);
       }
@@ -232,7 +230,7 @@ public:
     return targetGraph.graph.numEdges();
   }
 
-private:
+ private:
   inline void reorderVertices() noexcept {
     reorder(graph[FORWARD]);
     reorder(graph[BACKWARD]);
@@ -251,8 +249,7 @@ private:
     for (const Vertex to : upwardSweepGraph.graph.vertices()) {
       for (const Edge edge : upwardSweepGraph.graph.edgesFrom(to)) {
         const Vertex from = upwardSweepGraph.graph.get(ToVertex, edge);
-        if (sweepStartOf[from] != noVertex)
-          continue;
+        if (sweepStartOf[from] != noVertex) continue;
         sweepStartOf[from] = to;
       }
     }
@@ -262,8 +259,7 @@ private:
   inline void addSourceInternal(const Vertex vertex, const int initialDistance,
                                 const Vertex parentVertex) noexcept {
     check(vertex);
-    if (initialDistance >= distance[vertex])
-      return;
+    if (initialDistance >= distance[vertex]) return;
     distance[vertex] = initialDistance;
     parent[vertex] = parentVertex;
     if constexpr (FOR_SWEEP) {
@@ -439,7 +435,7 @@ private:
     }
   }
 
-private:
+ private:
   CHGraph graph[2];
   SweepGraph upwardSweepGraph;
   StopGraph stopGraph;
@@ -465,4 +461,4 @@ private:
   Timer timer;
 };
 
-} // namespace CH
+}  // namespace CH

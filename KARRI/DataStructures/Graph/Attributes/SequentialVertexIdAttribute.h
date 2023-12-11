@@ -33,7 +33,7 @@
 // graph. The attribute can be used to store, for each vertex of a subgraph, the
 // corresponding vertex in the supergraph.
 class SequentialVertexIdAttribute : public AbstractAttribute<int> {
-public:
+ public:
   // Returns the attribute's default value.
   static Type defaultValue() { return INVALID_VERTEX; }
 
@@ -51,7 +51,7 @@ public:
     return values[v];
   }
 
-protected:
+ protected:
   static constexpr const char *NAME =
-      "sequential_vertex_id"; // The attribute's unique name.
+      "sequential_vertex_id";  // The attribute's unique name.
 };

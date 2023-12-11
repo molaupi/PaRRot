@@ -4,21 +4,17 @@
 #include <string>
 
 #include "../../Algorithms/StronglyConnectedComponents.h"
-
 #include "../../DataStructures/CSA/Data.h"
 #include "../../DataStructures/Graph/Graph.h"
 #include "../../DataStructures/Intermediate/Data.h"
 #include "../../DataStructures/RAPTOR/Data.h"
-
 #include "../../Helpers/HighlightText.h"
-
 #include "../../Shell/Shell.h"
 
 using namespace Shell;
 
 class DuplicateTrips : public ParameterizedCommand {
-
-public:
+ public:
   DuplicateTrips(BasicShell &shell)
       : ParameterizedCommand(
             shell, "duplicateTrips",
@@ -42,8 +38,7 @@ public:
 };
 
 class ReverseRAPTORNetwork : public ParameterizedCommand {
-
-public:
+ public:
   ReverseRAPTORNetwork(BasicShell &shell)
       : ParameterizedCommand(
             shell, "reverseRAPTORNetwork",
@@ -65,8 +60,7 @@ public:
 };
 
 class AddGraph : public ParameterizedCommand {
-
-public:
+ public:
   AddGraph(BasicShell &shell)
       : ParameterizedCommand(
             shell, "addGraph",
@@ -94,8 +88,7 @@ public:
 };
 
 class ReplaceGraph : public ParameterizedCommand {
-
-public:
+ public:
   ReplaceGraph(BasicShell &shell)
       : ParameterizedCommand(shell, "replaceGraph",
                              "Replaces the transfer graph of a network.") {
@@ -119,7 +112,7 @@ public:
     }
   }
 
-private:
+ private:
   template <typename GRAPH, typename = std::enable_if_t<
                                 std::is_rvalue_reference<GRAPH &&>::value>>
   inline void chooseNetwork(GRAPH &&graph) noexcept {
@@ -155,8 +148,7 @@ private:
 };
 
 class ReduceGraph : public ParameterizedCommand {
-
-public:
+ public:
   ReduceGraph(BasicShell &shell)
       : ParameterizedCommand(shell, "reduceGraph",
                              "Contracts vertices with degree <= 2.") {
@@ -177,8 +169,7 @@ public:
 };
 
 class ReduceToMaximumConnectedComponent : public ParameterizedCommand {
-
-public:
+ public:
   ReduceToMaximumConnectedComponent(BasicShell &shell)
       : ParameterizedCommand(shell, "reduceToMaximumConnectedComponent",
                              "Removes everything that is not part of the "
@@ -205,10 +196,8 @@ public:
     inter.printInfo();
     inter.serialize(getParameter("Output file"));
     for (const Intermediate::Stop &stop : inter.stops) {
-      if (stop.coordinates.x != 0)
-        continue;
-      if (stop.coordinates.y != 0)
-        continue;
+      if (stop.coordinates.x != 0) continue;
+      if (stop.coordinates.y != 0) continue;
       warning(stop);
     }
   }
@@ -216,8 +205,7 @@ public:
 
 class ReduceToMaximumConnectedComponentWithTransitive
     : public ParameterizedCommand {
-
-public:
+ public:
   ReduceToMaximumConnectedComponentWithTransitive(BasicShell &shell)
       : ParameterizedCommand(
             shell, "reduceToMaximumConnectedComponentWithTransitive",
@@ -248,10 +236,8 @@ public:
     fullData.printInfo();
     fullData.serialize(getParameter("Full output file"));
     for (const Intermediate::Stop &stop : fullData.stops) {
-      if (stop.coordinates.x != 0)
-        continue;
-      if (stop.coordinates.y != 0)
-        continue;
+      if (stop.coordinates.x != 0) continue;
+      if (stop.coordinates.y != 0) continue;
       warning(stop);
     }
 
@@ -267,8 +253,7 @@ public:
 };
 
 class ApplyBoundingBox : public ParameterizedCommand {
-
-public:
+ public:
   ApplyBoundingBox(BasicShell &shell)
       : ParameterizedCommand(
             shell, "applyBoundingBox",
@@ -299,7 +284,7 @@ public:
     inter.serialize(outputFile);
   }
 
-private:
+ private:
   const Geometry::Rectangle Switzerland = Geometry::Rectangle::BoundingBox(
       Geometry::Point(Construct::XY, 5.826, 45.487),
       Geometry::Point(Construct::XY, 10.819, 48.142));
@@ -315,8 +300,7 @@ private:
 };
 
 class ApplyCustomBoundingBox : public ParameterizedCommand {
-
-public:
+ public:
   ApplyCustomBoundingBox(BasicShell &shell)
       : ParameterizedCommand(shell, "applyCustomBoundingBox",
                              "Applies the specified bounding box to the "
@@ -350,8 +334,7 @@ public:
 };
 
 class MakeOneHopTransfers : public ParameterizedCommand {
-
-public:
+ public:
   MakeOneHopTransfers(BasicShell &shell)
       : ParameterizedCommand(shell, "makeOneHopTransfers",
                              "Constructs one-hop transfers between all stops "
@@ -382,8 +365,7 @@ public:
 };
 
 class MakeOneHopTransfersByGeoDistance : public ParameterizedCommand {
-
-public:
+ public:
   MakeOneHopTransfersByGeoDistance(BasicShell &shell)
       : ParameterizedCommand(shell, "makeOneHopTransfersByGeoDistance",
                              "Constructs one-hop transfers between all stops "
@@ -416,8 +398,7 @@ public:
 };
 
 class ApplyMaxTransferSpeed : public ParameterizedCommand {
-
-public:
+ public:
   ApplyMaxTransferSpeed(BasicShell &shell)
       : ParameterizedCommand(shell, "applyMaxTransferSpeed",
                              "Applies a speed limit to all transfers.") {
@@ -440,8 +421,7 @@ public:
 };
 
 class ApplyConstantTransferSpeed : public ParameterizedCommand {
-
-public:
+ public:
   ApplyConstantTransferSpeed(BasicShell &shell)
       : ParameterizedCommand(shell, "applyConstantTransferSpeed",
                              "Applies a constant speed to all transfers.") {
@@ -467,8 +447,7 @@ public:
 };
 
 class ApplyMinTransferTravelTime : public ParameterizedCommand {
-
-public:
+ public:
   ApplyMinTransferTravelTime(BasicShell &shell)
       : ParameterizedCommand(
             shell, "applyMinTransferTravelTime",
@@ -497,11 +476,11 @@ public:
     }
   }
 
-private:
+ private:
   template <typename NETWORK_TYPE>
-  inline static void
-  applyMinTravelTime(NETWORK_TYPE &network, const double minTravelTime,
-                     const std::string &outputFile) noexcept {
+  inline static void applyMinTravelTime(
+      NETWORK_TYPE &network, const double minTravelTime,
+      const std::string &outputFile) noexcept {
     network.printInfo();
     network.applyMinTravelTime(minTravelTime);
     network.printInfo();

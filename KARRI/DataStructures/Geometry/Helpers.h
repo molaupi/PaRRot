@@ -45,10 +45,8 @@ inline bool intersection(const Point &p, const Point &q, const Point &r,
                          const Point &s) {
   const int o1 = orientation(p, q, r);
   const int o2 = orientation(p, q, s);
-  if (o1 != o2 && orientation(r, s, p) != orientation(r, s, q))
-    return true;
-  if (o1 != 0 || o2 != 0)
-    return false;
+  if (o1 != o2 && orientation(r, s, p) != orientation(r, s, q)) return true;
+  if (o1 != 0 || o2 != 0) return false;
   // All points are collinear.
   Rectangle pq(p);
   Rectangle rs(r);

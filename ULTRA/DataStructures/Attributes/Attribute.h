@@ -2,16 +2,15 @@
 
 #include <iostream>
 
-#include "AttributeNames.h"
-
 #include "../../Helpers/Meta.h"
 #include "../../Helpers/String/Enumeration.h"
 #include "../../Helpers/String/String.h"
+#include "AttributeNames.h"
 
 // Introduction of Attribute, a struct that represents a pair of an
 // AttributeName and a Type at compile time
-template <AttributeNameType ATTRIBUTE_NAME, typename TYPE> struct Attribute {
-
+template <AttributeNameType ATTRIBUTE_NAME, typename TYPE>
+struct Attribute {
   using Type = TYPE;
   inline constexpr static AttributeNameType Name = ATTRIBUTE_NAME;
   inline constexpr static const char *String = attributeToString(Name);
@@ -55,7 +54,7 @@ struct InsertAttribute<Attribute<NAME_A, TYPE_A>,
               Attribute<NAME_B, TYPE_B>, ATTRIBUTE_LIST...>,
          InsertAttribute<Attribute<NAME_A, TYPE_A>, List<ATTRIBUTE_LIST...>,
                          RESULTING_LIST..., Attribute<NAME_B, TYPE_B>>> {};
-} // namespace Implementation
+}  // namespace Implementation
 
 template <typename ATTRIBUTE, typename ATTRIBUTE_LIST>
 using InsertAttribute =
@@ -83,7 +82,7 @@ struct RemoveAttribute<NAME_A, List<Attribute<NAME_B, TYPE>, ATTRIBUTE_LIST...>,
                        RESULTING_LIST...>
     : RemoveAttribute<NAME_A, List<ATTRIBUTE_LIST...>, RESULTING_LIST...,
                       Attribute<NAME_B, TYPE>> {};
-} // namespace Implementation
+}  // namespace Implementation
 
 template <AttributeNameType NAME, typename ATTRIBUTE_LIST>
 using RemoveAttribute =
@@ -91,16 +90,18 @@ using RemoveAttribute =
 
 // SORT ATTRIBUTES (by AttributeName, using insertion sort)
 namespace Implementation {
-template <typename ATTRIBUTE_LIST> struct SortAttributes;
+template <typename ATTRIBUTE_LIST>
+struct SortAttributes;
 
-template <> struct SortAttributes<List<>> : List<> {};
+template <>
+struct SortAttributes<List<>> : List<> {};
 
 template <typename ATTRIBUTE, typename... ATTRIBUTE_LIST>
 struct SortAttributes<List<ATTRIBUTE, ATTRIBUTE_LIST...>>
     : InsertAttribute<ATTRIBUTE,
                       typename SortAttributes<List<ATTRIBUTE_LIST...>>::Type> {
 };
-} // namespace Implementation
+}  // namespace Implementation
 
 template <typename ATTRIBUTE_LIST>
 using SortAttributes =
@@ -120,7 +121,7 @@ struct ContainsAttribute<ATTRIBUTE_NAME,
                          List<Attribute<NAME_A, TYPE_A>, ATTRIBUTE_LIST...>>
     : IF<ATTRIBUTE_NAME != NAME_A,
          ContainsAttribute<ATTRIBUTE_NAME, List<ATTRIBUTE_LIST...>>, True> {};
-} // namespace Implementation
+}  // namespace Implementation
 
 template <AttributeNameType ATTRIBUTE_NAME, typename ATTRIBUTE_LIST>
 inline constexpr bool ContainsAttribute() {
@@ -144,7 +145,7 @@ struct FindAttributeList<ATTRIBUTE_NAME,
     : IF<ATTRIBUTE_NAME != NAME_A,
          FindAttributeList<ATTRIBUTE_NAME, List<ATTRIBUTE_LIST...>>,
          List<Attribute<NAME_A, TYPE_A>, ATTRIBUTE_LIST...>> {};
-} // namespace Implementation
+}  // namespace Implementation
 
 template <AttributeNameType ATTRIBUTE_NAME, typename ATTRIBUTE_LIST>
 using FindAttributeList =
@@ -167,7 +168,7 @@ struct FindAttributeType<ATTRIBUTE_NAME,
     : IF<ATTRIBUTE_NAME != NAME_A,
          FindAttributeType<ATTRIBUTE_NAME, List<ATTRIBUTE_LIST...>>,
          ID<TYPE_A>> {};
-} // namespace Implementation
+}  // namespace Implementation
 
 template <AttributeNameType ATTRIBUTE_NAME, typename ATTRIBUTE_LIST>
 using FindAttributeType =
@@ -176,9 +177,11 @@ using FindAttributeType =
 
 // HAS DUPLICATE ATTRIBUTE
 namespace Implementation {
-template <typename ATTRIBUTE_LIST> struct HasDuplicateAttribute;
+template <typename ATTRIBUTE_LIST>
+struct HasDuplicateAttribute;
 
-template <> struct HasDuplicateAttribute<List<>> : False {};
+template <>
+struct HasDuplicateAttribute<List<>> : False {};
 
 template <typename ATTRIBUTE>
 struct HasDuplicateAttribute<List<ATTRIBUTE>> : False {};
@@ -193,18 +196,19 @@ struct HasDuplicateAttribute<
          HasDuplicateAttribute<
              List<Attribute<SECOND_NAME, SECOND_TYPE>, ATTRIBUTE_LIST...>>,
          True> {};
-} // namespace Implementation
+}  // namespace Implementation
 
 template <typename ATTRIBUTE_LIST>
 inline constexpr bool HasDuplicateAttribute() {
   return Implementation::HasDuplicateAttribute<
       SortAttributes<ATTRIBUTE_LIST>>::Value;
 }
-} // namespace Meta
+}  // namespace Meta
 
 namespace ImplementationDetail {
 
-template <typename ATTRIBUTE_LIST> struct AttributeListToString {
+template <typename ATTRIBUTE_LIST>
+struct AttributeListToString {
   inline static const std::string String = "";
 };
 
@@ -221,7 +225,7 @@ struct AttributeListToString<
       AttributeListToString<Meta::List<ATTRIBUTE_B, ATTRIBUTES...>>::String;
 };
 
-} // namespace ImplementationDetail
+}  // namespace ImplementationDetail
 
 template <typename ATTRIBUTE_LIST>
 inline std::string attributeListToString() noexcept {

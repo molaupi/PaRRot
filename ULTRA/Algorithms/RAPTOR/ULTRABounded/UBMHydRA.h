@@ -7,39 +7,46 @@
 #include "../../../DataStructures/RAPTOR/Data.h"
 #include "../../../DataStructures/RAPTOR/Entities/ArrivalLabel.h"
 #include "../../../DataStructures/RAPTOR/Entities/Bags.h"
-
+#include "../../TripBased/BoundedMcQuery/BackwardPruningQuery.h"
+#include "../../TripBased/BoundedMcQuery/ForwardPruningQuery.h"
 #include "../InitialTransfers.h"
 #include "../Profiler.h"
 
-#include "../../TripBased/BoundedMcQuery/BackwardPruningQuery.h"
-#include "../../TripBased/BoundedMcQuery/ForwardPruningQuery.h"
-
 namespace RAPTOR {
 
-template <typename PROFILER = NoProfiler> class UBMHydRA {
-
-public:
+template <typename PROFILER = NoProfiler>
+class UBMHydRA {
+ public:
   using Profiler = PROFILER;
   using Type = UBMHydRA<Profiler>;
 
-private:
+ private:
   struct Label {
     Label()
-        : arrivalTime(never), walkingDistance(INFTY), parentStop(noStop),
-          parentIndex(-1), parentDepartureTime(never), routeId(noRouteId),
+        : arrivalTime(never),
+          walkingDistance(INFTY),
+          parentStop(noStop),
+          parentIndex(-1),
+          parentDepartureTime(never),
+          routeId(noRouteId),
           stopEvent(noStopEvent) {}
 
     Label(const Label &parentLabel, const StopId stop, const size_t parentIndex)
         : arrivalTime(parentLabel.arrivalTime),
-          walkingDistance(parentLabel.walkingDistance), parentStop(stop),
+          walkingDistance(parentLabel.walkingDistance),
+          parentStop(stop),
           parentIndex(parentIndex),
-          parentDepartureTime(parentLabel.arrivalTime), transferId(noEdge),
+          parentDepartureTime(parentLabel.arrivalTime),
+          transferId(noEdge),
           stopEvent(noStopEvent) {}
 
     Label(const int departureTime, const StopId sourceStop)
-        : arrivalTime(departureTime), walkingDistance(0),
-          parentStop(sourceStop), parentIndex(-1),
-          parentDepartureTime(departureTime), routeId(noRouteId),
+        : arrivalTime(departureTime),
+          walkingDistance(0),
+          parentStop(sourceStop),
+          parentIndex(-1),
+          parentDepartureTime(departureTime),
+          routeId(noRouteId),
           stopEvent(noStopEvent) {}
 
     int arrivalTime;
@@ -67,12 +74,9 @@ private:
     }
 
     inline bool operator==(const Label &other) const noexcept {
-      if (arrivalTime != other.arrivalTime)
-        return false;
-      if (walkingDistance != other.walkingDistance)
-        return false;
-      if (stopEvent != other.stopEvent)
-        return false;
+      if (arrivalTime != other.arrivalTime) return false;
+      if (walkingDistance != other.walkingDistance) return false;
+      if (stopEvent != other.stopEvent) return false;
       return true;
     }
   };
@@ -123,24 +127,28 @@ private:
   using Round = std::vector<BagType>;
   using RouteBagType = RouteBag<RouteLabel>;
 
-public:
+ public:
   UBMHydRA(const TripBased::Data &tripData,
            const TripBased::Data &forwardTBData,
            const TripBased::Data &backwardTBData, const CH::CH &chData,
            const Profiler &profilerTemplate = Profiler())
-      : tripData(tripData), data(tripData.raptorData),
+      : tripData(tripData),
+        data(tripData.raptorData),
         stopOfStopEvent(tripData.numberOfStopEvents(), noStop),
         initialTransfers(chData, FORWARD, data.numberOfStops()),
         profiler(profilerTemplate),
         forwardPruningQuery(forwardTBData, initialTransfers, dummy),
         backwardPruningQuery(backwardTBData, forwardPruningQuery,
                              initialTransfers, dummy),
-        maxTrips(-1), bestLabels(data.numberOfStops() + 1),
+        maxTrips(-1),
+        bestLabels(data.numberOfStops() + 1),
         stopsUpdatedByRoute(data.numberOfStops()),
         stopsUpdatedByTransfer(data.numberOfStops()),
         routesServingUpdatedStops(data.numberOfRoutes()),
-        sourceVertex(noVertex), targetVertex(noVertex),
-        targetStop(StopId(data.numberOfStops())), sourceDepartureTime(never) {
+        sourceVertex(noVertex),
+        targetVertex(noVertex),
+        targetStop(StopId(data.numberOfStops())),
+        sourceDepartureTime(never) {
     AssertMsg(data.hasImplicitBufferTimes(),
               "Departure buffer times have to be implicit!");
     for (StopEventId stopEvent(0); stopEvent < stopOfStopEvent.size();
@@ -170,8 +178,7 @@ public:
     forwardPruningQuery.run(source, departureTime, target, arrivalSlack,
                             tripSlack);
     profiler.doneRound();
-    if (forwardPruningQuery.getAnchorLabels().empty())
-      return;
+    if (forwardPruningQuery.getAnchorLabels().empty()) return;
     profiler.startExtraRound(EXTRA_ROUND_BACKWARD_PRUNING);
     backwardPruningQuery.run(target, departureTime, source, arrivalSlack,
                              tripSlack);
@@ -268,8 +275,8 @@ public:
     return getResults(targetStop);
   }
 
-  inline std::vector<WalkingParetoLabel>
-  getResults(const Vertex vertex) const noexcept {
+  inline std::vector<WalkingParetoLabel> getResults(
+      const Vertex vertex) const noexcept {
     const StopId target =
         (vertex == targetVertex) ? (targetStop) : (StopId(vertex));
     std::vector<WalkingParetoLabel> result;
@@ -282,7 +289,8 @@ public:
     return result;
   }
 
-  template <bool RESET_CAPACITIES = false> inline void clear() noexcept {
+  template <bool RESET_CAPACITIES = false>
+  inline void clear() noexcept {
     stopsUpdatedByRoute.clear();
     stopsUpdatedByTransfer.clear();
     routesServingUpdatedStops.clear();
@@ -299,7 +307,7 @@ public:
 
   inline const Profiler &getProfiler() const noexcept { return profiler; }
 
-private:
+ private:
   inline void initialize() noexcept {
     startNewRound();
     if (data.isStop(sourceVertex)) {
@@ -357,8 +365,7 @@ private:
                  (trip[stopIndex].departureTime < label.arrivalTime)) {
             trip += tripSize;
           }
-          if (trip[stopIndex].departureTime < label.arrivalTime)
-            continue;
+          if (trip[stopIndex].departureTime < label.arrivalTime) continue;
           const size_t tripOffset = (trip - firstTrip) / tripSize;
           const TripId reverseTrip =
               backwardPruningQuery.getReverseTrip(route, tripOffset);
@@ -367,8 +374,7 @@ private:
                         backwardPruningQuery.getReachedIndex(
                             reverseTrip, maxTrips - currentNumberOfTrips()) -
                         1);
-          if (reachedIndex < stopIndex)
-            continue;
+          if (reachedIndex < stopIndex) continue;
 
           RouteLabel newLabel;
           newLabel.trip = trip;
@@ -382,8 +388,7 @@ private:
         stop = stops[stopIndex];
         profiler.countMetric(METRIC_ROUTE_SEGMENTS);
         for (const RouteLabel &label : routeBag.labels) {
-          if (label.lastExitIndex + 1 < stopIndex)
-            continue;
+          if (label.lastExitIndex + 1 < stopIndex) continue;
           Label newLabel;
           newLabel.arrivalTime = label.trip[stopIndex].arrivalTime;
           newLabel.walkingDistance = label.walkingDistance;
@@ -445,8 +450,7 @@ private:
           Label(previousRound()[sourceVertex][0], StopId(sourceVertex), 0);
     }
     for (const Vertex stop : initialTransfers.getForwardPOIs()) {
-      if (stop == targetVertex)
-        continue;
+      if (stop == targetVertex) continue;
       AssertMsg(data.isStop(stop), "Reached POI " << stop << " is not a stop!");
       AssertMsg(initialTransfers.getForwardDistance(stop) != INFTY,
                 "Vertex " << stop << " was not reached!");
@@ -540,24 +544,18 @@ private:
     if (-backwardPruningQuery.getArrivalTime(
             stop, maxTrips - currentNumberOfTrips()) < label.arrivalTime)
       return;
-    if (bestLabels[targetStop].dominates(label))
-      return;
-    if (!bestLabels[stop].mergeWithStrongDominance(BestLabel(label)))
-      return;
-    if (!currentRound()[stop].mergeUndominatedUnlessEqual(label))
-      return;
+    if (bestLabels[targetStop].dominates(label)) return;
+    if (!bestLabels[stop].mergeWithStrongDominance(BestLabel(label))) return;
+    if (!currentRound()[stop].mergeUndominatedUnlessEqual(label)) return;
     profiler.countMetric(METRIC_STOPS_BY_TRANSFER);
     stopsUpdatedByTransfer.insert(stop);
   }
 
   inline void arrivalByRoute(const StopId stop, const Label &label) noexcept {
     AssertMsg(data.isStop(stop), "Stop " << stop << " is out of range!");
-    if (bestLabels[targetStop].dominates(label))
-      return;
-    if (!bestLabels[stop].mergeWithStrongDominance(BestLabel(label)))
-      return;
-    if (!currentRound()[stop].mergeUndominatedUnlessEqual(label))
-      return;
+    if (bestLabels[targetStop].dominates(label)) return;
+    if (!bestLabels[stop].mergeWithStrongDominance(BestLabel(label))) return;
+    if (!currentRound()[stop].mergeUndominatedUnlessEqual(label)) return;
     profiler.countMetric(METRIC_STOPS_BY_TRIP);
     stopsUpdatedByRoute.insert(stop);
   }
@@ -566,8 +564,7 @@ private:
     if (-backwardPruningQuery.getDepartureTime(
             maxTrips - currentNumberOfTrips()) < label.arrivalTime)
       return;
-    if (!bestLabels[targetStop].merge(BestLabel(label)))
-      return;
+    if (!bestLabels[targetStop].merge(BestLabel(label))) return;
     profiler.countMetric(METRIC_STOPS_BY_TRANSFER);
     currentRound()[targetStop].mergeUndominated(label);
     AssertMsg(bestLabels[targetStop].dominates(currentRound()[targetStop]),
@@ -597,13 +594,12 @@ private:
     const size_t round =
         std::min(anchorLabel.numberOfTrips * 2 + 1, rounds.size() - 1);
     for (const Label &label : rounds[round][targetStop]) {
-      if (label.arrivalTime == anchorLabel.arrivalTime)
-        return true;
+      if (label.arrivalTime == anchorLabel.arrivalTime) return true;
     }
     return false;
   }
 
-private:
+ private:
   const TripBased::Data &tripData;
   const Data &data;
   std::vector<StopId> stopOfStopEvent;
@@ -631,4 +627,4 @@ private:
   int sourceDepartureTime;
 };
 
-} // namespace RAPTOR
+}  // namespace RAPTOR

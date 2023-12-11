@@ -18,17 +18,14 @@ using namespace Shell;
 #include "../../Algorithms/RAPTOR/OneToAllDijkstraRAPTOR.h"
 #include "../../Algorithms/RAPTOR/UPRAPTOR.h"
 #include "../../Algorithms/TripBased/Query/UPQuery.h"
-
 #include "../../DataStructures/CSA/Data.h"
 #include "../../DataStructures/Queries/Queries.h"
 #include "../../DataStructures/RAPTOR/Data.h"
 #include "../../DataStructures/TripBased/Data.h"
-
 #include "../../Helpers/String/String.h"
 
 class RunOneToAllDijkstraCSAQueriesToVertices : public ParameterizedCommand {
-
-public:
+ public:
   RunOneToAllDijkstraCSAQueriesToVertices(BasicShell &shell)
       : ParameterizedCommand(shell, "runOneToAllDijkstraCSAQueriesToVertices",
                              "Runs the given number of random Dijkstra-CSA "
@@ -57,8 +54,7 @@ public:
 };
 
 class RunOneToManyDijkstraCSAQueriesToStops : public ParameterizedCommand {
-
-public:
+ public:
   RunOneToManyDijkstraCSAQueriesToStops(BasicShell &shell)
       : ParameterizedCommand(shell, "runOneToManyDijkstraCSAQueriesToStops",
                              "Runs the given number of random Dijkstra-CSA "
@@ -104,8 +100,7 @@ inline IndexedSet<false, Vertex> getTargetSet(const DATA &data,
 }
 
 class RunUPCSAQueries : public ParameterizedCommand {
-
-public:
+ public:
   RunUPCSAQueries(BasicShell &shell)
       : ParameterizedCommand(
             shell, "runUPCSAQueries",
@@ -128,7 +123,7 @@ public:
     }
   }
 
-private:
+ private:
   template <bool USE_STOP_BUCKETS>
   inline void chooseFinalTransfers() const noexcept {
     if (getParameter("Final transfers") == "Bucket") {
@@ -191,8 +186,7 @@ private:
 };
 
 class RunOneToAllDijkstraRAPTORQueriesToVertices : public ParameterizedCommand {
-
-public:
+ public:
   RunOneToAllDijkstraRAPTORQueriesToVertices(BasicShell &shell)
       : ParameterizedCommand(shell,
                              "runOneToAllDijkstraRAPTORQueriesToVertices",
@@ -224,8 +218,7 @@ public:
 };
 
 class RunOneToManyDijkstraRAPTORQueriesToStops : public ParameterizedCommand {
-
-public:
+ public:
   RunOneToManyDijkstraRAPTORQueriesToStops(BasicShell &shell)
       : ParameterizedCommand(shell, "runOneToManyDijkstraRAPTORQueriesToStops",
                              "Runs the given number of random Dijkstra-RAPTOR "
@@ -256,8 +249,7 @@ public:
 };
 
 class RunUPRAPTORQueries : public ParameterizedCommand {
-
-public:
+ public:
   RunUPRAPTORQueries(BasicShell &shell)
       : ParameterizedCommand(
             shell, "runUPRAPTORQueries",
@@ -274,23 +266,24 @@ public:
 
   virtual void execute() noexcept {
     switch (getParameter<size_t>("Grouped rounds")) {
-    case 0:
-      run<0>();
-      break;
-    case 4:
-      run<4>();
-      break;
-    case 6:
-      run<6>();
-      break;
-    case 8:
-      run<8>();
-      break;
+      case 0:
+        run<0>();
+        break;
+      case 4:
+        run<4>();
+        break;
+      case 6:
+        run<6>();
+        break;
+      case 8:
+        run<8>();
+        break;
     }
   }
 
-private:
-  template <size_t GROUPED_ROUNDS> inline void run() const noexcept {
+ private:
+  template <size_t GROUPED_ROUNDS>
+  inline void run() const noexcept {
     RAPTOR::Data raptorData(getParameter("RAPTOR data"));
     raptorData.useImplicitDepartureBufferTimes();
     raptorData.printInfo();
@@ -343,8 +336,7 @@ private:
 };
 
 class RunUPTBQueries : public ParameterizedCommand {
-
-public:
+ public:
   RunUPTBQueries(BasicShell &shell)
       : ParameterizedCommand(shell, "runUPTBQueries",
                              "Runs the given number of random UP-TB queries.") {
@@ -360,23 +352,24 @@ public:
 
   virtual void execute() noexcept {
     switch (getParameter<size_t>("Grouped rounds")) {
-    case 0:
-      run<0>();
-      break;
-    case 4:
-      run<4>();
-      break;
-    case 6:
-      run<6>();
-      break;
-    case 8:
-      run<8>();
-      break;
+      case 0:
+        run<0>();
+        break;
+      case 4:
+        run<4>();
+        break;
+      case 6:
+        run<6>();
+        break;
+      case 8:
+        run<8>();
+        break;
     }
   }
 
-private:
-  template <size_t GROUPED_ROUNDS> inline void run() const noexcept {
+ private:
+  template <size_t GROUPED_ROUNDS>
+  inline void run() const noexcept {
     TripBased::Data tripBasedData(getParameter("Trip-Based data"));
     tripBasedData.printInfo();
     TransferGraph dijkstraGraph(getParameter("Dijkstra graph"));
@@ -569,8 +562,7 @@ inline std::vector<Vertex> generateTargetSet(const TransferGraph &graph,
 }
 
 class CreateBallTargetSets : public ParameterizedCommand {
-
-public:
+ public:
   CreateBallTargetSets(BasicShell &shell)
       : ParameterizedCommand(
             shell, "createBallTargetSets",
@@ -603,8 +595,7 @@ public:
 };
 
 class BuildCoreCHForTargetSets : public ParameterizedCommand {
-
-public:
+ public:
   BuildCoreCHForTargetSets(BasicShell &shell)
       : ParameterizedCommand(shell, "buildCoreCHForTargetSets",
                              "Builds Core-CHs for the given target sets.") {
@@ -637,7 +628,7 @@ public:
     std::cout << benchmarkData << std::endl;
   }
 
-private:
+ private:
   struct BenchmarkData {
     BenchmarkData()
         : buildTime(0.0), coreVertices(0), coreEdges(0), chEdges(0), count(0) {}
@@ -672,8 +663,7 @@ private:
 };
 
 class BuildUPCHForTargetSets : public ParameterizedCommand {
-
-public:
+ public:
   BuildUPCHForTargetSets(BasicShell &shell)
       : ParameterizedCommand(
             shell, "buildUPCHForTargetSets",
@@ -710,7 +700,7 @@ public:
     std::cout << benchmarkData << std::endl;
   }
 
-private:
+ private:
   struct BenchmarkData {
     BenchmarkData() : buildTime(0.0), chEdges(0), count(0) {}
 
@@ -736,8 +726,7 @@ private:
 };
 
 class RunOneToManyDijkstraCSAQueriesToBall : public ParameterizedCommand {
-
-public:
+ public:
   RunOneToManyDijkstraCSAQueriesToBall(BasicShell &shell)
       : ParameterizedCommand(shell, "runOneToManyDijkstraCSAQueriesToBall",
                              "Runs the given number of random Dijkstra-CSA "
@@ -789,9 +778,14 @@ public:
 
 struct SetupBenchmarkData {
   SetupBenchmarkData()
-      : buildTime(0.0), upwardSweepGraphVertices(0), upwardSweepGraphEdges(0),
-        stopGraphVertices(0), stopGraphEdges(0), targetGraphVertices(0),
-        targetGraphEdges(0), count(0) {}
+      : buildTime(0.0),
+        upwardSweepGraphVertices(0),
+        upwardSweepGraphEdges(0),
+        stopGraphVertices(0),
+        stopGraphEdges(0),
+        targetGraphVertices(0),
+        targetGraphEdges(0),
+        count(0) {}
 
   template <typename ALGORITHM>
   inline void add(const double time, const ALGORITHM &algorithm) noexcept {
@@ -805,8 +799,8 @@ struct SetupBenchmarkData {
     count++;
   }
 
-  inline friend std::ostream &
-  operator<<(std::ostream &out, const SetupBenchmarkData &data) noexcept {
+  inline friend std::ostream &operator<<(
+      std::ostream &out, const SetupBenchmarkData &data) noexcept {
     out << "Setup:" << std::endl;
     out << "\tTime: " << String::musToString(data.buildTime / data.count)
         << std::endl;
@@ -841,8 +835,7 @@ struct SetupBenchmarkData {
 };
 
 class RunUPCSAQueriesToBall : public ParameterizedCommand {
-
-public:
+ public:
   RunUPCSAQueriesToBall(BasicShell &shell)
       : ParameterizedCommand(shell, "runUPCSAQueriesToBall",
                              "Runs the given number of random UP-CSA queries "
@@ -865,7 +858,7 @@ public:
     }
   }
 
-private:
+ private:
   template <bool USE_STOP_BUCKETS>
   inline void chooseFinalTransfers() const noexcept {
     if (getParameter("Final transfers") == "Bucket") {
@@ -926,8 +919,7 @@ private:
 };
 
 class RunOneToManyDijkstraRAPTORQueriesToBall : public ParameterizedCommand {
-
-public:
+ public:
   RunOneToManyDijkstraRAPTORQueriesToBall(BasicShell &shell)
       : ParameterizedCommand(shell, "runOneToManyDijkstraRAPTORQueriesToBall",
                              "Runs the given number of random Dijkstra-RAPTOR "
@@ -982,8 +974,7 @@ public:
 };
 
 class RunUPRAPTORQueriesToBall : public ParameterizedCommand {
-
-public:
+ public:
   RunUPRAPTORQueriesToBall(BasicShell &shell)
       : ParameterizedCommand(shell, "runUPRAPTORQueriesToBall",
                              "Runs the given number of random UP-RAPTOR "

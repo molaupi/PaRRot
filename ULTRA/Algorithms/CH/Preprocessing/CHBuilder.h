@@ -9,13 +9,12 @@
 
 #include "../../../DataStructures/Container/ExternalKHeap.h"
 #include "../../../DataStructures/Graph/Graph.h"
+#include "../../../Helpers/Timer.h"
 #include "CHData.h"
 #include "KeyFunction.h"
+#include "Profiler.h"
 #include "StopCriterion.h"
 #include "WitnessSearch.h"
-
-#include "../../../Helpers/Timer.h"
-#include "Profiler.h"
 
 namespace CH {
 
@@ -26,8 +25,7 @@ template <
     typename STOP_CRITERION = NoStopCriterion, bool BUILD_Q_LINEAR = false,
     bool BREAK_KEY_TIES_BY_ID = false, bool SORT_SHORTCUTS = false>
 class Builder {
-
-public:
+ public:
   using Profiler = PROFILER;
   using WitnessSearch = WITNESS_SEARCH;
   using KeyFunction = KEY_FUNCTION;
@@ -38,10 +36,10 @@ public:
   using Type = Builder<Profiler, WitnessSearch, KeyFunction, StopCriterion,
                        BuildQLinear, BreakKeyTiesById, SortShortcuts>;
 
-private:
+ private:
   using KeyType = typename KEY_FUNCTION::KeyType;
 
-private:
+ private:
   struct VertexLabel : public ExternalKHeapElement {
     VertexLabel() : key(0) {}
     inline bool hasSmallerKey(const VertexLabel *const other) const noexcept {
@@ -63,32 +61,44 @@ private:
     }
   };
 
-public:
+ public:
   template <typename GRAPH, typename WEIGHT>
   Builder(GRAPH &&graph, const WEIGHT &weight,
           const KeyFunction &keyFunction = KeyFunction(),
           const StopCriterion &stopCriterion = StopCriterion(),
           const WitnessSearch &witnessSearch = WitnessSearch(),
           const Profiler &profiler = Profiler())
-      : data(std::move(graph), weight), keyFunction(keyFunction),
-        witnessSearch(witnessSearch), stopCriterion(stopCriterion),
-        profiler(profiler), Q(data.numVertices), label(data.numVertices) {}
+      : data(std::move(graph), weight),
+        keyFunction(keyFunction),
+        witnessSearch(witnessSearch),
+        stopCriterion(stopCriterion),
+        profiler(profiler),
+        Q(data.numVertices),
+        label(data.numVertices) {}
 
   Builder(CHCoreGraph &&graph, const KeyFunction &keyFunction = KeyFunction(),
           const StopCriterion &stopCriterion = StopCriterion(),
           const WitnessSearch &witnessSearch = WitnessSearch(),
           const Profiler &profiler = Profiler())
-      : data(std::move(graph)), keyFunction(keyFunction),
-        witnessSearch(witnessSearch), stopCriterion(stopCriterion),
-        profiler(profiler), Q(data.numVertices), label(data.numVertices) {}
+      : data(std::move(graph)),
+        keyFunction(keyFunction),
+        witnessSearch(witnessSearch),
+        stopCriterion(stopCriterion),
+        profiler(profiler),
+        Q(data.numVertices),
+        label(data.numVertices) {}
 
   Builder(Data &&originalData, const KeyFunction &keyFunction = KeyFunction(),
           const StopCriterion &stopCriterion = StopCriterion(),
           const WitnessSearch &witnessSearch = WitnessSearch(),
           const Profiler &profiler = Profiler())
-      : data(std::move(originalData)), keyFunction(keyFunction),
-        witnessSearch(witnessSearch), stopCriterion(stopCriterion),
-        profiler(profiler), Q(data.numVertices), label(data.numVertices) {}
+      : data(std::move(originalData)),
+        keyFunction(keyFunction),
+        witnessSearch(witnessSearch),
+        stopCriterion(stopCriterion),
+        profiler(profiler),
+        Q(data.numVertices),
+        label(data.numVertices) {}
 
   inline void run() {
     initialize<true>();
@@ -166,8 +176,9 @@ public:
 
   inline Data &getData() noexcept { return data; }
 
-private:
-  template <bool RESET_DATA> inline void initialize() noexcept {
+ private:
+  template <bool RESET_DATA>
+  inline void initialize() noexcept {
     if constexpr (RESET_DATA) {
       data.order.clear();
       std::vector<VertexLabel>(data.numVertices).swap(label);
@@ -184,7 +195,8 @@ private:
     return keyFunction(vertex);
   }
 
-  template <bool RESET_DATA> inline void buildQ() noexcept {
+  template <bool RESET_DATA>
+  inline void buildQ() noexcept {
     profiler.startBuildingQ();
     Q.clear();
     std::vector<bool> alreadyContracted;
@@ -198,8 +210,7 @@ private:
       if constexpr (RESET_DATA) {
         data.level[vertex] = 0;
       } else {
-        if (alreadyContracted[vertex])
-          continue;
+        if (alreadyContracted[vertex]) continue;
       }
       label[vertex].key = getKey(vertex);
       if constexpr (!(BuildQLinear && RESET_DATA)) {
@@ -235,8 +246,7 @@ private:
       Vertex from = data.core.get(FromVertex, first);
       for (Edge second : data.core.edgesFrom(vertex)) {
         Vertex to = data.core.get(ToVertex, second);
-        if (from == to)
-          continue;
+        if (from == to) continue;
         shortcuts.push_back(Shortcut(
             {from, to,
              data.core.get(Weight, first) + data.core.get(Weight, second)}));
@@ -255,8 +265,7 @@ private:
     std::set<Vertex> neighbors;
     for (Edge edge : data.core.edgesFrom(vertex)) {
       Vertex to = data.core.get(ToVertex, edge);
-      if (vertex == to)
-        continue;
+      if (vertex == to) continue;
       data.forwardCH.addEdge(vertex, to)
           .set(ViaVertex, data.core.get(ViaVertex, edge))
           .set(Weight, data.core.get(Weight, edge));
@@ -265,8 +274,7 @@ private:
     }
     for (Edge edge : data.core.edgesTo(vertex)) {
       Vertex from = data.core.get(FromVertex, edge);
-      if (vertex == from)
-        continue;
+      if (vertex == from) continue;
       data.backwardCH.addEdge(vertex, from)
           .set(ViaVertex, data.core.get(ViaVertex, edge))
           .set(Weight, data.core.get(Weight, edge));
@@ -299,7 +307,7 @@ private:
     }
   }
 
-private:
+ private:
   Data data;
   KeyFunction keyFunction;
   WitnessSearch witnessSearch;
@@ -310,4 +318,4 @@ private:
   std::vector<VertexLabel> label;
 };
 
-} // namespace CH
+}  // namespace CH

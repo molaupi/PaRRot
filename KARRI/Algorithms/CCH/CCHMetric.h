@@ -45,7 +45,7 @@
 // hierarchy. It stores the edge weights and contains several sequential and
 // parallel customization algorithms.
 class CCHMetric {
-public:
+ public:
   // Constructs an individual metric incorporating the specified input weights
   // in the specified CCH.
   CCHMetric(const CCH &cch, const int32_t *const inputWeights)
@@ -225,7 +225,7 @@ public:
             std::move(ranks)};
   }
 
-private:
+ private:
   // Computes a respecting metric.
   void computeRespectingMetric() {
     upWeights.resize(cch.getUpwardGraph().numEdges());
@@ -325,10 +325,11 @@ private:
     });
   }
 
-  const CCH &cch;                    // The associated CCH.
-  const int32_t *const inputWeights; // The weights of the input edges.
+  const CCH &cch;                     // The associated CCH.
+  const int32_t *const inputWeights;  // The weights of the input edges.
 
-  std::vector<int32_t> upWeights; // The upward weights of the edges in the CCH.
   std::vector<int32_t>
-      downWeights; // The downward weights of the edges in the CCH.
+      upWeights;  // The upward weights of the edges in the CCH.
+  std::vector<int32_t>
+      downWeights;  // The downward weights of the edges in the CCH.
 };

@@ -34,8 +34,9 @@
 // The simplest implementation of a container maintaining distance labels during
 // a shortest-path search. The distance labels are explicitly initialized with a
 // linear sweep over all labels.
-template <typename DistanceLabelT> class SimpleDistanceLabelContainer {
-public:
+template <typename DistanceLabelT>
+class SimpleDistanceLabelContainer {
+ public:
   // Constructs a distance label container with explicit initialization.
   explicit SimpleDistanceLabelContainer(const int numLabels) {
     resize(numLabels);
@@ -65,7 +66,7 @@ public:
     return distanceLabels[v];
   }
 
-private:
+ private:
   AlignedVector<DistanceLabelT>
-      distanceLabels; // The distance labels of the vertices.
+      distanceLabels;  // The distance labels of the vertices.
 };
