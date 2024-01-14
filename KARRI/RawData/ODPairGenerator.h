@@ -119,7 +119,7 @@ public:
         dijkstra.init({ { od.origin } });
         while (u != od.destination) {
             if (dijkstra.queue.empty())
-                return INFTY;
+                return INFTYKARRI;
             u = dijkstra.settleNextVertex();
             rank += isVertexInStudyArea[u];
         }

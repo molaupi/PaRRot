@@ -215,8 +215,8 @@ private:
 
                     // Iterate over all pickups/dropoffs at this stop once to find a lower bound on the cost of any
                     // paired assignment here
-                    minDistToPickup = INFTY;
-                    minDistFromDropoff = INFTY;
+                    minDistToPickup = INFTYKARRI;
+                    minDistFromDropoff = INFTYKARRI;
 
                     while (pickupIt < relevantPickups.end() && pickupIt->stopIndex == stopPos) {
                         const auto& entry = *pickupIt;
@@ -236,7 +236,7 @@ private:
                         ++dropoffIt;
                     }
 
-                    if (minDistToPickup == INFTY || minDistFromDropoff == INFTY)
+                    if (minDistToPickup == INFTYKARRI || minDistFromDropoff == INFTYKARRI)
                         continue;
 
                     const auto endOfStopInPickups = pickupIt;
@@ -268,7 +268,7 @@ private:
                             asgn.pickup = &requestState.pickups[pickupEntry.pdId];
                             asgn.distToPickup = pickupEntry.distToPDLoc;
 
-                            assert(asgn.distToPickup < INFTY && asgn.distFromDropoff < INFTY);
+                            assert(asgn.distToPickup < INFTYKARRI && asgn.distFromDropoff < INFTYKARRI);
                             asgn.distToDropoff = pdDistances.getDirectDistance(*asgn.pickup, *asgn.dropoff);
                             requestState.tryAssignment(asgn);
                             ++numAssignmentsTried;

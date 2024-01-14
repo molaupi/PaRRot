@@ -238,7 +238,7 @@ private:
                             // If we know the exact distance to the pickup via the vehicles current location, we try
                             // the precise assignment.
                             asgn.distToPickup = curVehLocToPickupSearches.getDistance(vehId, asgn.pickup->id);
-                            if (asgn.distToPickup >= INFTY)
+                            if (asgn.distToPickup >= INFTYKARRI)
                                 continue;
 
                             requestState.tryAssignment(asgn);
@@ -265,7 +265,7 @@ private:
                     for (const auto& pair : pickupsToTryBeforeNextStop) {
                         asgn.pickup = &requestState.pickups[pair.first];
                         asgn.distToPickup = curVehLocToPickupSearches.getDistance(vehId, asgn.pickup->id);
-                        if (asgn.distToPickup >= INFTY)
+                        if (asgn.distToPickup >= INFTYKARRI)
                             continue;
 
                         asgn.distFromPickup = pair.second;

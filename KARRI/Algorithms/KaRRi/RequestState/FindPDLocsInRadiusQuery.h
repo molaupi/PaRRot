@@ -25,6 +25,7 @@
 #pragma once
 
 #include "../../../DataStructures/Graph/Attributes/PsgEdgeToCarEdgeAttribute.h"
+#include "../../../DataStructures/Labels/BasicLabelSet.h"
 #include "../../Dijkstra/Dijkstra.h"
 #include "../BaseObjects/Request.h"
 #include <cstdint>
@@ -131,7 +132,7 @@ private:
                 if (eInVehGraph == PsgEdgeToCarEdgeAttribute::defaultValue() || distToV + forwardGraph.travelTime(e) > inputConfig.pickupRadius)
                     continue;
 
-                pickups.push_back({ INVALID_ID, eInVehGraph, e, distToV + forwardGraph.travelTime(e), INFTY, INFTY });
+                pickups.push_back({ INVALID_ID, eInVehGraph, e, distToV + forwardGraph.travelTime(e), INFTYKARRI, INFTYKARRI });
             }
         }
     }
@@ -147,7 +148,7 @@ private:
                 const int eInVehGraph = forwardGraph.toCarEdge(eInForwGraph);
                 if (eInVehGraph == PsgEdgeToCarEdgeAttribute::defaultValue())
                     continue;
-                dropoffs.push_back({ INVALID_ID, eInVehGraph, eInForwGraph, distToV, INFTY, INFTY });
+                dropoffs.push_back({ INVALID_ID, eInVehGraph, eInForwGraph, distToV, INFTYKARRI, INFTYKARRI });
             }
         }
     }
@@ -158,7 +159,7 @@ private:
         // Add center to PD locs
         const int nextSeqId = pdLocs.size();
         const int centerInVehGraph = forwardGraph.toCarEdge(centerInPsgGraph);
-        pdLocs.push_back({ nextSeqId, centerInVehGraph, centerInPsgGraph, 0, INFTY, INFTY });
+        pdLocs.push_back({ nextSeqId, centerInVehGraph, centerInPsgGraph, 0, INFTYKARRI, INFTYKARRI });
 
         // Remove duplicates
         removeDuplicates(pdLocs);
@@ -174,7 +175,7 @@ private:
             // If there are more PD-locs than the maximum number, then we permute the PD-locs randomly and
             // use only the first maxNumber ones. We make sure that the center is included and stays at the
             // beginning of the PD-locs.
-            const auto perm = Permutation::getRandomPermutation(pdLocs.size(), rand);
+            const auto perm = PermutationKARRI::getRandomPermutationKARRI(pdLocs.size(), rand);
             perm.applyTo(pdLocs);
             std::swap(pdLocs[perm[0]], pdLocs[0]);
         }
@@ -214,9 +215,9 @@ private:
         for (int i = 0; i < pdLocs.size(); ++i) {
             if (pdLocs[i].id != i)
                 return false;
-            if (pdLocs[i].vehDistToCenter != INFTY)
+            if (pdLocs[i].vehDistToCenter != INFTYKARRI)
                 return false;
-            if (pdLocs[i].vehDistFromCenter != INFTY)
+            if (pdLocs[i].vehDistFromCenter != INFTYKARRI)
                 return false;
         }
         return true;

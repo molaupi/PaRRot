@@ -102,28 +102,28 @@ public:
     // Returns the parent vertex of v on the shortest path to v.
     int getParentVertex(const int v)
     {
-        assert(distanceLabels[v][0] != INFTY);
+        assert(distanceLabels[v][0] != INFTYKARRI);
         return parent.getVertex(v);
     }
 
     // Returns the parent edge of v on the shortest path to v.
     int getParentEdge(const int v)
     {
-        assert(distanceLabels[v][0] != INFTY);
+        assert(distanceLabels[v][0] != INFTYKARRI);
         return parent.getEdge(v);
     }
 
     // Returns the vertices on the shortest path to t in reverse order.
     const std::vector<int32_t>& getReversePath(const int t)
     {
-        assert(distanceLabels[t][0] != INFTY);
+        assert(distanceLabels[t][0] != INFTYKARRI);
         return parent.getReversePath(t);
     }
 
     // Returns the edges on the shortest path to t in reverse order.
     const std::vector<int32_t>& getReverseEdgePath(const int t)
     {
-        assert(distanceLabels[t][0] != INFTY);
+        assert(distanceLabels[t][0] != INFTYKARRI);
         return parent.getReverseEdgePath(t);
     }
 

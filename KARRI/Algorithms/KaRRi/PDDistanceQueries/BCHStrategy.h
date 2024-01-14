@@ -50,7 +50,7 @@ private:
         static constexpr unsigned int invalid_target = std::numeric_limits<unsigned int>::max();
 
         unsigned int targetId = invalid_target; // the batch id for this batch of K dropoffs with sequential ids (i.e. targetId ranges from 0 to numDropoffs / K ( + 1)).
-        DistanceLabel distToDropoff = INFTY; // the distances from this vertex to the K dropoffs
+        DistanceLabel distToDropoff = INFTYKARRI; // the distances from this vertex to the K dropoffs
 
         friend bool operator==(const DropoffBatchLabel& lhs, const DropoffBatchLabel& rhs) noexcept
         {
@@ -191,8 +191,8 @@ public:
             maxDestToDropoffVehDist = std::max(maxDestToDropoffVehDist, dropoff.vehDistFromCenter);
         }
 
-        if (maxPickupToOriginVehDist >= INFTY || maxDestToDropoffVehDist >= INFTY) {
-            upperBoundDirectPDDist = INFTY;
+        if (maxPickupToOriginVehDist >= INFTYKARRI || maxDestToDropoffVehDist >= INFTYKARRI) {
+            upperBoundDirectPDDist = INFTYKARRI;
         } else {
             upperBoundDirectPDDist = maxPickupToOriginVehDist + requestState.originalReqDirectDist + maxDestToDropoffVehDist; // read by stopping criterion of searches
         }

@@ -196,7 +196,7 @@ private:
 
         assert(std::all_of(rel.relevantSpots.begin(), rel.relevantSpots.end(),
             [&](const auto& h) {
-                return h.distToPDLoc < INFTY && h.distFromPDLocToNextStop < INFTY;
+                return h.distToPDLoc < INFTYKARRI && h.distFromPDLocToNextStop < INFTYKARRI;
             }));
 
         return numStopsRelevant;
@@ -211,7 +211,7 @@ private:
         const int& vehId = veh.vehicleId;
 
         assert(routeState.occupanciesFor(vehId)[stopIndex] + requestState.originalRequest.numRiders <= veh.capacity);
-        if (distFromStopToPickup >= INFTY || distFromPickupToNextStop >= INFTY)
+        if (distFromStopToPickup >= INFTYKARRI || distFromPickupToNextStop >= INFTYKARRI)
             return false;
 
         assert(distFromStopToPickup + distFromPickupToNextStop >= calcLengthOfLegStartingAt(stopIndex, vehId, routeState));
@@ -261,7 +261,7 @@ private:
         if (stopLocations[stopIndex + 1] == d.loc)
             return false;
 
-        if (distFromStopToDropoff >= INFTY || distFromDropoffToNextStop >= INFTY)
+        if (distFromStopToDropoff >= INFTYKARRI || distFromDropoffToNextStop >= INFTYKARRI)
             return false;
 
         const bool isDropoffAtExistingStop = d.loc == stopLocations[stopIndex];

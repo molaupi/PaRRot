@@ -305,7 +305,7 @@ public:
         depTimeOfVehAtLastStop = routeState.schedDepTimesFor(veh.vehicleId)[numStops - 1];
 
         entriesVisitedInSearch = 0;
-        maxDetourUntilEndOfServiceTime = INFTY;
+        maxDetourUntilEndOfServiceTime = INFTYKARRI;
         verticesVisitedInSearch = 0;
 
         if (isIdle) {
@@ -366,7 +366,7 @@ private:
         depTimeOfVehAtLastStop = routeState.schedDepTimesFor(veh.vehicleId)[numStops - 1];
 
         entriesVisitedInSearch = 0;
-        maxDetourUntilEndOfServiceTime = INFTY;
+        maxDetourUntilEndOfServiceTime = INFTYKARRI;
         verticesVisitedInSearch = 0;
         if (wasIdle) {
             idleEntryDelSearch.run(ch.rank(stopVertex));

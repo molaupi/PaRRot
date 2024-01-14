@@ -36,8 +36,8 @@ namespace karri::PickupAfterLastStopStrategies {
 struct PDPairAfterLastStopLabel {
     int pickupId = INVALID_ID;
     int dropoffId = INVALID_ID;
-    int directDistance = INFTY; // Stored so it only has to be retrieved from direct distances once
-    int distToPickup = INFTY;
+    int directDistance = INFTYKARRI; // Stored so it only has to be retrieved from direct distances once
+    int distToPickup = INFTYKARRI;
 
     friend bool operator==(const PDPairAfterLastStopLabel& label1, const PDPairAfterLastStopLabel& label2)
     {
@@ -87,8 +87,8 @@ public:
         , reverseLabelBuckets(inputGraph.numVertices())
         , reverseQueue(queryGraph.numVertices())
         , markedIndices()
-        , upperBoundCostWithConstraints(INFTY)
-        , bestCostWithoutConstraints(INFTY)
+        , upperBoundCostWithConstraints(INFTYKARRI)
+        , bestCostWithoutConstraints(INFTYKARRI)
         , bestAsgn()
     {
     }
@@ -255,7 +255,7 @@ private:
         const PDDistanceLabel& distancesToDropoff)
     {
         static const PDDistanceLabel INVALID_DIST_LABEL = PDDistanceLabel(INVALID_DIST);
-        static const auto inftyLabel = PDDistanceLabel(INFTY);
+        static const auto inftyLabel = PDDistanceLabel(INFTYKARRI);
         PDLabelMask isNewDominated = distancesToDropoff >= inftyLabel;
         for (int i = 0; i < dropoffIdsForInitialLabels.size(); ++i) {
             isNewDominated |= batchInitialLabelDominates(dropoffIdsForInitialLabels[i],

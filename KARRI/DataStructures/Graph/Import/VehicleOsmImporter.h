@@ -333,10 +333,10 @@ public:
         //        assert(edgeIDMapper.is_global_id_mapped(osmWayId));
         if (!edgeIDMapper.is_global_id_mapped(osmWayId) || !nodeIDMapper.is_global_id_mapped(headOsmNodeId))
             return PsgEdgeToCarEdgeAttribute::defaultValue();
-        uint64_t routing_way_id = edgeIDMapper.to_local(osmWayId, INFTY);
+        uint64_t routing_way_id = edgeIDMapper.to_local(osmWayId, INFTYKARRI);
         assert(routing_way_id < firstArcOfRoutingWay.size());
         assert(isVehicleAccessible(wayCategory[routing_way_id]));
-        uint64_t head_vertex_graph_id = nodeIDMapper.to_local(headOsmNodeId, INFTY);
+        uint64_t head_vertex_graph_id = nodeIDMapper.to_local(headOsmNodeId, INFTYKARRI);
         assert(nodeIDMapper.to_global(head_vertex_graph_id) == headOsmNodeId);
         assert(head_vertex_graph_id < osmGraph.first_out.size());
 
@@ -525,6 +525,6 @@ template <>
 inline TravelTimeAttribute::Type VehicleOsmImporter::getValue<TravelTimeAttribute>() const
 {
     if (getValue<FreeFlowSpeedAttribute>() == 0)
-        return INFTY;
+        return INFTYKARRI;
     return std::round(36.0 * getValue<LengthAttribute>() / getValue<FreeFlowSpeedAttribute>());
 }

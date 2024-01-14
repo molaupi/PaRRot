@@ -27,7 +27,7 @@ namespace karri {
 
 struct BucketEntryWithLeeway {
     int targetId = INVALID_ID; // stop id
-    int distToTarget = INFTY;
+    int distToTarget = INFTYKARRI;
     int leeway = 0;
 
     friend bool operator==(const BucketEntryWithLeeway& e1, const BucketEntryWithLeeway& e2)

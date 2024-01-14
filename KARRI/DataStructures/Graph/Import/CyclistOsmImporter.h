@@ -324,6 +324,6 @@ template <>
 inline TravelTimeAttribute::Type CyclistOsmImporter::getValue<TravelTimeAttribute>() const
 {
     if (getValue<FreeFlowSpeedAttribute>() == 0)
-        return INFTY;
+        return INFTYKARRI;
     return std::round(36.0 * getValue<LengthAttribute>() / getValue<FreeFlowSpeedAttribute>());
 }

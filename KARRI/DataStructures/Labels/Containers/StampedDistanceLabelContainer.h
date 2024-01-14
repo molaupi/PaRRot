@@ -75,7 +75,7 @@ public:
         assert(v < distanceLabels.size());
         if (timestamps[v] != clock) {
             assert(timestamps[v] < clock);
-            distanceLabels[v] = INFTY;
+            distanceLabels[v] = INFTYKARRI;
             timestamps[v] = clock;
         }
         return distanceLabels[v];

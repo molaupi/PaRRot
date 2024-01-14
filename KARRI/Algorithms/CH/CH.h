@@ -34,7 +34,7 @@
 #include "../../DataStructures/Graph/Attributes/TraversalCostAttribute.h"
 #include "../../DataStructures/Graph/Attributes/UnpackingInfoAttribute.h"
 #include "../../DataStructures/Graph/Graph.h"
-#include "../../DataStructures/Utilities/Permutation.h"
+#include "../../DataStructures/Utilities/PermutationKARRI.h"
 #include "../../Tools/Constants.h"
 
 // A weighted contraction hierarchy. The contraction order is determined online and bottom-up.
@@ -49,8 +49,7 @@ public:
 
     // Constructs a CH from the specified upward and downward graph.
     template <typename SearchGraphT, typename PermT>
-    CH(SearchGraphT&& upGraph, SearchGraphT&& downGraph, PermT&& order, PermT&& ranks)
-    noexcept
+    CH(SearchGraphT&& upGraph, SearchGraphT&& downGraph, PermT&& order, PermT&& ranks) noexcept
         : upGraph(std::forward<SearchGraphT>(upGraph))
         , downGraph(std::forward<SearchGraphT>(downGraph))
         , order(std::forward<PermT>(order))
@@ -58,7 +57,7 @@ public:
     {
         assert(this->upGraph.numVertices() == this->downGraph.numVertices());
         assert(this->upGraph.numVertices() == this->order.size());
-        assert(this->ranks == this->order.getInversePermutation());
+        assert(this->ranks == this->order.getInversePermutationKARRI());
     }
 
     // Constructs a CH from the specified binary file.
@@ -159,6 +158,6 @@ public:
 private:
     SearchGraph upGraph; // The upward graph.
     SearchGraph downGraph; // The downward graph.
-    Permutation order; // order[i] = v indicates that v was the i-th vertex contracted.
-    Permutation ranks; // ranks[v] = i indicates that v was the i-th vertex contracted.
+    PermutationKARRI order; // order[i] = v indicates that v was the i-th vertex contracted.
+    PermutationKARRI ranks; // ranks[v] = i indicates that v was the i-th vertex contracted.
 };

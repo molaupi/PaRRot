@@ -103,8 +103,10 @@ using Position = AttributeNameWrapper<30>;
 using DistanceLabelTo = AttributeNameWrapper<31>;
 using DistanceLabelFrom = AttributeNameWrapper<32>;
 // ********************************
+using InsertionInfoType = AttributeNameWrapper<33>;
+using VehicleIdType = AttributeNameWrapper<34>;
 
-using UnknownType = AttributeNameWrapper<33>;
+using UnknownType = AttributeNameWrapper<35>;
 // Ensure that Unknown is the last entry!
 
 } // namespace ImplementationDetail
@@ -147,6 +149,8 @@ constexpr ImplementationDetail::Position Position;
 constexpr ImplementationDetail::DistanceLabelTo DistanceLabelTo;
 constexpr ImplementationDetail::DistanceLabelFrom DistanceLabelFrom;
 // ********************************
+constexpr ImplementationDetail::InsertionInfoType InsertionInfo;
+constexpr ImplementationDetail::VehicleIdType VehicleId;
 
 constexpr ImplementationDetail::UnknownType Unknown;
 // Ensure that Unknown is the last entry!
@@ -190,7 +194,9 @@ constexpr const char* AttributeNameStrings[] = {
     /* 31 */ "DistanceLabelTo",
     /* 32 */ "DistanceLabelFrom",
     // ********************************
-    /* 33 */ "Unknown"
+    /* 33 */ "InsertionInfo",
+    /* 34 */ "VehicleId",
+    /* 35 */ "Unknown"
     // Ensure that Unknown is the last entry!
 };
 

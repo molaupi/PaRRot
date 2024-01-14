@@ -36,7 +36,7 @@
 #include "../../DataStructures/Graph/Attributes/EdgeTailAttribute.h"
 #include "../../DataStructures/Graph/Graph.h"
 #include "../../DataStructures/Partitioning/SeparatorDecomposition.h"
-#include "../../DataStructures/Utilities/Permutation.h"
+#include "../../DataStructures/Utilities/PermutationKARRI.h"
 #include "../../Tools/Constants.h"
 #include "../../Tools/Workarounds.h"
 
@@ -118,13 +118,13 @@ public:
     }
 
     // Returns the order in which vertices were contracted.
-    const Permutation& getContractionOrder() const noexcept
+    const PermutationKARRI& getContractionOrder() const noexcept
     {
         return decomp.order;
     }
 
     // Returns the position of each vertex in the contraction order.
-    const Permutation& getRanks() const noexcept
+    const PermutationKARRI& getRanks() const noexcept
     {
         return ranks;
     }
@@ -315,7 +315,7 @@ private:
     }
 
     SeparatorDecomposition decomp; // The separator decomposition used to build this CCH.
-    Permutation ranks; // The position of each vertex in the contraction order.
+    PermutationKARRI ranks; // The position of each vertex in the contraction order.
     EliminationTree eliminationTree; // The associated elimination tree.
 
     UpGraph upGraph; // The upward graph.

@@ -49,11 +49,11 @@ public:
     {
         assert(maxDist >= 0);
         queryPoint = query;
-        boundingBox = { { -INFTY, -INFTY }, { INFTY, INFTY } };
+        boundingBox = { { -INFTYKARRI, -INFTYKARRI }, { INFTYKARRI, INFTYKARRI } };
         closestPoint = INVALID_ID;
         distToClosestPoint = int64_t { maxDist } * maxDist + 1;
         findClosestPoint(tree.front());
-        assert(boundingBox == Rectangle(Point(-INFTY, -INFTY), Point(INFTY, INFTY)));
+        assert(boundingBox == Rectangle(Point(-INFTYKARRI, -INFTYKARRI), Point(INFTYKARRI, INFTYKARRI)));
         return closestPoint;
     }
 
@@ -89,7 +89,7 @@ private:
             recordsByX[i].id = i;
             recordsByX[i].coordinates = points[i];
         }
-        recordsByX.back().coordinates = { INFTY, INFTY };
+        recordsByX.back().coordinates = { INFTYKARRI, INFTYKARRI };
         recordsByY.assign(recordsByX.begin(), recordsByX.end());
         tmpStorage.assign(points.size(), {});
 

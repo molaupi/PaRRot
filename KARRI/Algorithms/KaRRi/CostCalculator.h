@@ -28,13 +28,13 @@
 #include <cassert>
 #include <cmath>
 
-#include "Algorithms/KaRRi/AssignmentCostFunctions/TimeIsMoneyCostFunction.h"
-#include "Algorithms/KaRRi/BaseObjects/Assignment.h"
-#include "Algorithms/KaRRi/InputConfig.h"
-#include "Algorithms/KaRRi/RouteState.h"
-#include "Algorithms/KaRRi/TimeUtils.h"
-#include "Tools/Constants.h"
-#include "Tools/Workarounds.h"
+#include "../../Tools/Constants.h"
+#include "../../Tools/Workarounds.h"
+#include "AssignmentCostFunctions/TimeIsMoneyCostFunction.h"
+#include "BaseObjects/Assignment.h"
+#include "InputConfig.h"
+#include "RouteState.h"
+#include "TimeUtils.h"
 
 namespace karri {
 
@@ -74,10 +74,10 @@ public:
         using namespace time_utils;
         assert(asgn.vehicle && asgn.pickup && asgn.dropoff);
         if (!asgn.vehicle || !asgn.pickup || !asgn.dropoff)
-            return INFTY;
+            return INFTYKARRI;
 
-        if (asgn.distToPickup == INFTY || asgn.distFromPickup == INFTY || asgn.distToDropoff == INFTY || asgn.distFromDropoff == INFTY)
-            return INFTY;
+        if (asgn.distToPickup == INFTYKARRI || asgn.distFromPickup == INFTYKARRI || asgn.distToDropoff == INFTYKARRI || asgn.distFromDropoff == INFTYKARRI)
+            return INFTYKARRI;
         const int vehId = asgn.vehicle->vehicleId;
         const auto numStops = routeState.numStopsOf(asgn.vehicle->vehicleId);
         const auto actualDepTimeAtPickup = getActualDepTimeAtPickup(asgn, context, routeState, inputConfig);
@@ -98,7 +98,7 @@ public:
             routeState);
 
         if (checkHardConstraints && isAnyHardConstraintViolated(asgn, context, initialPickupDetour, detourRightAfterDropoff, residualDetourAtEnd, dropoffAtExistingStop, routeState))
-            return INFTY;
+            return INFTYKARRI;
 
         addedTripTime += calcAddedTripTimeAffectedByPickupAndDropoff(asgn, detourRightAfterDropoff, routeState);
 
@@ -113,8 +113,8 @@ public:
     {
         assert(walkingDist >= travelTimeOfDestEdge);
 
-        if (walkingDist >= INFTY)
-            return INFTY;
+        if (walkingDist >= INFTYKARRI)
+            return INFTYKARRI;
 
         int destSideDist;
         if (walkingDist <= inputConfig.pickupRadius + inputConfig.dropoffRadius) {
@@ -143,10 +143,10 @@ public:
     {
         using namespace time_utils;
         if (!asgn.vehicle || !asgn.pickup || !asgn.dropoff)
-            return INFTY;
+            return INFTYKARRI;
         assert(asgn.pickupStopIdx == asgn.dropoffStopIdx);
-        if (asgn.distToPickup == INFTY || asgn.distFromPickup == INFTY || asgn.distToDropoff == INFTY || asgn.distFromDropoff == INFTY)
-            return INFTY;
+        if (asgn.distToPickup == INFTYKARRI || asgn.distFromPickup == INFTYKARRI || asgn.distToDropoff == INFTYKARRI || asgn.distFromDropoff == INFTYKARRI)
+            return INFTYKARRI;
 
         const PDLoc& pickupWithMinDistToPrev = *asgn.pickup;
 
@@ -168,7 +168,7 @@ public:
         if (isAnyHardConstraintViolated(asgn, context, initialPickupDetour, detourRightAfterDropoff,
                 totalVehicleDetour,
                 dropoffAtExistingStop, routeState))
-            return INFTY;
+            return INFTYKARRI;
 
         const int tripTimeLowerBound = context.originalReqDirectDist;
 
@@ -209,7 +209,7 @@ public:
             minDetourRightAfterDropoff, routeState);
         if (isAnyHardConstraintViolated(asgn, context, initialPickupDetour, minDetourRightAfterDropoff,
                 residualDetourAtEnd, false, routeState))
-            return INFTY;
+            return INFTYKARRI;
 
         const int minTripTime = minActualDepTimeAtPickup - context.originalRequest.requestTime + minDistToDropoff;
         const int walkingCost = F::calcWalkingCost(pickup.walkingDist, inputConfig.pickupRadius);
@@ -227,8 +227,8 @@ public:
         const int minDistToDropoff,
         const RequestContext& context) const
     {
-        if (distToPickup >= INFTY)
-            return INFTY;
+        if (distToPickup >= INFTYKARRI)
+            return INFTYKARRI;
 
         const int minDetour = distToPickup + minDistToDropoff + stopTime;
 
@@ -258,9 +258,9 @@ public:
 
         DistanceLabel costLowerBound = F::calcKVehicleCosts(minDetour) + minWaitViolationCost + minTripCost;
 
-        // Calculations with INFTY don't work like mathematical infinity, so make infinite costs caused by infinite
+        // Calculations with INFTYKARRI don't work like mathematical infinity, so make infinite costs caused by infinite
         // distances explicit
-        costLowerBound.setIf(DistanceLabel(INFTY), ~(distsToPickup < INFTY));
+        costLowerBound.setIf(DistanceLabel(INFTYKARRI), ~(distsToPickup < INFTYKARRI));
 
         return costLowerBound;
     }
@@ -276,11 +276,11 @@ public:
     {
         using DistanceLabel = typename LabelSet::DistanceLabel;
         using LabelMask = typename LabelSet::LabelMask;
-        assert(directDist.horizontalMin() >= 0 && directDist.horizontalMax() < INFTY);
-        assert(pickupWalkingDists.horizontalMin() >= 0 && pickupWalkingDists.horizontalMax() < INFTY);
+        assert(directDist.horizontalMin() >= 0 && directDist.horizontalMax() < INFTYKARRI);
+        assert(pickupWalkingDists.horizontalMin() >= 0 && pickupWalkingDists.horizontalMax() < INFTYKARRI);
 
-        // Calculations with INFTY don't work like mathematical infinity, so set cost to INFTY later.
-        const LabelMask inftyMask = ~((detourTillDepAtPickup < INFTY) & (tripTimeTillDepAtPickup < INFTY));
+        // Calculations with INFTYKARRI don't work like mathematical infinity, so set cost to INFTYKARRI later.
+        const LabelMask inftyMask = ~((detourTillDepAtPickup < INFTYKARRI) & (tripTimeTillDepAtPickup < INFTYKARRI));
         //            const DistanceLabel adaptedVehTimeTillDepAtPickup = select(vehTimeInftyMask, 0, vehTimeTillDepAtPickup);
 
         const DistanceLabel detourCost = F::calcKVehicleCosts(detourTillDepAtPickup + directDist + stopTime);
@@ -291,8 +291,8 @@ public:
         // Pickup after last stop so no added trip costs for existing passengers.
         DistanceLabel minCost = detourCost + tripCost + walkingCost + waitViolationCost;
 
-        // Set cost to INFTY where input times were invalid
-        minCost.setIf(DistanceLabel(INFTY), inftyMask);
+        // Set cost to INFTYKARRI where input times were invalid
+        minCost.setIf(DistanceLabel(INFTYKARRI), inftyMask);
 
         return minCost;
     }
@@ -309,15 +309,15 @@ public:
         using DistanceLabel = typename LabelSet::DistanceLabel;
         using LabelMask = typename LabelSet::LabelMask;
         using namespace time_utils;
-        assert(psgArrTimesAtPickups.horizontalMin() >= 0 && psgArrTimesAtPickups.horizontalMax() < INFTY);
-        assert(distancesToDest.horizontalMin() >= 0 && distancesToDest.horizontalMax() < INFTY);
-        assert(pickupWalkingDists.horizontalMin() >= 0 && pickupWalkingDists.horizontalMax() < INFTY);
+        assert(psgArrTimesAtPickups.horizontalMin() >= 0 && psgArrTimesAtPickups.horizontalMax() < INFTYKARRI);
+        assert(distancesToDest.horizontalMin() >= 0 && distancesToDest.horizontalMax() < INFTYKARRI);
+        assert(pickupWalkingDists.horizontalMin() >= 0 && pickupWalkingDists.horizontalMax() < INFTYKARRI);
 
         const int& vehId = veh.vehicleId;
 
-        // Calculations with INFTY don't work like mathematical infinity, so use 0 as placeholder value and set cost
-        // to INFTY later.
-        const LabelMask distToPickupInftyMask = ~(distancesToPickups < INFTY);
+        // Calculations with INFTYKARRI don't work like mathematical infinity, so use 0 as placeholder value and set cost
+        // to INFTYKARRI later.
+        const LabelMask distToPickupInftyMask = ~(distancesToPickups < INFTYKARRI);
         const DistanceLabel adaptedDistToPickup = select(distToPickupInftyMask, 0, distancesToPickups);
 
         const auto& stopIdx = routeState.numStopsOf(vehId) - 1;
@@ -336,12 +336,12 @@ public:
 
         DistanceLabel cost = detourCost + tripCost + walkingCost + waitViolationCost;
 
-        // Set cost to INFTY where dist was INFTY
-        cost.setIf(DistanceLabel(INFTY), distToPickupInftyMask);
+        // Set cost to INFTYKARRI where dist was INFTYKARRI
+        cost.setIf(DistanceLabel(INFTYKARRI), distToPickupInftyMask);
 
-        // Check if service time hard constraint is violated for any pairs. Set cost to INFTY if so.
+        // Check if service time hard constraint is violated for any pairs. Set cost to INFTYKARRI if so.
         const LabelMask violatesServiceTime = DistanceLabel(veh.endOfServiceTime) < (DistanceLabel(vehDepTimeAtLastStop + 2 * stopTime) + distancesToPickups + distancesToDest);
-        cost.setIf(DistanceLabel(INFTY), violatesServiceTime);
+        cost.setIf(DistanceLabel(INFTYKARRI), violatesServiceTime);
 
         return cost;
     }
@@ -354,8 +354,8 @@ public:
         const RequestContext& context) const
     {
         using namespace time_utils;
-        if (distToPickup >= INFTY || minDistToDropoff >= INFTY)
-            return INFTY;
+        if (distToPickup >= INFTYKARRI || minDistToDropoff >= INFTYKARRI)
+            return INFTYKARRI;
 
         const auto vehId = veh.vehicleId;
 
@@ -369,7 +369,7 @@ public:
         const int minDetour = detourUntilDepAtPickup + minDistToDropoff;
 
         if (time_utils::isServiceTimeConstraintViolated(veh, context, minDetour, routeState))
-            return INFTY;
+            return INFTYKARRI;
 
         const int walkingCost = F::calcWalkingCost(pickup.walkingDist, inputConfig.pickupRadius);
         const int waitViolationCost = F::calcWaitViolationCost(actualDepTimeAtPickup, context);
@@ -397,9 +397,9 @@ public:
         const int minTripTimeToLastStop,
         const RequestContext& context) const
     {
-        assert(distToDropoff < INFTY);
-        if (distToDropoff >= INFTY)
-            return INFTY;
+        assert(distToDropoff < INFTYKARRI);
+        if (distToDropoff >= INFTYKARRI)
+            return INFTYKARRI;
 
         const int minDetour = distToDropoff + stopTime;
 
@@ -424,8 +424,8 @@ public:
         using DistanceLabel = typename LabelSet::DistanceLabel;
         using LabelMask = typename LabelSet::LabelMask;
 
-        // For dropoffs with a distanceToDropoff of INFTY, set cost to INFTY later.
-        const LabelMask inftyMask = ~(distToDropoff < INFTY);
+        // For dropoffs with a distanceToDropoff of INFTYKARRI, set cost to INFTYKARRI later.
+        const LabelMask inftyMask = ~(distToDropoff < INFTYKARRI);
 
         const DistanceLabel minDropoffDetours = distToDropoff + stopTime;
         const DistanceLabel walkingCosts = F::calcKWalkingCosts(dropoffWalkingDists, inputConfig.dropoffRadius);
@@ -436,7 +436,7 @@ public:
         // const DistanceLabel minAddedTripCostOfOthers = 0;
 
         DistanceLabel costLowerBound = F::calcKVehicleCosts(minDropoffDetours) + walkingCosts + minTripCosts;
-        costLowerBound.setIf(DistanceLabel(INFTY), inftyMask);
+        costLowerBound.setIf(DistanceLabel(INFTYKARRI), inftyMask);
 
         return costLowerBound;
     }
@@ -448,9 +448,9 @@ public:
         const RequestContext& context) const
     {
         assert(minArrTimeAtDropoff >= context.originalRequest.requestTime);
-        assert(minDistToDropoff < INFTY);
-        if (minDistToDropoff >= INFTY)
-            return INFTY;
+        assert(minDistToDropoff < INFTYKARRI);
+        if (minDistToDropoff >= INFTYKARRI)
+            return INFTYKARRI;
 
         const int minDetour = minDistToDropoff + stopTime;
         const int walkingCost = F::calcWalkingCost(dropoffWalkingDist, inputConfig.dropoffRadius);
@@ -471,8 +471,8 @@ public:
         using DistanceLabel = typename LabelSet::DistanceLabel;
         using LabelMask = typename LabelSet::LabelMask;
 
-        // For dropoffs with a distanceToDropoff of INFTY, set cost to INFTY later.
-        const LabelMask inftyMask = ~((minDistToDropoff < INFTY) & (minArrTimeAtDropoff < INFTY));
+        // For dropoffs with a distanceToDropoff of INFTYKARRI, set cost to INFTYKARRI later.
+        const LabelMask inftyMask = ~((minDistToDropoff < INFTYKARRI) & (minArrTimeAtDropoff < INFTYKARRI));
 
         const DistanceLabel minDropoffDetours = minDistToDropoff + stopTime;
         const DistanceLabel walkingCosts = F::calcKWalkingCosts(dropoffWalkingDists, inputConfig.dropoffRadius);
@@ -483,7 +483,7 @@ public:
         // const DistanceLabel minAddedTripCostOfOthers = 0;
 
         DistanceLabel costLowerBound = F::calcKVehicleCosts(minDropoffDetours) + walkingCosts + minTripCosts;
-        costLowerBound.setIf(DistanceLabel(INFTY), inftyMask);
+        costLowerBound.setIf(DistanceLabel(INFTYKARRI), inftyMask);
 
         return costLowerBound;
     }
@@ -500,8 +500,8 @@ public:
         using DistanceLabel = typename LabelSet::DistanceLabel;
         using LabelMask = typename LabelSet::LabelMask;
 
-        // For dropoffs with a distanceToDropoff of INFTY, set cost to INFTY later.
-        const LabelMask inftyMask = ~(distToDropoff < INFTY);
+        // For dropoffs with a distanceToDropoff of INFTYKARRI, set cost to INFTYKARRI later.
+        const LabelMask inftyMask = ~(distToDropoff < INFTYKARRI);
 
         const DistanceLabel minDropoffDetours = distToDropoff + stopTime;
         const DistanceLabel walkingCosts = F::calcKWalkingCosts(dropoffWalkingDists, inputConfig.dropoffRadius);
@@ -513,7 +513,7 @@ public:
         // const DistanceLabel minAddedTripCostOfOthers = 0;
 
         DistanceLabel costLowerBound = F::calcKVehicleCosts(minDropoffDetours) + walkingCosts + minTripCosts;
-        costLowerBound.setIf(DistanceLabel(INFTY), inftyMask);
+        costLowerBound.setIf(DistanceLabel(INFTYKARRI), inftyMask);
 
         return costLowerBound;
     }
@@ -548,7 +548,7 @@ public:
         const auto residualDetourAtEnd = calcResidualPickupDetour(veh.vehicleId, pickupIndex, numStops - 1,
             initialPickupDetour, routeState);
         if (isServiceTimeConstraintViolated(veh, context, residualDetourAtEnd, routeState))
-            return INFTY;
+            return INFTYKARRI;
 
         const int walkingCost = F::calcWalkingCost(walkingDist, inputConfig.pickupRadius);
         const int addedTripTimeOfOthers = calcAddedTripTimeInInterval(veh.vehicleId, pickupIndex, numStops - 1,
@@ -578,7 +578,7 @@ public:
             numStops - 1, 0, initialDropoffDetour, routeState);
 
         if (isServiceTimeConstraintViolated(veh, context, residualDetourAtEnd, routeState))
-            return INFTY;
+            return INFTYKARRI;
 
         const int walkingCost = F::calcWalkingCost(walkingDist, inputConfig.dropoffRadius);
         const int minAddedTripTimeOfOthers = calcAddedTripTimeInInterval(veh.vehicleId, dropoffIndex, numStops - 1,
@@ -608,7 +608,7 @@ private:
         const bool dropoffAtExistingStop, const int addedTripTimeForExistingPassengers) const
     {
         if (!asgn.vehicle || !asgn.pickup || !asgn.dropoff)
-            return INFTY;
+            return INFTYKARRI;
 
         using namespace time_utils;
         const auto arrTimeAtDropoff = getArrTimeAtDropoff(depTimeAtPickup, asgn, initialPickupDetour,

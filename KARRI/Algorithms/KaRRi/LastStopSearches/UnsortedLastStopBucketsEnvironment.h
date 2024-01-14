@@ -194,7 +194,7 @@ public:
         vehicleId = veh.vehicleId;
 
         entriesVisitedInSearch = 0;
-        maxDetourUntilEndOfServiceTime = INFTY;
+        maxDetourUntilEndOfServiceTime = INFTYKARRI;
         verticesVisitedInSearch = 0;
         entryDelSearch.run(ch.rank(stopVertex));
         const auto time = timer.elapsed<std::chrono::nanoseconds>();

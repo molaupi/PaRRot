@@ -122,7 +122,7 @@ private:
         search.queue.clear();
         std::fill(idOfClosestSpotToRank.begin(), idOfClosestSpotToRank.end(), INVALID_ID);
         std::fill(idOfClosestSpotToVeh.begin(), idOfClosestSpotToVeh.end(), INVALID_ID);
-        std::fill(distVehToClosestSpot.begin(), distVehToClosestSpot.end(), INFTY);
+        std::fill(distVehToClosestSpot.begin(), distVehToClosestSpot.end(), INFTYKARRI);
 
         for (const auto& pdLoc : pdLocs) {
             const auto tailRank = ch.rank(inputGraph.edgeTail(pdLoc.loc));

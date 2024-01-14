@@ -128,7 +128,7 @@ private:
             // Update tentative distances to v for any searches where distViaV admits a possible better assignment
             // than the current best and where distViaV is at least as good as the current tentative distance.
             LabelMask mask = ~(search.tentativeDistances.getDistancesForCurBatch(vehId) < distToPDLoc);
-            mask &= distToPDLoc < INFTY;
+            mask &= distToPDLoc < INFTYKARRI;
             if (!anySet(mask))
                 return;
 

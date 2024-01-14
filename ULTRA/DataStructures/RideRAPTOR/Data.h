@@ -36,14 +36,8 @@
 
 namespace RIDERAPTOR {
 
-using ConstructionGraph = DynamicGraph<
-    List<Attribute<VehicleId, int>>,
-    List<Attribute<Weight, int>, Attribute<InsertionInfo, StopInsertionInfo>>>;
-using RideTransferGraph = StaticGraph<
-    List<Attribute<VehicleId, int>>,
-    List<Attribute<Weight, int>, Attribute<InsertionInfo, StopInsertionInfo>>>;
-
-using RoadGraph = GraphWrapper<LoudGraph>;
+using RoadGraph = GraphWrapper<KaRRiGraph>;
+// what this?
 using CHProvider = Loud::StandardCHProvider<RoadGraph, ImplementationDetail::TravelTimeType>;
 using Dispatcher = Loud::LoudDispatcher<RoadGraph, CHProvider, std::ofstream>;
 

@@ -33,8 +33,8 @@ struct Request {
     int requestId = INVALID_ID;
     int origin = INVALID_EDGE;
     int destination = INVALID_EDGE;
-    int requestTime = INFTY;
-    int numRiders = INFTY;
+    int requestTime = INFTYKARRI;
+    int numRiders = INFTYKARRI;
 };
 
 // Models a location used for a pickup or dropoff with an ID (should be counted separately for pickups and dropoffs), a
@@ -45,10 +45,10 @@ struct PDLoc {
     int id = INVALID_ID; // Should be counted separately for pickups and dropoffs
     int loc = INVALID_EDGE; // Location in road network
     int psgLoc = INVALID_EDGE; // Location in passenger road network
-    int walkingDist = INFTY; // Walking time from origin to this pickup or from this dropoff to destination.
+    int walkingDist = INFTYKARRI; // Walking time from origin to this pickup or from this dropoff to destination.
 
-    int vehDistToCenter = INFTY; // Vehicle driving time from this pickup/dropoff to the origin/destination.
-    int vehDistFromCenter = INFTY; // Vehicle driving time from origin/destination to this pickup/dropoff.
+    int vehDistToCenter = INFTYKARRI; // Vehicle driving time from this pickup/dropoff to the origin/destination.
+    int vehDistFromCenter = INFTYKARRI; // Vehicle driving time from origin/destination to this pickup/dropoff.
 };
 
 enum PDLocType : std::int8_t {

@@ -35,39 +35,39 @@
 #include "../Containers/BitVector.h"
 
 // A permutation is a rearrangement of members of a sequence into a new sequence.
-class Permutation {
+class PermutationKARRI {
 public:
     // A const iterator type referring to a new location.
     using ConstIterator = std::vector<int32_t>::const_iterator;
 
     // Constructs an empty permutation.
-    Permutation() = default;
+    PermutationKARRI() = default;
 
     // Constructs an uninitialized permutation of the specified size.
-    explicit Permutation(const int size)
+    explicit PermutationKARRI(const int size)
         : permutation(size)
     {
     }
 
     // Constructs a permutation equal to the one specified as an iterator range.
     template <typename InputIteratorT>
-    Permutation(InputIteratorT first, InputIteratorT last)
+    PermutationKARRI(InputIteratorT first, InputIteratorT last)
         : permutation(first, last)
     {
         assert(validate());
     }
 
     // Constructs a permutation from the specified binary file.
-    explicit Permutation(std::ifstream& in)
+    explicit PermutationKARRI(std::ifstream& in)
     {
         readFrom(in);
     }
 
     // Returns a random permutation of the specified size.
     template <typename RandomNumberGeneratorT>
-    static Permutation getRandomPermutation(const int size, RandomNumberGeneratorT&& rand)
+    static PermutationKARRI getRandomPermutationKARRI(const int size, RandomNumberGeneratorT&& rand)
     {
-        Permutation perm(size);
+        PermutationKARRI perm(size);
         std::iota(perm.permutation.begin(), perm.permutation.end(), 0);
         std::shuffle(perm.permutation.begin(), perm.permutation.end(), rand);
         return perm;
@@ -116,7 +116,7 @@ public:
     }
 
     // Returns true if each element is mapped to the same location in the two permutations.
-    friend bool operator==(const Permutation& lhs, const Permutation& rhs)
+    friend bool operator==(const PermutationKARRI& lhs, const PermutationKARRI& rhs)
     {
         return lhs.permutation == rhs.permutation;
     }
@@ -124,14 +124,14 @@ public:
     // Inverts the permutation.
     void invert()
     {
-        *this = getInversePermutation();
+        *this = getInversePermutationKARRI();
     }
 
     // Returns the inverse permutation that maps new locations to old locations.
-    Permutation getInversePermutation() const
+    PermutationKARRI getInversePermutationKARRI() const
     {
         assert(validate());
-        Permutation perm(size());
+        PermutationKARRI perm(size());
         for (int oldPos = 0; oldPos < permutation.size(); ++oldPos)
             perm[permutation[oldPos]] = oldPos;
         return perm;

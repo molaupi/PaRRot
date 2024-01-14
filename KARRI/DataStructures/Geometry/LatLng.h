@@ -47,8 +47,8 @@ public:
 
     // Constructs an uninitialized LatLng.
     LatLng()
-        : lat(INFTY)
-        , lng(INFTY)
+        : lat(INFTYKARRI)
+        , lng(INFTYKARRI)
     {
     }
 
@@ -83,7 +83,7 @@ public:
     // Returns true if the LatLng represents a valid geographic point, false otherwise.
     bool isValid() const
     {
-        return lat != INFTY;
+        return lat != INFTYKARRI;
     }
 
     // Returns the latitude in 1/PRECISION degrees.

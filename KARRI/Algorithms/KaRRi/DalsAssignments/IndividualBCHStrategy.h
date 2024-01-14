@@ -59,10 +59,10 @@ private:
             const bool considerWalkingDists) const
         {
 
-            if (strat.upperBoundCost >= INFTY) {
-                // If current best is INFTY, only indices i with distancesToDropoffs[i] >= INFTY are worse than the
+            if (strat.upperBoundCost >= INFTYKARRI) {
+                // If current best is INFTYKARRI, only indices i with distancesToDropoffs[i] >= INFTYKARRI are worse than the
                 // current best.
-                return ~(distancesToDropoffs < INFTY);
+                return ~(distancesToDropoffs < INFTYKARRI);
             }
 
             const DistanceLabel walkingDists = considerWalkingDists ? strat.currentDropoffWalkingDists : 0;
@@ -81,10 +81,10 @@ private:
             const DistanceLabel& minDistancesToDropoffs) const
         {
 
-            if (strat.upperBoundCost >= INFTY) {
-                // If current best is INFTY, only indices i with arrTimesAtDropoffs[i] >= INFTY or
-                // minDistancesToDropoffs[i] >= INFTY are worse than the current best.
-                return ~((arrTimesAtDropoffs < INFTY) & (minDistancesToDropoffs < INFTY));
+            if (strat.upperBoundCost >= INFTYKARRI) {
+                // If current best is INFTYKARRI, only indices i with arrTimesAtDropoffs[i] >= INFTYKARRI or
+                // minDistancesToDropoffs[i] >= INFTYKARRI are worse than the current best.
+                return ~((arrTimesAtDropoffs < INFTYKARRI) & (minDistancesToDropoffs < INFTYKARRI));
             }
 
             const DistanceLabel costLowerBound = calc.template calcKVehicleIndependentCostLowerBoundsForDALSWithKnownMinArrTime<LabelSet>(
@@ -96,10 +96,10 @@ private:
         LabelMask isWorseThanBestKnownVehicleDependent(const int vehId,
             const DistanceLabel& distancesToDropoffs)
         {
-            if (strat.upperBoundCost >= INFTY) {
-                // If current best is INFTY, only indices i with distancesToDropoffs[i] >= INFTY are worse than
+            if (strat.upperBoundCost >= INFTYKARRI) {
+                // If current best is INFTYKARRI, only indices i with distancesToDropoffs[i] >= INFTYKARRI are worse than
                 // the current best.
-                return ~(distancesToDropoffs < INFTY);
+                return ~(distancesToDropoffs < INFTYKARRI);
             }
 
             const DistanceLabel costLowerBound = calc.template calcKVehicleDependentCostLowerBoundsForDALSWithKnownDistToDropoff<LabelSet>(
@@ -201,7 +201,7 @@ private:
         int totalNumberOfCandidateDropoffs = 0;
         for (const auto& vehId : vehiclesSeenForDropoffs)
             for (const auto& dropoff : requestState.dropoffs)
-                totalNumberOfCandidateDropoffs += (getDistanceToDropoff(vehId, dropoff.id) < INFTY);
+                totalNumberOfCandidateDropoffs += (getDistanceToDropoff(vehId, dropoff.id) < INFTYKARRI);
         requestState.stats().dalsAssignmentsStats.numCandidateDropoffsAcrossAllVehicles += totalNumberOfCandidateDropoffs;
     }
 
@@ -228,10 +228,10 @@ private:
                 asgn.dropoff = &dropoff;
 
                 asgn.distToDropoff = getDistanceToDropoff(vehId, asgn.dropoff->id);
-                if (asgn.distToDropoff >= INFTY)
+                if (asgn.distToDropoff >= INFTYKARRI)
                     continue; // no need to check pickup before next stop
 
-                assert(asgn.distToDropoff >= 0 && asgn.distToDropoff < INFTY);
+                assert(asgn.distToDropoff >= 0 && asgn.distToDropoff < INFTYKARRI);
                 int curPickupIndex = numStops - 1;
                 auto pickupIt = relevantPickupsInRevOrder.begin();
                 for (; pickupIt < relevantPickupsInRevOrder.end(); ++pickupIt) {
@@ -305,7 +305,7 @@ private:
                         continue;
 
                     asgn.distToDropoff = getDistanceToDropoff(vehId, asgn.dropoff->id);
-                    if (asgn.distToDropoff >= INFTY)
+                    if (asgn.distToDropoff >= INFTYKARRI)
                         continue;
 
                     if (curVehLocToPickupSearches.knowsDistance(vehId, asgn.pickup->id)) {
@@ -337,7 +337,7 @@ private:
 
                 asgn.distToPickup = curVehLocToPickupSearches.getDistance(vehId,
                     continuation.pickupID);
-                if (asgn.distToPickup >= INFTY)
+                if (asgn.distToPickup >= INFTYKARRI)
                     continue;
 
                 asgn.distFromPickup = continuation.distFromPickup;
@@ -348,7 +348,7 @@ private:
                         continue;
 
                     asgn.distToDropoff = getDistanceToDropoff(vehId, asgn.dropoff->id);
-                    if (asgn.distToDropoff >= INFTY)
+                    if (asgn.distToDropoff >= INFTYKARRI)
                         continue;
 
                     ++numAssignmentsTried;

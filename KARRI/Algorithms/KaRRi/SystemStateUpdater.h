@@ -178,7 +178,7 @@ public:
             << requestState.originalRequest.requestTime << ", "
             << requestState.originalReqDirectDist << ", ";
 
-        if (requestState.getBestCost() == INFTY) {
+        if (requestState.getBestCost() == INFTYKARRI) {
             bestAssignmentsLogger << "-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,inf\n";
             return;
         }

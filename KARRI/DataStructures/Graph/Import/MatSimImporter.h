@@ -351,5 +351,5 @@ inline TravelTimeAttribute::Type MatSimImporter::getValue<TravelTimeAttribute>()
     if (currentEdge.freeFlowSpeed != 0)
         return static_cast<int>(3.6 * currentEdge.length / currentEdge.freeFlowSpeed) * 10 + 10;
     else
-        return INFTY;
+        return INFTYKARRI;
 }

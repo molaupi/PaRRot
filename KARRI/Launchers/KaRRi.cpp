@@ -150,13 +150,13 @@ int main(int argc, char* argv[])
         inputConfig.maxWaitTime = clp.getValue<int>("w", 300) * 10;
         inputConfig.pickupRadius = clp.getValue<int>("p-radius", inputConfig.maxWaitTime / 10) * 10;
         inputConfig.dropoffRadius = clp.getValue<int>("d-radius", inputConfig.maxWaitTime / 10) * 10;
-        inputConfig.maxNumPickups = clp.getValue<int>("max-num-p", INFTY);
-        inputConfig.maxNumDropoffs = clp.getValue<int>("max-num-d", INFTY);
+        inputConfig.maxNumPickups = clp.getValue<int>("max-num-p", INFTYKARRI);
+        inputConfig.maxNumDropoffs = clp.getValue<int>("max-num-d", INFTYKARRI);
         inputConfig.alwaysUseVehicle = clp.isSet("always-veh");
         if (inputConfig.maxNumPickups == 0)
-            inputConfig.maxNumPickups = INFTY;
+            inputConfig.maxNumPickups = INFTYKARRI;
         if (inputConfig.maxNumDropoffs == 0)
-            inputConfig.maxNumDropoffs = INFTY;
+            inputConfig.maxNumDropoffs = INFTYKARRI;
         inputConfig.alpha = clp.getValue<double>("a", 1.7);
         inputConfig.beta = clp.getValue<int>("b", 120) * 10;
         const auto vehicleNetworkFileName = clp.getValue<std::string>("veh-g");

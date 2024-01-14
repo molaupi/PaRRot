@@ -55,12 +55,12 @@ class IndividualBCHStrategy {
         LabelMask doesDistanceNotAdmitBestAsgn(const DistanceLabel& distancesToPickups,
             const bool considerPickupWalkingDists = false) const
         {
-            assert(strat.requestState.minDirectPDDist < INFTY);
+            assert(strat.requestState.minDirectPDDist < INFTYKARRI);
 
-            if (strat.upperBoundCost >= INFTY) {
-                // If current best is INFTY, only indices i with distancesToPickups[i] >= INFTY or
-                // minDirectDistances[i] >= INFTY are worse than the current best.
-                return ~(distancesToPickups < INFTY);
+            if (strat.upperBoundCost >= INFTYKARRI) {
+                // If current best is INFTYKARRI, only indices i with distancesToPickups[i] >= INFTYKARRI or
+                // minDirectDistances[i] >= INFTYKARRI are worse than the current best.
+                return ~(distancesToPickups < INFTYKARRI);
             }
 
             const auto& walkingDists = considerPickupWalkingDists ? strat.currentPickupWalkingDists : 0;
@@ -72,7 +72,7 @@ class IndividualBCHStrategy {
             DistanceLabel costLowerBound = calc.template calcLowerBoundCostForKPairedAssignmentsAfterLastStop<LabelSetT>(
                 detourTillDepAtPickup, tripTimeTillDepAtPickup, directDist, walkingDists, strat.requestState);
 
-            costLowerBound.setIf(DistanceLabel(INFTY), ~(distancesToPickups < INFTY));
+            costLowerBound.setIf(DistanceLabel(INFTYKARRI), ~(distancesToPickups < INFTYKARRI));
 
             return strat.upperBoundCost < costLowerBound;
         }
@@ -85,12 +85,12 @@ class IndividualBCHStrategy {
         LabelMask doesArrTimeNotAdmitBestAsgn(const DistanceLabel& arrTimesAtPickups,
             const DistanceLabel& minDistancesToPickups) const
         {
-            assert(strat.requestState.minDirectPDDist < INFTY);
+            assert(strat.requestState.minDirectPDDist < INFTYKARRI);
 
-            if (strat.upperBoundCost >= INFTY) {
-                // If current best is INFTY, only indices i with arrTimesAtPickups[i] >= INFTY or
-                // minDistancesToPickups[i] >= INFTY are worse than the current best.
-                return ~((arrTimesAtPickups < INFTY) & (minDistancesToPickups < INFTY));
+            if (strat.upperBoundCost >= INFTYKARRI) {
+                // If current best is INFTYKARRI, only indices i with arrTimesAtPickups[i] >= INFTYKARRI or
+                // minDistancesToPickups[i] >= INFTYKARRI are worse than the current best.
+                return ~((arrTimesAtPickups < INFTYKARRI) & (minDistancesToPickups < INFTYKARRI));
             }
 
             const DistanceLabel directDist = strat.requestState.minDirectPDDist;
@@ -102,18 +102,18 @@ class IndividualBCHStrategy {
             DistanceLabel costLowerBound = calc.template calcLowerBoundCostForKPairedAssignmentsAfterLastStop<LabelSetT>(
                 detourTillDepAtPickup, tripTimeTillDepAtPickup, directDist, strat.currentPickupWalkingDists, strat.requestState);
 
-            costLowerBound.setIf(DistanceLabel(INFTY),
-                ~((arrTimesAtPickups < INFTY) & (minDistancesToPickups < INFTY)));
+            costLowerBound.setIf(DistanceLabel(INFTYKARRI),
+                ~((arrTimesAtPickups < INFTYKARRI) & (minDistancesToPickups < INFTYKARRI)));
             return strat.upperBoundCost < costLowerBound;
         }
 
         LabelMask isWorseThanBestKnownVehicleDependent(const int vehId,
             const DistanceLabel& distancesToPickups)
         {
-            if (strat.upperBoundCost >= INFTY) {
-                // If current best is INFTY, only indices i with distancesToDropoffs[i] >= INFTY are worse than
+            if (strat.upperBoundCost >= INFTYKARRI) {
+                // If current best is INFTYKARRI, only indices i with distancesToDropoffs[i] >= INFTYKARRI are worse than
                 // the current best.
-                return ~(distancesToPickups < INFTY);
+                return ~(distancesToPickups < INFTYKARRI);
             }
 
             const DistanceLabel directDist = strat.requestState.minDirectPDDist;
@@ -129,7 +129,7 @@ class IndividualBCHStrategy {
                 detourTillDepAtPickup, tripTimeTillDepAtPickup, directDist, strat.currentPickupWalkingDists,
                 strat.requestState);
 
-            costLowerBound.setIf(INFTY, ~(distancesToPickups < INFTY));
+            costLowerBound.setIf(INFTYKARRI, ~(distancesToPickups < INFTYKARRI));
             return strat.upperBoundCost < costLowerBound;
         }
 
@@ -229,7 +229,7 @@ private:
             for (auto& p : requestState.pickups) {
                 asgn.pickup = &p;
                 asgn.distToPickup = getDistanceToPickup(vehId, asgn.pickup->id);
-                if (asgn.distToPickup >= INFTY)
+                if (asgn.distToPickup >= INFTYKARRI)
                     continue;
 
                 // Compute cost lower bound for this pickup specifically

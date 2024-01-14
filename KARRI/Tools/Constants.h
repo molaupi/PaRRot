@@ -27,7 +27,7 @@
 #include <limits>
 
 // A special value representing infinity.
-constexpr int INFTY = std::numeric_limits<int>::max() / 2;
+constexpr int INFTYKARRI = std::numeric_limits<int>::max() / 2;
 
 // Special values representing an invalid (vertex/edge) ID.
 constexpr int INVALID_ID = -1;

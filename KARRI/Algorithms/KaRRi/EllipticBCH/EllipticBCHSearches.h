@@ -27,7 +27,6 @@
 #include "../../../DataStructures/Labels/BasicLabelSet.h"
 #include "../../../DataStructures/Labels/ParentInfo.h"
 #include "../../../DataStructures/Labels/SimdLabelSet.h"
-#include <vector>
 
 #include "../../../Tools/Logging/NullLogger.h"
 #include "../../../Tools/Timer.h"
@@ -36,6 +35,9 @@
 #include "../RequestState/RequestState.h"
 #include "../RouteState.h"
 #include "BucketEntryWithLeeway.h"
+
+#include "../../CH/CH.h"
+#include <vector>
 
 namespace karri {
 
@@ -220,7 +222,7 @@ public:
         , lastStopsAtVertices(lastStopsAtVertices)
         , feasibleEllipticPickups(feasibleEllipticPickups)
         , feasibleEllipticDropoffs(feasibleEllipticDropoffs)
-        , distUpperBound(INFTY)
+        , distUpperBound(INFTYKARRI)
         , updateDistancesToPdLocs()
         , updateDistancesFromPdLocs(routeState)
         , toQuery(chEnv.template getReverseSearch<ScanSourceBuckets, StopBCHQuery, LabelSetT>(

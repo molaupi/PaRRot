@@ -173,7 +173,7 @@ public:
             }
             currentEdge.dist = std::round(1.0 / distPrecision * currentEdge.dist);
             assert(currentEdge.dist >= 0);
-            assert(currentEdge.dist < INFTY);
+            assert(currentEdge.dist < INFTYKARRI);
         }
 
         if (timeGrFile.is_open()) {
@@ -189,7 +189,7 @@ public:
             }
             currentEdge.time = std::round(10.0 / timePrecision * currentEdge.time);
             assert(currentEdge.time >= 0);
-            assert(currentEdge.time < INFTY);
+            assert(currentEdge.time < INFTYKARRI);
 
             if (distGrFile.is_open()) {
                 assert(distGrFile.eof() == timeGrFile.eof());

@@ -4,13 +4,13 @@
 #include <string>
 #include <vector>
 
+#include "../../../KARRI/Algorithms/KaRRi/BaseObjeccts/RideRAPTORRequest.h"
 #include "../../DataStructures/Container/Map.h"
 #include "../../DataStructures/Container/Set.h"
 #include "../../DataStructures/RAPTOR/Data.h"
 #include "../../DataStructures/RAPTOR/Entities/EarliestArrivalTime.h"
 #include "../../DataStructures/RideRAPTOR/Data.h"
 #include "../../DataStructures/RideRAPTOR/Entities/Journey.h"
-#include "../KaRRi/KaRRi/BaseObjeccts/RideRAPTORRequest.h"
 #include "../RAPTOR/InitialTransfers.h"
 #include "../RAPTOR/Profiler.h"
 

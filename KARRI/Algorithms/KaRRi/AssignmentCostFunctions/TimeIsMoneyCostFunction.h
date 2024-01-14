@@ -170,7 +170,7 @@ struct TimeIsMoneyCostFunction {
     calcMinDistFromOrToPDLocSuchThatVehCostReachesMinCost(const int cost, const int maxLegLength)
     {
         if constexpr (VEHICLE_COST_SCALE == 0)
-            return INFTY;
+            return INFTYKARRI;
         else
             return cost / VEHICLE_COST_SCALE + (cost % VEHICLE_COST_SCALE != 0) + maxLegLength;
     }

@@ -65,7 +65,7 @@ public:
         assert(vehId < startIdxForVeh.size());
         const int startIdx = startIdxForVeh[vehId];
         if (startIdx == INVALID_INDEX)
-            return INFTY;
+            return INFTYKARRI;
 
         const int batchIdx = pdLocId / K;
         return distances[startIdx + batchIdx][pdLocId % K];
@@ -76,7 +76,7 @@ public:
         assert(vehId < startIdxForVeh.size());
         const int startIdx = startIdxForVeh[vehId];
         if (startIdx == INVALID_INDEX)
-            return DistanceLabel(INFTY);
+            return DistanceLabel(INFTYKARRI);
         return distances[startIdx + curBatchIdx];
     }
 
@@ -89,7 +89,7 @@ public:
 
         if (startIdxForVeh[vehId] == INVALID_INDEX) {
             startIdxForVeh[vehId] = distances.size();
-            distances.insert(distances.end(), curNumBatches, DistanceLabel(INFTY));
+            distances.insert(distances.end(), curNumBatches, DistanceLabel(INFTYKARRI));
         }
 
         distances[startIdxForVeh[vehId] + curBatchIdx].setIf(distanceBatch, batchInsertMask);

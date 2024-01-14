@@ -6,7 +6,7 @@
 #include <vector>
 
 #include "../../Tools/BinaryIO.h"
-#include "../Utilities/Permutation.h"
+#include "../Utilities/PermutationKARRI.h"
 
 // A separator decomposition of an undirected n-vertex graph G = (V, E) is a rooted tree T whose
 // nodes are disjoint subsets of V and that is recursively defined as follows. If n = 1, then T
@@ -69,5 +69,5 @@ struct SeparatorDecomposition {
     }
 
     std::vector<Node> tree; // The rooted tree representing this separator decomposition.
-    Permutation order; // The associated nested dissection order.
+    PermutationKARRI order; // The associated nested dissection order.
 };

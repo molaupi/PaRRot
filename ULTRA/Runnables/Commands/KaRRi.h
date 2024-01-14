@@ -24,20 +24,19 @@
 #include "../../DataStructures/RideRAPTOR/Data.h"
 #include "../../Shell/Shell.h"
 // TODO adapt correct includes
-#include "../../Algorithms/KaRRi/CHProviders/StandardCHProvider.h"
-#include "../../Algorithms/KaRRi/KaRRi/BaseObjects/Request.h"
-#include "../../Algorithms/KaRRi/KaRRi/BaseObjects/Vehicle.h"
-#include "../../Algorithms/KaRRi/LoudDispatcher.h"
-#include "../../Algorithms/KaRRi/MatSimDispatcher.h"
-#include "../../Algorithms/KaRRi/TransportSimulation.h"
-#include "../../Algorithms/KaRRi/VehicleLocators/StandaloneVehicleLocator.h"
+/* #include "../../../KARRI/Algorithms/KaRRi/AssignmentFinder.h" */
+/* #include "../../../KARRI/Algorithms/KaRRi/BaseObjects/Request.h" */
+/* #include "../../../KARRI/Algorithms/KaRRi/BaseObjects/Vehicle.h" */
+/* #include "../../../KARRI/Algorithms/KaRRi/CHEnvironment.h" */
+/* #include "../../../KARRI/Algorithms/KaRRi/PbnsAssignments/VehicleLocator.h" */
+
 #include "../../Algorithms/RAPTOR/Profiler.h"
 #include "../../Algorithms/RAPTOR/RAPTOR.h"
-#include "../../Algorithms/RideRAPTOR/RideRAPTOR.h"
-#include "../../Helpers/ConstructorTags.h"
-#include "../../Tools/Constants.h"
-#include "../../Tools/Logging/LogManager.h"
-#include "../../Tools/StringHelpers.h"
+/* #include "../../Algorithms/RideRAPTOR/RideRAPTOR.h" */
+/* #include "../../Helpers/ConstructorTags.h" */
+#include "../../../KARRI/Tools/Constants.h"
+#include "../../../KARRI/Tools/Logging/LogManager.h"
+#include "../../../KARRI/Tools/StringHelpers.h"
 
 using namespace Shell;
 

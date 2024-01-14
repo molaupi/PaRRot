@@ -89,14 +89,14 @@ public:
                 routeState.stopLocationsFor(vehId)[pdLocAtExistingStop.stopIndex]);
             allocateEntriesFor(stopId);
 
-            DistanceLabel zeroLabel = INFTY;
+            DistanceLabel zeroLabel = INFTYKARRI;
             zeroLabel[pdLocAtExistingStop.pdId % K] = 0;
             const auto firstIdInBatch = (pdLocAtExistingStop.pdId / K) * K;
             updateDistanceFromStopToPDLoc(stopId, firstIdInBatch, zeroLabel, stopVertex);
 
             const auto lengthOfLegStartingHere = time_utils::calcLengthOfLegStartingAt(
                 pdLocAtExistingStop.stopIndex, pdLocAtExistingStop.vehId, routeState);
-            DistanceLabel lengthOfLegLabel = INFTY;
+            DistanceLabel lengthOfLegLabel = INFTYKARRI;
             lengthOfLegLabel[pdLocAtExistingStop.pdId % K] = lengthOfLegStartingHere;
             updateDistanceFromPDLocToNextStop(stopId, firstIdInBatch, lengthOfLegLabel, stopVertex);
         }
@@ -119,7 +119,7 @@ public:
         assert(stopId >= 0 && stopId <= maxStopId);
         assert(firstPDLocId < numLabelsPerStop * K);
         assert(firstPDLocId % K == 0);
-        assert(newDistToPDLoc.horizontalMin() >= 0 && newDistToPDLoc.horizontalMin() < INFTY);
+        assert(newDistToPDLoc.horizontalMin() >= 0 && newDistToPDLoc.horizontalMin() < INFTYKARRI);
 
         // If no entries exist yet for this stop, perform the allocation.
         if (startOfRangeInValueArray[stopId] == INVALID_INDEX) {
@@ -259,17 +259,17 @@ private:
         const auto curNumLabels = distToRelevantPDLocs.size();
         startOfRangeInValueArray[stopId] = curNumLabels;
         vehiclesWithRelevantPDLocs.insert(routeState.vehicleIdOf(stopId));
-        distToRelevantPDLocs.insert(distToRelevantPDLocs.end(), numLabelsPerStop, DistanceLabel(INFTY));
+        distToRelevantPDLocs.insert(distToRelevantPDLocs.end(), numLabelsPerStop, DistanceLabel(INFTYKARRI));
         distFromRelevantPDLocsToNextStop.insert(distFromRelevantPDLocsToNextStop.end(),
-            numLabelsPerStop, DistanceLabel(INFTY));
+            numLabelsPerStop, DistanceLabel(INFTYKARRI));
         meetingVerticesToRelevantPDLocs.insert(meetingVerticesToRelevantPDLocs.end(), numLabelsPerStop,
             DistanceLabel(INVALID_VERTEX));
         meetingVerticesFromRelevantPDLocsToNextStop.insert(
             meetingVerticesFromRelevantPDLocsToNextStop.end(),
             numLabelsPerStop, DistanceLabel(INVALID_VERTEX));
 
-        minDistToPDLoc[stopId] = INFTY;
-        minDistFromPDLocToNextStop[stopId] = INFTY;
+        minDistToPDLoc[stopId] = INFTYKARRI;
+        minDistFromPDLocToNextStop[stopId] = INFTYKARRI;
     }
 
     const RouteState& routeState;

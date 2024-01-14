@@ -35,8 +35,8 @@ class Rectangle {
 public:
     // Constructs an empty bounding box that can be gradually extended.
     Rectangle() noexcept
-        : sw(INFTY, INFTY)
-        , ne(-INFTY, -INFTY)
+        : sw(INFTYKARRI, INFTYKARRI)
+        , ne(-INFTYKARRI, -INFTYKARRI)
     {
     }
 

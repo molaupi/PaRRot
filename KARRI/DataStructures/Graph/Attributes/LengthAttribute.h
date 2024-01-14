@@ -35,7 +35,7 @@ public:
     // Returns the attribute's default value.
     static Type defaultValue()
     {
-        return INFTY;
+        return INFTYKARRI;
     }
 
     // Returns the length in meters of edge e.

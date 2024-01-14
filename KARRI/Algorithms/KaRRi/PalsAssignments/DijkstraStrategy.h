@@ -152,7 +152,7 @@ private:
             for (auto& p : requestState.pickups) {
                 asgn.pickup = &p;
                 asgn.distToPickup = lastStopDistances.getDistance(vehId, asgn.pickup->id);
-                if (asgn.distToPickup >= INFTY)
+                if (asgn.distToPickup >= INFTYKARRI)
                     continue;
 
                 // Compute cost lower bound for this pickup specifically

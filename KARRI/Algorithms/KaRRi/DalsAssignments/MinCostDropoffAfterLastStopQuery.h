@@ -190,8 +190,8 @@ private:
 
     int costOf(const DropoffLabel& label) const
     {
-        if (label.distToDropoff >= INFTY)
-            return INFTY;
+        if (label.distToDropoff >= INFTYKARRI)
+            return INFTYKARRI;
         return calculator.calcVehicleIndependentCostLowerBoundForDALSWithKnownMinDistToDropoff(
             label.distToDropoff, requestState.dropoffs[label.dropoffId], requestState);
     }

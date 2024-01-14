@@ -44,15 +44,15 @@ struct PDDistances {
 
     void clear()
     {
-        minDirectDist = INFTY;
+        minDirectDist = INFTYKARRI;
         const int numLabelsPerDropoff = (requestState.numPickups() / K + (requestState.numPickups() % K != 0));
         const int numNeededLabels = numLabelsPerDropoff * requestState.numDropoffs();
         distances.clear();
-        distances.resize(numNeededLabels, DistanceLabel(INFTY));
+        distances.resize(numNeededLabels, DistanceLabel(INFTYKARRI));
 
-        // minDirectDistancesPerPickup has one entry per pickup. Initialize to INFTY.
+        // minDirectDistancesPerPickup has one entry per pickup. Initialize to INFTYKARRI.
         minDirectDistancesPerPickup.clear();
-        minDirectDistancesPerPickup.resize(numLabelsPerDropoff, DistanceLabel(INFTY));
+        minDirectDistancesPerPickup.resize(numLabelsPerDropoff, DistanceLabel(INFTYKARRI));
     }
 
     // IDs refer to the indices in the vectors of pickups/dropoffs given at the last initialize() call.
@@ -61,7 +61,7 @@ struct PDDistances {
         assert(pickupId < requestState.numPickups());
         assert(dropoffId < requestState.numDropoffs());
         const int res = labelFor(pickupId, dropoffId)[pickupId % K];
-        assert(res < INFTY);
+        assert(res < INFTYKARRI);
         return res;
     }
 

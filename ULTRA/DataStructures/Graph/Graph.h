@@ -72,6 +72,9 @@ using KaRRiCHGraph = StaticGraph<NoVertexAttributes, WithWeightAndUnpackingInfo>
 using KaRRiGraph = StaticGraph<WithCoordinates,
     List<Attribute<FromVertex, Vertex>, Attribute<TravelTime, int>,
         Attribute<EdgeId, int>>>;
+
+using ConstructionGraph = DynamicGraph<List<Attribute<VehicleId, int>>, List<Attribute<Weight, int>, Attribute<InsertionInfo, StopInsertionInfo>>>;
+using RideTransferGraph = DynamicGraph<List<Attribute<VehicleId, int>>, List<Attribute<Weight, int>, Attribute<InsertionInfo, StopInsertionInfo>>>;
 // ********************************
 
 #include "Utils/Conversion.h"

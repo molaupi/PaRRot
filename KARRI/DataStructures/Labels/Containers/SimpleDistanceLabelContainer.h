@@ -49,13 +49,13 @@ public:
         if (numLabels < currentSize)
             distanceLabels.erase(distanceLabels.begin() + numLabels, distanceLabels.end());
         else
-            distanceLabels.insert(distanceLabels.end(), numLabels - currentSize, INFTY);
+            distanceLabels.insert(distanceLabels.end(), numLabels - currentSize, INFTYKARRI);
     }
 
     // Initializes all distance labels to infinity.
     void init()
     {
-        std::fill(distanceLabels.begin(), distanceLabels.end(), INFTY);
+        std::fill(distanceLabels.begin(), distanceLabels.end(), INFTYKARRI);
     }
 
     // Returns a reference to the distance label of vertex v.

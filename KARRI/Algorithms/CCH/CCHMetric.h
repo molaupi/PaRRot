@@ -204,8 +204,8 @@ public:
             std::move(downOutEdges), std::move(downEdgeHeads), numDownEdges,
             std::move(downEdgeWeights), std::move(downUnpackingInfo));
 
-        Permutation order;
-        Permutation ranks;
+        PermutationKARRI order;
+        PermutationKARRI ranks;
 
 #pragma omp parallel sections
         {
@@ -227,8 +227,8 @@ private:
 #pragma omp parallel for schedule(static)
         FORALL_EDGES(cch.getUpwardGraph(), e)
         {
-            upWeights[e] = INFTY;
-            downWeights[e] = INFTY;
+            upWeights[e] = INFTYKARRI;
+            downWeights[e] = INFTYKARRI;
             cch.forEachUpwardInputEdge(e, [&](const int inputEdge) {
                 if (inputWeights[inputEdge] < upWeights[e])
                     upWeights[e] = inputWeights[inputEdge];

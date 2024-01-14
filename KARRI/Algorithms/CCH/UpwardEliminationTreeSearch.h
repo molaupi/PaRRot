@@ -47,7 +47,7 @@ struct PruningCriterion {
     template <typename DistanceLabelT, typename DistanceLabelContainerT>
     bool operator()(const int, const DistanceLabelT& distToV, const DistanceLabelContainerT&) const
     {
-        return !anySet(distToV < INFTY);
+        return !anySet(distToV < INFTYKARRI);
     }
 };
 
@@ -270,7 +270,7 @@ private:
     {
         nextVertices.build(lastSources);
         for (auto v = nextVertex(); v != INVALID_VERTEX; v = nextVertex())
-            distanceLabels[v] = INFTY;
+            distanceLabels[v] = INFTYKARRI;
     }
 
     // Relaxes the edges out of the next vertex and returns its ID.
@@ -304,7 +304,7 @@ private:
         nextVertices.deleteMin(eliminationTree[v]);
         // If two or more of the k searches merged at v, block all but one of them.
         while (nextVertices.minKey() == v)
-            nextVertices.deleteMin(INFTY);
+            nextVertices.deleteMin(INFTYKARRI);
         return v;
     }
 

@@ -144,12 +144,12 @@ struct RequestState {
     {
         assert(calculator.calc(asgn, *this) == cost);
 
-        if (cost < INFTY && (cost < bestCost || (cost == bestCost && breakCostTie(asgn, bestAssignment)))) {
+        if (cost < INFTYKARRI && (cost < bestCost || (cost == bestCost && breakCostTie(asgn, bestAssignment)))) {
 
             bestAssignment = asgn;
             bestCost = cost;
             notUsingVehicleIsBest = false;
-            notUsingVehicleDist = INFTY;
+            notUsingVehicleDist = INFTYKARRI;
             return true;
         }
         return false;
@@ -192,15 +192,15 @@ struct RequestState {
         perfStats.clear();
 
         originalRequest = {};
-        originalReqDirectDist = INFTY;
-        minDirectPDDist = INFTY;
+        originalReqDirectDist = INFTYKARRI;
+        minDirectPDDist = INFTYKARRI;
         pickups.clear();
         dropoffs.clear();
 
         bestAssignment = Assignment();
-        bestCost = INFTY;
+        bestCost = INFTYKARRI;
         notUsingVehicleIsBest = false;
-        notUsingVehicleDist = INFTY;
+        notUsingVehicleDist = INFTYKARRI;
     }
 
 private:

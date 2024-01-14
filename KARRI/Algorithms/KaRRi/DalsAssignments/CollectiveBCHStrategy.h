@@ -86,7 +86,7 @@ public:
         , minCostSearch(inputGraph, fleet, chEnv, calculator, lastStopBucketsEnv,
               isVehEligibleForDropoffAfterLastStop, routeState, requestState,
               inputConfig)
-        , distsFromLastStopToDropoffs(0, INFTY)
+        , distsFromLastStopToDropoffs(0, INFTYKARRI)
         , checkPBNSForVehicle(fleet.size())
         , fullCHQuery(chEnv.template getFullCHQuery<FallBackCHLabelSet>())
     {
@@ -195,7 +195,7 @@ private:
 
                 asgn.vehicle = &fleet[vehId];
                 asgn.distToDropoff = distFromLastStopToDropoff;
-                assert(asgn.distToDropoff >= 0 && asgn.distToDropoff < INFTY);
+                assert(asgn.distToDropoff >= 0 && asgn.distToDropoff < INFTYKARRI);
                 asgn.dropoffStopIdx = numStops - 1;
 
                 const auto relevantPickupsInRevOrder = relevantOrdinaryPickups.relevantSpotsForInReverseOrder(
@@ -372,7 +372,7 @@ private:
                 asgn.dropoff = &requestState.dropoffs[pair.dropoffId];
                 assert(curVehLocToPickupSearches.knowsDistance(vehId, asgn.pickup->id));
                 asgn.distToPickup = curVehLocToPickupSearches.getDistance(vehId, asgn.pickup->id);
-                if (asgn.distToPickup >= INFTY)
+                if (asgn.distToPickup >= INFTYKARRI)
                     continue;
 
                 asgn.distFromPickup = pair.distFromPickup;

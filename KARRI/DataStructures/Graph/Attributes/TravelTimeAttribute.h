@@ -35,7 +35,7 @@ public:
     // Returns the attribute's default value.
     static Type defaultValue()
     {
-        return INFTY;
+        return INFTYKARRI;
     }
 
     // Returns the travel time in tenths of a second on edge e.

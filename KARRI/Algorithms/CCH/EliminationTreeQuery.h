@@ -104,16 +104,16 @@ public:
     // Runs an elimination tree query that computes multiple shortest paths simultaneously.
     void run(const std::array<int, K>& sources, const std::array<int, K>& targets)
     {
-        reverseSearch.distanceLabels[reverseSearch.searchGraph.numVertices() - 1] = INFTY;
+        reverseSearch.distanceLabels[reverseSearch.searchGraph.numVertices() - 1] = INFTYKARRI;
         forwardSearch.init(sources);
         reverseSearch.init(targets);
-        tentativeDistances = INFTY;
+        tentativeDistances = INFTYKARRI;
         while (forwardSearch.nextVertices.minKey() != INVALID_VERTEX)
             if (forwardSearch.nextVertices.minKey() <= reverseSearch.nextVertices.minKey()) {
                 updateTentativeDistances(forwardSearch.nextVertices.minKey());
-                forwardSearch.distanceLabels[forwardSearch.settleNextVertex()] = INFTY;
+                forwardSearch.distanceLabels[forwardSearch.settleNextVertex()] = INFTYKARRI;
             } else {
-                reverseSearch.distanceLabels[reverseSearch.settleNextVertex()] = INFTY;
+                reverseSearch.distanceLabels[reverseSearch.settleNextVertex()] = INFTYKARRI;
             }
     }
 
@@ -126,28 +126,28 @@ public:
     // Returns the edges in the upward graph on the up segment of the up-down path (in reverse order).
     const std::vector<int32_t>& getUpEdgePath(const int i = 0)
     {
-        assert(tentativeDistances[i] != INFTY);
+        assert(tentativeDistances[i] != INFTYKARRI);
         return forwardSearch.getReverseEdgePath(meetingVertices.vertex(i), i);
     }
 
     // Returns the edges in the downward graph on the down segment of the up-down path.
     const std::vector<int32_t>& getDownEdgePath(const int i = 0)
     {
-        assert(tentativeDistances[i] != INFTY);
+        assert(tentativeDistances[i] != INFTYKARRI);
         return reverseSearch.getReverseEdgePath(meetingVertices.vertex(i), i);
     }
 
     // Returns the vertices (ranks) in the upward graph on the up segment of the up-down path (in reverse order).
     const std::vector<int32_t>& getUpVertexPath(const int i = 0)
     {
-        assert(tentativeDistances[i] != INFTY);
+        assert(tentativeDistances[i] != INFTYKARRI);
         return forwardSearch.getReversePath(i);
     }
 
     // Returns the vertices (ranks) in the downward graph on the down segment of the up-down path.
     const std::vector<int32_t>& getDownVertexPath(const int i = 0)
     {
-        assert(tentativeDistances[i] != INFTY);
+        assert(tentativeDistances[i] != INFTYKARRI);
         return reverseSearch.getReversePath(i);
     }
 

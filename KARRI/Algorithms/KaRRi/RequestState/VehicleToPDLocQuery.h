@@ -108,7 +108,7 @@ public:
             auto& pdLoc = pdLocs[i];
             const auto vertexOfSpot = forwardGraph.edgeTail(pdLoc.loc);
             pdLoc.vehDistFromCenter = forwardSearch.getDistance(vertexOfSpot) + forwardGraph.travelTime(pdLoc.loc);
-            assert(pdLoc.vehDistFromCenter < INFTY);
+            assert(pdLoc.vehDistFromCenter < INFTYKARRI);
         }
 
         runTime = timer.elapsed<std::chrono::nanoseconds>();
@@ -143,7 +143,7 @@ public:
             auto& pdLoc = pdLocs[i];
             const auto vertexOfSpot = forwardGraph.edgeHead(pdLoc.loc);
             pdLoc.vehDistToCenter = reverseSearch.getDistance(vertexOfSpot);
-            assert(pdLoc.vehDistToCenter < INFTY);
+            assert(pdLoc.vehDistToCenter < INFTYKARRI);
         }
 
         runTime = timer.elapsed<std::chrono::nanoseconds>();

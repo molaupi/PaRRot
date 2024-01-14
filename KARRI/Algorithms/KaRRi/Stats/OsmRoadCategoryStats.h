@@ -24,7 +24,7 @@
 
 #pragma once
 
-#include "../../DataStructures/Graph/Attributes/OsmRoadCategoryAttribute.h"
+#include "../../../DataStructures/Graph/Attributes/OsmRoadCategoryAttribute.h"
 
 namespace karri::stats {
 

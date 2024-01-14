@@ -45,7 +45,7 @@ class PBNSAssignmentsFinder {
     // combinations can continue after the bundled computation of exact distances.
     struct Continuation {
         int pickupId = INVALID_ID;
-        int distFromPickup = INFTY;
+        int distFromPickup = INFTYKARRI;
         RelevantPDLocs::It continueIt;
     };
 
@@ -260,7 +260,7 @@ private:
             asgn.pickup = &requestState.pickups[continuation.pickupId];
 
             asgn.distToPickup = curVehLocToPickupSearches.getDistance(veh.vehicleId, continuation.pickupId);
-            if (asgn.distToPickup >= INFTY)
+            if (asgn.distToPickup >= INFTYKARRI)
                 continue;
 
             asgn.distFromPickup = continuation.distFromPickup;
@@ -294,7 +294,7 @@ private:
 
             asgn.dropoffStopIdx = 0;
             asgn.distToPickup = curVehLocToPickupSearches.getDistance(veh.vehicleId, pId);
-            if (asgn.distToPickup >= INFTY)
+            if (asgn.distToPickup >= INFTYKARRI)
                 continue;
 
             asgn.distFromPickup = 0;
@@ -312,7 +312,7 @@ private:
                 }
 
                 asgn.distFromDropoff = dropoffEntry.distFromPDLocToNextStop;
-                if (asgn.distFromDropoff >= INFTY)
+                if (asgn.distFromDropoff >= INFTYKARRI)
                     continue;
 
                 asgn.distToDropoff = pdDistances.getDirectDistance(pId, asgn.dropoff->id);

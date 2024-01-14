@@ -79,7 +79,7 @@ public:
             occupancies[i] = 0;
             numDropoffsPrefixSum[i] = 0;
             vehWaitTimesUntilDropoffsPrefixSum[i] = 0;
-            maxArrTimes[i] = INFTY;
+            maxArrTimes[i] = INFTYKARRI;
         }
     }
 

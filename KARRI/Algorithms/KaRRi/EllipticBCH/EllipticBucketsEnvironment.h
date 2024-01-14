@@ -104,7 +104,7 @@ public:
                   StopWhenLeewayExceeded(currentLeeway)))
         , forwardSearchFromPrevStop(chEnv.getForwardSearch({}, StopWhenLeewayExceeded(currentLeeway)))
         , reverseSearchFromNextStop(chEnv.getReverseSearch({}, StopWhenLeewayExceeded(currentLeeway)))
-        , currentLeeway(INFTY)
+        , currentLeeway(INFTYKARRI)
         , searchSpace()
         , descendentHasEntry(inputGraph.numVertices())
         , deleteSearchSpace(inputGraph.numVertices())
@@ -296,7 +296,7 @@ private:
             const auto v = *it;
 
             // Try to find witness for shortest path that has a higher ranked vertex:
-            int minDistViaHigherPath = INFTY;
+            int minDistViaHigherPath = INFTYKARRI;
             FORALL_INCIDENT_EDGES(neighborGraph, v, e)
             {
                 const int higherVertex = neighborGraph.edgeHead(e);

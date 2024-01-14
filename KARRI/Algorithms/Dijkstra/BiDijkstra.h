@@ -137,8 +137,8 @@ public:
     {
         forwardSearch.init(sources);
         reverseSearch.init(targets, targetOffsets);
-        tentativeDistances = INFTY;
-        maxTentativeDistance = INFTY;
+        tentativeDistances = INFTYKARRI;
+        maxTentativeDistance = INFTYKARRI;
         bool advanceForward = false;
         while (!stoppingCriterion.stopForwardSearch() || !stoppingCriterion.stopReverseSearch()) {
             advanceForward = !advanceForward; // Alternate between the forward and reverse search.
@@ -163,14 +163,14 @@ public:
     // Returns the edges in the forward graph on the path to the meeting vertex (in reverse order).
     const std::vector<int32_t>& getEdgePathToMeetingVertex(const int i = 0)
     {
-        assert(tentativeDistances[i] != INFTY);
+        assert(tentativeDistances[i] != INFTYKARRI);
         return forwardSearch.getReverseEdgePath(meetingVertices.vertex(i), i);
     }
 
     // Returns the edges in the reverse graph on the path from the meeting vertex.
     const std::vector<int32_t>& getEdgePathFromMeetingVertex(const int i = 0)
     {
-        assert(tentativeDistances[i] != INFTY);
+        assert(tentativeDistances[i] != INFTYKARRI);
         return reverseSearch.getReverseEdgePath(meetingVertices.vertex(i), i);
     }
 

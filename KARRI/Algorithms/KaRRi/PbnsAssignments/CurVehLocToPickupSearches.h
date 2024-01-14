@@ -45,7 +45,7 @@ private:
 
     static constexpr VehicleLocation INVALID_LOC = { INVALID_EDGE, -1 };
 
-    static constexpr int unknownDist = INFTY + 1;
+    static constexpr int unknownDist = INFTYKARRI + 1;
 
     struct StopWhenMaxDistExceeded {
 
@@ -92,11 +92,11 @@ private:
         bool operator()(const int v, const DistLabelT& distToV, const DistLabelContT&)
         {
             const auto& distFromVehLocToV = searches.distFromCurVehLocation[v];
-            if (distFromVehLocToV >= INFTY)
+            if (distFromVehLocToV >= INFTYKARRI)
                 return false;
 
             DistanceLabel dists = distToV + DistanceLabel(distFromVehLocToV);
-            dists.setIf(DistanceLabel(INFTY), ~(distToV < INFTY));
+            dists.setIf(DistanceLabel(INFTYKARRI), ~(distToV < INFTYKARRI));
             searches.tentativeDistances.min(dists);
             searches.maxTentativeDist = std::min(searches.maxTentativeDist,
                 searches.tentativeDistances.horizontalMax());
@@ -134,11 +134,11 @@ public:
               chEnv.template getReverseSearch<ScanLabelAndUpdateDistances, StopWhenMaxDistExceeded, LabelSetT>(
                   ScanLabelAndUpdateDistances(*this),
                   StopWhenMaxDistExceeded(maxTentativeDist)))
-        , maxTentativeDist(INFTY)
+        , maxTentativeDist(INFTYKARRI)
         , curPickupIds()
         , currentTime(-1)
         , waitingQueue()
-        , distFromCurVehLocation(chEnv.getCH().upwardGraph().numVertices(), INFTY)
+        , distFromCurVehLocation(chEnv.getCH().upwardGraph().numVertices(), INFTYKARRI)
     {
     }
 
@@ -253,7 +253,7 @@ public:
                 }
 
                 maxTentativeDist = curLeeway;
-                tentativeDistances = DistanceLabel(INFTY);
+                tentativeDistances = DistanceLabel(INFTYKARRI);
                 // Build distance labels for the vehicle
                 if (!builtLabelsForVeh) {
                     distFromCurVehLocation.clear();

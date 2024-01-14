@@ -30,7 +30,7 @@ namespace karri {
 
 struct VehicleLocation {
     int location = INVALID_EDGE;
-    int depTimeAtHead = INFTY;
+    int depTimeAtHead = INFTYKARRI;
 
     friend bool operator==(const VehicleLocation& l1, const VehicleLocation& l2)
     {
