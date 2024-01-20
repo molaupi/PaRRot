@@ -4,22 +4,22 @@
 /// Copyright (c) 2023 Moritz Laupichler <moritz.laupichler@kit.edu>
 ///
 /// Permission is hereby granted, free of charge, to any person obtaining a copy
-/// of this software and associated documentation files (the "Software"), to
-/// deal in the Software without restriction, including without limitation the
-/// rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
-/// sell copies of the Software, and to permit persons to whom the Software is
+/// of this software and associated documentation files (the "Software"), to deal
+/// in the Software without restriction, including without limitation the rights
+/// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+/// copies of the Software, and to permit persons to whom the Software is
 /// furnished to do so, subject to the following conditions:
 ///
-/// The above copyright notice and this permission notice shall be included in
-/// all copies or substantial portions of the Software.
+/// The above copyright notice and this permission notice shall be included in all
+/// copies or substantial portions of the Software.
 ///
 /// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 /// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 /// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
 /// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-/// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
-/// FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
-/// IN THE SOFTWARE.
+/// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+/// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+/// SOFTWARE.
 /// ******************************************************************************
 
 #pragma once
@@ -31,32 +31,44 @@
 // User needs to make sure that begin and end are well-defined.
 template <typename IteratorT>
 class IteratorRange {
- public:
-  using ValueType = typename std::iterator_traits<IteratorT>::value_type;
-  using Iterator = IteratorT;
+public:
+    using ValueType = typename std::iterator_traits<IteratorT>::value_type;
+    using Iterator = IteratorT;
 
-  IteratorRange(const IteratorT startingPoint, const IteratorT endingPoint)
-      : startingPoint(startingPoint), endingPoint(endingPoint) {}
+    IteratorRange(const IteratorT startingPoint, const IteratorT endingPoint)
+        : startingPoint(startingPoint)
+        , endingPoint(endingPoint)
+    {
+    }
 
-  Iterator begin() const noexcept { return startingPoint; }
+    Iterator begin() const noexcept
+    {
+        return startingPoint;
+    }
 
-  Iterator end() const noexcept { return endingPoint; }
+    Iterator end() const noexcept
+    {
+        return endingPoint;
+    }
 
-  const ValueType &operator[](const int col) const {
-    assert(col >= 0);
-    assert(col < endingPoint - startingPoint);
-    return startingPoint[col];
-  }
+    const ValueType& operator[](const int col) const
+    {
+        assert(col >= 0);
+        assert(col < endingPoint - startingPoint);
+        return startingPoint[col];
+    }
 
-  size_t size() const noexcept { return endingPoint - startingPoint; }
+    size_t size() const noexcept
+    {
+        return endingPoint - startingPoint;
+    }
 
- private:
-  IteratorT startingPoint;
-  IteratorT endingPoint;
+private:
+    IteratorT startingPoint;
+    IteratorT endingPoint;
 };
 
 template <typename T>
-class ConstantVectorRange
-    : public IteratorRange<typename std::vector<T>::const_iterator> {
-  using IteratorRange<typename std::vector<T>::const_iterator>::IteratorRange;
+class ConstantVectorRange : public IteratorRange<typename std::vector<T>::const_iterator> {
+    using IteratorRange<typename std::vector<T>::const_iterator>::IteratorRange;
 };

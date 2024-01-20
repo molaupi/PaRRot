@@ -24,9 +24,8 @@
  * GNU General Public License http://www.gnu.org/licenses/gpl.html
  *****************************************************************************/
 
-#include <time.h>  // define time()
-
-#include "randomc.h"  // define classes for random number generators
+#include "randomc.h" // define classes for random number generators
+#include <time.h> // define time()
 
 #ifndef MULTIFILE_PROJECT
 // If compiled as a single file then include these cpp files,
@@ -37,37 +36,38 @@
 #include "userintf.cpp"
 #endif
 
-int main() {
-  int seed = (int)time(0);  // random seed
+int main()
+{
+    int seed = (int)time(0); // random seed
 
-  // choose one of the random number generators:
-  CRandomMersenne RanGen(seed);  // make instance of random number generator
+    // choose one of the random number generators:
+    CRandomMersenne RanGen(seed); // make instance of random number generator
 
-  int i;      // loop counter
-  int ir;     // random integer number
-  double fr;  // random floating point number
+    int i; // loop counter
+    int ir; // random integer number
+    double fr; // random floating point number
 
-  // make random integers in interval from 0 to 99, inclusive:
-  printf("\n\nRandom integers in interval from 0 to 99:\n");
-  for (i = 0; i < 40; i++) {
-    ir = RanGen.IRandom(0, 99);
-    printf("%6i  ", ir);
-  }
+    // make random integers in interval from 0 to 99, inclusive:
+    printf("\n\nRandom integers in interval from 0 to 99:\n");
+    for (i = 0; i < 40; i++) {
+        ir = RanGen.IRandom(0, 99);
+        printf("%6i  ", ir);
+    }
 
-  // make random floating point numbers in interval from 0 to 1:
-  printf("\n\nRandom floating point numbers in interval from 0 to 1:\n");
-  for (i = 0; i < 32; i++) {
-    fr = RanGen.Random();
-    printf("%8.6f  ", fr);
-  }
+    // make random floating point numbers in interval from 0 to 1:
+    printf("\n\nRandom floating point numbers in interval from 0 to 1:\n");
+    for (i = 0; i < 32; i++) {
+        fr = RanGen.Random();
+        printf("%8.6f  ", fr);
+    }
 
-  // make random bits
-  printf("\n\nRandom bits (hexadecimal):\n");
-  for (i = 0; i < 32; i++) {
-    ir = RanGen.BRandom();
-    printf("%08lX  ", ir);
-  }
+    // make random bits
+    printf("\n\nRandom bits (hexadecimal):\n");
+    for (i = 0; i < 32; i++) {
+        ir = RanGen.BRandom();
+        printf("%08lX  ", ir);
+    }
 
-  EndOfProgram();  // system-specific exit code
-  return 0;
+    EndOfProgram(); // system-specific exit code
+    return 0;
 }

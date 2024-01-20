@@ -4,82 +4,89 @@
 /// Copyright (c) 2023 Moritz Laupichler <moritz.laupichler@kit.edu>
 ///
 /// Permission is hereby granted, free of charge, to any person obtaining a copy
-/// of this software and associated documentation files (the "Software"), to
-/// deal in the Software without restriction, including without limitation the
-/// rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
-/// sell copies of the Software, and to permit persons to whom the Software is
+/// of this software and associated documentation files (the "Software"), to deal
+/// in the Software without restriction, including without limitation the rights
+/// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+/// copies of the Software, and to permit persons to whom the Software is
 /// furnished to do so, subject to the following conditions:
 ///
-/// The above copyright notice and this permission notice shall be included in
-/// all copies or substantial portions of the Software.
+/// The above copyright notice and this permission notice shall be included in all
+/// copies or substantial portions of the Software.
 ///
 /// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 /// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 /// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
 /// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-/// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
-/// FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
-/// IN THE SOFTWARE.
+/// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+/// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+/// SOFTWARE.
 /// ******************************************************************************
 
 #pragma once
 
-#include "Algorithms/KaRRi/BaseObjects/Vehicle.h"
-#include "Algorithms/KaRRi/RequestState/RequestState.h"
-#include "Algorithms/KaRRi/RouteState.h"
-#include "Tools/Simd/AlignedVector.h"
+#include "../../../Tools/Simd/AlignedVector.h"
+#include "../BaseObjects/Vehicle.h"
+#include "../RouteState.h"
+#include "RequestState.h"
 
 namespace karri {
 
 struct RelevantPDLocs {
-  template <typename>
-  friend class RelevantPDLocsFilter;
 
-  struct RelevantPDLoc {
-    int stopIndex;
-    unsigned int pdId;
-    int distToPDLoc;
-    int distFromPDLocToNextStop;
-  };
+    template <typename, typename, typename>
+    friend class RelevantPDLocsFilter;
 
-  using RelevantPDLocVector = AlignedVector<RelevantPDLoc>;
+    struct RelevantPDLoc {
+        int stopIndex;
+        unsigned int pdId;
+        int distToPDLoc;
+        int distFromPDLocToNextStop;
+    };
 
- public:
-  using It = typename RelevantPDLocVector::const_iterator;
-  using RevIt = typename RelevantPDLocVector::const_reverse_iterator;
+    using RelevantPDLocVector = AlignedVector<RelevantPDLoc>;
 
-  RelevantPDLocs(const int fleetSize)
-      : fleetSize(fleetSize),
-        startOfRelevantPDLocs(fleetSize + 1),
-        relevantSpots(),
-        vehiclesWithRelevantSpots(fleetSize) {}
+public:
+    using It = typename RelevantPDLocVector::const_iterator;
+    using RevIt = typename RelevantPDLocVector::const_reverse_iterator;
 
-  const Subset &getVehiclesWithRelevantPDLocs() const {
-    return vehiclesWithRelevantSpots;
-  }
+    RelevantPDLocs(const int fleetSize)
+        : fleetSize(fleetSize)
+        , startOfRelevantPDLocs(fleetSize + 1)
+        , relevantSpots()
+        , vehiclesWithRelevantSpots(fleetSize)
+    {
+    }
 
-  bool hasRelevantSpotsFor(const int vehId) const {
-    assert(vehId >= 0 && vehId < fleetSize);
-    return startOfRelevantPDLocs[vehId] != startOfRelevantPDLocs[vehId + 1];
-  }
+    const Subset& getVehiclesWithRelevantPDLocs() const
+    {
+        return vehiclesWithRelevantSpots;
+    }
 
-  IteratorRange<It> relevantSpotsFor(const int vehId) const {
-    assert(vehId >= 0 && vehId < fleetSize);
-    return {relevantSpots.begin() + startOfRelevantPDLocs[vehId],
-            relevantSpots.begin() + startOfRelevantPDLocs[vehId + 1]};
-  }
+    bool hasRelevantSpotsFor(const int vehId) const
+    {
+        assert(vehId >= 0 && vehId < fleetSize);
+        return startOfRelevantPDLocs[vehId] != startOfRelevantPDLocs[vehId + 1];
+    }
 
-  IteratorRange<RevIt> relevantSpotsForInReverseOrder(const int vehId) const {
-    assert(vehId >= 0 && vehId < fleetSize);
-    const int rstart = relevantSpots.size() - startOfRelevantPDLocs[vehId + 1];
-    const int rend = relevantSpots.size() - startOfRelevantPDLocs[vehId];
-    return {relevantSpots.rbegin() + rstart, relevantSpots.rbegin() + rend};
-  }
+    IteratorRange<It> relevantSpotsFor(const int vehId) const
+    {
+        assert(vehId >= 0 && vehId < fleetSize);
+        return { relevantSpots.begin() + startOfRelevantPDLocs[vehId],
+            relevantSpots.begin() + startOfRelevantPDLocs[vehId + 1] };
+    }
 
- private:
-  const int fleetSize;
-  std::vector<int> startOfRelevantPDLocs;
-  RelevantPDLocVector relevantSpots;
-  Subset vehiclesWithRelevantSpots;
+    IteratorRange<RevIt> relevantSpotsForInReverseOrder(const int vehId) const
+    {
+        assert(vehId >= 0 && vehId < fleetSize);
+        const int rstart = relevantSpots.size() - startOfRelevantPDLocs[vehId + 1];
+        const int rend = relevantSpots.size() - startOfRelevantPDLocs[vehId];
+        return { relevantSpots.rbegin() + rstart, relevantSpots.rbegin() + rend };
+    }
+
+private:
+    const int fleetSize;
+    std::vector<int> startOfRelevantPDLocs;
+    RelevantPDLocVector relevantSpots;
+    Subset vehiclesWithRelevantSpots;
 };
-}  // namespace karri
+}

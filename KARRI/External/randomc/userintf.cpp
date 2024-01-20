@@ -18,11 +18,11 @@
  * GNU General Public License http://www.gnu.org/licenses/gpl.html
  *****************************************************************************/
 
-#include <stdio.h>   // define printf() function
-#include <stdlib.h>  // define exit() function
+#include <stdio.h> // define printf() function
+#include <stdlib.h> // define exit() function
 
 #if (defined(__BORLANDC__) || defined(_MSC_VER)) && !defined(_WINDOWS_)
-#include <conio.h>  // define getch() function
+#include <conio.h> // define getch() function
 #define _GETCH_DEFINED_
 #endif
 
@@ -30,7 +30,8 @@
                      End of program
 ***********************************************************************/
 
-void EndOfProgram() {
+void EndOfProgram()
+{
 // This function takes care of whatever is necessary to do when the
 // program is finished
 
@@ -39,12 +40,12 @@ void EndOfProgram() {
 // Remove the #ifdef and #endif lines to unconditionally wait for a key press;
 // Remove all three lines to not wait:
 #ifdef _GETCH_DEFINED_
-  getch();  // wait for user to press a key
+    getch(); // wait for user to press a key
 #endif
 
 // It may be necessary to end the program with a linefeed:
 #if defined(__unix__) || defined(_MSC_VER)
-  printf("\n");  // end program with a linefeed
+    printf("\n"); // end program with a linefeed
 #endif
 }
 
@@ -52,7 +53,8 @@ void EndOfProgram() {
                      Error message function
 ***********************************************************************/
 
-void FatalError(const char *ErrorText) {
+void FatalError(const char* ErrorText)
+{
 // This function outputs an error message and aborts the program.
 
 // Important: There is no universally portable way of outputting an
@@ -62,17 +64,17 @@ void FatalError(const char *ErrorText) {
 // Check if FatalAppExit exists (this macro is defined in winbase.h)
 #ifdef FatalAppExit
 
-  // in Windows, use FatalAppExit:
-  FatalAppExit(0, ErrorText);
+    // in Windows, use FatalAppExit:
+    FatalAppExit(0, ErrorText);
 
 #else
 
-  // in console mode, print error message
-  printf("\n%s\n", ErrorText);
-  EndOfProgram();
+    // in console mode, print error message
+    printf("\n%s\n", ErrorText);
+    EndOfProgram();
 
 #endif
 
-  // Terminate program with error code
-  exit(1);
+    // Terminate program with error code
+    exit(1);
 }

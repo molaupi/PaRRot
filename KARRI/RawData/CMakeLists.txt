@@ -47,10 +47,13 @@ target_link_libraries(OsmToCarAndPassengerGraph ${PROJ_LIBRARY} ${RoutingKit_LIB
 
 add_executable(TransformLocations TransformLocations.cc)
 target_compile_definitions(TransformLocations PRIVATE CSV_IO_NO_THREAD)
-target_link_libraries(TransformLocations ${PROJ_LIBRARY} ${RoutingKit_LIBRARY})
+# target_link_libraries(TransformLocations ${PROJ_LIBRARY} ${RoutingKit_LIBRARY})
+target_link_libraries(TransformLocations PRIVATE proj routingkit)
+#include "LocationMapper/LatLngToTargetVertexMapper.h"
 
 
-add_executable(CheckExistingAttributesInNetworkFile CheckExistingAttributesInNetworkFile.cc)
+add_executable(CheckExistingAttributesInNetworkFile CheckExistingAttributesInNetworkFile.cc
+        ../Algorithms/KaRRi/LastStopSearches/NoOpLastStopBucketEnvironment.h)
 target_compile_definitions(CheckExistingAttributesInNetworkFile PRIVATE CSV_IO_NO_THREAD)
 
 add_executable(GenerateGeoJsonForGraph GenerateGeoJsonForGraph.cc)

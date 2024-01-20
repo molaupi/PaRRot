@@ -24,54 +24,59 @@
 
 #include <stdio.h>
 
-#if 1  // Choose between Mersenne Twister and SFMT generator
+#if 1 // Choose between Mersenne Twister and SFMT generator
 #include "mersenne.cpp"
-#define STOC_BASE CRandomMersenne  // define random number generator base class
+#define STOC_BASE CRandomMersenne // define random number generator base class
 #else
 #include "sfmt.cpp"
 #define STOC_BASE CRandomSFMT
 #endif
 
-int main() {
-  // Define constants
-  const int nsamp = 8005000;     // Number of samples
-  const int seed = 1;            // Random number seed
-  const int imin = -0x5FFFFFFF;  // Lower limit for uniform random integers
-  const int imax = 0x60000000;   // Upper limit for uniform random integers
-  const int period = 3;          // Periodicity
+int main()
+{
+    // Define constants
+    const int nsamp = 8005000; // Number of samples
+    const int seed = 1; // Random number seed
+    const int imin = -0x5FFFFFFF; // Lower limit for uniform random integers
+    const int imax = 0x60000000; // Upper limit for uniform random integers
+    const int period = 3; // Periodicity
 
-  unsigned int i;          // Loop counter
-  unsigned int x[period];  // Sample counters
-  int r;                   // Random integer
+    unsigned int i; // Loop counter
+    unsigned int x[period]; // Sample counters
+    int r; // Random integer
 
-  STOC_BASE ran1(seed);  // Make instance of random number generator
-  for (i = 0; i < period; i++) x[i] = 0;  // Initialize
+    STOC_BASE ran1(seed); // Make instance of random number generator
+    for (i = 0; i < period; i++)
+        x[i] = 0; // Initialize
 
-  // Sample loop with IRandom
-  for (i = 0; i < nsamp; i++) {
-    r = ran1.IRandom(imin, imax);
-    if (r > 0) {
-      x[(unsigned int)r % period]++;
+    // Sample loop with IRandom
+    for (i = 0; i < nsamp; i++) {
+        r = ran1.IRandom(imin, imax);
+        if (r > 0) {
+            x[(unsigned int)r % period]++;
+        }
     }
-  }
-  printf("\nTest difference between IRandom and IRandomX");
-  printf("\n\nSample counts for IRandom:");
-  for (i = 0; i < period; i++) printf("\n%i  %9u", i, x[i]);
+    printf("\nTest difference between IRandom and IRandomX");
+    printf("\n\nSample counts for IRandom:");
+    for (i = 0; i < period; i++)
+        printf("\n%i  %9u", i, x[i]);
 
-  // Repeat test with IRandomX
-  ran1.RandomInit(seed);                  // Reset generator with same seed
-  for (i = 0; i < period; i++) x[i] = 0;  // Initialize again
+    // Repeat test with IRandomX
+    ran1.RandomInit(seed); // Reset generator with same seed
+    for (i = 0; i < period; i++)
+        x[i] = 0; // Initialize again
 
-  // Sample loop with IRandomX
-  for (i = 0; i < nsamp; i++) {
-    r = ran1.IRandomX(imin, imax);
-    if (r > 0) {
-      x[(unsigned int)r % period]++;
+    // Sample loop with IRandomX
+    for (i = 0; i < nsamp; i++) {
+        r = ran1.IRandomX(imin, imax);
+        if (r > 0) {
+            x[(unsigned int)r % period]++;
+        }
     }
-  }
-  printf("\n\nSample counts for IRandomX:");
-  for (i = 0; i < period; i++) printf("\n%i  %9u", i, x[i]);
+    printf("\n\nSample counts for IRandomX:");
+    for (i = 0; i < period; i++)
+        printf("\n%i  %9u", i, x[i]);
 
-  printf("\n\n");
-  return 0;
+    printf("\n\n");
+    return 0;
 }
