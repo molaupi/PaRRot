@@ -24,8 +24,8 @@
 
 #pragma once
 
-#include "Tools/Logging/LogManager.h"
-#include "Tools/Logging/NullLogger.h"
+#include "../../Tools/Logging/LogManager.h"
+#include "../../Tools/Logging/NullLogger.h"
 #include "Utils.h"
 
 // Given a latitude/longitude coordinate, finds the closest vertex to that coordinate in a target road network.

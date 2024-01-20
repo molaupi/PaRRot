@@ -5,7 +5,9 @@
 #include "Commands/BenchmarkMultimodal.h"
 #include "Commands/BenchmarkULTRA.h"
 #include "Commands/CH.h"
+#include "Commands/NetworkIO.h"
 #include "Commands/ULTRAPreprocessing.h"
+
 using namespace Shell;
 
 int main(int argc, char** argv)
@@ -57,6 +59,9 @@ int main(int argc, char** argv)
     new RunMultimodalULTRAMcRAPTORQueries(shell);
     new RunMultimodalUBMRAPTORQueries(shell);
     new RunMultimodalUBMHydRAQueries(shell);
+
+    // Output
+    new RAPTORToCSV(shell);
 
     shell.run();
     return 0;

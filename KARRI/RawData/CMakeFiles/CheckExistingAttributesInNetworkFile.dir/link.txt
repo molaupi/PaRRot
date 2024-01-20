@@ -1,1 +1,0 @@
-/usr/bin/c++  -march=native -Werror -Wfatal-errors -Wpedantic -pedantic-errors      -Wall -Wextra -ftemplate-backtrace-limit=1 -Wno-unknown-pragmas -Wno-sign-compare -O3 CMakeFiles/CheckExistingAttributesInNetworkFile.dir/CheckExistingAttributesInNetworkFile.cc.o -o CheckExistingAttributesInNetworkFile 

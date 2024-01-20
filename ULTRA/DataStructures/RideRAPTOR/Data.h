@@ -15,31 +15,27 @@
 #include "../../DataStructures/Graph/Graph.h"
 #include "../../DataStructures/Graph/Utils/Conversion.h"
 #include "../../DataStructures/RAPTOR/Data.h"
-#include "../../Shell/Shell.h"
-// TODO adapt the ch providers
-#include "../../../KARRI/Algorithms/KaRRi/BaseObjects/Request.h"
-#include "../../../KARRI/Algorithms/KaRRi/BaseObjects/Vehicle.h"
-/* #include "../../Algorithms/Loud/CHProviders/StandardCHProvider.h" */
-/* #include "../../Algorithms/Loud/LoudDispatcher.h" */
-/* #include "../../Algorithms/Loud/MatSimDispatcher.h" */
-/* #include "../../Algorithms/Loud/TransportSimulation.h" */
-/* #include "../../Algorithms/Loud/VehicleLocators/StandaloneVehicleLocator.h" */
-#include "../../../KARRI/Tools/Constants.h"
-#include "../../../KARRI/Tools/Logging/LogManager.h"
-#include "../../../KARRI/Tools/StringHelpers.h"
-
 #include "../../DataStructures/RideRAPTOR/Entities/Journey.h"
+#include "../../Helpers/ConstructorTags.h"
 #include "../../Helpers/Vector/Permutation.h"
+#include "../../Shell/Shell.h"
 #include "DistanceMatrix.h"
 #include "Entities/InsertionInfo.h"
 #include "Profiler.h"
 
+// The KaRRi Stuff
+// TODO
+// we need vehicle for the prefix of num stops (possibily more than that)
+#include "../../../KARRI/Algorithms/BaseObjects/Vehicle.h"
+
 namespace RIDERAPTOR {
 
+using ConstructionGraph = DynamicGraph<List<Attribute<VehicleId, int>>, List<Attribute<Weight, int>, Attribute<InsertionInfo, StopInsertionInfo>>>;
+using RideTransferGraph = DynamicGraph<List<Attribute<VehicleId, int>>, List<Attribute<Weight, int>, Attribute<InsertionInfo, StopInsertionInfo>>>;
 using RoadGraph = GraphWrapper<KaRRiGraph>;
 // what this?
-using CHProvider = Loud::StandardCHProvider<RoadGraph, ImplementationDetail::TravelTimeType>;
-using Dispatcher = Loud::LoudDispatcher<RoadGraph, CHProvider, std::ofstream>;
+/* using CHProvider = Loud::StandardCHProvider<RoadGraph, ImplementationDetail::TravelTimeType>; */
+/* using Dispatcher = Loud::LoudDispatcher<RoadGraph, CHProvider, std::ofstream>; */
 
 inline TransferGraph getOverheadGraph(RAPTOR::Data& raptorData,
     TransferGraph& graph) noexcept
@@ -129,9 +125,7 @@ public:
         , maxWalkTime(maxWalkTime)
         , stopCounter(disp.fleet.size(), 0)
         , accumulatedNumStops(disp.fleet.size() + 1)
-        ,
-        // necessary to allow to add target later
-        sourceStopDummy(raptorData.numberOfStops())
+        , sourceStopDummy(raptorData.numberOfStops())
         , targetStopDummy(raptorData.numberOfStops() + 1)
         , numberOfStops(raptorData.numberOfStops() + 2)
         , profiler(profilerTemplate)
@@ -152,7 +146,21 @@ public:
     {
         profiler.start();
 
-        accumulatedNumStops = disp.getNumStopsForVehicles();
+        // build prefix of accumulated number of stops myself
+        accumulatedNumStops.assign(fleet.size() + 1, 0);
+
+        int runningSum(0);
+        // TODO check where we get the route state
+        for (size_t i(0); i < fleet.size(); ++i) {
+            // is i == vehid??
+            auto& vehicle = fleet[i];
+            const auto& vehid = vehicle.vehicleId;
+
+            accumulatedNumStops[i] = runningSum;
+            runningSum += ROUTESTATE.numStopsOf(vehId);
+        }
+        accumulatedNumStops.back() = runningSum;
+
         profiler.countMetric(METRIC_VEHICLESTOPS, accumulatedNumStops.back());
         stopCounter.clear();
         stopCounter.resize(accumulatedNumStops.back());
@@ -245,6 +253,10 @@ public:
             const auto sourceHead = disp.inputGraph.get(ToVertex, sourceEdge);
             const auto travelTime = disp.inputGraph.get(TravelTime, sourceEdge);
 
+            // TODO
+            // runBCHSearches? how can you get the insertion infos
+            // there is EllipticBCSSearches and a run method, but how can i construct stuff from there
+            // every method returns void?
             const auto insertionInfos = disp.runBCHSearchFromStop(sourceTail, sourceHead, travelTime);
             insertSourceEdges(insertionInfos, sourceStop);
         }
@@ -254,6 +266,7 @@ public:
             const auto targetHead = disp.inputGraph.get(ToVertex, targetEdge);
             const auto travelTime = disp.inputGraph.get(TravelTime, targetEdge);
 
+            // TODO
             const auto insertionInfos = disp.runBCHSearchFromStop(targetTail, targetHead, travelTime);
             insertTargetEdges(insertionInfos, targetStop);
         }
@@ -374,7 +387,7 @@ private:
         const StopId stop,
         ConstructionGraph& constructionGraph)
     {
-        for (const auto insertionInfo : insertionInfos) {
+        for (const auto& insertionInfo : insertionInfos) {
             auto edge = constructionGraph
                             .addEdge(Vertex(stop), getVertexFromVehiclePosition(insertionInfo.vehicleId, insertionInfo.insertionPosition))
                             .set(Weight, insertionInfo.leeway);
@@ -383,7 +396,8 @@ private:
 
             if (INSERT_OUTGOING) {
                 const auto& occupancies = disp.occupanciesFor(insertionInfo.vehicleId);
-                const auto& capacity = disp.fleet[insertionInfo.vehicleId].seatingCapacity;
+                // capacity is in the vehicle
+                const auto& capacity = fleet[insertionInfo.vehicleId].capacity;
 
                 for (int pos = insertionInfo.insertionPosition; pos >= 0; pos--) {
                     if (occupancies[pos] == capacity)
@@ -410,7 +424,7 @@ private:
             rideTransferGraph.set(InsertionInfo, edge, info);
         }
 
-        for (const auto insertionInfo : insertionInfos) {
+        for (const auto& insertionInfo : insertionInfos) {
             auto edge = rideTransferGraph.findEdge(
                 sourceVertex,
                 getVertexFromVehiclePosition(insertionInfo.vehicleId,
@@ -426,6 +440,8 @@ private:
     void insertTargetEdges(const std::vector<StopInsertionInfo> insertionInfos,
         const Vertex targetVertex)
     {
+        // TODO
+        // do we really have to resert *everything*?
         for (auto vertex = numberOfStops; vertex < rideTransferGraph.numVertices();
              vertex++) {
             const auto edge = rideTransferGraph.findEdge(Vertex(vertex), targetVertex);
@@ -434,9 +450,9 @@ private:
             rideTransferGraph.set(InsertionInfo, edge, info);
         }
 
-        for (const auto insertionInfo : insertionInfos) {
+        for (const auto& insertionInfo : insertionInfos) {
             const auto& occupancies = disp.occupanciesFor(insertionInfo.vehicleId);
-            const auto& capacity = disp.fleet[insertionInfo.vehicleId].seatingCapacity;
+            const auto& capacity = fleet[insertionInfo.vehicleId].capacity;
 
             for (int pos = insertionInfo.insertionPosition; pos >= 0; pos--) {
                 if (occupancies[pos] == capacity)
@@ -480,13 +496,13 @@ private:
             }
         }
         profiler.countMetric(METRIC_NUMBER_OF_INSERTIONS, insertions);
-
         profiler.countMetric(METRIC_VERTICES, rideTransferGraph.numVertices());
         profiler.countMetric(METRIC_EDGES, rideTransferGraph.numEdges());
     }
 
 public:
     const RAPTOR::Data& raptorData;
+    // TODO how to model a Dispatcher
     Dispatcher& disp;
     RideTransferGraph rideTransferGraph;
     const DistanceMatrix& distanceMatrix;

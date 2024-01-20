@@ -24,7 +24,7 @@
 
 #pragma once
 
-#include "Tools/EnumParser.h"
+#include "../../Tools/EnumParser.h"
 
 enum TransformMode {
     ODPairs,
@@ -61,7 +61,7 @@ using Epsg31467Coords = std::pair<double, double>;
 namespace transform_locations_input {
 
 using TrimPolicy = io::trim_chars<>;
-using QuotePolicy = io::no_quote_escape<','>;
+using QuotePolicy = io::double_quote_escape<',', '"'>;
 using OverflowPolicy = io::throw_on_overflow;
 using CommentPolicy = io::single_line_comment<'#'>;
 

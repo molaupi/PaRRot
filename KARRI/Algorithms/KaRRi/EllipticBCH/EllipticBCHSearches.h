@@ -39,6 +39,8 @@
 #include "../../CH/CH.h"
 #include <vector>
 
+// TODO
+// i need to get the insertion info from a Bucket CH search from a stop
 namespace karri {
 
 template <typename InputGraphT,

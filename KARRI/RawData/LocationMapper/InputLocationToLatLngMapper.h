@@ -24,7 +24,7 @@
 
 #pragma once
 
-#include "DataStructures/Geometry/CoordinateTransformation.h"
+#include "../../DataStructures/Geometry/CoordinateTransformation.h"
 
 namespace input_location_to_lat_lng {
 

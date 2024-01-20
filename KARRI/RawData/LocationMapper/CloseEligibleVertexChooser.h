@@ -24,9 +24,9 @@
 
 #pragma once
 
-#include "Algorithms/Dijkstra/Dijkstra.h"
-#include "DataStructures/Labels/BasicLabelSet.h"
-#include "DataStructures/Labels/ParentInfo.h"
+#include "../../Algorithms/Dijkstra/Dijkstra.h"
+#include "../../DataStructures/Labels/BasicLabelSet.h"
+#include "../../DataStructures/Labels/ParentInfo.h"
 
 // Given a vertex in a graph, this facility chooses another vertex that is different from the original one,
 // eligible according to a given eligibility criterion and as close to the given vertex as possible.
