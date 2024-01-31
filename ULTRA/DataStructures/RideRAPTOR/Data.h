@@ -24,18 +24,20 @@
 #include "Profiler.h"
 
 // The KaRRi Stuff
-// TODO
 // we need vehicle for the prefix of num stops (possibily more than that)
-#include "../../../KARRI/Algorithms/BaseObjects/Vehicle.h"
+#include "../../../KARRI/Algorithms/KaRRi/BaseObjects/Vehicle.h"
+#include "../../../KARRI/Algorithms/KaRRi/CostCalculator.h"
+#include "../../../KARRI/Algorithms/KaRRi/InputConfig.h"
+#include "../../../KARRI/Algorithms/KaRRi/RequestState/RelevantPDLocs.h"
+#include "../../../KARRI/Algorithms/KaRRi/RequestState/RelevantPDLocsFilter.h"
+#include "../../../KARRI/Algorithms/KaRRi/RequestState/RequestState.h"
+#include "../../../KARRI/Algorithms/KaRRi/RouteState.h"
 
 namespace RIDERAPTOR {
 
 using ConstructionGraph = DynamicGraph<List<Attribute<VehicleId, int>>, List<Attribute<Weight, int>, Attribute<InsertionInfo, StopInsertionInfo>>>;
 using RideTransferGraph = DynamicGraph<List<Attribute<VehicleId, int>>, List<Attribute<Weight, int>, Attribute<InsertionInfo, StopInsertionInfo>>>;
 using RoadGraph = GraphWrapper<KaRRiGraph>;
-// what this?
-/* using CHProvider = Loud::StandardCHProvider<RoadGraph, ImplementationDetail::TravelTimeType>; */
-/* using Dispatcher = Loud::LoudDispatcher<RoadGraph, CHProvider, std::ofstream>; */
 
 inline TransferGraph getOverheadGraph(RAPTOR::Data& raptorData,
     TransferGraph& graph) noexcept
@@ -102,32 +104,70 @@ struct RideRaptorParameter {
     }
 };
 
+template <typename FeasibleDistancesT, typename InputGraphT, typename CHEnvT>
 class Data {
 public:
     Data(const std::string& fileName, const RAPTOR::Data& raptorData,
-        Dispatcher& dispatcher, CH::CH walkingCH = CH::CH(),
+        const karri::Fleet& fleet, const InputGraphT& inputGraph,
+        const CHEnvT& chEnv, const karri::CostCalculator& calculator,
+        karri::RequestState& requestState, const karri::RouteState& routeState,
+        const karri::InputConfig& inputConfig,
+        const FeasibleDistancesT& feasiblePickupDistances,
+        const FeasibleDistancesT& feasibleDropoffDistances,
+        karri::RelevantPDLocs& relOrdinaryPickups,
+        karri::RelevantPDLocs& relOrdinaryDropoffs,
+        karri::RelevantPDLocs& relPickupsBeforeNextStop,
+        karri::RelevantPDLocs& relDropoffsBeforeNextStop,
+        const std::vector<int>& edgeIdOfStation,
+        CH::CH walkingCH = CH::CH(),
         const int maxWalkTime = 600,
         const DistanceMatrix& distanceMatrix = DistanceMatrix(),
-        const std::string& separator = ".", const Profiler& = Profiler())
-        : Data(raptorData, dispatcher, walkingCH, maxWalkTime, distanceMatrix)
+        const std::string& separator = ".", const Profiler& profilerTemplate = Profiler())
+        : Data(raptorData, fleet, inputGraph, chEnv, calculator, requestState, routeState, inputConfig, feasiblePickupDistances, feasibleDropoffDistances, relOrdinaryPickups, relOrdinaryDropoffs, relPickupsBeforeNextStop, relDropoffsBeforeNextStop, edgeIdOfStation, walkingCH, maxWalkTime, distanceMatrix, profilerTemplate)
     {
         readRideDataFrom(fileName, separator);
     }
 
-    Data(const RAPTOR::Data& raptorData, Dispatcher& disp,
+    Data(const RAPTOR::Data& raptorData,
+        const karri::Fleet& fleet, const InputGraphT& inputGraph,
+        const CHEnvT& chEnv, const karri::CostCalculator& calculator,
+        karri::RequestState& requestState, const karri::RouteState& routeState,
+        const karri::InputConfig& inputConfig,
+        const FeasibleDistancesT& feasiblePickupDistances,
+        const FeasibleDistancesT& feasibleDropoffDistances,
+        karri::RelevantPDLocs& relOrdinaryPickups,
+        karri::RelevantPDLocs& relOrdinaryDropoffs,
+        karri::RelevantPDLocs& relPickupsBeforeNextStop,
+        karri::RelevantPDLocs& relDropoffsBeforeNextStop,
+        const std::vector<int>& edgeIdOfStation,
         CH::CH walkingCH = CH::CH(), const int maxWalkTime = 600,
         const DistanceMatrix& distanceMatrix = DistanceMatrix(),
         const Profiler& profilerTemplate = Profiler())
         : raptorData(raptorData)
-        , disp(disp)
         , walkingCH(walkingCH)
         , distanceMatrix(distanceMatrix)
         , maxWalkTime(maxWalkTime)
-        , stopCounter(disp.fleet.size(), 0)
-        , accumulatedNumStops(disp.fleet.size() + 1)
+        , stopCounter(fleet.size(), 0)
+        , accumulatedNumStops(fleet.size() + 1)
         , sourceStopDummy(raptorData.numberOfStops())
         , targetStopDummy(raptorData.numberOfStops() + 1)
         , numberOfStops(raptorData.numberOfStops() + 2)
+        , fleet(fleet)
+        , inputGraph(inputGraph)
+        , ch(chEnv.getCH())
+        , chQuery(chEnv.template getFullCHQuery<>())
+        , calculator(calculator)
+        , requestState(requestState)
+        , routeState(routeState)
+        , inputConfig(inputConfig)
+        , feasiblePickupDistances(feasiblePickupDistances)
+        , feasibleDropoffDistances(feasibleDropoffDistances)
+        , relOrdinaryPickups(relOrdinaryPickups)
+        , relOrdinaryDropoffs(relOrdinaryDropoffs)
+        , relPickupsBeforeNextStop(relPickupsBeforeNextStop)
+        , relDropoffsBeforeNextStop(relDropoffsBeforeNextStop)
+        , relevantPdLocsFilter(fleet, inputGraph, chEnv, calculator, requestState, routeState, inputConfig, feasiblePickupDistances, feasibleDropoffDistances, relOrdinaryPickups, relOrdinaryDropoffs, relPickupsBeforeNextStop, relDropoffsBeforeNextStop)
+        , edgeIdOfStation(edgeIdOfStation)
         , profiler(profilerTemplate)
     {
         profiler.registerPhases(
@@ -138,7 +178,7 @@ public:
                 METRIC_PICKUPEDGES, METRIC_DROPOFFEDGES, METRIC_NUMBER_OF_INSERTIONS,
                 METRIC_MAX_STATIONS_PER_VEHICLE });
         profiler.initialize();
-        profiler.countMetric(METRIC_VEHICLES, disp.fleet.size());
+        profiler.countMetric(METRIC_VEHICLES, fleet.size());
         profiler.countMetric(METRIC_STATIONS, raptorData.numberOfStops());
     }
 
@@ -157,7 +197,7 @@ public:
             const auto& vehid = vehicle.vehicleId;
 
             accumulatedNumStops[i] = runningSum;
-            runningSum += ROUTESTATE.numStopsOf(vehId);
+            runningSum += routeState.numStopsOf(i);
         }
         accumulatedNumStops.back() = runningSum;
 
@@ -184,11 +224,39 @@ public:
         profiler.donePhase(PHASE_BUILDTRANSFERGRAPH);
 
         profiler.startPhase(PHASE_BCHSEARCHES);
-        for (const auto stop : raptorData.stops()) {
-            const auto vehicles = disp.runBCHSearchFromStop(stop, stop);
+        for (const auto station : raptorData.stops()) {
+            requestState.reset();
+
+            // TODO how to switch between locations?
+            // add the current stations point to the pickups && dropoffs
+            requestState.pickups.emplace_back(
+                INVALID_ID, // PdLoc ID
+                edgeIdOfStation[station].first, // Location in road network
+                edgeIdOfStation[station].second, // Location in passenger road network
+                0, // Walking time from origin to this pickup or
+                   // from this dropoff to destination.
+                INFTYKARRI, // Vehicle driving time from this pickup/dropoff to the origin/destination.
+                INFTYKARRI // Vehicle driving time from origin/destination to this pickup/dropoff.
+            );
+
+            requestState.dropoffs.emplace_back(
+                INVALID_ID, // PdLoc ID
+                edgeIdOfStation[station].first, // Location in road network
+                edgeIdOfStation[station].second, // Location in passenger road network
+                0, // Walking time from origin to this pickup or
+                   // from this dropoff to destination.
+                INFTYKARRI, // Vehicle driving time from this pickup/dropoff to the origin/destination.
+                INFTYKARRI // Vehicle driving time from origin/destination to this pickup/dropoff.
+            );
+
+            std::vector<StopInsertionInfo> vehicles;
+
+            relevantPdLocsFilter.filterOrdinary(vehicles);
+            relevantPdLocsFilter.filterBeforeNextStop(vehicles);
+
             profiler.countMetric(METRIC_BCHSEARCHES, 2);
             profiler.countMetric(METRIC_NEARBYVEHICLEROUTES, vehicles.size());
-            insertVehicleEdges(vehicles, stop, constructionGraph);
+            insertVehicleEdges(vehicles, station, constructionGraph);
         }
         profiler.donePhase(PHASE_BCHSEARCHES);
 
@@ -205,42 +273,6 @@ public:
         profiler.done();
     }
 
-    /*void extendRideTransferGraph(StopId sourceStop, Edge sourceEdge, StopId
-    targetStop, Edge targetEdge) { if (raptorData.isStop(sourceStop) &&
-    raptorData.isStop(targetStop)) { return;
-        }
-
-        ConstructionGraph constructionGraph;
-
-        Graph::move(std::move(rideTransferGraph), constructionGraph);
-
-        if (!raptorData.isStop(sourceStop)) {
-
-            const auto sourceTail = disp.inputGraph.get(FromVertex, sourceEdge);
-            const auto sourceHead = disp.inputGraph.get(ToVertex, sourceEdge);
-            const auto travelTime = disp.inputGraph.get(TravelTime, sourceEdge);
-
-            const auto insertionInfos = disp.runBCHSearchFromStop(sourceTail,
-    sourceHead, travelTime); insertSourceEdges(insertionInfos, sourceStop);
-        }
-
-        if (!raptorData.isStop(targetStop)) {
-            constructionGraph.deleteAllIncomingEdges(targetStop);
-            constructionGraph.deleteAllOutgoingEdges(targetStop);
-
-            const auto targetTail = disp.inputGraph.get(FromVertex, targetEdge);
-            const auto targetHead = disp.inputGraph.get(ToVertex, targetEdge);
-            const auto travelTime = disp.inputGraph.get(TravelTime, targetEdge);
-
-            const auto insertionInfos = disp.runBCHSearchFromStop(targetTail,
-    targetHead, travelTime); insertVehicleEdges(insertionInfos, targetStop,
-    constructionGraph);
-        }
-
-        constructionGraph.sortEdgesReverse(Weight);
-        Graph::move(std::move(constructionGraph), rideTransferGraph);
-    }*/
-
     void extendRideTransferGraph(StopId sourceStop, Edge sourceEdge,
         StopId targetStop, Edge targetEdge)
     {
@@ -248,28 +280,26 @@ public:
             return;
         }
 
-        if (!raptorData.isStop(sourceStop)) {
-            const auto sourceTail = disp.inputGraph.get(FromVertex, sourceEdge);
-            const auto sourceHead = disp.inputGraph.get(ToVertex, sourceEdge);
-            const auto travelTime = disp.inputGraph.get(TravelTime, sourceEdge);
+        // TODO
+        /* if (!raptorData.isStop(sourceStop)) { */
+        /*     const auto sourceTail = inputGraph.get(FromVertex, sourceEdge); */
+        /*     const auto sourceHead = inputGraph.get(ToVertex, sourceEdge); */
+        /*     const auto travelTime = inputGraph.get(TravelTime, sourceEdge); */
 
-            // TODO
-            // runBCHSearches? how can you get the insertion infos
-            // there is EllipticBCSSearches and a run method, but how can i construct stuff from there
-            // every method returns void?
-            const auto insertionInfos = disp.runBCHSearchFromStop(sourceTail, sourceHead, travelTime);
-            insertSourceEdges(insertionInfos, sourceStop);
-        }
+        /*     // TODO */
+        /*     const auto insertionInfos = disp.runBCHSearchFromStop(sourceTail, sourceHead, travelTime); */
+        /*     insertSourceEdges(insertionInfos, sourceStop); */
+        /* } */
 
-        if (!raptorData.isStop(targetStop)) {
-            const auto targetTail = disp.inputGraph.get(FromVertex, targetEdge);
-            const auto targetHead = disp.inputGraph.get(ToVertex, targetEdge);
-            const auto travelTime = disp.inputGraph.get(TravelTime, targetEdge);
+        /* if (!raptorData.isStop(targetStop)) { */
+        /*     const auto targetTail = inputGraph.get(FromVertex, targetEdge); */
+        /*     const auto targetHead = inputGraph.get(ToVertex, targetEdge); */
+        /*     const auto travelTime = inputGraph.get(TravelTime, targetEdge); */
 
-            // TODO
-            const auto insertionInfos = disp.runBCHSearchFromStop(targetTail, targetHead, travelTime);
-            insertTargetEdges(insertionInfos, targetStop);
-        }
+        /*     // TODO */
+        /*     const auto insertionInfos = disp.runBCHSearchFromStop(targetTail, targetHead, travelTime); */
+        /*     insertTargetEdges(insertionInfos, targetStop); */
+        /* } */
     }
 
     inline std::vector<std::string> journeyToText(
@@ -297,7 +327,7 @@ public:
                 line << "minimal waiting time: "
                      << String::secToString(leg.arrivalTime - leg.departureTime) << ".";
             } else if (leg.usesRide) {
-                line << "Take " << disp.fleet[leg.vehicleId] << " [" << leg.vehicleId
+                line << "Take " << fleet[leg.vehicleId] << " [" << leg.vehicleId
                      << "] ";
                 line << "from "
                      << (raptorData.isStop(leg.from)
@@ -364,7 +394,9 @@ public:
     void readRideDataFrom(const std::string& fileName,
         const std::string& separator = ".")
     {
-        disp.readFrom(fileName + separator + "dispatcher", separator);
+        // TODO
+        // readFrom method anpassen
+        /* disp.readFrom(fileName + separator + "dispatcher", separator); */
         IO::deserialize(fileName + separator + "stopCounter", stopCounter);
         IO::deserialize(fileName + separator + "accumulatedNumStops",
             accumulatedNumStops);
@@ -374,7 +406,9 @@ public:
     void writeRideDataTo(const std::string& fileName,
         const std::string& separator = ".")
     {
-        disp.writeTo(fileName + separator + "dispatcher", separator);
+        // TODO
+        // writeTo method anpassen
+        /* disp.writeTo(fileName + separator + "dispatcher", separator); */
         IO::serialize(fileName + separator + "stopCounter", stopCounter);
         IO::serialize(fileName + separator + "accumulatedNumStops",
             accumulatedNumStops);
@@ -388,6 +422,7 @@ private:
         ConstructionGraph& constructionGraph)
     {
         for (const auto& insertionInfo : insertionInfos) {
+            // edge from stop -> vehicle position
             auto edge = constructionGraph
                             .addEdge(Vertex(stop), getVertexFromVehiclePosition(insertionInfo.vehicleId, insertionInfo.insertionPosition))
                             .set(Weight, insertionInfo.leeway);
@@ -395,13 +430,14 @@ private:
             profiler.countMetric(METRIC_PICKUPEDGES);
 
             if (INSERT_OUTGOING) {
-                const auto& occupancies = disp.occupanciesFor(insertionInfo.vehicleId);
+                const auto& occupancies = routeState.occupanciesFor(insertionInfo.vehicleId);
                 // capacity is in the vehicle
                 const auto& capacity = fleet[insertionInfo.vehicleId].capacity;
 
                 for (int pos = insertionInfo.insertionPosition; pos >= 0; pos--) {
                     if (occupancies[pos] == capacity)
                         break;
+                    // add edge from previous vehicle position -> stop
                     auto reverseEdge = constructionGraph
                                            .addEdge(getVertexFromVehiclePosition(insertionInfo.vehicleId,
                                                         pos),
@@ -418,12 +454,14 @@ private:
     void insertSourceEdges(const std::vector<StopInsertionInfo> insertionInfos,
         const Vertex sourceVertex)
     {
+        // "reset" old outgoing edges from source
         for (const auto edge : rideTransferGraph.edgesFrom(sourceVertex)) {
             rideTransferGraph.set(Weight, edge, INFTY);
             StopInsertionInfo info;
             rideTransferGraph.set(InsertionInfo, edge, info);
         }
 
+        // insert new edge from sourcevertex -> vertex @ insertion poisiton
         for (const auto& insertionInfo : insertionInfos) {
             auto edge = rideTransferGraph.findEdge(
                 sourceVertex,
@@ -440,8 +478,7 @@ private:
     void insertTargetEdges(const std::vector<StopInsertionInfo> insertionInfos,
         const Vertex targetVertex)
     {
-        // TODO
-        // do we really have to resert *everything*?
+        // "reseet" everything
         for (auto vertex = numberOfStops; vertex < rideTransferGraph.numVertices();
              vertex++) {
             const auto edge = rideTransferGraph.findEdge(Vertex(vertex), targetVertex);
@@ -450,8 +487,9 @@ private:
             rideTransferGraph.set(InsertionInfo, edge, info);
         }
 
+        // insert all vehicle @ previous pos -> targetvertex
         for (const auto& insertionInfo : insertionInfos) {
-            const auto& occupancies = disp.occupanciesFor(insertionInfo.vehicleId);
+            const auto& occupancies = routeState.occupanciesFor(insertionInfo.vehicleId);
             const auto& capacity = fleet[insertionInfo.vehicleId].capacity;
 
             for (int pos = insertionInfo.insertionPosition; pos >= 0; pos--) {
@@ -502,8 +540,6 @@ private:
 
 public:
     const RAPTOR::Data& raptorData;
-    // TODO how to model a Dispatcher
-    Dispatcher& disp;
     RideTransferGraph rideTransferGraph;
     const DistanceMatrix& distanceMatrix;
     CH::CH walkingCH;
@@ -511,6 +547,29 @@ public:
 
     const StopId sourceStopDummy;
     const StopId targetStopDummy;
+
+    // KaRRi Stuff
+    const karri::Fleet& fleet;
+    const InputGraphT& inputGraph;
+    const karri::CH& ch;
+    typename CHEnvT::template FullCHQuery<> chQuery;
+    const karri::CostCalculator& calculator;
+    karri::RequestState& requestState;
+    const karri::RouteState& routeState;
+    const karri::InputConfig& inputConfig;
+
+    const FeasibleDistancesT& feasiblePickupDistances;
+    const FeasibleDistancesT& feasibleDropoffDistances;
+
+    karri::RelevantPDLocs& relOrdinaryPickups;
+    karri::RelevantPDLocs& relOrdinaryDropoffs;
+    karri::RelevantPDLocs& relPickupsBeforeNextStop;
+    karri::RelevantPDLocs& relDropoffsBeforeNextStop;
+
+    karri::RelevantPDLocsFilter<FeasibleDistancesT, InputGraphT, CHEnvT> relevantPdLocsFilter;
+
+    // maps the station to an edge id
+    std::vector<int> edgeIdOfStation;
 
 private:
     std::vector<int> stopCounter;

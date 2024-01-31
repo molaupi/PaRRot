@@ -268,8 +268,7 @@ public:
     }
 
 private:
-    void
-    updatePDDistances(const unsigned int firstPickupId, const unsigned int dropoffId, const DistanceLabel& dist)
+    void updatePDDistances(const unsigned int firstPickupId, const unsigned int dropoffId, const DistanceLabel& dist)
     {
         distances.updateDistanceBatchIfSmaller(firstPickupId, dropoffId, dist);
     }

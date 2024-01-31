@@ -38,6 +38,8 @@
 #include "../Dijkstra/Dijkstra.h"
 #include "CH.h"
 
+namespace karri {
+
 // Implementation of a CH query. Depending on the used label set, it keeps parent vertices and/or
 // edges, and computes multiple shortest paths simultaneously, optionally using SSE or AVX
 // instructions. The algorithm can be used with different distance label containers and queues.
@@ -165,3 +167,4 @@ private:
 
     BiDijkstra<UpwardSearch, StoppingCriterion> search; // The modified bidirectional search.
 };
+}

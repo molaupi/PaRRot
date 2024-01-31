@@ -29,81 +29,81 @@
 
 #include <csv.h>
 
-#include "DataStructures/Graph/Attributes/CarEdgeToPsgEdgeAttribute.h"
-#include "DataStructures/Graph/Attributes/EdgeIdAttribute.h"
-#include "DataStructures/Graph/Attributes/EdgeTailAttribute.h"
-#include "DataStructures/Graph/Attributes/FreeFlowSpeedAttribute.h"
-#include "DataStructures/Graph/Attributes/LatLngAttribute.h"
-#include "DataStructures/Graph/Attributes/OsmNodeIdAttribute.h"
-#include "DataStructures/Graph/Attributes/PsgEdgeToCarEdgeAttribute.h"
-#include "DataStructures/Graph/Attributes/TravelTimeAttribute.h"
-#include "DataStructures/Graph/Graph.h"
-#include "Tools/CommandLine/CommandLineParser.h"
-#include "Tools/Logging/LogManager.h"
+#include "../DataStructures/Graph/Attributes/CarEdgeToPsgEdgeAttribute.h"
+#include "../DataStructures/Graph/Attributes/EdgeIdAttribute.h"
+#include "../DataStructures/Graph/Attributes/EdgeTailAttribute.h"
+#include "../DataStructures/Graph/Attributes/FreeFlowSpeedAttribute.h"
+#include "../DataStructures/Graph/Attributes/LatLngAttribute.h"
+#include "../DataStructures/Graph/Attributes/OsmNodeIdAttribute.h"
+#include "../DataStructures/Graph/Attributes/PsgEdgeToCarEdgeAttribute.h"
+#include "../DataStructures/Graph/Attributes/TravelTimeAttribute.h"
+#include "../DataStructures/Graph/Graph.h"
+#include "../Tools/CommandLine/CommandLineParser.h"
+#include "../Tools/Logging/LogManager.h"
 
-#include "Algorithms/KaRRi/AssignmentFinder.h"
-#include "Algorithms/KaRRi/BaseObjects/Request.h"
-#include "Algorithms/KaRRi/BaseObjects/Vehicle.h"
-#include "Algorithms/KaRRi/CostCalculator.h"
-#include "Algorithms/KaRRi/DalsAssignments/DALSAssignmentsFinder.h"
-#include "Algorithms/KaRRi/EllipticBCH/EllipticBCHSearches.h"
-#include "Algorithms/KaRRi/EllipticBCH/EllipticBucketsEnvironment.h"
-#include "Algorithms/KaRRi/EllipticBCH/FeasibleEllipticDistances.h"
-#include "Algorithms/KaRRi/EventSimulation.h"
-#include "Algorithms/KaRRi/InputConfig.h"
-#include "Algorithms/KaRRi/LastStopSearches/SortedLastStopBucketsEnvironment.h"
-#include "Algorithms/KaRRi/LastStopSearches/UnsortedLastStopBucketsEnvironment.h"
-#include "Algorithms/KaRRi/OrdinaryAssignments/OrdinaryAssignmentsFinder.h"
-#include "Algorithms/KaRRi/PDDistanceQueries/PDDistances.h"
-#include "Algorithms/KaRRi/PalsAssignments/PALSAssignmentsFinder.h"
-#include "Algorithms/KaRRi/PbnsAssignments/PBNSAssignmentsFinder.h"
-#include "Algorithms/KaRRi/PbnsAssignments/VehicleLocator.h"
-#include "Algorithms/KaRRi/RequestState/RelevantPDLocs.h"
-#include "Algorithms/KaRRi/RequestState/RelevantPDLocsFilter.h"
-#include "Algorithms/KaRRi/RequestState/RequestState.h"
-#include "Algorithms/KaRRi/RequestState/RequestStateInitializer.h"
-#include "Algorithms/KaRRi/RequestState/VehicleToPDLocQuery.h"
-#include "Algorithms/KaRRi/SystemStateUpdater.h"
+#include "../Algorithms/KaRRi/AssignmentFinder.h"
+#include "../Algorithms/KaRRi/BaseObjects/Request.h"
+#include "../Algorithms/KaRRi/BaseObjects/Vehicle.h"
+#include "../Algorithms/KaRRi/CostCalculator.h"
+#include "../Algorithms/KaRRi/DalsAssignments/DALSAssignmentsFinder.h"
+#include "../Algorithms/KaRRi/EllipticBCH/EllipticBCHSearches.h"
+#include "../Algorithms/KaRRi/EllipticBCH/EllipticBucketsEnvironment.h"
+#include "../Algorithms/KaRRi/EllipticBCH/FeasibleEllipticDistances.h"
+#include "../Algorithms/KaRRi/EventSimulation.h"
+#include "../Algorithms/KaRRi/InputConfig.h"
+#include "../Algorithms/KaRRi/LastStopSearches/SortedLastStopBucketsEnvironment.h"
+#include "../Algorithms/KaRRi/LastStopSearches/UnsortedLastStopBucketsEnvironment.h"
+#include "../Algorithms/KaRRi/OrdinaryAssignments/OrdinaryAssignmentsFinder.h"
+#include "../Algorithms/KaRRi/PDDistanceQueries/PDDistances.h"
+#include "../Algorithms/KaRRi/PalsAssignments/PALSAssignmentsFinder.h"
+#include "../Algorithms/KaRRi/PbnsAssignments/PBNSAssignmentsFinder.h"
+#include "../Algorithms/KaRRi/PbnsAssignments/VehicleLocator.h"
+#include "../Algorithms/KaRRi/RequestState/RelevantPDLocs.h"
+#include "../Algorithms/KaRRi/RequestState/RelevantPDLocsFilter.h"
+#include "../Algorithms/KaRRi/RequestState/RequestState.h"
+#include "../Algorithms/KaRRi/RequestState/RequestStateInitializer.h"
+#include "../Algorithms/KaRRi/RequestState/VehicleToPDLocQuery.h"
+#include "../Algorithms/KaRRi/SystemStateUpdater.h"
 
 #ifdef KARRI_USE_CCHS
-#include "Algorithms/KaRRi/CCHEnvironment.h"
+#include "../Algorithms/KaRRi/CCHEnvironment.h"
 #else
-#include "Algorithms/KaRRi/CHEnvironment.h"
+#include "../Algorithms/KaRRi/CHEnvironment.h"
 #endif
 
 #if KARRI_PD_STRATEGY == KARRI_BCH_PD_STRAT
 
-#include "Algorithms/KaRRi/PDDistanceQueries/BCHStrategy.h"
+#include "../Algorithms/KaRRi/PDDistanceQueries/BCHStrategy.h"
 
 #else // KARRI_PD_STRATEGY == KARRI_CH_PD_STRAT
-#include "Algorithms/KaRRi/PDDistanceQueries/CHStrategy.h"
+#include "../Algorithms/KaRRi/PDDistanceQueries/CHStrategy.h"
 #endif
 
 #if KARRI_PALS_STRATEGY == KARRI_COL
 
-#include "Algorithms/KaRRi/PalsAssignments/CollectiveBCHStrategy.h"
+#include "../Algorithms/KaRRi/PalsAssignments/CollectiveBCHStrategy.h"
 
 #elif KARRI_PALS_STRATEGY == KARRI_IND
 
-#include "Algorithms/KaRRi/PalsAssignments/IndividualBCHStrategy.h"
+#include "../Algorithms/KaRRi/PalsAssignments/IndividualBCHStrategy.h"
 
 #else // KARRI_PALS_STRATEGY == KARRI_DIJ
 
-#include "Algorithms/KaRRi/PalsAssignments/DijkstraStrategy.h"
+#include "../Algorithms/KaRRi/PalsAssignments/DijkstraStrategy.h"
 
 #endif
 
 #if KARRI_DALS_STRATEGY == KARRI_COL
 
-#include "Algorithms/KaRRi/DalsAssignments/CollectiveBCHStrategy.h"
+#include "../Algorithms/KaRRi/DalsAssignments/CollectiveBCHStrategy.h"
 
 #elif KARRI_DALS_STRATEGY == KARRI_IND
 
-#include "Algorithms/KaRRi/DalsAssignments//IndividualBCHStrategy.h"
+#include "../Algorithms/KaRRi/DalsAssignments//IndividualBCHStrategy.h"
 
 #else // KARRI_DALS_STRATEGY == KARRI_DIJ
 
-#include "Algorithms/KaRRi/DalsAssignments/DijkstraStrategy.h"
+#include "../Algorithms/KaRRi/DalsAssignments/DijkstraStrategy.h"
 
 #endif
 

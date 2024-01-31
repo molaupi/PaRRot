@@ -27,6 +27,8 @@
 #include <chrono>
 #include <cstdint>
 
+namespace karri {
+
 // A timer to measure how long some code takes to execute.
 class Timer {
 public:
@@ -53,3 +55,4 @@ public:
 private:
     std::chrono::steady_clock::time_point startTime; // Time point when the timer was started.
 };
+}

@@ -403,7 +403,7 @@ private:
             for (const auto& entry : nonIdleBucket) {
                 ++numEntriesScannedHere;
 
-                const int& vehId = entry.targetId;
+                const int vehId = entry.targetId;
                 const int arrTimeAtDropoff = entry.distToTarget + label.distToDropoff;
 
                 const auto costFromLastStop = calculator.calcVehicleIndependentCostLowerBoundForDALSWithKnownMinArrTime(
@@ -424,7 +424,7 @@ private:
                 if (fleet[vehId].endOfServiceTime < arrTimeAtDropoff + inputConfig.stopTime)
                     continue;
 
-                const int& depTimeAtLastStop = routeState.schedDepTimesFor(vehId)[routeState.numStopsOf(vehId) - 1];
+                const int depTimeAtLastStop = routeState.schedDepTimesFor(vehId)[routeState.numStopsOf(vehId) - 1];
                 const int fullDistToDropoff = arrTimeAtDropoff - depTimeAtLastStop;
                 const DropoffLabel labelAtVeh = { dropoff.id, fullDistToDropoff };
                 insertLabelAtVehicleAndClean(vehId, labelAtVeh);

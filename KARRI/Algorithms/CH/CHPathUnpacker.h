@@ -32,6 +32,7 @@
 #include "../../Tools/Constants.h"
 #include "CH.h"
 
+namespace karri {
 // This class unpacks an up-down path in a contraction hierarchy (which generally contains
 // shortcuts) into the corresponding path in the original graph (which contains only original
 // edges). A path is represented as a dynamic array of edge identifiers. For efficiency, we do not
@@ -70,3 +71,4 @@ private:
     const CH& ch;
     Path packedPath;
 };
+}

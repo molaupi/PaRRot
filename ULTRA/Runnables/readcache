@@ -11,3 +11,7 @@ raptorToCSV /home/patrick/Documents/KIT/PARROT/Networks/Berlin/raptor.binary /ho
 raptorToCSV /home/patrick/Documents/KIT/PARROT/Networks/Berlin/raptor.binary /home/patrick/Documents/KIT/PARROT/Networks/Berlin/csv
 raptorToCSV /home/patrick/Documents/KIT/PARROT/Networks/Berlin/raptor.binary /home/patrick/Documents/KIT/PARROT/Networks/Berlin/csv/
 runTransitiveRAPTORQueries /home/patrick/Documents/KIT/PARROT/Networks/Berlin/raptor.binary 1000
+help
+raptorToCSV /home/patrick/Documents/KIT/PARROT/Networks/Berlin/raptor.binary
+/home/patrick/Documents/KIT/PARROT/Networks/Berlin/csv/
+raptorToCSV /home/patrick/Documents/KIT/PARROT/Networks/Berlin/raptor.binary /home/patrick/Documents/KIT/PARROT/Networks/Berlin/csv/

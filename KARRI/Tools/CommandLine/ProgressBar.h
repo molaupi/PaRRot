@@ -31,6 +31,8 @@
 
 #include <omp.h>
 
+namespace karri {
+
 // A textual indicator of progress towards some goal.
 class ProgressBar {
 public:
@@ -146,3 +148,4 @@ private:
     int dotOutputInterval; // Percentage points between two printed dots.
     bool verbose; // Indicates if the progress bar should be printed.
 };
+}

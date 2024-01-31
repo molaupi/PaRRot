@@ -84,7 +84,6 @@ class FindPDLocsInRadiusQuery;
 
 template <typename, typename, typename, typename, typename>
 class ClosestPDLocToLastStopBCHQuery;
-}
 
 // Implementation of Dijkstra's shortest-path algorithm. Depending on the used label set, it
 // keeps parent vertices and/or edges, and computes multiple shortest paths simultaneously,
@@ -351,3 +350,4 @@ private:
     int numEdgeRelaxations; // Number of edge relaxations in last run.
     int numVerticesSettled; // Number of vertices settled in last run.
 };
+}

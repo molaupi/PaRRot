@@ -383,7 +383,7 @@ private:
                 if (e.distToTarget == 0) {
                     const int vehId = routeState.vehicleIdOf(e.targetId);
                     const int stopIdx = routeState.stopPositionOf(e.targetId);
-                    const auto& stopLoc = routeState.stopLocationsFor(vehId)[stopIdx];
+                    const auto stopLoc = routeState.stopLocationsFor(vehId)[stopIdx];
                     if (stopLoc == pdLoc.loc) {
                         res.push_back({ pdLoc.id, vehId, stopIdx });
                     }

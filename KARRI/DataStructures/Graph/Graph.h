@@ -80,6 +80,8 @@ struct DynamicOutEdgeRange {
 
 }
 
+namespace karri {
+
 // Auxiliary classes for grouping vertex and edge attributes, respectively.
 template <typename... Attributes>
 class VertexAttrs {
@@ -1064,3 +1066,4 @@ using DynamicGraph = Graph<VertexAttributes, EdgeAttributes, true>;
     for (int u = 0; u < G.numVertices(); ++u) \
         for (int e = G.firstEdge(u); e < G.lastEdge(u); ++e)
 #define FORALL_INCIDENT_EDGES(G, u, e) for (int e = G.firstEdge(u); e < G.lastEdge(u); ++e)
+}

@@ -24,16 +24,16 @@
 
 #pragma once
 
-#include "Algorithms/Buckets/DynamicBucketContainer.h"
-#include "Algorithms/Buckets/SortedBucketContainer.h"
-#include "Algorithms/CH/CH.h"
-#include "Algorithms/Dijkstra/Dijkstra.h"
-#include "Algorithms/KaRRi/InputConfig.h"
-#include "Algorithms/KaRRi/RouteState.h"
-#include "Algorithms/KaRRi/Stats/PerformanceStats.h"
+#include "../../../DataStructures/Containers/Subset.h"
+#include "../../../Tools/Timer.h"
+#include "../../Buckets/DynamicBucketContainer.h"
+#include "../../Buckets/SortedBucketContainer.h"
+#include "../../CH/CH.h"
+#include "../../Dijkstra/Dijkstra.h"
+#include "../InputConfig.h"
+#include "../RouteState.h"
+#include "../Stats/PerformanceStats.h"
 #include "BucketEntryWithLeeway.h"
-#include "DataStructures/Containers/Subset.h"
-#include "Tools/Timer.h"
 #include <type_traits>
 
 namespace karri {

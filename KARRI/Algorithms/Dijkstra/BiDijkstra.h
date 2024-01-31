@@ -67,6 +67,7 @@ struct StoppingCriterion {
 
 }
 
+namespace karri {
 // Implementation of a bidirectional search. Depending on the underlying Dijkstra implementation, it
 // keeps parent vertices and/or edges, and computes multiple shortest paths simultaneously,
 // optionally using SSE or AVX instructions. The algorithm can be used with different stopping
@@ -192,3 +193,4 @@ private:
     ParentLabel meetingVertices; // One meeting vertex per simultaneous search.
     int maxTentativeDistance; // The largest of all k tentative distances.
 };
+}

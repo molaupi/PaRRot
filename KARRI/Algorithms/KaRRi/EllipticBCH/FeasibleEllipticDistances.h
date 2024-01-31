@@ -24,15 +24,15 @@
 
 #pragma once
 
-#include "DataStructures/Containers/Subset.h"
-#include "DataStructures/Labels/BasicLabelSet.h"
-#include "DataStructures/Labels/SimdLabelSet.h"
-#include "Tools/Simd/AlignedVector.h"
+#include "../../../DataStructures/Containers/Subset.h"
+#include "../../../DataStructures/Labels/BasicLabelSet.h"
+#include "../../../DataStructures/Labels/SimdLabelSet.h"
+#include "../../../Tools/Simd/AlignedVector.h"
 #include <type_traits>
 
-#include "Algorithms/KaRRi/RequestState/RequestState.h"
-#include "Algorithms/KaRRi/RouteState.h"
-#include "Algorithms/KaRRi/TimeUtils.h"
+#include "../RequestState/RequestState.h"
+#include "../RouteState.h"
+#include "../TimeUtils.h"
 
 namespace karri {
 
@@ -84,8 +84,8 @@ public:
         for (const auto& pdLocAtExistingStop : pdLocsAtExistingStops) {
             const auto& vehId = pdLocAtExistingStop.vehId;
             assert(pdLocAtExistingStop.stopIndex < routeState.numStopsOf(vehId));
-            const auto& stopId = routeState.stopIdsFor(vehId)[pdLocAtExistingStop.stopIndex];
-            const auto& stopVertex = inputGraph.edgeHead(
+            const auto stopId = routeState.stopIdsFor(vehId)[pdLocAtExistingStop.stopIndex];
+            const auto stopVertex = inputGraph.edgeHead(
                 routeState.stopLocationsFor(vehId)[pdLocAtExistingStop.stopIndex]);
             allocateEntriesFor(stopId);
 

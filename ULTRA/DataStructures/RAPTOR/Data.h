@@ -1072,15 +1072,15 @@ public:
         std::ofstream file(fileName);
         Assert(file);
         Assert(file.is_open());
-        file << "StopId,Latitude,Longitude,MinChangeTime\n";
+        file << "StopId,Name,Latitude,Longitude,MinChangeTime\n";
         if (hasImplicitBufferTimes()) {
             for (const StopId stop : stops()) {
-                file << stop.value() << "," << stopData[stop].coordinates.latitude
+                file << stop.value() << ",\"" << stopData[stop].name << "\"," << stopData[stop].coordinates.latitude
                      << "," << stopData[stop].coordinates.longitude << ",0\n";
             }
         } else {
             for (const StopId stop : stops()) {
-                file << stop.value() << "," << stopData[stop].coordinates.latitude
+                file << stop.value() << ",\"" << stopData[stop].name << "\"," << stopData[stop].coordinates.latitude
                      << "," << stopData[stop].coordinates.longitude << ","
                      << stopData[stop].minTransferTime << "\n";
             }

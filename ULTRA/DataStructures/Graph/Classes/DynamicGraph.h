@@ -695,6 +695,15 @@ public:
         });
     }
 
+    template <AttributeNameType ATTRIBUTE_NAME>
+    inline void sortEdgesReverse(
+        const AttributeNameWrapper<ATTRIBUTE_NAME> attributeName) noexcept
+    {
+        sortEdges([&](const Edge a, const Edge b) {
+            return get(attributeName, a) > get(attributeName, b);
+        });
+    }
+
     // Utilities
     inline void deleteIsolatedVertices() noexcept
     {

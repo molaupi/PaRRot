@@ -37,6 +37,8 @@
 #include "../../DataStructures/Utilities/PermutationKARRI.h"
 #include "../../Tools/Constants.h"
 
+namespace karri {
+
 // A weighted contraction hierarchy. The contraction order is determined online and bottom-up.
 class CH {
 public:
@@ -161,3 +163,4 @@ private:
     PermutationKARRI order; // order[i] = v indicates that v was the i-th vertex contracted.
     PermutationKARRI ranks; // ranks[v] = i indicates that v was the i-th vertex contracted.
 };
+}

@@ -24,9 +24,9 @@
 
 #pragma once
 
-#include "DataStructures/Utilities/DynamicRagged2DArrays.h"
-#include "DataStructures/Utilities/IteratorRange.h"
-#include "Tools/Workarounds.h"
+#include "../../../DataStructures/Utilities/DynamicRagged2DArrays.h"
+#include "../../../DataStructures/Utilities/IteratorRange.h"
+#include "../../../Tools/Workarounds.h"
 #include <cassert>
 #include <vector>
 

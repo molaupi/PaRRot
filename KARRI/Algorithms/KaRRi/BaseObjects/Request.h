@@ -25,6 +25,7 @@
 #pragma once
 
 #include "../../../Tools/Constants.h"
+#include <iostream>
 
 namespace karri {
 
@@ -41,7 +42,6 @@ struct Request {
 // location, a walking distance, and optional driving distances to and from the associated origin or destination
 // location.
 struct PDLoc {
-
     int id = INVALID_ID; // Should be counted separately for pickups and dropoffs
     int loc = INVALID_EDGE; // Location in road network
     int psgLoc = INVALID_EDGE; // Location in passenger road network
@@ -57,4 +57,26 @@ enum PDLocType : std::int8_t {
     INVALID_PD_LOC_TYPE
 };
 
+std::ostream& operator<<(std::ostream& os, const Request& request)
+{
+    os << "Request ID: " << request.requestId << "\n"
+       << "Origin: " << request.origin << "\n"
+       << "Destination: " << request.destination << "\n"
+       << "Request Time: " << request.requestTime << "\n"
+       << "Number of Riders: " << request.numRiders;
+
+    return os;
+}
+
+std::ostream& operator<<(std::ostream& os, const PDLoc& pdLoc)
+{
+    os << "ID: " << pdLoc.id << "\n"
+       << "Location: " << pdLoc.loc << "\n"
+       << "Passenger Location: " << pdLoc.psgLoc << "\n"
+       << "Walking Distance: " << pdLoc.walkingDist << "\n"
+       << "Vehicle Distance to Center: " << pdLoc.vehDistToCenter << "\n"
+       << "Vehicle Distance from Center: " << pdLoc.vehDistFromCenter;
+
+    return os;
+}
 }

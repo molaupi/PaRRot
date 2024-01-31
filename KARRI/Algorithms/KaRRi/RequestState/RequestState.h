@@ -25,6 +25,7 @@
 #pragma once
 
 #include "../../../DataStructures/Containers/Subset.h"
+#include "../../../Tools/Logging/LogManager.h"
 #include "../../../Tools/Simd/AlignedVector.h"
 #include "../BaseObjects/Assignment.h"
 #include "../BaseObjects/Request.h"

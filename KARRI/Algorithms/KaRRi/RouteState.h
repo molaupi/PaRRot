@@ -39,6 +39,8 @@ namespace karri {
 class RouteState {
 
 public:
+    RouteState() = default;
+
     RouteState(const Fleet& fleet, const int stopTime)
         : pos(fleet.size())
         , stopIds(fleet.size())
