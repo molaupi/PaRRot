@@ -27,6 +27,7 @@
 // we need vehicle for the prefix of num stops (possibily more than that)
 #include "../../../KARRI/Algorithms/KaRRi/BaseObjects/Vehicle.h"
 #include "../../../KARRI/Algorithms/KaRRi/CostCalculator.h"
+#include "../../../KARRI/Algorithms/KaRRi/EllipticBCH/EllipticBCHSearches.h"
 #include "../../../KARRI/Algorithms/KaRRi/InputConfig.h"
 #include "../../../KARRI/Algorithms/KaRRi/RequestState/RelevantPDLocs.h"
 #include "../../../KARRI/Algorithms/KaRRi/RequestState/RelevantPDLocsFilter.h"
@@ -104,7 +105,7 @@ struct RideRaptorParameter {
     }
 };
 
-template <typename FeasibleDistancesT, typename InputGraphT, typename CHEnvT>
+template <typename FeasibleDistancesT, typename InputGraphT, typename CHEnvT, typename EllipticBCHSearchesT>
 class Data {
 public:
     Data(const std::string& fileName, const RAPTOR::Data& raptorData,
@@ -118,12 +119,13 @@ public:
         karri::RelevantPDLocs& relOrdinaryDropoffs,
         karri::RelevantPDLocs& relPickupsBeforeNextStop,
         karri::RelevantPDLocs& relDropoffsBeforeNextStop,
+        EllipticBCHSearchesT& ellipticBchSearches,
         const std::vector<int>& edgeIdOfStation,
         CH::CH walkingCH = CH::CH(),
         const int maxWalkTime = 600,
         const DistanceMatrix& distanceMatrix = DistanceMatrix(),
         const std::string& separator = ".", const Profiler& profilerTemplate = Profiler())
-        : Data(raptorData, fleet, inputGraph, chEnv, calculator, requestState, routeState, inputConfig, feasiblePickupDistances, feasibleDropoffDistances, relOrdinaryPickups, relOrdinaryDropoffs, relPickupsBeforeNextStop, relDropoffsBeforeNextStop, edgeIdOfStation, walkingCH, maxWalkTime, distanceMatrix, profilerTemplate)
+        : Data(raptorData, fleet, inputGraph, chEnv, calculator, requestState, routeState, inputConfig, feasiblePickupDistances, feasibleDropoffDistances, relOrdinaryPickups, relOrdinaryDropoffs, relPickupsBeforeNextStop, relDropoffsBeforeNextStop, ellipticBchSearches, edgeIdOfStation, walkingCH, maxWalkTime, distanceMatrix, profilerTemplate)
     {
         readRideDataFrom(fileName, separator);
     }
@@ -139,6 +141,7 @@ public:
         karri::RelevantPDLocs& relOrdinaryDropoffs,
         karri::RelevantPDLocs& relPickupsBeforeNextStop,
         karri::RelevantPDLocs& relDropoffsBeforeNextStop,
+        EllipticBCHSearchesT& ellipticBchSearches,
         const std::vector<int>& edgeIdOfStation,
         CH::CH walkingCH = CH::CH(), const int maxWalkTime = 600,
         const DistanceMatrix& distanceMatrix = DistanceMatrix(),
@@ -167,6 +170,7 @@ public:
         , relPickupsBeforeNextStop(relPickupsBeforeNextStop)
         , relDropoffsBeforeNextStop(relDropoffsBeforeNextStop)
         , relevantPdLocsFilter(fleet, inputGraph, chEnv, calculator, requestState, routeState, inputConfig, feasiblePickupDistances, feasibleDropoffDistances, relOrdinaryPickups, relOrdinaryDropoffs, relPickupsBeforeNextStop, relDropoffsBeforeNextStop)
+        , ellipticBchSearches(ellipticBchSearches)
         , edgeIdOfStation(edgeIdOfStation)
         , profiler(profilerTemplate)
     {
@@ -190,7 +194,6 @@ public:
         accumulatedNumStops.assign(fleet.size() + 1, 0);
 
         int runningSum(0);
-        // TODO check where we get the route state
         for (size_t i(0); i < fleet.size(); ++i) {
             // is i == vehid??
             auto& vehicle = fleet[i];
@@ -227,22 +230,11 @@ public:
         for (const auto station : raptorData.stops()) {
             requestState.reset();
 
-            // TODO how to switch between locations?
             // add the current stations point to the pickups && dropoffs
             requestState.pickups.emplace_back(
                 INVALID_ID, // PdLoc ID
-                edgeIdOfStation[station].first, // Location in road network
-                edgeIdOfStation[station].second, // Location in passenger road network
-                0, // Walking time from origin to this pickup or
-                   // from this dropoff to destination.
-                INFTYKARRI, // Vehicle driving time from this pickup/dropoff to the origin/destination.
-                INFTYKARRI // Vehicle driving time from origin/destination to this pickup/dropoff.
-            );
-
-            requestState.dropoffs.emplace_back(
-                INVALID_ID, // PdLoc ID
-                edgeIdOfStation[station].first, // Location in road network
-                edgeIdOfStation[station].second, // Location in passenger road network
+                edgeIdOfStation[station], // Location in road network
+                inputGraph.toPsgEdge(edgeIdOfStation[station]), // Location in passenger road network
                 0, // Walking time from origin to this pickup or
                    // from this dropoff to destination.
                 INFTYKARRI, // Vehicle driving time from this pickup/dropoff to the origin/destination.
@@ -251,6 +243,7 @@ public:
 
             std::vector<StopInsertionInfo> vehicles;
 
+            ellipticBchSearches.runForStation();
             relevantPdLocsFilter.filterOrdinary(vehicles);
             relevantPdLocsFilter.filterBeforeNextStop(vehicles);
 
@@ -568,8 +561,10 @@ public:
 
     karri::RelevantPDLocsFilter<FeasibleDistancesT, InputGraphT, CHEnvT> relevantPdLocsFilter;
 
+    EllipticBCHSearchesT& ellipticBchSearches;
+
     // maps the station to an edge id
-    std::vector<int> edgeIdOfStation;
+    const std::vector<int>& edgeIdOfStation;
 
 private:
     std::vector<int> stopCounter;

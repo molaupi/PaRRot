@@ -363,9 +363,9 @@ private:
                                     distFromPDLoc, // distFrom
                                     0, // reverseDistTo
                                     0, // reverseDistFrom
-                                    0, // minArrTime
-                                    0, // minDepTime
-                                    0 // maxDepTime
+                                    routeState.schedArrTimesFor(vehId)[stopId], // minArrTime
+                                    routeState.schedDepTimesFor(vehId)[stopId], // minDepTime
+                                    routeState.maxArrTimesFor(vehId)[stopId] // maxDepTime
                                 );
                             }
                         }

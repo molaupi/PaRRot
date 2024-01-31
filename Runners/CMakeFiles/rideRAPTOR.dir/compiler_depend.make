@@ -12,12 +12,8 @@ CMakeFiles/rideRAPTOR.dir/RunRideRaptor.o: RunRideRaptor.cpp \
   /home/patrick/Documents/KIT/PARROT/KARRI/Algorithms/KaRRi/DalsAssignments/CollectiveBCHStrategy.h \
   /home/patrick/Documents/KIT/PARROT/KARRI/Algorithms/KaRRi/DalsAssignments/DALSAssignmentsFinder.h \
   /home/patrick/Documents/KIT/PARROT/KARRI/Algorithms/KaRRi/DalsAssignments/MinCostDropoffAfterLastStopQuery.h \
-  /home/patrick/Documents/KIT/PARROT/KARRI/DataStructures/Labels/SimdLabelSet.h \
   /home/patrick/Documents/KIT/PARROT/KARRI/Algorithms/Buckets/DynamicBucketContainer.h \
   /home/patrick/Documents/KIT/PARROT/KARRI/Algorithms/Buckets/SortedBucketContainer.h \
-  /home/patrick/Documents/KIT/PARROT/KARRI/Algorithms/KaRRi/LastStopSearches/LastStopsAtVertices.h \
-  /home/patrick/Documents/KIT/PARROT/KARRI/Algorithms/KaRRi/EllipticBCH/BucketEntryWithLeeway.h \
-  /home/patrick/Documents/KIT/PARROT/KARRI/Algorithms/KaRRi/EllipticBCH/EllipticBCHSearches.h \
   /home/patrick/Documents/KIT/PARROT/KARRI/Algorithms/KaRRi/EllipticBCH/EllipticBucketsEnvironment.h \
   /home/patrick/Documents/KIT/PARROT/KARRI/Algorithms/KaRRi/EllipticBCH/FeasibleEllipticDistances.h \
   /home/patrick/Documents/KIT/PARROT/KARRI/Algorithms/KaRRi/EventSimulation.h \
@@ -53,92 +49,43 @@ CMakeFiles/rideRAPTOR.dir/RunRideRaptor.o: RunRideRaptor.cpp \
   /home/patrick/Documents/KIT/PARROT/KARRI/DataStructures/Graph/Attributes/FreeFlowSpeedAttribute.h \
   /home/patrick/Documents/KIT/PARROT/KARRI/DataStructures/Graph/Attributes/OsmNodeIdAttribute.h \
   /home/patrick/Documents/KIT/PARROT/KARRI/Tools/CommandLine/CommandLineParser.h \
-  /home/patrick/Documents/KIT/PARROT/KARRI/Tools/CompilerSpecific.h \
-  /home/patrick/Documents/KIT/PARROT/KARRI/Tools/MachineSpecs.h \
-  /home/patrick/Documents/KIT/PARROT/KARRI/Tools/Simd/AlignedVector.h \
-  /home/patrick/Documents/KIT/PARROT/KARRI/DataStructures/Containers/BitVector.h \
-  /home/patrick/Documents/KIT/PARROT/KARRI/DataStructures/Utilities/DynamicRagged2DArrays.h \
-  /home/patrick/Documents/KIT/PARROT/KARRI/DataStructures/Utilities/IteratorRange.h \
-  /home/patrick/Documents/KIT/PARROT/KARRI/Algorithms/KaRRi/AssignmentCostFunctions/TimeIsMoneyCostFunction.h \
-  /home/patrick/Documents/KIT/PARROT/KARRI/Algorithms/KaRRi/BaseObjects/Assignment.h \
-  /home/patrick/Documents/KIT/PARROT/KARRI/Algorithms/KaRRi/BaseObjects/Request.h \
-  /home/patrick/Documents/KIT/PARROT/KARRI/Algorithms/KaRRi/CostCalculator.h \
-  /home/patrick/Documents/KIT/PARROT/KARRI/Algorithms/KaRRi/InputConfig.h \
-  /home/patrick/Documents/KIT/PARROT/KARRI/DataStructures/Containers/Subset.h \
-  /home/patrick/Documents/KIT/PARROT/KARRI/Tools/Logging/LogManager.h \
-  /home/patrick/Documents/KIT/PARROT/KARRI/Tools/Logging/NullLogger.h \
-  /home/patrick/Documents/KIT/PARROT/KARRI/Tools/Timer.h \
-  /home/patrick/Documents/KIT/PARROT/KARRI/DataStructures/Graph/Attributes/TraversalCostAttribute.h \
-  /home/patrick/Documents/KIT/PARROT/KARRI/DataStructures/Graph/Attributes/UnpackingInfoAttribute.h \
-  /home/patrick/Documents/KIT/PARROT/KARRI/Algorithms/CH/CH.h \
-  /home/patrick/Documents/KIT/PARROT/KARRI/DataStructures/Graph/Attributes/AbstractAttribute.h \
-  /home/patrick/Documents/KIT/PARROT/KARRI/DataStructures/Graph/Attributes/PsgEdgeToCarEdgeAttribute.h \
-  /home/patrick/Documents/KIT/PARROT/KARRI/Tools/TemplateProgramming.h \
-  /home/patrick/Documents/KIT/PARROT/KARRI/DataStructures/Labels/BasicLabelSet.h \
-  /home/patrick/Documents/KIT/PARROT/KARRI/DataStructures/Labels/ParentInfo.h \
-  /home/patrick/Documents/KIT/PARROT/KARRI/Tools/BinaryIO.h \
-  /home/patrick/Documents/KIT/PARROT/KARRI/Tools/ContainerHelpers.h \
-  /home/patrick/Documents/KIT/PARROT/KARRI/DataStructures/Utilities/PermutationKARRI.h \
-  /home/patrick/Documents/KIT/PARROT/KARRI/DataStructures/Graph/Export/DefaultExporter.h \
-  /home/patrick/Documents/KIT/PARROT/KARRI/DataStructures/Graph/Graph.h \
-  /home/patrick/Documents/KIT/PARROT/KARRI/Tools/LexicalCast.h \
-  /home/patrick/Documents/KIT/PARROT/KARRI/Tools/StringHelpers.h \
-  /home/patrick/Documents/KIT/PARROT/KARRI/DataStructures/Graph/Attributes/CapacityAttribute.h \
-  /home/patrick/Documents/KIT/PARROT/KARRI/DataStructures/Graph/Attributes/LatLngAttribute.h \
-  /home/patrick/Documents/KIT/PARROT/KARRI/DataStructures/Graph/Attributes/LengthAttribute.h \
-  /home/patrick/Documents/KIT/PARROT/KARRI/DataStructures/Graph/Attributes/NumLanesAttribute.h \
-  /home/patrick/Documents/KIT/PARROT/KARRI/DataStructures/Graph/Attributes/TravelTimeAttribute.h \
-  /home/patrick/Documents/KIT/PARROT/KARRI/DataStructures/Graph/Attributes/XatfRoadCategoryAttribute.h \
-  /home/patrick/Documents/KIT/PARROT/KARRI/DataStructures/Graph/Import/XatfImporter.h \
-  /home/patrick/Documents/KIT/PARROT/KARRI/DataStructures/Labels/Containers/ParentLabelContainer.h \
-  /home/patrick/Documents/KIT/PARROT/KARRI/DataStructures/Labels/Containers/StampedDistanceLabelContainer.h \
-  /home/patrick/Documents/KIT/PARROT/KARRI/DataStructures/Queues/AddressableKHeap.h \
-  /home/patrick/Documents/KIT/PARROT/KARRI/Algorithms/Dijkstra/Dijkstra.h \
-  /home/patrick/Documents/KIT/PARROT/KARRI/Algorithms/KaRRi/RequestState/FindPDLocsInRadiusQuery.h \
-  /home/patrick/Documents/KIT/PARROT/KARRI/Tools/EnumParser.h \
-  /home/patrick/Documents/KIT/PARROT/KARRI/DataStructures/Graph/Attributes/OsmRoadCategoryAttribute.h \
-  /home/patrick/Documents/KIT/PARROT/KARRI/Algorithms/KaRRi/Stats/OsmRoadCategoryStats.h \
-  /home/patrick/Documents/KIT/PARROT/KARRI/Algorithms/KaRRi/Stats/PerformanceStats.h \
-  /home/patrick/Documents/KIT/PARROT/KARRI/Algorithms/KaRRi/RequestState/RelevantPDLocs.h \
-  /home/patrick/Documents/KIT/PARROT/KARRI/Algorithms/KaRRi/RequestState/RelevantPDLocsFilter.h \
-  /home/patrick/Documents/KIT/PARROT/KARRI/Algorithms/KaRRi/RequestState/RequestState.h \
-  /home/patrick/Documents/KIT/PARROT/KARRI/Algorithms/KaRRi/RouteState.h \
-  /home/patrick/Documents/KIT/PARROT/KARRI/Algorithms/KaRRi/TimeUtils.h \
-  /home/patrick/Documents/KIT/PARROT/ULTRA/Helpers/Console/ProgressBar.h \
+  /home/patrick/Documents/KIT/PARROT/ULTRA/Helpers/Meta.h \
   /home/patrick/Documents/KIT/PARROT/ULTRA/Helpers/Assert.h \
   /home/patrick/Documents/KIT/PARROT/ULTRA/Helpers/HighlightText.h \
   /home/patrick/Documents/KIT/PARROT/ULTRA/Helpers/Ranges/ReverseRange.h \
   /home/patrick/Documents/KIT/PARROT/ULTRA/Helpers/String/String.h \
-  /home/patrick/Documents/KIT/PARROT/ULTRA/Helpers/FileSystem/FileSystem.h \
-  /home/patrick/Documents/KIT/PARROT/ULTRA/Helpers/Meta.h \
-  /home/patrick/Documents/KIT/PARROT/ULTRA/Helpers/String/Enumeration.h \
+  /home/patrick/Documents/KIT/PARROT/ULTRA/DataStructures/Attributes/AttributeNames.h \
+  /home/patrick/Documents/KIT/PARROT/ULTRA/Helpers/ConstructorTags.h \
   /home/patrick/Documents/KIT/PARROT/ULTRA/Helpers/Helpers.h \
+  /home/patrick/Documents/KIT/PARROT/ULTRA/Helpers/FileSystem/FileSystem.h \
+  /home/patrick/Documents/KIT/PARROT/ULTRA/Helpers/String/Enumeration.h \
   /home/patrick/Documents/KIT/PARROT/ULTRA/Helpers/Vector/Vector.h \
   /home/patrick/Documents/KIT/PARROT/ULTRA/Helpers/IO/File.h \
   /home/patrick/Documents/KIT/PARROT/ULTRA/Helpers/IO/Serialization.h \
   /home/patrick/Documents/KIT/PARROT/ULTRA/Helpers/TaggedInteger.h \
   /home/patrick/Documents/KIT/PARROT/ULTRA/Helpers/Types.h \
-  /home/patrick/Documents/KIT/PARROT/ULTRA/DataStructures/Attributes/Attribute.h \
-  /home/patrick/Documents/KIT/PARROT/ULTRA/DataStructures/Attributes/AttributeHandle.h \
-  /home/patrick/Documents/KIT/PARROT/ULTRA/DataStructures/Attributes/AttributeNames.h \
-  /home/patrick/Documents/KIT/PARROT/ULTRA/DataStructures/Attributes/AttributeRecord.h \
-  /home/patrick/Documents/KIT/PARROT/ULTRA/DataStructures/Attributes/Attributes.h \
-  /home/patrick/Documents/KIT/PARROT/ULTRA/Helpers/ConstructorTags.h \
-  /home/patrick/Documents/KIT/PARROT/ULTRA/DataStructures/Geometry/Point.h \
-  /home/patrick/Documents/KIT/PARROT/ULTRA/DataStructures/Graph/Classes/GraphInterface.h \
-  /home/patrick/Documents/KIT/PARROT/ULTRA/Helpers/Ranges/DirectEdgeRange.h \
-  /home/patrick/Documents/KIT/PARROT/ULTRA/Helpers/Ranges/IndexRange.h \
-  /home/patrick/Documents/KIT/PARROT/ULTRA/Helpers/Ranges/IndirectEdgeRange.h \
-  /home/patrick/Documents/KIT/PARROT/ULTRA/Helpers/Ranges/Range.h \
-  /home/patrick/Documents/KIT/PARROT/ULTRA/Helpers/Ranges/SparseRange.h \
-  /home/patrick/Documents/KIT/PARROT/ULTRA/Helpers/Ranges/SubRange.h \
   /home/patrick/Documents/KIT/PARROT/ULTRA/Helpers/Vector/Permutation.h \
-  /home/patrick/Documents/KIT/PARROT/ULTRA/DataStructures/Geometry/Rectangle.h \
-  /home/patrick/Documents/KIT/PARROT/ULTRA/Algorithms/DepthFirstSearch.h \
   /home/patrick/Documents/KIT/PARROT/ULTRA/DataStructures/Container/ExternalKHeap.h \
   /home/patrick/Documents/KIT/PARROT/ULTRA/DataStructures/Container/Set.h \
   /home/patrick/Documents/KIT/PARROT/ULTRA/Helpers/Timer.h \
   /home/patrick/Documents/KIT/PARROT/ULTRA/Algorithms/Dijkstra/Dijkstra.h \
+  /home/patrick/Documents/KIT/PARROT/ULTRA/Helpers/Ranges/Range.h \
+  /home/patrick/Documents/KIT/PARROT/ULTRA/Helpers/Ranges/SubRange.h \
+  /home/patrick/Documents/KIT/PARROT/ULTRA/Helpers/Ranges/SimultaneousRange.h \
+  /home/patrick/Documents/KIT/PARROT/ULTRA/DataStructures/Container/Map.h \
+  /home/patrick/Documents/KIT/PARROT/ULTRA/DataStructures/Geometry/Point.h \
+  /home/patrick/Documents/KIT/PARROT/ULTRA/DataStructures/Geometry/Rectangle.h \
+  /home/patrick/Documents/KIT/PARROT/ULTRA/Helpers/Console/ProgressBar.h \
+  /home/patrick/Documents/KIT/PARROT/ULTRA/DataStructures/Attributes/Attribute.h \
+  /home/patrick/Documents/KIT/PARROT/ULTRA/DataStructures/Attributes/AttributeHandle.h \
+  /home/patrick/Documents/KIT/PARROT/ULTRA/DataStructures/Attributes/AttributeRecord.h \
+  /home/patrick/Documents/KIT/PARROT/ULTRA/DataStructures/Attributes/Attributes.h \
+  /home/patrick/Documents/KIT/PARROT/ULTRA/DataStructures/Graph/Classes/GraphInterface.h \
+  /home/patrick/Documents/KIT/PARROT/ULTRA/Helpers/Ranges/DirectEdgeRange.h \
+  /home/patrick/Documents/KIT/PARROT/ULTRA/Helpers/Ranges/IndexRange.h \
+  /home/patrick/Documents/KIT/PARROT/ULTRA/Helpers/Ranges/IndirectEdgeRange.h \
+  /home/patrick/Documents/KIT/PARROT/ULTRA/Helpers/Ranges/SparseRange.h \
+  /home/patrick/Documents/KIT/PARROT/ULTRA/Algorithms/DepthFirstSearch.h \
   /home/patrick/Documents/KIT/PARROT/ULTRA/Algorithms/StronglyConnectedComponents.h \
   /home/patrick/Documents/KIT/PARROT/ULTRA/DataStructures/Graph/Utils/Utils.h \
   /home/patrick/Documents/KIT/PARROT/ULTRA/DataStructures/Graph/Classes/DynamicGraph.h \
@@ -147,26 +94,7 @@ CMakeFiles/rideRAPTOR.dir/RunRideRaptor.o: RunRideRaptor.cpp \
   /home/patrick/Documents/KIT/PARROT/ULTRA/DataStructures/Graph/Graph.h \
   /home/patrick/Documents/KIT/PARROT/ULTRA/DataStructures/Graph/Utils/Conversion.h \
   /home/patrick/Documents/KIT/PARROT/ULTRA/DataStructures/Graph/Utils/IO.h \
-  /home/patrick/Documents/KIT/PARROT/ULTRA/Helpers/Ranges/ConcatenatedRange.h \
-  /home/patrick/Documents/KIT/PARROT/ULTRA/Algorithms/CH/CH.h \
-  /home/patrick/Documents/KIT/PARROT/ULTRA/Algorithms/CH/Preprocessing/CHBuilder.h \
-  /home/patrick/Documents/KIT/PARROT/ULTRA/Algorithms/CH/Preprocessing/CHData.h \
-  /home/patrick/Documents/KIT/PARROT/ULTRA/Algorithms/CH/Preprocessing/KeyFunction.h \
-  /home/patrick/Documents/KIT/PARROT/ULTRA/Algorithms/CH/Preprocessing/Profiler.h \
-  /home/patrick/Documents/KIT/PARROT/ULTRA/Algorithms/CH/Preprocessing/StopCriterion.h \
-  /home/patrick/Documents/KIT/PARROT/ULTRA/Algorithms/CH/Preprocessing/WitnessSearch.h \
   /home/patrick/Documents/KIT/PARROT/ULTRA/Helpers/Console/Progress.h \
-  /home/patrick/Documents/KIT/PARROT/ULTRA/Algorithms/CH/Query/BucketQuery.h \
-  /home/patrick/Documents/KIT/PARROT/ULTRA/Algorithms/CH/Query/CHQuery.h \
-  /home/patrick/Documents/KIT/PARROT/KARRI/Tools/Bitwise.h \
-  /home/patrick/Documents/KIT/PARROT/KARRI/Tools/Constants.h \
-  /home/patrick/Documents/KIT/PARROT/KARRI/Tools/Math.h \
-  /home/patrick/Documents/KIT/PARROT/KARRI/Tools/Workarounds.h \
-  /home/patrick/Documents/KIT/PARROT/KARRI/DataStructures/Geometry/LatLng.h \
-  /home/patrick/Documents/KIT/PARROT/KARRI/DataStructures/Geometry/Point.h \
-  /home/patrick/Documents/KIT/PARROT/ULTRA/DataStructures/Graph/Classes/GraphWrapper.h \
-  /home/patrick/Documents/KIT/PARROT/ULTRA/Helpers/Ranges/SimultaneousRange.h \
-  /home/patrick/Documents/KIT/PARROT/ULTRA/DataStructures/Container/Map.h \
   /home/patrick/Documents/KIT/PARROT/ULTRA/Helpers/IO/ParserCSV.h \
   /home/patrick/Documents/KIT/PARROT/ULTRA/DataStructures/GTFS/Data.h \
   /home/patrick/Documents/KIT/PARROT/ULTRA/Helpers/Calendar.h \
@@ -193,6 +121,78 @@ CMakeFiles/rideRAPTOR.dir/RunRideRaptor.o: RunRideRaptor.cpp \
   /home/patrick/Documents/KIT/PARROT/ULTRA/DataStructures/RAPTOR/Entities/Stop.h \
   /home/patrick/Documents/KIT/PARROT/ULTRA/DataStructures/RAPTOR/Entities/StopEvent.h \
   /home/patrick/Documents/KIT/PARROT/ULTRA/DataStructures/RAPTOR/Entities/TripIterator.h \
+  /home/patrick/Documents/KIT/PARROT/KARRI/Tools/CompilerSpecific.h \
+  /home/patrick/Documents/KIT/PARROT/KARRI/Tools/MachineSpecs.h \
+  /home/patrick/Documents/KIT/PARROT/KARRI/Tools/Simd/AlignedVector.h \
+  /home/patrick/Documents/KIT/PARROT/KARRI/DataStructures/Containers/BitVector.h \
+  /home/patrick/Documents/KIT/PARROT/KARRI/DataStructures/Utilities/DynamicRagged2DArrays.h \
+  /home/patrick/Documents/KIT/PARROT/KARRI/DataStructures/Utilities/IteratorRange.h \
+  /home/patrick/Documents/KIT/PARROT/KARRI/Algorithms/KaRRi/AssignmentCostFunctions/TimeIsMoneyCostFunction.h \
+  /home/patrick/Documents/KIT/PARROT/KARRI/Algorithms/KaRRi/BaseObjects/Assignment.h \
+  /home/patrick/Documents/KIT/PARROT/KARRI/Algorithms/KaRRi/BaseObjects/Request.h \
+  /home/patrick/Documents/KIT/PARROT/KARRI/Algorithms/KaRRi/CostCalculator.h \
+  /home/patrick/Documents/KIT/PARROT/KARRI/Tools/TemplateProgramming.h \
+  /home/patrick/Documents/KIT/PARROT/KARRI/DataStructures/Labels/BasicLabelSet.h \
+  /home/patrick/Documents/KIT/PARROT/KARRI/DataStructures/Labels/ParentInfo.h \
+  /home/patrick/Documents/KIT/PARROT/KARRI/DataStructures/Labels/SimdLabelSet.h \
+  /home/patrick/Documents/KIT/PARROT/KARRI/Tools/Logging/NullLogger.h \
+  /home/patrick/Documents/KIT/PARROT/KARRI/Tools/Timer.h \
+  /home/patrick/Documents/KIT/PARROT/KARRI/DataStructures/Graph/Attributes/TraversalCostAttribute.h \
+  /home/patrick/Documents/KIT/PARROT/KARRI/DataStructures/Graph/Attributes/UnpackingInfoAttribute.h \
+  /home/patrick/Documents/KIT/PARROT/KARRI/Algorithms/CH/CH.h \
+  /home/patrick/Documents/KIT/PARROT/KARRI/Algorithms/KaRRi/LastStopSearches/LastStopsAtVertices.h \
+  /home/patrick/Documents/KIT/PARROT/KARRI/DataStructures/Containers/Subset.h \
+  /home/patrick/Documents/KIT/PARROT/KARRI/Tools/Logging/LogManager.h \
+  /home/patrick/Documents/KIT/PARROT/KARRI/DataStructures/Graph/Attributes/AbstractAttribute.h \
+  /home/patrick/Documents/KIT/PARROT/KARRI/DataStructures/Graph/Attributes/PsgEdgeToCarEdgeAttribute.h \
+  /home/patrick/Documents/KIT/PARROT/KARRI/Tools/BinaryIO.h \
+  /home/patrick/Documents/KIT/PARROT/KARRI/Tools/ContainerHelpers.h \
+  /home/patrick/Documents/KIT/PARROT/KARRI/DataStructures/Utilities/PermutationKARRI.h \
+  /home/patrick/Documents/KIT/PARROT/KARRI/DataStructures/Graph/Export/DefaultExporter.h \
+  /home/patrick/Documents/KIT/PARROT/KARRI/DataStructures/Graph/Graph.h \
+  /home/patrick/Documents/KIT/PARROT/KARRI/Tools/LexicalCast.h \
+  /home/patrick/Documents/KIT/PARROT/KARRI/Tools/StringHelpers.h \
+  /home/patrick/Documents/KIT/PARROT/KARRI/DataStructures/Graph/Attributes/CapacityAttribute.h \
+  /home/patrick/Documents/KIT/PARROT/KARRI/DataStructures/Graph/Attributes/LatLngAttribute.h \
+  /home/patrick/Documents/KIT/PARROT/KARRI/DataStructures/Graph/Attributes/LengthAttribute.h \
+  /home/patrick/Documents/KIT/PARROT/KARRI/DataStructures/Graph/Attributes/NumLanesAttribute.h \
+  /home/patrick/Documents/KIT/PARROT/KARRI/DataStructures/Graph/Attributes/TravelTimeAttribute.h \
+  /home/patrick/Documents/KIT/PARROT/KARRI/DataStructures/Graph/Attributes/XatfRoadCategoryAttribute.h \
+  /home/patrick/Documents/KIT/PARROT/KARRI/DataStructures/Graph/Import/XatfImporter.h \
+  /home/patrick/Documents/KIT/PARROT/KARRI/DataStructures/Labels/Containers/ParentLabelContainer.h \
+  /home/patrick/Documents/KIT/PARROT/KARRI/DataStructures/Labels/Containers/StampedDistanceLabelContainer.h \
+  /home/patrick/Documents/KIT/PARROT/KARRI/DataStructures/Queues/AddressableKHeap.h \
+  /home/patrick/Documents/KIT/PARROT/KARRI/Algorithms/Dijkstra/Dijkstra.h \
+  /home/patrick/Documents/KIT/PARROT/KARRI/Algorithms/KaRRi/RequestState/FindPDLocsInRadiusQuery.h \
+  /home/patrick/Documents/KIT/PARROT/KARRI/Tools/EnumParser.h \
+  /home/patrick/Documents/KIT/PARROT/KARRI/DataStructures/Graph/Attributes/OsmRoadCategoryAttribute.h \
+  /home/patrick/Documents/KIT/PARROT/KARRI/Algorithms/KaRRi/Stats/OsmRoadCategoryStats.h \
+  /home/patrick/Documents/KIT/PARROT/KARRI/Algorithms/KaRRi/Stats/PerformanceStats.h \
+  /home/patrick/Documents/KIT/PARROT/KARRI/Algorithms/KaRRi/RequestState/RequestState.h \
+  /home/patrick/Documents/KIT/PARROT/KARRI/Algorithms/KaRRi/EllipticBCH/BucketEntryWithLeeway.h \
+  /home/patrick/Documents/KIT/PARROT/KARRI/Algorithms/KaRRi/EllipticBCH/EllipticBCHSearches.h \
+  /home/patrick/Documents/KIT/PARROT/KARRI/Algorithms/KaRRi/InputConfig.h \
+  /home/patrick/Documents/KIT/PARROT/KARRI/Algorithms/KaRRi/RequestState/RelevantPDLocs.h \
+  /home/patrick/Documents/KIT/PARROT/KARRI/Algorithms/KaRRi/RequestState/RelevantPDLocsFilter.h \
+  /home/patrick/Documents/KIT/PARROT/KARRI/Algorithms/KaRRi/RouteState.h \
+  /home/patrick/Documents/KIT/PARROT/KARRI/Algorithms/KaRRi/TimeUtils.h \
+  /home/patrick/Documents/KIT/PARROT/ULTRA/Helpers/Ranges/ConcatenatedRange.h \
+  /home/patrick/Documents/KIT/PARROT/ULTRA/Algorithms/CH/CH.h \
+  /home/patrick/Documents/KIT/PARROT/ULTRA/Algorithms/CH/Preprocessing/CHBuilder.h \
+  /home/patrick/Documents/KIT/PARROT/ULTRA/Algorithms/CH/Preprocessing/CHData.h \
+  /home/patrick/Documents/KIT/PARROT/ULTRA/Algorithms/CH/Preprocessing/KeyFunction.h \
+  /home/patrick/Documents/KIT/PARROT/ULTRA/Algorithms/CH/Preprocessing/Profiler.h \
+  /home/patrick/Documents/KIT/PARROT/ULTRA/Algorithms/CH/Preprocessing/StopCriterion.h \
+  /home/patrick/Documents/KIT/PARROT/ULTRA/Algorithms/CH/Preprocessing/WitnessSearch.h \
+  /home/patrick/Documents/KIT/PARROT/ULTRA/Algorithms/CH/Query/BucketQuery.h \
+  /home/patrick/Documents/KIT/PARROT/ULTRA/Algorithms/CH/Query/CHQuery.h \
+  /home/patrick/Documents/KIT/PARROT/KARRI/Tools/Bitwise.h \
+  /home/patrick/Documents/KIT/PARROT/KARRI/Tools/Constants.h \
+  /home/patrick/Documents/KIT/PARROT/KARRI/Tools/Math.h \
+  /home/patrick/Documents/KIT/PARROT/KARRI/Tools/Workarounds.h \
+  /home/patrick/Documents/KIT/PARROT/KARRI/DataStructures/Geometry/LatLng.h \
+  /home/patrick/Documents/KIT/PARROT/KARRI/DataStructures/Geometry/Point.h \
+  /home/patrick/Documents/KIT/PARROT/ULTRA/DataStructures/Graph/Classes/GraphWrapper.h \
   /home/patrick/Documents/KIT/PARROT/KARRI/Algorithms/KaRRi/BaseObjects/Vehicle.h \
   /home/patrick/Documents/KIT/PARROT/ULTRA/DataStructures/RideRAPTOR/Entities/Journey.h \
   /home/patrick/Documents/KIT/PARROT/ULTRA/Shell/BasicShell.h \
@@ -1226,46 +1226,6 @@ CMakeFiles/rideRAPTOR.dir/RunRideRaptor.o: RunRideRaptor.cpp \
 
 /usr/include/c++/13/iosfwd:
 
-/usr/include/x86_64-linux-gnu/bits/sigcontext.h:
-
-/home/patrick/Documents/KIT/PARROT/ULTRA/DataStructures/RAPTOR/Entities/RouteSegment.h:
-
-/home/patrick/Documents/KIT/PARROT/KARRI/DataStructures/Queues/AddressableKHeap.h:
-
-/usr/include/x86_64-linux-gnu/bits/struct_rwlock.h:
-
-/usr/include/boost/container_hash/hash.hpp:
-
-/home/patrick/Documents/KIT/PARROT/ULTRA/Algorithms/CH/Preprocessing/StopCriterion.h:
-
-/usr/include/c++/13/bits/stl_tempbuf.h:
-
-/usr/include/boost/container_hash/hash_fwd.hpp:
-
-/usr/include/c++/13/bits/functional_hash.h:
-
-/usr/include/boost/container_hash/extensions.hpp:
-
-/home/patrick/Documents/KIT/PARROT/ULTRA/DataStructures/Intermediate/Entities/StopEvent.h:
-
-/home/patrick/Documents/KIT/PARROT/ULTRA/Shell/LineBuffer.h:
-
-/home/patrick/Documents/KIT/PARROT/ULTRA/DataStructures/Geometry/CoordinateTree.h:
-
-/usr/include/x86_64-linux-gnu/bits/types/__FILE.h:
-
-/usr/include/boost/assert.hpp:
-
-/home/patrick/Documents/KIT/PARROT/ULTRA/DataStructures/GTFS/Entities/CalendarDate.h:
-
-/home/patrick/Documents/KIT/PARROT/KARRI/Tools/Bitwise.h:
-
-/home/patrick/Documents/KIT/PARROT/KARRI/DataStructures/Graph/Attributes/OsmRoadCategoryAttribute.h:
-
-/home/patrick/Documents/KIT/PARROT/ULTRA/Algorithms/DepthFirstSearch.h:
-
-/usr/include/c++/13/pstl/glue_numeric_defs.h:
-
 /usr/include/x86_64-linux-gnu/sys/wait.h:
 
 /home/patrick/Documents/KIT/PARROT/ULTRA/DataStructures/Graph/Classes/GraphWrapper.h:
@@ -1280,109 +1240,163 @@ CMakeFiles/rideRAPTOR.dir/RunRideRaptor.o: RunRideRaptor.cpp \
 
 /home/patrick/Documents/KIT/PARROT/KARRI/Tools/Math.h:
 
+/home/patrick/Documents/KIT/PARROT/KARRI/Tools/Bitwise.h:
+
+/home/patrick/Documents/KIT/PARROT/ULTRA/DataStructures/GTFS/Entities/CalendarDate.h:
+
 /usr/include/c++/13/bits/exception.h:
 
 /usr/include/c++/13/bits/std_thread.h:
 
-/usr/lib/gcc/x86_64-linux-gnu/13/include/mmintrin.h:
+/usr/include/x86_64-linux-gnu/bits/types/error_t.h:
 
-/home/patrick/Documents/KIT/PARROT/ULTRA/DataStructures/GTFS/Entities/Transfer.h:
+/home/patrick/Documents/KIT/PARROT/KARRI/Algorithms/KaRRi/TimeUtils.h:
 
-/usr/include/c++/13/tr1/bessel_function.tcc:
+/home/patrick/Documents/KIT/PARROT/KARRI/DataStructures/Graph/Graph.h:
 
-/usr/include/boost/align/detail/aligned_alloc_posix.hpp:
+/usr/include/boost/container_hash/detail/hash_float.hpp:
 
-/usr/include/c++/13/tr1/gamma.tcc:
+/home/patrick/Documents/KIT/PARROT/KARRI/Algorithms/KaRRi/RequestState/RelevantPDLocs.h:
 
-/home/patrick/Documents/KIT/PARROT/ULTRA/DataStructures/GTFS/Entities/Vehicle.h:
+/home/patrick/Documents/KIT/PARROT/KARRI/Algorithms/KaRRi/BaseObjects/VehicleLocation.h:
 
-/usr/include/boost/version.hpp:
+/usr/include/boost/move/core.hpp:
 
-/home/patrick/Documents/KIT/PARROT/ULTRA/DataStructures/Graph/Classes/EdgeList.h:
+/usr/include/c++/13/bits/stl_relops.h:
 
-/usr/include/c++/13/bits/alloc_traits.h:
+/usr/include/x86_64-linux-gnu/bits/struct_mutex.h:
 
-/home/patrick/Documents/KIT/PARROT/ULTRA/DataStructures/Graph/Utils/Utils.h:
+/home/patrick/Documents/KIT/PARROT/KARRI/Algorithms/KaRRi/EllipticBCH/EllipticBCHSearches.h:
 
-/home/patrick/Documents/KIT/PARROT/ULTRA/DataStructures/RAPTOR/Entities/StopEvent.h:
+/home/patrick/Documents/KIT/PARROT/KARRI/Algorithms/KaRRi/EllipticBCH/BucketEntryWithLeeway.h:
 
-/home/patrick/Documents/KIT/PARROT/ULTRA/Algorithms/StronglyConnectedComponents.h:
+/usr/include/boost/integer_fwd.hpp:
 
-/usr/include/c++/13/bits/algorithmfwd.h:
+/usr/include/c++/13/bits/concept_check.h:
 
-/home/patrick/Documents/KIT/PARROT/ULTRA/Algorithms/CH/Query/BucketQuery.h:
+/usr/include/boost/align/alignment_of.hpp:
+
+/usr/include/boost/detail/container_fwd.hpp:
+
+/home/patrick/Documents/KIT/PARROT/KARRI/Algorithms/KaRRi/Stats/PerformanceStats.h:
 
 /home/patrick/Documents/KIT/PARROT/KARRI/Algorithms/KaRRi/Stats/OsmRoadCategoryStats.h:
 
-/home/patrick/Documents/KIT/PARROT/ULTRA/DataStructures/RAPTOR/Data.h:
+/home/patrick/Documents/KIT/PARROT/ULTRA/Algorithms/CH/Query/BucketQuery.h:
 
-/home/patrick/Documents/KIT/PARROT/KARRI/DataStructures/Labels/Containers/StampedDistanceLabelContainer.h:
+/usr/include/boost/align/detail/is_alignment_constant.hpp:
 
-/usr/include/string.h:
+/home/patrick/Documents/KIT/PARROT/KARRI/DataStructures/Graph/Attributes/TravelTimeAttribute.h:
 
-/usr/local/include/vectorclass/vectorclass.h:
+/usr/local/include/routingkit/timestamp_flag.h:
 
-/usr/include/c++/13/cxxabi.h:
+/home/patrick/Documents/KIT/PARROT/KARRI/DataStructures/Graph/Attributes/NumLanesAttribute.h:
 
-/home/patrick/Documents/KIT/PARROT/ULTRA/Algorithms/CH/Preprocessing/WitnessSearch.h:
+/usr/include/x86_64-linux-gnu/bits/posix_opt.h:
 
-/usr/include/c++/13/compare:
+/usr/include/c++/13/thread:
 
-/home/patrick/Documents/KIT/PARROT/ULTRA/DataStructures/Graph/Utils/Conversion.h:
+/usr/include/c++/13/bits/atomic_futex.h:
 
-/usr/include/c++/13/debug/assertions.h:
+/usr/lib/gcc/x86_64-linux-gnu/13/include/hresetintrin.h:
 
-/usr/include/asm-generic/ioctls.h:
+/home/patrick/Documents/KIT/PARROT/KARRI/DataStructures/Graph/Attributes/CapacityAttribute.h:
 
-/usr/include/boost/dynamic_bitset_fwd.hpp:
+/home/patrick/Documents/KIT/PARROT/KARRI/Tools/StringHelpers.h:
 
-/usr/lib/gcc/x86_64-linux-gnu/13/include/vaesintrin.h:
+/home/patrick/Documents/KIT/PARROT/KARRI/DataStructures/Utilities/PermutationKARRI.h:
 
-/home/patrick/Documents/KIT/PARROT/ULTRA/Algorithms/CH/CH.h:
+/usr/include/c++/13/bits/stl_set.h:
 
-/home/patrick/Documents/KIT/PARROT/ULTRA/Helpers/Ranges/SubRange.h:
+/home/patrick/Documents/KIT/PARROT/KARRI/Tools/ContainerHelpers.h:
 
-/home/patrick/Documents/KIT/PARROT/ULTRA/Helpers/Ranges/SparseRange.h:
+/home/patrick/Documents/KIT/PARROT/KARRI/Algorithms/KaRRi/OrdinaryAssignments/OrdinaryAssignmentsFinder.h:
 
-/usr/lib/gcc/x86_64-linux-gnu/13/include/stddef.h:
+/usr/include/c++/13/bits/functexcept.h:
 
-/home/patrick/Documents/KIT/PARROT/KARRI/DataStructures/Utilities/IteratorRange.h:
+/usr/lib/gcc/x86_64-linux-gnu/13/include/avx512vp2intersectvlintrin.h:
 
-/usr/include/boost/core/pointer_traits.hpp:
+/home/patrick/Documents/KIT/PARROT/KARRI/DataStructures/Graph/Attributes/PsgEdgeToCarEdgeAttribute.h:
 
-/home/patrick/Documents/KIT/PARROT/ULTRA/Algorithms/Dijkstra/Dijkstra.h:
+/usr/include/x86_64-linux-gnu/bits/floatn.h:
 
-/usr/include/boost/move/detail/pointer_element.hpp:
+/home/patrick/Documents/KIT/PARROT/KARRI/DataStructures/Graph/Attributes/LatLngAttribute.h:
 
-/usr/lib/gcc/x86_64-linux-gnu/13/include/wmmintrin.h:
+/usr/include/termios.h:
 
-/usr/include/boost/align/detail/is_alignment.hpp:
+/home/patrick/Documents/KIT/PARROT/KARRI/DataStructures/Graph/Attributes/AbstractAttribute.h:
 
-/home/patrick/Documents/KIT/PARROT/KARRI/Algorithms/KaRRi/DalsAssignments/MinCostDropoffAfterLastStopQuery.h:
+/usr/include/x86_64-linux-gnu/bits/posix2_lim.h:
 
-/usr/include/boost/config/compiler/gcc.hpp:
+/home/patrick/Documents/KIT/PARROT/KARRI/DataStructures/Graph/Attributes/OsmNodeIdAttribute.h:
 
-/usr/include/c++/13/bits/locale_facets.tcc:
+/home/patrick/Documents/KIT/PARROT/ULTRA/Helpers/Assert.h:
 
-/usr/include/linux/stat.h:
+/usr/include/c++/13/complex:
 
-/usr/include/x86_64-linux-gnu/bits/types/sigval_t.h:
+/usr/include/asm-generic/int-ll64.h:
 
-/home/patrick/Documents/KIT/PARROT/KARRI/DataStructures/Utilities/DynamicRagged2DArrays.h:
+/home/patrick/Documents/KIT/PARROT/KARRI/Tools/BinaryIO.h:
 
-/usr/lib/gcc/x86_64-linux-gnu/13/include/cetintrin.h:
+/usr/include/boost/move/move.hpp:
 
-/home/patrick/Documents/KIT/PARROT/KARRI/Algorithms/Dijkstra/DagShortestPaths.h:
+/usr/include/c++/13/bits/stl_algobase.h:
 
-/usr/include/c++/13/ctime:
+/home/patrick/Documents/KIT/PARROT/KARRI/Algorithms/CH/CH.h:
 
-/home/patrick/Documents/KIT/PARROT/KARRI/Algorithms/KaRRi/EllipticBCH/EllipticBucketsEnvironment.h:
+/usr/lib/gcc/x86_64-linux-gnu/13/include/emmintrin.h:
 
-/home/patrick/Documents/KIT/PARROT/KARRI/Algorithms/KaRRi/PalsAssignments/PALSAssignmentsFinder.h:
+/home/patrick/Documents/KIT/PARROT/ULTRA/DataStructures/Graph/Classes/GraphInterface.h:
 
-/home/patrick/Documents/KIT/PARROT/ULTRA/DataStructures/Container/Set.h:
+/usr/include/boost/move/utility.hpp:
 
-/usr/include/c++/13/bits/hashtable.h:
+/usr/include/x86_64-linux-gnu/bits/statx.h:
+
+/home/patrick/Documents/KIT/PARROT/KARRI/DataStructures/Graph/Attributes/UnpackingInfoAttribute.h:
+
+/usr/include/x86_64-linux-gnu/bits/typesizes.h:
+
+/home/patrick/Documents/KIT/PARROT/KARRI/DataStructures/Graph/Attributes/TraversalCostAttribute.h:
+
+/usr/lib/gcc/x86_64-linux-gnu/13/include/avx512vlintrin.h:
+
+/usr/include/linux/types.h:
+
+/home/patrick/Documents/KIT/PARROT/KARRI/Tools/Logging/NullLogger.h:
+
+/usr/include/x86_64-linux-gnu/bits/types/__FILE.h:
+
+/usr/include/boost/assert.hpp:
+
+/home/patrick/Documents/KIT/PARROT/ULTRA/DataStructures/Geometry/CoordinateTree.h:
+
+/home/patrick/Documents/KIT/PARROT/KARRI/DataStructures/Labels/BasicLabelSet.h:
+
+/usr/include/c++/13/bits/istream.tcc:
+
+/home/patrick/Documents/KIT/PARROT/KARRI/Tools/TemplateProgramming.h:
+
+/home/patrick/Documents/KIT/PARROT/KARRI/Algorithms/KaRRi/CostCalculator.h:
+
+/home/patrick/Documents/KIT/PARROT/KARRI/Algorithms/KaRRi/BaseObjects/Assignment.h:
+
+/usr/include/boost/type_traits/intrinsics.hpp:
+
+/usr/include/boost/align/alignment_of_forward.hpp:
+
+/usr/include/c++/13/bits/postypes.h:
+
+/home/patrick/Documents/KIT/PARROT/KARRI/DataStructures/Graph/Attributes/FreeFlowSpeedAttribute.h:
+
+/usr/lib/gcc/x86_64-linux-gnu/13/include/xopintrin.h:
+
+/home/patrick/Documents/KIT/PARROT/ULTRA/Helpers/Ranges/IndexRange.h:
+
+/usr/include/c++/13/bits/stl_iterator_base_funcs.h:
+
+/home/patrick/Documents/KIT/PARROT/ULTRA/Helpers/Helpers.h:
+
+/home/patrick/Documents/KIT/PARROT/ULTRA/Helpers/ConstructorTags.h:
 
 /home/patrick/Documents/KIT/PARROT/KARRI/Algorithms/KaRRi/SystemStateUpdater.h:
 
@@ -1396,77 +1410,73 @@ CMakeFiles/rideRAPTOR.dir/RunRideRaptor.o: RunRideRaptor.cpp \
 
 /usr/include/c++/13/bits/cxxabi_init_exception.h:
 
-/usr/lib/gcc/x86_64-linux-gnu/13/include/avx512fp16vlintrin.h:
-
-/home/patrick/Documents/KIT/PARROT/KARRI/Tools/CommandLine/CommandLineParser.h:
+/home/patrick/Documents/KIT/PARROT/ULTRA/Shell/LineBuffer.h:
 
 /usr/lib/gcc/x86_64-linux-gnu/13/include/tsxldtrkintrin.h:
 
 /home/patrick/Documents/KIT/PARROT/KARRI/Algorithms/KaRRi/PbnsAssignments/VehicleLocator.h:
 
+/usr/include/x86_64-linux-gnu/bits/sigcontext.h:
+
+/home/patrick/Documents/KIT/PARROT/ULTRA/DataStructures/RAPTOR/Entities/RouteSegment.h:
+
+/home/patrick/Documents/KIT/PARROT/KARRI/DataStructures/Queues/AddressableKHeap.h:
+
+/usr/lib/gcc/x86_64-linux-gnu/13/include/syslimits.h:
+
+/usr/include/boost/align/aligned_allocator.hpp:
+
+/usr/include/c++/13/bits/cxxabi_forced.h:
+
+RunRideRaptor.cpp:
+
+/usr/include/x86_64-linux-gnu/asm/types.h:
+
+/usr/include/boost/align/aligned_allocator_forward.hpp:
+
+/home/patrick/Documents/KIT/PARROT/KARRI/DataStructures/Geometry/LatLng.h:
+
+/home/patrick/Documents/KIT/PARROT/KARRI/Algorithms/KaRRi/PDDistanceQueries/PDDistances.h:
+
+/usr/include/asm-generic/types.h:
+
+/usr/include/c++/13/tr1/legendre_function.tcc:
+
 /usr/include/boost/current_function.hpp:
 
 /home/patrick/Documents/KIT/PARROT/KARRI/Algorithms/KaRRi/PbnsAssignments/PBNSAssignmentsFinder.h:
-
-/usr/include/c++/13/bits/atomic_futex.h:
 
 /usr/include/c++/13/bits/hashtable_policy.h:
 
 /home/patrick/Documents/KIT/PARROT/ULTRA/Helpers/Console/ProgressBar.h:
 
+/home/patrick/Documents/KIT/PARROT/ULTRA/DataStructures/RAPTOR/Data.h:
+
+/home/patrick/Documents/KIT/PARROT/KARRI/DataStructures/Labels/Containers/StampedDistanceLabelContainer.h:
+
+/usr/include/string.h:
+
+/usr/include/boost/config/no_tr1/cmath.hpp:
+
+/usr/include/c++/13/stack:
+
+/usr/include/boost/move/algorithm.hpp:
+
+/usr/include/boost/config.hpp:
+
+/usr/include/x86_64-linux-gnu/bits/types/struct_statx.h:
+
+/usr/include/c++/13/bits/stl_multimap.h:
+
+/usr/include/boost/align/detail/throw_exception.hpp:
+
+/home/patrick/Documents/KIT/PARROT/KARRI/Algorithms/KaRRi/LastStopSearches/UnsortedLastStopBucketsEnvironment.h:
+
 /home/patrick/Documents/KIT/PARROT/KARRI/DataStructures/Containers/TimestampedVector.h:
-
-/usr/include/x86_64-linux-gnu/bits/posix2_lim.h:
-
-/home/patrick/Documents/KIT/PARROT/KARRI/DataStructures/Graph/Attributes/OsmNodeIdAttribute.h:
-
-/home/patrick/Documents/KIT/PARROT/ULTRA/Helpers/Assert.h:
-
-/usr/include/c++/13/complex:
 
 /home/patrick/Documents/KIT/PARROT/KARRI/Algorithms/KaRRi/LastStopSearches/ClosestPDLocToLastStopBCHQuery.h:
 
 /home/patrick/Documents/KIT/PARROT/KARRI/Algorithms/KaRRi/PathTracker.h:
-
-/home/patrick/Documents/KIT/PARROT/KARRI/DataStructures/Utilities/PermutationKARRI.h:
-
-/usr/include/boost/align/detail/element_type.hpp:
-
-/usr/include/c++/13/system_error:
-
-/usr/include/c++/13/bits/ostream_insert.h:
-
-/usr/include/c++/13/bits/stl_set.h:
-
-/home/patrick/Documents/KIT/PARROT/ULTRA/DataStructures/GTFS/Entities/StopTime.h:
-
-/usr/lib/gcc/x86_64-linux-gnu/13/include/xsaveoptintrin.h:
-
-/home/patrick/Documents/KIT/PARROT/ULTRA/DataStructures/Geometry/Rectangle.h:
-
-/usr/include/x86_64-linux-gnu/bits/time64.h:
-
-/usr/include/c++/13/ext/type_traits.h:
-
-/usr/include/boost/core/no_exceptions_support.hpp:
-
-/usr/include/linux/close_range.h:
-
-/usr/include/boost/config/stdlib/libstdcpp3.hpp:
-
-/home/patrick/Documents/KIT/PARROT/ULTRA/DataStructures/RideRAPTOR/Data.h:
-
-/usr/include/c++/13/bits/uses_allocator.h:
-
-/home/patrick/Documents/KIT/PARROT/ULTRA/DataStructures/Attributes/Attributes.h:
-
-/usr/local/include/routingkit/permutation.h:
-
-/usr/include/c++/13/tr1/riemann_zeta.tcc:
-
-/usr/include/boost/align/detail/alignment_of_cxx11.hpp:
-
-/home/patrick/Documents/KIT/PARROT/KARRI/Algorithms/KaRRi/PalsAssignments/CollectiveBCHStrategy.h:
 
 /home/patrick/Documents/KIT/PARROT/KARRI/DataStructures/Graph/Attributes/EdgeTailAttribute.h:
 
@@ -1480,69 +1490,103 @@ CMakeFiles/rideRAPTOR.dir/RunRideRaptor.o: RunRideRaptor.cpp \
 
 /usr/include/c++/13/bits/stl_tree.h:
 
-/usr/include/x86_64-linux-gnu/bits/struct_mutex.h:
+/usr/include/boost/core/addressof.hpp:
 
-/home/patrick/Documents/KIT/PARROT/KARRI/Algorithms/KaRRi/EllipticBCH/EllipticBCHSearches.h:
+/usr/lib/gcc/x86_64-linux-gnu/13/include/enqcmdintrin.h:
+
+/home/patrick/Documents/KIT/PARROT/KARRI/Tools/EnumParser.h:
+
+/usr/include/c++/13/bits/stl_pair.h:
+
+/home/patrick/Documents/KIT/PARROT/KARRI/Algorithms/Buckets/SortedBucketContainer.h:
+
+/usr/include/x86_64-linux-gnu/bits/struct_rwlock.h:
+
+/usr/include/boost/container_hash/hash.hpp:
+
+/home/patrick/Documents/KIT/PARROT/ULTRA/Algorithms/CH/Preprocessing/StopCriterion.h:
+
+/usr/include/c++/13/bits/stl_tempbuf.h:
 
 /home/patrick/Documents/KIT/PARROT/KARRI/Algorithms/KaRRi/AssignmentFinder.h:
-
-/home/patrick/Documents/KIT/PARROT/KARRI/Algorithms/KaRRi/AssignmentCostFunctions/TimeIsMoneyCostFunction.h:
 
 /home/patrick/Documents/KIT/PARROT/ULTRA/Helpers/Vector/Vector.h:
 
 /home/patrick/Documents/KIT/PARROT/ULTRA/Helpers/IO/File.h:
 
-/home/patrick/Documents/KIT/PARROT/KARRI/Algorithms/Dijkstra/BiDijkstra.h:
-
-/home/patrick/Documents/KIT/PARROT/ULTRA/Helpers/Calendar.h:
-
-/usr/include/x86_64-linux-gnu/sys/stat.h:
-
-/home/patrick/Documents/KIT/PARROT/ULTRA/Helpers/String/Enumeration.h:
-
-/usr/include/c++/13/bits/hash_bytes.h:
-
-/home/patrick/Documents/KIT/PARROT/KARRI/Algorithms/Dijkstra/Dijkstra.h:
-
-/home/patrick/Documents/KIT/PARROT/ULTRA/DataStructures/RAPTOR/Entities/TripIterator.h:
-
-/usr/include/c++/13/bits/streambuf_iterator.h:
-
-/home/patrick/Documents/KIT/PARROT/ULTRA/Algorithms/CH/Preprocessing/KeyFunction.h:
-
-/usr/include/boost/core/enable_if.hpp:
-
-/home/patrick/Documents/KIT/PARROT/KARRI/Algorithms/KaRRi/RequestState/RequestStateInitializer.h:
-
-/home/patrick/Documents/KIT/PARROT/KARRI/Algorithms/CH/CHQuery.h:
-
-/home/patrick/Documents/KIT/PARROT/KARRI/Algorithms/KaRRi/EllipticBCH/FeasibleEllipticDistances.h:
-
-/home/patrick/Documents/KIT/PARROT/ULTRA/DataStructures/RAPTOR/Entities/Route.h:
-
-/usr/include/x86_64-linux-gnu/bits/types/error_t.h:
-
-/home/patrick/Documents/KIT/PARROT/KARRI/Algorithms/KaRRi/TimeUtils.h:
-
-/home/patrick/Documents/KIT/PARROT/KARRI/DataStructures/Graph/Graph.h:
-
-/home/patrick/Documents/KIT/PARROT/KARRI/Algorithms/KaRRi/LastStopSearches/LabelBucketContainer.h:
-
-/usr/include/boost/assert/source_location.hpp:
-
-/usr/include/boost/align/detail/max_size.hpp:
-
-/usr/include/c++/13/tr1/modified_bessel_func.tcc:
-
-/usr/include/boost/align/detail/integral_constant.hpp:
-
-/home/patrick/Documents/KIT/PARROT/ULTRA/DataStructures/GTFS/Entities/Route.h:
+/home/patrick/Documents/KIT/PARROT/KARRI/Algorithms/KaRRi/AssignmentCostFunctions/TimeIsMoneyCostFunction.h:
 
 /usr/lib/gcc/x86_64-linux-gnu/13/include/avxneconvertintrin.h:
 
+/home/patrick/Documents/KIT/PARROT/KARRI/DataStructures/Labels/ParentInfo.h:
+
 /home/patrick/Documents/KIT/PARROT/ULTRA/DataStructures/Graph/Utils/IO.h:
 
-/home/patrick/Documents/KIT/PARROT/KARRI/DataStructures/Labels/ParentInfo.h:
+/home/patrick/Documents/KIT/PARROT/KARRI/Algorithms/Dijkstra/BiDijkstra.h:
+
+/usr/lib/gcc/x86_64-linux-gnu/13/include/cetintrin.h:
+
+/home/patrick/Documents/KIT/PARROT/KARRI/Algorithms/Dijkstra/DagShortestPaths.h:
+
+/usr/include/c++/13/ctime:
+
+/usr/include/boost/core/pointer_traits.hpp:
+
+/home/patrick/Documents/KIT/PARROT/ULTRA/Algorithms/Dijkstra/Dijkstra.h:
+
+/usr/include/boost/move/detail/pointer_element.hpp:
+
+/usr/lib/gcc/x86_64-linux-gnu/13/include/wmmintrin.h:
+
+/usr/include/boost/align/detail/is_alignment.hpp:
+
+/usr/include/boost/config/compiler/gcc.hpp:
+
+/home/patrick/Documents/KIT/PARROT/KARRI/Algorithms/KaRRi/DalsAssignments/MinCostDropoffAfterLastStopQuery.h:
+
+/usr/include/c++/13/bits/locale_facets.tcc:
+
+/usr/include/linux/stat.h:
+
+/usr/include/x86_64-linux-gnu/bits/types/sigval_t.h:
+
+/home/patrick/Documents/KIT/PARROT/KARRI/DataStructures/Utilities/DynamicRagged2DArrays.h:
+
+/usr/lib/gcc/x86_64-linux-gnu/13/include/pmmintrin.h:
+
+/usr/include/x86_64-linux-gnu/bits/stdint-intn.h:
+
+/home/patrick/Documents/KIT/PARROT/KARRI/DataStructures/Labels/SimdLabelSet.h:
+
+/home/patrick/Documents/KIT/PARROT/KARRI/DataStructures/Containers/Subset.h:
+
+/home/patrick/Documents/KIT/PARROT/ULTRA/Helpers/HighlightText.h:
+
+/home/patrick/Documents/KIT/PARROT/KARRI/Algorithms/KaRRi/EllipticBCH/FeasibleEllipticDistances.h:
+
+/usr/lib/gcc/x86_64-linux-gnu/13/include/waitpkgintrin.h:
+
+/usr/include/x86_64-linux-gnu/bits/math-vector.h:
+
+/home/patrick/Documents/KIT/PARROT/KARRI/Algorithms/KaRRi/LastStopSearches/LastStopsAtVertices.h:
+
+/home/patrick/Documents/KIT/PARROT/KARRI/Algorithms/KaRRi/RequestState/RelevantPDLocsFilter.h:
+
+/usr/lib/gcc/x86_64-linux-gnu/13/include/avx512cdintrin.h:
+
+/home/patrick/Documents/KIT/PARROT/KARRI/DataStructures/Geometry/Point.h:
+
+/usr/include/c++/13/bits/locale_facets_nonio.tcc:
+
+/home/patrick/Documents/KIT/PARROT/ULTRA/Helpers/Vector/Permutation.h:
+
+/home/patrick/Documents/KIT/PARROT/KARRI/Algorithms/KaRRi/DalsAssignments/DALSAssignmentsFinder.h:
+
+/usr/local/include/csv.h:
+
+/usr/include/c++/13/bits/shared_ptr.h:
+
+/home/patrick/Documents/KIT/PARROT/KARRI/Algorithms/KaRRi/LastStopSearches/LabelBucketContainer.h:
 
 /home/patrick/Documents/KIT/PARROT/ULTRA/DataStructures/Attributes/AttributeHandle.h:
 
@@ -1552,59 +1596,47 @@ CMakeFiles/rideRAPTOR.dir/RunRideRaptor.o: RunRideRaptor.cpp \
 
 /usr/include/boost/throw_exception.hpp:
 
-/home/patrick/Documents/KIT/PARROT/KARRI/DataStructures/Graph/Attributes/FreeFlowSpeedAttribute.h:
-
-/usr/lib/gcc/x86_64-linux-gnu/13/include/xopintrin.h:
-
-/home/patrick/Documents/KIT/PARROT/ULTRA/Helpers/Ranges/IndexRange.h:
-
-/usr/include/c++/13/bits/stl_iterator_base_funcs.h:
-
 /home/patrick/Documents/KIT/PARROT/KARRI/Algorithms/KaRRi/RequestState/VehicleToPDLocQuery.h:
 
 /usr/include/c++/13/condition_variable:
 
-/usr/lib/gcc/x86_64-linux-gnu/13/include/syslimits.h:
+/usr/include/asm-generic/ioctls.h:
 
-/usr/include/boost/align/aligned_allocator.hpp:
+/usr/include/boost/dynamic_bitset_fwd.hpp:
 
-/usr/include/c++/13/bits/cxxabi_forced.h:
+/usr/lib/gcc/x86_64-linux-gnu/13/include/xsaveoptintrin.h:
 
-RunRideRaptor.cpp:
+/home/patrick/Documents/KIT/PARROT/ULTRA/DataStructures/Geometry/Rectangle.h:
 
-/usr/include/x86_64-linux-gnu/asm/types.h:
+/usr/include/x86_64-linux-gnu/bits/time64.h:
 
-/home/patrick/Documents/KIT/PARROT/KARRI/Algorithms/KaRRi/BaseObjects/VehicleLocation.h:
+/usr/include/c++/13/ext/type_traits.h:
 
-/home/patrick/Documents/KIT/PARROT/KARRI/Algorithms/KaRRi/RequestState/RelevantPDLocs.h:
+/home/patrick/Documents/KIT/PARROT/ULTRA/Helpers/Ranges/SparseRange.h:
 
-/usr/include/boost/move/core.hpp:
+/home/patrick/Documents/KIT/PARROT/KARRI/Algorithms/KaRRi/EllipticBCH/EllipticBucketsEnvironment.h:
 
-/usr/include/c++/13/bits/stl_relops.h:
+/home/patrick/Documents/KIT/PARROT/KARRI/Algorithms/KaRRi/PalsAssignments/PALSAssignmentsFinder.h:
 
-/usr/include/boost/align/aligned_allocator_forward.hpp:
+/home/patrick/Documents/KIT/PARROT/ULTRA/DataStructures/Container/Set.h:
 
-/home/patrick/Documents/KIT/PARROT/KARRI/DataStructures/Geometry/LatLng.h:
+/usr/include/c++/13/bits/hashtable.h:
 
-/home/patrick/Documents/KIT/PARROT/KARRI/Algorithms/KaRRi/PDDistanceQueries/PDDistances.h:
+/home/patrick/Documents/KIT/PARROT/ULTRA/DataStructures/RideRAPTOR/Data.h:
 
-/usr/include/asm-generic/types.h:
+/usr/include/c++/13/bits/uses_allocator.h:
 
-/usr/include/c++/13/tr1/legendre_function.tcc:
+/usr/include/boost/move/detail/workaround.hpp:
 
-/home/patrick/Documents/KIT/PARROT/KARRI/Tools/TemplateProgramming.h:
+/home/patrick/Documents/KIT/PARROT/KARRI/Tools/Logging/LogManager.h:
 
-/usr/lib/gcc/x86_64-linux-gnu/13/include/hresetintrin.h:
+/usr/include/x86_64-linux-gnu/sys/stat.h:
 
-/home/patrick/Documents/KIT/PARROT/KARRI/DataStructures/Graph/Attributes/CapacityAttribute.h:
+/home/patrick/Documents/KIT/PARROT/ULTRA/Helpers/String/Enumeration.h:
 
-/home/patrick/Documents/KIT/PARROT/KARRI/Algorithms/KaRRi/EllipticBCH/BucketEntryWithLeeway.h:
+/usr/include/c++/13/bits/hash_bytes.h:
 
-/usr/include/boost/integer_fwd.hpp:
-
-/usr/include/c++/13/bits/concept_check.h:
-
-/usr/include/boost/align/detail/is_alignment_constant.hpp:
+/home/patrick/Documents/KIT/PARROT/KARRI/Algorithms/KaRRi/PbnsAssignments/CurVehLocToPickupSearches.h:
 
 /home/patrick/Documents/KIT/PARROT/ULTRA/DataStructures/Intermediate/Data.h:
 
@@ -1612,39 +1644,11 @@ RunRideRaptor.cpp:
 
 /usr/include/c++/13/bits/fstream.tcc:
 
-/home/patrick/Documents/KIT/PARROT/KARRI/Algorithms/KaRRi/PbnsAssignments/CurVehLocToPickupSearches.h:
+/home/patrick/Documents/KIT/PARROT/ULTRA/DataStructures/RAPTOR/Entities/Route.h:
 
-/usr/lib/gcc/x86_64-linux-gnu/13/include/mm_malloc.h:
+/usr/include/boost/align/detail/alignment_of_cxx11.hpp:
 
-/usr/include/boost/align/aligned_alloc.hpp:
-
-/usr/include/c++/13/algorithm:
-
-/home/patrick/Documents/KIT/PARROT/ULTRA/DataStructures/RideRAPTOR/DistanceMatrix.h:
-
-/usr/include/boost/move/detail/workaround.hpp:
-
-/usr/include/x86_64-linux-gnu/bits/mathcalls-helper-functions.h:
-
-/home/patrick/Documents/KIT/PARROT/KARRI/Algorithms/KaRRi/BaseObjects/Vehicle.h:
-
-/home/patrick/Documents/KIT/PARROT/KARRI/Algorithms/Buckets/DynamicBucketContainer.h:
-
-/usr/include/boost/dynamic_bitset/detail/lowest_bit.hpp:
-
-/usr/include/c++/13/bits/stl_raw_storage_iter.h:
-
-/home/patrick/Documents/KIT/PARROT/ULTRA/Helpers/ConstructorTags.h:
-
-/home/patrick/Documents/KIT/PARROT/ULTRA/Helpers/Console/Progress.h:
-
-/usr/include/c++/13/bits/stl_bvector.h:
-
-/home/patrick/Documents/KIT/PARROT/ULTRA/Helpers/Ranges/DirectEdgeRange.h:
-
-/home/patrick/Documents/KIT/PARROT/KARRI/Algorithms/KaRRi/LastStopSearches/UnsortedLastStopBucketsEnvironment.h:
-
-/usr/include/boost/align/detail/throw_exception.hpp:
+/home/patrick/Documents/KIT/PARROT/KARRI/Algorithms/KaRRi/PalsAssignments/CollectiveBCHStrategy.h:
 
 /home/patrick/Documents/KIT/PARROT/KARRI/Algorithms/Buckets/LastStopBucketContainer.h:
 
@@ -1658,247 +1662,65 @@ RunRideRaptor.cpp:
 
 /usr/include/c++/13/functional:
 
-/home/patrick/Documents/KIT/PARROT/KARRI/Algorithms/KaRRi/BaseObjects/Assignment.h:
+/usr/include/boost/core/no_exceptions_support.hpp:
 
-/usr/include/boost/type_traits/intrinsics.hpp:
+/usr/include/linux/close_range.h:
 
-/usr/include/boost/align/alignment_of_forward.hpp:
+/usr/include/boost/config/stdlib/libstdcpp3.hpp:
 
-/usr/include/c++/13/bits/postypes.h:
+/home/patrick/Documents/KIT/PARROT/ULTRA/DataStructures/Attributes/Attributes.h:
 
-/home/patrick/Documents/KIT/PARROT/ULTRA/DataStructures/GTFS/Entities/Frequency.h:
+/usr/local/include/routingkit/permutation.h:
 
-/home/patrick/Documents/KIT/PARROT/ULTRA/DataStructures/GTFS/Data.h:
+/usr/include/c++/13/tr1/riemann_zeta.tcc:
 
-/usr/include/c++/13/bits/string_view.tcc:
+/usr/local/include/vectorclass/vectorclass.h:
 
-/usr/lib/gcc/x86_64-linux-gnu/13/include/mwaitintrin.h:
+/usr/include/c++/13/cxxabi.h:
 
-/usr/lib/gcc/x86_64-linux-gnu/13/include/avx512vnnivlintrin.h:
+/home/patrick/Documents/KIT/PARROT/ULTRA/Algorithms/CH/Preprocessing/WitnessSearch.h:
 
-/usr/include/c++/13/bits/vector.tcc:
+/usr/include/c++/13/compare:
 
-/home/patrick/Documents/KIT/PARROT/KARRI/Tools/MachineSpecs.h:
+/usr/include/c++/13/bits/ostream_insert.h:
 
-/usr/include/c++/13/optional:
+/usr/include/boost/align/detail/element_type.hpp:
 
-/home/patrick/Documents/KIT/PARROT/KARRI/Algorithms/KaRRi/CostCalculator.h:
+/usr/include/c++/13/system_error:
 
-/usr/lib/gcc/x86_64-linux-gnu/13/include/mm3dnow.h:
+/home/patrick/Documents/KIT/PARROT/ULTRA/DataStructures/Graph/Utils/Conversion.h:
 
-/home/patrick/Documents/KIT/PARROT/KARRI/Algorithms/KaRRi/InputConfig.h:
-
-/usr/lib/gcc/x86_64-linux-gnu/13/include/pmmintrin.h:
-
-/usr/include/x86_64-linux-gnu/bits/stdint-intn.h:
-
-/home/patrick/Documents/KIT/PARROT/KARRI/DataStructures/Labels/SimdLabelSet.h:
-
-/home/patrick/Documents/KIT/PARROT/ULTRA/Helpers/HighlightText.h:
-
-/home/patrick/Documents/KIT/PARROT/KARRI/DataStructures/Containers/Subset.h:
-
-/home/patrick/Documents/KIT/PARROT/KARRI/Tools/Logging/LogManager.h:
-
-/home/patrick/Documents/KIT/PARROT/KARRI/Tools/Logging/NullLogger.h:
-
-/usr/local/include/routingkit/timestamp_flag.h:
-
-/home/patrick/Documents/KIT/PARROT/KARRI/DataStructures/Graph/Attributes/NumLanesAttribute.h:
-
-/usr/include/x86_64-linux-gnu/bits/posix_opt.h:
-
-/usr/include/c++/13/thread:
-
-/home/patrick/Documents/KIT/PARROT/ULTRA/Helpers/Ranges/Range.h:
-
-/home/patrick/Documents/KIT/PARROT/ULTRA/Helpers/IO/ParserCSV.h:
-
-/usr/lib/gcc/x86_64-linux-gnu/13/include/avx512vlintrin.h:
-
-/usr/include/linux/types.h:
-
-/usr/include/x86_64-linux-gnu/bits/typesizes.h:
-
-/home/patrick/Documents/KIT/PARROT/KARRI/DataStructures/Graph/Attributes/TraversalCostAttribute.h:
-
-/usr/include/x86_64-linux-gnu/bits/statx.h:
-
-/home/patrick/Documents/KIT/PARROT/KARRI/DataStructures/Graph/Attributes/UnpackingInfoAttribute.h:
-
-/usr/include/boost/core/addressof.hpp:
-
-/home/patrick/Documents/KIT/PARROT/KARRI/Algorithms/Buckets/SortedBucketContainer.h:
-
-/home/patrick/Documents/KIT/PARROT/ULTRA/Shell/Command.h:
-
-/usr/include/c++/13/bits/deque.tcc:
-
-/usr/lib/gcc/x86_64-linux-gnu/13/include/enqcmdintrin.h:
-
-/home/patrick/Documents/KIT/PARROT/KARRI/Tools/EnumParser.h:
-
-/usr/include/c++/13/bits/stl_pair.h:
-
-/usr/include/asm-generic/int-ll64.h:
-
-/home/patrick/Documents/KIT/PARROT/KARRI/Algorithms/CH/CH.h:
-
-/usr/lib/gcc/x86_64-linux-gnu/13/include/emmintrin.h:
-
-/home/patrick/Documents/KIT/PARROT/ULTRA/DataStructures/Graph/Classes/GraphInterface.h:
-
-/usr/include/boost/move/utility.hpp:
-
-/home/patrick/Documents/KIT/PARROT/KARRI/Tools/BinaryIO.h:
-
-/usr/include/boost/move/move.hpp:
-
-/usr/include/c++/13/bits/stl_algobase.h:
-
-/usr/lib/gcc/x86_64-linux-gnu/13/include/avx512vp2intersectvlintrin.h:
-
-/home/patrick/Documents/KIT/PARROT/KARRI/DataStructures/Graph/Attributes/PsgEdgeToCarEdgeAttribute.h:
-
-/home/patrick/Documents/KIT/PARROT/KARRI/DataStructures/Labels/BasicLabelSet.h:
-
-/usr/include/c++/13/bits/istream.tcc:
-
-/usr/include/x86_64-linux-gnu/bits/stdio_lim.h:
-
-/usr/include/boost/dynamic_bitset/dynamic_bitset.hpp:
-
-/usr/include/c++/13/bits/locale_conv.h:
-
-/home/patrick/Documents/KIT/PARROT/KARRI/Tools/StringHelpers.h:
-
-/home/patrick/Documents/KIT/PARROT/KARRI/DataStructures/Graph/Attributes/AbstractAttribute.h:
-
-/usr/include/termios.h:
-
-/home/patrick/Documents/KIT/PARROT/KARRI/Tools/ContainerHelpers.h:
-
-/home/patrick/Documents/KIT/PARROT/KARRI/Algorithms/KaRRi/OrdinaryAssignments/OrdinaryAssignmentsFinder.h:
-
-/usr/include/c++/13/bits/functexcept.h:
-
-/usr/include/boost/dynamic_bitset/config.hpp:
-
-/usr/include/asm-generic/errno-base.h:
-
-/home/patrick/Documents/KIT/PARROT/KARRI/Tools/CommandLine/ProgressBar.h:
-
-/home/patrick/Documents/KIT/PARROT/ULTRA/DataStructures/Container/Map.h:
-
-/usr/include/c++/13/vector:
-
-/home/patrick/Documents/KIT/PARROT/KARRI/DataStructures/Graph/Export/DefaultExporter.h:
-
-/usr/include/x86_64-linux-gnu/bits/floatn.h:
-
-/home/patrick/Documents/KIT/PARROT/KARRI/DataStructures/Graph/Attributes/LatLngAttribute.h:
-
-/home/patrick/Documents/KIT/PARROT/KARRI/DataStructures/Graph/Attributes/TravelTimeAttribute.h:
-
-/home/patrick/Documents/KIT/PARROT/KARRI/DataStructures/Graph/Attributes/XatfRoadCategoryAttribute.h:
-
-/usr/include/c++/13/ext/atomicity.h:
-
-/usr/lib/gcc/x86_64-linux-gnu/13/include/bmiintrin.h:
-
-/usr/include/boost/config/platform/linux.hpp:
-
-/home/patrick/Documents/KIT/PARROT/KARRI/Algorithms/KaRRi/CHEnvironment.h:
-
-/home/patrick/Documents/KIT/PARROT/ULTRA/DataStructures/GTFS/Entities/Stop.h:
-
-/usr/include/c++/13/bits/sstream.tcc:
-
-/home/patrick/Documents/KIT/PARROT/KARRI/Algorithms/KaRRi/RequestState/FindPDLocsInRadiusQuery.h:
-
-/usr/include/c++/13/pstl/execution_defs.h:
-
-/usr/include/boost/align/alignment_of.hpp:
-
-/usr/include/boost/detail/container_fwd.hpp:
-
-/home/patrick/Documents/KIT/PARROT/KARRI/Algorithms/KaRRi/Stats/PerformanceStats.h:
-
-/home/patrick/Documents/KIT/PARROT/ULTRA/Helpers/Vector/Permutation.h:
-
-/home/patrick/Documents/KIT/PARROT/KARRI/Algorithms/KaRRi/DalsAssignments/DALSAssignmentsFinder.h:
-
-/usr/local/include/csv.h:
-
-/usr/include/c++/13/bits/shared_ptr.h:
-
-/home/patrick/Documents/KIT/PARROT/KARRI/Algorithms/KaRRi/RequestState/RelevantPDLocsFilter.h:
-
-/usr/lib/gcc/x86_64-linux-gnu/13/include/avx512cdintrin.h:
-
-/home/patrick/Documents/KIT/PARROT/KARRI/DataStructures/Geometry/Point.h:
-
-/usr/include/c++/13/bits/locale_facets_nonio.tcc:
-
-/usr/include/boost/container_hash/detail/hash_float.hpp:
-
-/usr/lib/gcc/x86_64-linux-gnu/13/include/waitpkgintrin.h:
-
-/usr/include/x86_64-linux-gnu/bits/math-vector.h:
-
-/home/patrick/Documents/KIT/PARROT/KARRI/Algorithms/KaRRi/LastStopSearches/LastStopsAtVertices.h:
-
-/home/patrick/Documents/KIT/PARROT/ULTRA/Helpers/Ranges/ConcatenatedRange.h:
-
-/home/patrick/Documents/KIT/PARROT/ULTRA/Helpers/Ranges/IndirectEdgeRange.h:
-
-/home/patrick/Documents/KIT/PARROT/ULTRA/Helpers/String/String.h:
-
-/home/patrick/Documents/KIT/PARROT/KARRI/Algorithms/KaRRi/BaseObjects/Request.h:
-
-/usr/include/boost/type_traits/detail/config.hpp:
-
-/usr/include/c++/13/iostream:
-
-/home/patrick/Documents/KIT/PARROT/KARRI/Algorithms/KaRRi/RouteState.h:
-
-/usr/include/asm-generic/errno.h:
-
-/home/patrick/Documents/KIT/PARROT/KARRI/DataStructures/Containers/BitVector.h:
-
-/home/patrick/Documents/KIT/PARROT/ULTRA/Helpers/Meta.h:
-
-/usr/lib/gcc/x86_64-linux-gnu/13/include/rdseedintrin.h:
-
-/usr/include/c++/13/bits/char_traits.h:
-
-/home/patrick/Documents/KIT/PARROT/KARRI/Algorithms/Buckets/BucketEntry.h:
-
-/usr/include/c++/13/bits/std_function.h:
-
-/home/patrick/Documents/KIT/PARROT/ULTRA/Helpers/Helpers.h:
-
-/usr/include/boost/config/no_tr1/cmath.hpp:
-
-/usr/include/boost/move/algorithm.hpp:
-
-/usr/include/c++/13/stack:
-
-/usr/include/boost/config.hpp:
-
-/usr/include/x86_64-linux-gnu/bits/types/struct_statx.h:
-
-/usr/include/c++/13/bits/stl_multimap.h:
+/usr/include/c++/13/debug/assertions.h:
 
 /usr/include/x86_64-linux-gnu/c++/13/bits/cxxabi_tweaks.h:
 
 /home/patrick/Documents/KIT/PARROT/ULTRA/DataStructures/RAPTOR/Entities/Stop.h:
 
-/home/patrick/Documents/KIT/PARROT/ULTRA/DataStructures/Attributes/Attribute.h:
+/home/patrick/Documents/KIT/PARROT/ULTRA/Helpers/IO/ParserCSV.h:
 
-/usr/include/boost/dynamic_bitset.hpp:
+/home/patrick/Documents/KIT/PARROT/ULTRA/Helpers/Ranges/Range.h:
 
-/home/patrick/Documents/KIT/PARROT/ULTRA/DataStructures/Attributes/AttributeRecord.h:
+/usr/lib/gcc/x86_64-linux-gnu/13/include/vaesintrin.h:
+
+/home/patrick/Documents/KIT/PARROT/ULTRA/Algorithms/CH/CH.h:
+
+/home/patrick/Documents/KIT/PARROT/ULTRA/Helpers/Ranges/SubRange.h:
+
+/home/patrick/Documents/KIT/PARROT/KARRI/DataStructures/Graph/Attributes/XatfRoadCategoryAttribute.h:
+
+/usr/include/c++/13/ext/atomicity.h:
+
+/home/patrick/Documents/KIT/PARROT/KARRI/DataStructures/Graph/Attributes/OsmRoadCategoryAttribute.h:
+
+/home/patrick/Documents/KIT/PARROT/ULTRA/Algorithms/DepthFirstSearch.h:
+
+/usr/include/x86_64-linux-gnu/bits/stdio_lim.h:
+
+/usr/include/c++/13/bits/locale_conv.h:
+
+/usr/include/boost/dynamic_bitset/dynamic_bitset.hpp:
+
+/usr/include/c++/13/pstl/glue_numeric_defs.h:
 
 /usr/lib/gcc/x86_64-linux-gnu/13/include/smmintrin.h:
 
@@ -1909,6 +1731,184 @@ RunRideRaptor.cpp:
 /usr/include/c++/13/cstddef:
 
 /home/patrick/Documents/KIT/PARROT/ULTRA/DataStructures/Geometry/Point.h:
+
+/home/patrick/Documents/KIT/PARROT/ULTRA/DataStructures/Attributes/Attribute.h:
+
+/usr/include/boost/dynamic_bitset.hpp:
+
+/home/patrick/Documents/KIT/PARROT/ULTRA/DataStructures/Attributes/AttributeRecord.h:
+
+/usr/lib/gcc/x86_64-linux-gnu/13/include/bmiintrin.h:
+
+/usr/include/boost/config/platform/linux.hpp:
+
+/home/patrick/Documents/KIT/PARROT/KARRI/Algorithms/KaRRi/CHEnvironment.h:
+
+/usr/lib/gcc/x86_64-linux-gnu/13/include/mmintrin.h:
+
+/usr/include/c++/13/tr1/bessel_function.tcc:
+
+/home/patrick/Documents/KIT/PARROT/ULTRA/DataStructures/GTFS/Entities/Transfer.h:
+
+/home/patrick/Documents/KIT/PARROT/ULTRA/DataStructures/RAPTOR/Entities/StopEvent.h:
+
+/home/patrick/Documents/KIT/PARROT/ULTRA/Algorithms/StronglyConnectedComponents.h:
+
+/usr/include/c++/13/bits/algorithmfwd.h:
+
+/home/patrick/Documents/KIT/PARROT/ULTRA/DataStructures/Graph/Utils/Utils.h:
+
+/usr/lib/gcc/x86_64-linux-gnu/13/include/mm_malloc.h:
+
+/usr/include/boost/align/aligned_alloc.hpp:
+
+/home/patrick/Documents/KIT/PARROT/ULTRA/DataStructures/RideRAPTOR/DistanceMatrix.h:
+
+/usr/include/c++/13/algorithm:
+
+/usr/lib/gcc/x86_64-linux-gnu/13/include/stddef.h:
+
+/home/patrick/Documents/KIT/PARROT/KARRI/DataStructures/Utilities/IteratorRange.h:
+
+/home/patrick/Documents/KIT/PARROT/ULTRA/DataStructures/Graph/Classes/EdgeList.h:
+
+/usr/include/c++/13/bits/alloc_traits.h:
+
+/home/patrick/Documents/KIT/PARROT/ULTRA/DataStructures/GTFS/Entities/StopTime.h:
+
+/home/patrick/Documents/KIT/PARROT/ULTRA/Helpers/Ranges/DirectEdgeRange.h:
+
+/home/patrick/Documents/KIT/PARROT/ULTRA/Helpers/Console/Progress.h:
+
+/usr/include/c++/13/bits/stl_bvector.h:
+
+/home/patrick/Documents/KIT/PARROT/ULTRA/Helpers/String/String.h:
+
+/home/patrick/Documents/KIT/PARROT/ULTRA/Helpers/Ranges/IndirectEdgeRange.h:
+
+/home/patrick/Documents/KIT/PARROT/ULTRA/Helpers/Ranges/ConcatenatedRange.h:
+
+/home/patrick/Documents/KIT/PARROT/ULTRA/Helpers/Calendar.h:
+
+/usr/lib/gcc/x86_64-linux-gnu/13/include/mm3dnow.h:
+
+/home/patrick/Documents/KIT/PARROT/KARRI/Algorithms/KaRRi/InputConfig.h:
+
+/usr/include/c++/13/iostream:
+
+/home/patrick/Documents/KIT/PARROT/KARRI/Algorithms/KaRRi/RouteState.h:
+
+/usr/include/asm-generic/errno.h:
+
+/home/patrick/Documents/KIT/PARROT/ULTRA/Helpers/Meta.h:
+
+/usr/lib/gcc/x86_64-linux-gnu/13/include/rdseedintrin.h:
+
+/usr/include/c++/13/bits/char_traits.h:
+
+/home/patrick/Documents/KIT/PARROT/KARRI/DataStructures/Containers/BitVector.h:
+
+/usr/include/c++/13/bits/string_view.tcc:
+
+/usr/include/boost/type_traits/detail/config.hpp:
+
+/home/patrick/Documents/KIT/PARROT/KARRI/Algorithms/KaRRi/BaseObjects/Request.h:
+
+/usr/lib/gcc/x86_64-linux-gnu/13/include/mwaitintrin.h:
+
+/usr/lib/gcc/x86_64-linux-gnu/13/include/avx512vnnivlintrin.h:
+
+/usr/include/c++/13/bits/vector.tcc:
+
+/home/patrick/Documents/KIT/PARROT/ULTRA/DataStructures/GTFS/Data.h:
+
+/home/patrick/Documents/KIT/PARROT/ULTRA/DataStructures/GTFS/Entities/Frequency.h:
+
+/usr/include/boost/assert/source_location.hpp:
+
+/usr/include/boost/align/detail/max_size.hpp:
+
+/usr/include/boost/align/detail/integral_constant.hpp:
+
+/usr/include/c++/13/tr1/modified_bessel_func.tcc:
+
+/home/patrick/Documents/KIT/PARROT/ULTRA/DataStructures/GTFS/Entities/Route.h:
+
+/usr/include/c++/13/bits/sstream.tcc:
+
+/home/patrick/Documents/KIT/PARROT/KARRI/Algorithms/KaRRi/RequestState/FindPDLocsInRadiusQuery.h:
+
+/usr/include/c++/13/pstl/execution_defs.h:
+
+/home/patrick/Documents/KIT/PARROT/ULTRA/DataStructures/GTFS/Entities/Stop.h:
+
+/usr/include/boost/align/detail/aligned_alloc_posix.hpp:
+
+/usr/include/c++/13/tr1/gamma.tcc:
+
+/usr/include/c++/13/bits/deque.tcc:
+
+/home/patrick/Documents/KIT/PARROT/ULTRA/Shell/Command.h:
+
+/usr/include/boost/version.hpp:
+
+/home/patrick/Documents/KIT/PARROT/ULTRA/DataStructures/GTFS/Entities/Vehicle.h:
+
+/usr/include/c++/13/vector:
+
+/home/patrick/Documents/KIT/PARROT/ULTRA/DataStructures/Container/Map.h:
+
+/home/patrick/Documents/KIT/PARROT/KARRI/DataStructures/Graph/Export/DefaultExporter.h:
+
+/usr/include/c++/13/bits/std_function.h:
+
+/home/patrick/Documents/KIT/PARROT/KARRI/Algorithms/Buckets/BucketEntry.h:
+
+/usr/include/boost/dynamic_bitset/config.hpp:
+
+/usr/include/asm-generic/errno-base.h:
+
+/home/patrick/Documents/KIT/PARROT/KARRI/Tools/CommandLine/ProgressBar.h:
+
+/usr/lib/gcc/x86_64-linux-gnu/13/include/avx512fp16vlintrin.h:
+
+/home/patrick/Documents/KIT/PARROT/KARRI/Tools/CommandLine/CommandLineParser.h:
+
+/usr/include/boost/container_hash/hash_fwd.hpp:
+
+/usr/include/c++/13/bits/functional_hash.h:
+
+/usr/include/boost/container_hash/extensions.hpp:
+
+/home/patrick/Documents/KIT/PARROT/ULTRA/DataStructures/Intermediate/Entities/StopEvent.h:
+
+/home/patrick/Documents/KIT/PARROT/KARRI/Algorithms/CH/CHQuery.h:
+
+/home/patrick/Documents/KIT/PARROT/ULTRA/Algorithms/CH/Preprocessing/KeyFunction.h:
+
+/usr/include/boost/core/enable_if.hpp:
+
+/home/patrick/Documents/KIT/PARROT/KARRI/Algorithms/KaRRi/RequestState/RequestStateInitializer.h:
+
+/home/patrick/Documents/KIT/PARROT/KARRI/Algorithms/Dijkstra/Dijkstra.h:
+
+/home/patrick/Documents/KIT/PARROT/ULTRA/DataStructures/RAPTOR/Entities/TripIterator.h:
+
+/usr/include/c++/13/bits/streambuf_iterator.h:
+
+/usr/include/c++/13/optional:
+
+/home/patrick/Documents/KIT/PARROT/KARRI/Tools/MachineSpecs.h:
+
+/usr/include/x86_64-linux-gnu/bits/mathcalls-helper-functions.h:
+
+/home/patrick/Documents/KIT/PARROT/KARRI/Algorithms/KaRRi/BaseObjects/Vehicle.h:
+
+/home/patrick/Documents/KIT/PARROT/KARRI/Algorithms/Buckets/DynamicBucketContainer.h:
+
+/usr/include/boost/dynamic_bitset/detail/lowest_bit.hpp:
+
+/usr/include/c++/13/bits/stl_raw_storage_iter.h:
 
 /usr/include/boost/detail/workaround.hpp:
 
@@ -2044,9 +2044,9 @@ RunRideRaptor.cpp:
 
 /usr/include/c++/13/bits/locale_classes.h:
 
-/usr/include/boost/cstdint.hpp:
-
 /home/patrick/Documents/KIT/PARROT/KARRI/Algorithms/KaRRi/RequestState/RequestState.h:
+
+/usr/include/boost/cstdint.hpp:
 
 /usr/include/c++/13/bits/locale_classes.tcc:
 
@@ -2216,9 +2216,9 @@ RunRideRaptor.cpp:
 
 /usr/include/c++/13/cctype:
 
-/usr/include/c++/13/bits/stringfwd.h:
-
 /home/patrick/Documents/KIT/PARROT/KARRI/DataStructures/Containers/FastResetFlagArray.h:
+
+/usr/include/c++/13/bits/stringfwd.h:
 
 /usr/include/c++/13/cerrno:
 
@@ -2278,9 +2278,9 @@ RunRideRaptor.cpp:
 
 /usr/include/c++/13/list:
 
-/home/patrick/Documents/KIT/PARROT/KARRI/DataStructures/Graph/Attributes/EdgeIdAttribute.h:
-
 /usr/include/boost/move/detail/std_ns_end.hpp:
+
+/home/patrick/Documents/KIT/PARROT/KARRI/DataStructures/Graph/Attributes/EdgeIdAttribute.h:
 
 /usr/include/c++/13/ext/concurrence.h:
 

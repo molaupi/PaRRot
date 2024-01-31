@@ -284,6 +284,23 @@ public:
         requestState.stats().ellipticBchStats.initializationTime += time;
     }
 
+    // For the RideRAPTOR algortihm when building the RideTransferGraph
+    void runForStation()
+    {
+        // ******************************
+        // Copied from init()
+        // Find pickups at existing stops for new request and initialize distances.
+        const auto pickupsAtExistingStops = findPDLocsAtExistingStops<PICKUP>(requestState.pickups);
+        feasibleEllipticPickups.init(requestState.numPickups(),
+            pickupsAtExistingStops, inputGraph);
+
+        // ******************************
+
+        updateDistancesToPdLocs.setCurFeasible(&feasibleEllipticPickups);
+        updateDistancesFromPdLocs.setCurFeasible(&feasibleEllipticPickups);
+        runBCHSearchesFromAndTo(requestState.pickups);
+    }
+
 private:
     friend UpdateDistancesFromPDLocs;
     friend UpdateDistancesToPDLocs;

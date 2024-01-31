@@ -5,6 +5,7 @@
 #include <fstream>
 #include <iostream>
 
+#include "../ULTRA/DataStructures/RAPTOR/Data.h"
 #include "../ULTRA/DataStructures/RideRAPTOR/Data.h"
 
 #include "../KARRI/Algorithms/CH/CH.h"
@@ -88,15 +89,14 @@
 inline void printUsage()
 {
     std::cout
-        << "Usage: EXECUTABLE -veh-g <vehicle network> -psg-g <passenger network> -r "
-           "<requests> -v <vehicles> -o <file>\n"
+        << "Usage: EXECUTABLE -veh-g <vehicle network> -psg-g <passenger network> "
+           "-v <vehicles> -o <file>\n"
            "Runs Karlsruhe Rapid Ridesharing (KaRRi) simulation with given "
            "vehicle and passenger road networks,\n"
-           "requests, and vehicles. Writes output files to specified base path."
+           "requests, and vehicles. Writes output files to specified base path.\n"
            "  -veh-g <file>             vehicle road network in binary format.\n"
            "  -psg-g <file>             passenger road (and path) network in binary "
            "format.\n"
-           "  -r <file>                 requests in CSV format.\n"
            "  -v <file>                 vehicles in CSV format.\n"
            "  -s <sec>                  stop time (in s). (dflt: 60s)\n"
            "  -w <sec>                  maximum wait time (in s). (dflt: 300s)\n"
@@ -127,6 +127,7 @@ inline void printUsage()
            "  -o <file>                 generate output files at name <file> "
            "(specify name without file suffix).\n"
            "  -station-mapping <file>   file which maps the station used in RAPTOR to edges in the given road graph\n"
+           "  -raptor-data <file>       file with the precomputed RAPTOR data\n"
            "  -help                     show usage help text.\n";
 }
 
@@ -157,7 +158,6 @@ int main(int argc, char* argv[])
         const auto vehicleNetworkFileName = clp.getValue<std::string>("veh-g");
         const auto passengerNetworkFileName = clp.getValue<std::string>("psg-g");
         const auto vehicleFileName = clp.getValue<std::string>("v");
-        const auto requestFileName = clp.getValue<std::string>("r");
         const auto vehHierarchyFileName = clp.getValue<std::string>("veh-h");
         const auto psgHierarchyFileName = clp.getValue<std::string>("psg-h");
         const auto vehSepDecompFileName = clp.getValue<std::string>("veh-d");
@@ -165,6 +165,8 @@ int main(int argc, char* argv[])
         const bool csvFilesInLoudFormat = clp.isSet("csv-in-LOUD-format");
         // new
         const auto stationMappingFileName = clp.getValue<std::string>("station-mapping");
+        const auto raptorFileName = clp.getValue<std::string>("raptor-data");
+
         auto outputFileName = clp.getValue<std::string>("o");
         if (endsWith(outputFileName, ".csv"))
             outputFileName = outputFileName.substr(0, outputFileName.size() - 4);
@@ -280,42 +282,6 @@ int main(int argc, char* argv[])
 
         // Create Route State for empty routes.
         karri::RouteState routeState(fleet, inputConfig.stopTime);
-
-        // Read the request data from file.
-        std::cout << "Reading request data from file... " << std::flush;
-        std::vector<karri::Request> requests;
-        int origin, destination, requestTime, numRiders;
-        io::CSVReader<4, io::trim_chars<' '>> reqFileReader(requestFileName);
-
-        if (csvFilesInLoudFormat) {
-            reqFileReader.read_header(io::ignore_missing_column, "pickup_spot",
-                "dropoff_spot", "min_dep_time", "num_riders");
-        } else {
-            reqFileReader.read_header(io::ignore_missing_column, "origin",
-                "destination", "req_time", "num_riders");
-        }
-
-        numRiders = -1;
-        while (
-            reqFileReader.read_row(origin, destination, requestTime, numRiders)) {
-            if (origin < 0 || origin >= vehGraphOrigIdToSeqId.size() || vehGraphOrigIdToSeqId[origin] == INVALID_ID)
-                throw std::invalid_argument("invalid location -- '" + std::to_string(origin) + "'");
-            if (destination < 0 || destination >= vehGraphOrigIdToSeqId.size() || vehGraphOrigIdToSeqId[destination] == INVALID_ID)
-                throw std::invalid_argument("invalid location -- '" + std::to_string(destination) + "'");
-            if (numRiders > maxCapacity)
-                throw std::invalid_argument("number of riders '" + std::to_string(numRiders) + "' is larger than max vehicle capacity (" + std::to_string(maxCapacity) + ")");
-            const auto originSeqId = vehGraphOrigIdToSeqId[origin];
-            assert(vehicleInputGraph.toPsgEdge(originSeqId) != CarEdgeToPsgEdgeAttribute::defaultValue());
-            const auto destSeqId = vehGraphOrigIdToSeqId[destination];
-            assert(vehicleInputGraph.toPsgEdge(destSeqId) != CarEdgeToPsgEdgeAttribute::defaultValue());
-            const int requestId = static_cast<int>(requests.size());
-            if (numRiders == -1) // If number of riders was not specified, assume one rider
-                numRiders = 1;
-            requests.push_back(
-                { requestId, originSeqId, destSeqId, requestTime * 10, numRiders });
-            numRiders = -1;
-        }
-        std::cout << "done.\n";
 
 #ifdef KARRI_USE_CCHS
 
@@ -466,6 +432,34 @@ int main(int argc, char* argv[])
                 throw std::invalid_argument("invalid edge id for a station-- '" + std::to_string(edgeId) + "'");
             edgeIdOfStation.push_back(edgeId);
         }
+        std::cout << "done.\n";
+
+        // Read the RAPTOR data
+        std::cout << "Reading RAPTOR data from file... " << std::flush;
+        RAPTOR::Data raptor(raptorFileName);
+        std::cout << "done.\n";
+
+        // Build the RideRAPTOR data
+        std::cout << "Building RideRAPTOR data... " << std::flush;
+
+        RIDERAPTOR::Data<FeasibleEllipticDistancesImpl, VehicleInputGraph, VehCHEnv, EllipticBCHSearchesImpl> rideRaptor(
+            raptor,
+            fleet,
+            vehicleInputGraph,
+            *vehChEnv,
+            calc,
+            reqState,
+            routeState,
+            inputConfig,
+            feasibleEllipticPickups,
+            feasibleEllipticDropoffs,
+            relOrdinaryPickups,
+            relOrdinaryDropoffs,
+            relPickupsBeforeNextStop,
+            relDropoffsBeforeNextStop,
+            ellipticSearches,
+            edgeIdOfStation);
+
         std::cout << "done.\n";
 
     } catch (std::exception& e) {

@@ -1056,7 +1056,7 @@ public:
             firstStopEventOfRoute, routeSegments, stopIds, stopEvents,
             stopData, routeData, implicitDepartureBufferTimes,
             implicitArrivalBufferTimes);
-        transferGraph.readBinary(fileName + ".graph");
+        transferGraph.readBinary(fileName + ".graph", ".", false);
     }
 
     inline void writeCSV(const std::string& fileBaseName) const noexcept

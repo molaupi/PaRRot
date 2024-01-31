@@ -13,12 +13,8 @@ CMakeFiles/rideRAPTOR.dir/RunRideRaptor.o
  /home/patrick/Documents/KIT/PARROT/KARRI/Algorithms/KaRRi/DalsAssignments/CollectiveBCHStrategy.h
  /home/patrick/Documents/KIT/PARROT/KARRI/Algorithms/KaRRi/DalsAssignments/DALSAssignmentsFinder.h
  /home/patrick/Documents/KIT/PARROT/KARRI/Algorithms/KaRRi/DalsAssignments/MinCostDropoffAfterLastStopQuery.h
- /home/patrick/Documents/KIT/PARROT/KARRI/DataStructures/Labels/SimdLabelSet.h
  /home/patrick/Documents/KIT/PARROT/KARRI/Algorithms/Buckets/DynamicBucketContainer.h
  /home/patrick/Documents/KIT/PARROT/KARRI/Algorithms/Buckets/SortedBucketContainer.h
- /home/patrick/Documents/KIT/PARROT/KARRI/Algorithms/KaRRi/LastStopSearches/LastStopsAtVertices.h
- /home/patrick/Documents/KIT/PARROT/KARRI/Algorithms/KaRRi/EllipticBCH/BucketEntryWithLeeway.h
- /home/patrick/Documents/KIT/PARROT/KARRI/Algorithms/KaRRi/EllipticBCH/EllipticBCHSearches.h
  /home/patrick/Documents/KIT/PARROT/KARRI/Algorithms/KaRRi/EllipticBCH/EllipticBucketsEnvironment.h
  /home/patrick/Documents/KIT/PARROT/KARRI/Algorithms/KaRRi/EllipticBCH/FeasibleEllipticDistances.h
  /home/patrick/Documents/KIT/PARROT/KARRI/Algorithms/KaRRi/EventSimulation.h
@@ -54,92 +50,43 @@ CMakeFiles/rideRAPTOR.dir/RunRideRaptor.o
  /home/patrick/Documents/KIT/PARROT/KARRI/DataStructures/Graph/Attributes/FreeFlowSpeedAttribute.h
  /home/patrick/Documents/KIT/PARROT/KARRI/DataStructures/Graph/Attributes/OsmNodeIdAttribute.h
  /home/patrick/Documents/KIT/PARROT/KARRI/Tools/CommandLine/CommandLineParser.h
- /home/patrick/Documents/KIT/PARROT/KARRI/Tools/CompilerSpecific.h
- /home/patrick/Documents/KIT/PARROT/KARRI/Tools/MachineSpecs.h
- /home/patrick/Documents/KIT/PARROT/KARRI/Tools/Simd/AlignedVector.h
- /home/patrick/Documents/KIT/PARROT/KARRI/DataStructures/Containers/BitVector.h
- /home/patrick/Documents/KIT/PARROT/KARRI/DataStructures/Utilities/DynamicRagged2DArrays.h
- /home/patrick/Documents/KIT/PARROT/KARRI/DataStructures/Utilities/IteratorRange.h
- /home/patrick/Documents/KIT/PARROT/KARRI/Algorithms/KaRRi/AssignmentCostFunctions/TimeIsMoneyCostFunction.h
- /home/patrick/Documents/KIT/PARROT/KARRI/Algorithms/KaRRi/BaseObjects/Assignment.h
- /home/patrick/Documents/KIT/PARROT/KARRI/Algorithms/KaRRi/BaseObjects/Request.h
- /home/patrick/Documents/KIT/PARROT/KARRI/Algorithms/KaRRi/CostCalculator.h
- /home/patrick/Documents/KIT/PARROT/KARRI/Algorithms/KaRRi/InputConfig.h
- /home/patrick/Documents/KIT/PARROT/KARRI/DataStructures/Containers/Subset.h
- /home/patrick/Documents/KIT/PARROT/KARRI/Tools/Logging/LogManager.h
- /home/patrick/Documents/KIT/PARROT/KARRI/Tools/Logging/NullLogger.h
- /home/patrick/Documents/KIT/PARROT/KARRI/Tools/Timer.h
- /home/patrick/Documents/KIT/PARROT/KARRI/DataStructures/Graph/Attributes/TraversalCostAttribute.h
- /home/patrick/Documents/KIT/PARROT/KARRI/DataStructures/Graph/Attributes/UnpackingInfoAttribute.h
- /home/patrick/Documents/KIT/PARROT/KARRI/Algorithms/CH/CH.h
- /home/patrick/Documents/KIT/PARROT/KARRI/DataStructures/Graph/Attributes/AbstractAttribute.h
- /home/patrick/Documents/KIT/PARROT/KARRI/DataStructures/Graph/Attributes/PsgEdgeToCarEdgeAttribute.h
- /home/patrick/Documents/KIT/PARROT/KARRI/Tools/TemplateProgramming.h
- /home/patrick/Documents/KIT/PARROT/KARRI/DataStructures/Labels/BasicLabelSet.h
- /home/patrick/Documents/KIT/PARROT/KARRI/DataStructures/Labels/ParentInfo.h
- /home/patrick/Documents/KIT/PARROT/KARRI/Tools/BinaryIO.h
- /home/patrick/Documents/KIT/PARROT/KARRI/Tools/ContainerHelpers.h
- /home/patrick/Documents/KIT/PARROT/KARRI/DataStructures/Utilities/PermutationKARRI.h
- /home/patrick/Documents/KIT/PARROT/KARRI/DataStructures/Graph/Export/DefaultExporter.h
- /home/patrick/Documents/KIT/PARROT/KARRI/DataStructures/Graph/Graph.h
- /home/patrick/Documents/KIT/PARROT/KARRI/Tools/LexicalCast.h
- /home/patrick/Documents/KIT/PARROT/KARRI/Tools/StringHelpers.h
- /home/patrick/Documents/KIT/PARROT/KARRI/DataStructures/Graph/Attributes/CapacityAttribute.h
- /home/patrick/Documents/KIT/PARROT/KARRI/DataStructures/Graph/Attributes/LatLngAttribute.h
- /home/patrick/Documents/KIT/PARROT/KARRI/DataStructures/Graph/Attributes/LengthAttribute.h
- /home/patrick/Documents/KIT/PARROT/KARRI/DataStructures/Graph/Attributes/NumLanesAttribute.h
- /home/patrick/Documents/KIT/PARROT/KARRI/DataStructures/Graph/Attributes/TravelTimeAttribute.h
- /home/patrick/Documents/KIT/PARROT/KARRI/DataStructures/Graph/Attributes/XatfRoadCategoryAttribute.h
- /home/patrick/Documents/KIT/PARROT/KARRI/DataStructures/Graph/Import/XatfImporter.h
- /home/patrick/Documents/KIT/PARROT/KARRI/DataStructures/Labels/Containers/ParentLabelContainer.h
- /home/patrick/Documents/KIT/PARROT/KARRI/DataStructures/Labels/Containers/StampedDistanceLabelContainer.h
- /home/patrick/Documents/KIT/PARROT/KARRI/DataStructures/Queues/AddressableKHeap.h
- /home/patrick/Documents/KIT/PARROT/KARRI/Algorithms/Dijkstra/Dijkstra.h
- /home/patrick/Documents/KIT/PARROT/KARRI/Algorithms/KaRRi/RequestState/FindPDLocsInRadiusQuery.h
- /home/patrick/Documents/KIT/PARROT/KARRI/Tools/EnumParser.h
- /home/patrick/Documents/KIT/PARROT/KARRI/DataStructures/Graph/Attributes/OsmRoadCategoryAttribute.h
- /home/patrick/Documents/KIT/PARROT/KARRI/Algorithms/KaRRi/Stats/OsmRoadCategoryStats.h
- /home/patrick/Documents/KIT/PARROT/KARRI/Algorithms/KaRRi/Stats/PerformanceStats.h
- /home/patrick/Documents/KIT/PARROT/KARRI/Algorithms/KaRRi/RequestState/RelevantPDLocs.h
- /home/patrick/Documents/KIT/PARROT/KARRI/Algorithms/KaRRi/RequestState/RelevantPDLocsFilter.h
- /home/patrick/Documents/KIT/PARROT/KARRI/Algorithms/KaRRi/RequestState/RequestState.h
- /home/patrick/Documents/KIT/PARROT/KARRI/Algorithms/KaRRi/RouteState.h
- /home/patrick/Documents/KIT/PARROT/KARRI/Algorithms/KaRRi/TimeUtils.h
- /home/patrick/Documents/KIT/PARROT/ULTRA/Helpers/Console/ProgressBar.h
+ /home/patrick/Documents/KIT/PARROT/ULTRA/Helpers/Meta.h
  /home/patrick/Documents/KIT/PARROT/ULTRA/Helpers/Assert.h
  /home/patrick/Documents/KIT/PARROT/ULTRA/Helpers/HighlightText.h
  /home/patrick/Documents/KIT/PARROT/ULTRA/Helpers/Ranges/ReverseRange.h
  /home/patrick/Documents/KIT/PARROT/ULTRA/Helpers/String/String.h
- /home/patrick/Documents/KIT/PARROT/ULTRA/Helpers/FileSystem/FileSystem.h
- /home/patrick/Documents/KIT/PARROT/ULTRA/Helpers/Meta.h
- /home/patrick/Documents/KIT/PARROT/ULTRA/Helpers/String/Enumeration.h
+ /home/patrick/Documents/KIT/PARROT/ULTRA/DataStructures/Attributes/AttributeNames.h
+ /home/patrick/Documents/KIT/PARROT/ULTRA/Helpers/ConstructorTags.h
  /home/patrick/Documents/KIT/PARROT/ULTRA/Helpers/Helpers.h
+ /home/patrick/Documents/KIT/PARROT/ULTRA/Helpers/FileSystem/FileSystem.h
+ /home/patrick/Documents/KIT/PARROT/ULTRA/Helpers/String/Enumeration.h
  /home/patrick/Documents/KIT/PARROT/ULTRA/Helpers/Vector/Vector.h
  /home/patrick/Documents/KIT/PARROT/ULTRA/Helpers/IO/File.h
  /home/patrick/Documents/KIT/PARROT/ULTRA/Helpers/IO/Serialization.h
  /home/patrick/Documents/KIT/PARROT/ULTRA/Helpers/TaggedInteger.h
  /home/patrick/Documents/KIT/PARROT/ULTRA/Helpers/Types.h
- /home/patrick/Documents/KIT/PARROT/ULTRA/DataStructures/Attributes/Attribute.h
- /home/patrick/Documents/KIT/PARROT/ULTRA/DataStructures/Attributes/AttributeHandle.h
- /home/patrick/Documents/KIT/PARROT/ULTRA/DataStructures/Attributes/AttributeNames.h
- /home/patrick/Documents/KIT/PARROT/ULTRA/DataStructures/Attributes/AttributeRecord.h
- /home/patrick/Documents/KIT/PARROT/ULTRA/DataStructures/Attributes/Attributes.h
- /home/patrick/Documents/KIT/PARROT/ULTRA/Helpers/ConstructorTags.h
- /home/patrick/Documents/KIT/PARROT/ULTRA/DataStructures/Geometry/Point.h
- /home/patrick/Documents/KIT/PARROT/ULTRA/DataStructures/Graph/Classes/GraphInterface.h
- /home/patrick/Documents/KIT/PARROT/ULTRA/Helpers/Ranges/DirectEdgeRange.h
- /home/patrick/Documents/KIT/PARROT/ULTRA/Helpers/Ranges/IndexRange.h
- /home/patrick/Documents/KIT/PARROT/ULTRA/Helpers/Ranges/IndirectEdgeRange.h
- /home/patrick/Documents/KIT/PARROT/ULTRA/Helpers/Ranges/Range.h
- /home/patrick/Documents/KIT/PARROT/ULTRA/Helpers/Ranges/SparseRange.h
- /home/patrick/Documents/KIT/PARROT/ULTRA/Helpers/Ranges/SubRange.h
  /home/patrick/Documents/KIT/PARROT/ULTRA/Helpers/Vector/Permutation.h
- /home/patrick/Documents/KIT/PARROT/ULTRA/DataStructures/Geometry/Rectangle.h
- /home/patrick/Documents/KIT/PARROT/ULTRA/Algorithms/DepthFirstSearch.h
  /home/patrick/Documents/KIT/PARROT/ULTRA/DataStructures/Container/ExternalKHeap.h
  /home/patrick/Documents/KIT/PARROT/ULTRA/DataStructures/Container/Set.h
  /home/patrick/Documents/KIT/PARROT/ULTRA/Helpers/Timer.h
  /home/patrick/Documents/KIT/PARROT/ULTRA/Algorithms/Dijkstra/Dijkstra.h
+ /home/patrick/Documents/KIT/PARROT/ULTRA/Helpers/Ranges/Range.h
+ /home/patrick/Documents/KIT/PARROT/ULTRA/Helpers/Ranges/SubRange.h
+ /home/patrick/Documents/KIT/PARROT/ULTRA/Helpers/Ranges/SimultaneousRange.h
+ /home/patrick/Documents/KIT/PARROT/ULTRA/DataStructures/Container/Map.h
+ /home/patrick/Documents/KIT/PARROT/ULTRA/DataStructures/Geometry/Point.h
+ /home/patrick/Documents/KIT/PARROT/ULTRA/DataStructures/Geometry/Rectangle.h
+ /home/patrick/Documents/KIT/PARROT/ULTRA/Helpers/Console/ProgressBar.h
+ /home/patrick/Documents/KIT/PARROT/ULTRA/DataStructures/Attributes/Attribute.h
+ /home/patrick/Documents/KIT/PARROT/ULTRA/DataStructures/Attributes/AttributeHandle.h
+ /home/patrick/Documents/KIT/PARROT/ULTRA/DataStructures/Attributes/AttributeRecord.h
+ /home/patrick/Documents/KIT/PARROT/ULTRA/DataStructures/Attributes/Attributes.h
+ /home/patrick/Documents/KIT/PARROT/ULTRA/DataStructures/Graph/Classes/GraphInterface.h
+ /home/patrick/Documents/KIT/PARROT/ULTRA/Helpers/Ranges/DirectEdgeRange.h
+ /home/patrick/Documents/KIT/PARROT/ULTRA/Helpers/Ranges/IndexRange.h
+ /home/patrick/Documents/KIT/PARROT/ULTRA/Helpers/Ranges/IndirectEdgeRange.h
+ /home/patrick/Documents/KIT/PARROT/ULTRA/Helpers/Ranges/SparseRange.h
+ /home/patrick/Documents/KIT/PARROT/ULTRA/Algorithms/DepthFirstSearch.h
  /home/patrick/Documents/KIT/PARROT/ULTRA/Algorithms/StronglyConnectedComponents.h
  /home/patrick/Documents/KIT/PARROT/ULTRA/DataStructures/Graph/Utils/Utils.h
  /home/patrick/Documents/KIT/PARROT/ULTRA/DataStructures/Graph/Classes/DynamicGraph.h
@@ -148,26 +95,7 @@ CMakeFiles/rideRAPTOR.dir/RunRideRaptor.o
  /home/patrick/Documents/KIT/PARROT/ULTRA/DataStructures/Graph/Graph.h
  /home/patrick/Documents/KIT/PARROT/ULTRA/DataStructures/Graph/Utils/Conversion.h
  /home/patrick/Documents/KIT/PARROT/ULTRA/DataStructures/Graph/Utils/IO.h
- /home/patrick/Documents/KIT/PARROT/ULTRA/Helpers/Ranges/ConcatenatedRange.h
- /home/patrick/Documents/KIT/PARROT/ULTRA/Algorithms/CH/CH.h
- /home/patrick/Documents/KIT/PARROT/ULTRA/Algorithms/CH/Preprocessing/CHBuilder.h
- /home/patrick/Documents/KIT/PARROT/ULTRA/Algorithms/CH/Preprocessing/CHData.h
- /home/patrick/Documents/KIT/PARROT/ULTRA/Algorithms/CH/Preprocessing/KeyFunction.h
- /home/patrick/Documents/KIT/PARROT/ULTRA/Algorithms/CH/Preprocessing/Profiler.h
- /home/patrick/Documents/KIT/PARROT/ULTRA/Algorithms/CH/Preprocessing/StopCriterion.h
- /home/patrick/Documents/KIT/PARROT/ULTRA/Algorithms/CH/Preprocessing/WitnessSearch.h
  /home/patrick/Documents/KIT/PARROT/ULTRA/Helpers/Console/Progress.h
- /home/patrick/Documents/KIT/PARROT/ULTRA/Algorithms/CH/Query/BucketQuery.h
- /home/patrick/Documents/KIT/PARROT/ULTRA/Algorithms/CH/Query/CHQuery.h
- /home/patrick/Documents/KIT/PARROT/KARRI/Tools/Bitwise.h
- /home/patrick/Documents/KIT/PARROT/KARRI/Tools/Constants.h
- /home/patrick/Documents/KIT/PARROT/KARRI/Tools/Math.h
- /home/patrick/Documents/KIT/PARROT/KARRI/Tools/Workarounds.h
- /home/patrick/Documents/KIT/PARROT/KARRI/DataStructures/Geometry/LatLng.h
- /home/patrick/Documents/KIT/PARROT/KARRI/DataStructures/Geometry/Point.h
- /home/patrick/Documents/KIT/PARROT/ULTRA/DataStructures/Graph/Classes/GraphWrapper.h
- /home/patrick/Documents/KIT/PARROT/ULTRA/Helpers/Ranges/SimultaneousRange.h
- /home/patrick/Documents/KIT/PARROT/ULTRA/DataStructures/Container/Map.h
  /home/patrick/Documents/KIT/PARROT/ULTRA/Helpers/IO/ParserCSV.h
  /home/patrick/Documents/KIT/PARROT/ULTRA/DataStructures/GTFS/Data.h
  /home/patrick/Documents/KIT/PARROT/ULTRA/Helpers/Calendar.h
@@ -194,6 +122,78 @@ CMakeFiles/rideRAPTOR.dir/RunRideRaptor.o
  /home/patrick/Documents/KIT/PARROT/ULTRA/DataStructures/RAPTOR/Entities/Stop.h
  /home/patrick/Documents/KIT/PARROT/ULTRA/DataStructures/RAPTOR/Entities/StopEvent.h
  /home/patrick/Documents/KIT/PARROT/ULTRA/DataStructures/RAPTOR/Entities/TripIterator.h
+ /home/patrick/Documents/KIT/PARROT/KARRI/Tools/CompilerSpecific.h
+ /home/patrick/Documents/KIT/PARROT/KARRI/Tools/MachineSpecs.h
+ /home/patrick/Documents/KIT/PARROT/KARRI/Tools/Simd/AlignedVector.h
+ /home/patrick/Documents/KIT/PARROT/KARRI/DataStructures/Containers/BitVector.h
+ /home/patrick/Documents/KIT/PARROT/KARRI/DataStructures/Utilities/DynamicRagged2DArrays.h
+ /home/patrick/Documents/KIT/PARROT/KARRI/DataStructures/Utilities/IteratorRange.h
+ /home/patrick/Documents/KIT/PARROT/KARRI/Algorithms/KaRRi/AssignmentCostFunctions/TimeIsMoneyCostFunction.h
+ /home/patrick/Documents/KIT/PARROT/KARRI/Algorithms/KaRRi/BaseObjects/Assignment.h
+ /home/patrick/Documents/KIT/PARROT/KARRI/Algorithms/KaRRi/BaseObjects/Request.h
+ /home/patrick/Documents/KIT/PARROT/KARRI/Algorithms/KaRRi/CostCalculator.h
+ /home/patrick/Documents/KIT/PARROT/KARRI/Tools/TemplateProgramming.h
+ /home/patrick/Documents/KIT/PARROT/KARRI/DataStructures/Labels/BasicLabelSet.h
+ /home/patrick/Documents/KIT/PARROT/KARRI/DataStructures/Labels/ParentInfo.h
+ /home/patrick/Documents/KIT/PARROT/KARRI/DataStructures/Labels/SimdLabelSet.h
+ /home/patrick/Documents/KIT/PARROT/KARRI/Tools/Logging/NullLogger.h
+ /home/patrick/Documents/KIT/PARROT/KARRI/Tools/Timer.h
+ /home/patrick/Documents/KIT/PARROT/KARRI/DataStructures/Graph/Attributes/TraversalCostAttribute.h
+ /home/patrick/Documents/KIT/PARROT/KARRI/DataStructures/Graph/Attributes/UnpackingInfoAttribute.h
+ /home/patrick/Documents/KIT/PARROT/KARRI/Algorithms/CH/CH.h
+ /home/patrick/Documents/KIT/PARROT/KARRI/Algorithms/KaRRi/LastStopSearches/LastStopsAtVertices.h
+ /home/patrick/Documents/KIT/PARROT/KARRI/DataStructures/Containers/Subset.h
+ /home/patrick/Documents/KIT/PARROT/KARRI/Tools/Logging/LogManager.h
+ /home/patrick/Documents/KIT/PARROT/KARRI/DataStructures/Graph/Attributes/AbstractAttribute.h
+ /home/patrick/Documents/KIT/PARROT/KARRI/DataStructures/Graph/Attributes/PsgEdgeToCarEdgeAttribute.h
+ /home/patrick/Documents/KIT/PARROT/KARRI/Tools/BinaryIO.h
+ /home/patrick/Documents/KIT/PARROT/KARRI/Tools/ContainerHelpers.h
+ /home/patrick/Documents/KIT/PARROT/KARRI/DataStructures/Utilities/PermutationKARRI.h
+ /home/patrick/Documents/KIT/PARROT/KARRI/DataStructures/Graph/Export/DefaultExporter.h
+ /home/patrick/Documents/KIT/PARROT/KARRI/DataStructures/Graph/Graph.h
+ /home/patrick/Documents/KIT/PARROT/KARRI/Tools/LexicalCast.h
+ /home/patrick/Documents/KIT/PARROT/KARRI/Tools/StringHelpers.h
+ /home/patrick/Documents/KIT/PARROT/KARRI/DataStructures/Graph/Attributes/CapacityAttribute.h
+ /home/patrick/Documents/KIT/PARROT/KARRI/DataStructures/Graph/Attributes/LatLngAttribute.h
+ /home/patrick/Documents/KIT/PARROT/KARRI/DataStructures/Graph/Attributes/LengthAttribute.h
+ /home/patrick/Documents/KIT/PARROT/KARRI/DataStructures/Graph/Attributes/NumLanesAttribute.h
+ /home/patrick/Documents/KIT/PARROT/KARRI/DataStructures/Graph/Attributes/TravelTimeAttribute.h
+ /home/patrick/Documents/KIT/PARROT/KARRI/DataStructures/Graph/Attributes/XatfRoadCategoryAttribute.h
+ /home/patrick/Documents/KIT/PARROT/KARRI/DataStructures/Graph/Import/XatfImporter.h
+ /home/patrick/Documents/KIT/PARROT/KARRI/DataStructures/Labels/Containers/ParentLabelContainer.h
+ /home/patrick/Documents/KIT/PARROT/KARRI/DataStructures/Labels/Containers/StampedDistanceLabelContainer.h
+ /home/patrick/Documents/KIT/PARROT/KARRI/DataStructures/Queues/AddressableKHeap.h
+ /home/patrick/Documents/KIT/PARROT/KARRI/Algorithms/Dijkstra/Dijkstra.h
+ /home/patrick/Documents/KIT/PARROT/KARRI/Algorithms/KaRRi/RequestState/FindPDLocsInRadiusQuery.h
+ /home/patrick/Documents/KIT/PARROT/KARRI/Tools/EnumParser.h
+ /home/patrick/Documents/KIT/PARROT/KARRI/DataStructures/Graph/Attributes/OsmRoadCategoryAttribute.h
+ /home/patrick/Documents/KIT/PARROT/KARRI/Algorithms/KaRRi/Stats/OsmRoadCategoryStats.h
+ /home/patrick/Documents/KIT/PARROT/KARRI/Algorithms/KaRRi/Stats/PerformanceStats.h
+ /home/patrick/Documents/KIT/PARROT/KARRI/Algorithms/KaRRi/RequestState/RequestState.h
+ /home/patrick/Documents/KIT/PARROT/KARRI/Algorithms/KaRRi/EllipticBCH/BucketEntryWithLeeway.h
+ /home/patrick/Documents/KIT/PARROT/KARRI/Algorithms/KaRRi/EllipticBCH/EllipticBCHSearches.h
+ /home/patrick/Documents/KIT/PARROT/KARRI/Algorithms/KaRRi/InputConfig.h
+ /home/patrick/Documents/KIT/PARROT/KARRI/Algorithms/KaRRi/RequestState/RelevantPDLocs.h
+ /home/patrick/Documents/KIT/PARROT/KARRI/Algorithms/KaRRi/RequestState/RelevantPDLocsFilter.h
+ /home/patrick/Documents/KIT/PARROT/KARRI/Algorithms/KaRRi/RouteState.h
+ /home/patrick/Documents/KIT/PARROT/KARRI/Algorithms/KaRRi/TimeUtils.h
+ /home/patrick/Documents/KIT/PARROT/ULTRA/Helpers/Ranges/ConcatenatedRange.h
+ /home/patrick/Documents/KIT/PARROT/ULTRA/Algorithms/CH/CH.h
+ /home/patrick/Documents/KIT/PARROT/ULTRA/Algorithms/CH/Preprocessing/CHBuilder.h
+ /home/patrick/Documents/KIT/PARROT/ULTRA/Algorithms/CH/Preprocessing/CHData.h
+ /home/patrick/Documents/KIT/PARROT/ULTRA/Algorithms/CH/Preprocessing/KeyFunction.h
+ /home/patrick/Documents/KIT/PARROT/ULTRA/Algorithms/CH/Preprocessing/Profiler.h
+ /home/patrick/Documents/KIT/PARROT/ULTRA/Algorithms/CH/Preprocessing/StopCriterion.h
+ /home/patrick/Documents/KIT/PARROT/ULTRA/Algorithms/CH/Preprocessing/WitnessSearch.h
+ /home/patrick/Documents/KIT/PARROT/ULTRA/Algorithms/CH/Query/BucketQuery.h
+ /home/patrick/Documents/KIT/PARROT/ULTRA/Algorithms/CH/Query/CHQuery.h
+ /home/patrick/Documents/KIT/PARROT/KARRI/Tools/Bitwise.h
+ /home/patrick/Documents/KIT/PARROT/KARRI/Tools/Constants.h
+ /home/patrick/Documents/KIT/PARROT/KARRI/Tools/Math.h
+ /home/patrick/Documents/KIT/PARROT/KARRI/Tools/Workarounds.h
+ /home/patrick/Documents/KIT/PARROT/KARRI/DataStructures/Geometry/LatLng.h
+ /home/patrick/Documents/KIT/PARROT/KARRI/DataStructures/Geometry/Point.h
+ /home/patrick/Documents/KIT/PARROT/ULTRA/DataStructures/Graph/Classes/GraphWrapper.h
  /home/patrick/Documents/KIT/PARROT/KARRI/Algorithms/KaRRi/BaseObjects/Vehicle.h
  /home/patrick/Documents/KIT/PARROT/ULTRA/DataStructures/RideRAPTOR/Entities/Journey.h
  /home/patrick/Documents/KIT/PARROT/ULTRA/Shell/BasicShell.h
