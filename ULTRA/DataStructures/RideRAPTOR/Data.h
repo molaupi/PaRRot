@@ -227,7 +227,11 @@ public:
         profiler.donePhase(PHASE_BUILDTRANSFERGRAPH);
 
         profiler.startPhase(PHASE_BCHSEARCHES);
+        std::vector<StopInsertionInfo> vehicles;
+        vehicles.reserve(fleet.size());
+
         for (const auto station : raptorData.stops()) {
+            vehicles.clear();
             requestState.reset();
 
             // add the current stations point to the pickups && dropoffs
@@ -240,8 +244,6 @@ public:
                 INFTYKARRI, // Vehicle driving time from this pickup/dropoff to the origin/destination.
                 INFTYKARRI // Vehicle driving time from origin/destination to this pickup/dropoff.
             );
-
-            std::vector<StopInsertionInfo> vehicles;
 
             ellipticBchSearches.runForStation();
             relevantPdLocsFilter.filterOrdinary(vehicles);
@@ -273,26 +275,60 @@ public:
             return;
         }
 
-        // TODO
-        /* if (!raptorData.isStop(sourceStop)) { */
-        /*     const auto sourceTail = inputGraph.get(FromVertex, sourceEdge); */
-        /*     const auto sourceHead = inputGraph.get(ToVertex, sourceEdge); */
-        /*     const auto travelTime = inputGraph.get(TravelTime, sourceEdge); */
+        std::vector<StopInsertionInfo> vehicles;
+        vehicles.reserve(fleet.size());
 
-        /*     // TODO */
-        /*     const auto insertionInfos = disp.runBCHSearchFromStop(sourceTail, sourceHead, travelTime); */
-        /*     insertSourceEdges(insertionInfos, sourceStop); */
-        /* } */
+        if (!raptorData.isStop(sourceStop)) {
+            /* const auto sourceTail = inputGraph.get(FromVertex, sourceEdge); */
+            /* const auto sourceHead = inputGraph.get(ToVertex, sourceEdge); */
+            const auto travelTime = inputGraph.get(TravelTime, sourceEdge);
 
-        /* if (!raptorData.isStop(targetStop)) { */
-        /*     const auto targetTail = inputGraph.get(FromVertex, targetEdge); */
-        /*     const auto targetHead = inputGraph.get(ToVertex, targetEdge); */
-        /*     const auto travelTime = inputGraph.get(TravelTime, targetEdge); */
+            vehicles.clear();
+            requestState.reset();
 
-        /*     // TODO */
-        /*     const auto insertionInfos = disp.runBCHSearchFromStop(targetTail, targetHead, travelTime); */
-        /*     insertTargetEdges(insertionInfos, targetStop); */
-        /* } */
+            // add the current stations point to the pickups && dropoffs
+            requestState.pickups.emplace_back(
+                INVALID_ID, // PdLoc ID
+                sourceEdge, // Location in road network
+                inputGraph.toPsgEdge(sourceEdge), // Location in passenger road network
+                travelTime, // Walking time from origin to this pickup or
+                            // from this dropoff to destination.
+                INFTYKARRI, // Vehicle driving time from this pickup/dropoff to the origin/destination.
+                INFTYKARRI // Vehicle driving time from origin/destination to this pickup/dropoff.
+            );
+
+            ellipticBchSearches.runForStation();
+            relevantPdLocsFilter.filterOrdinary(vehicles);
+            relevantPdLocsFilter.filterBeforeNextStop(vehicles);
+
+            insertSourceEdges(vehicles, sourceStop);
+        }
+
+        if (!raptorData.isStop(targetStop)) {
+            /* const auto targetTail = inputGraph.get(FromVertex, targetEdge); */
+            /* const auto targetHead = inputGraph.get(ToVertex, targetEdge); */
+            const auto travelTime = inputGraph.get(TravelTime, targetEdge);
+
+            vehicles.clear();
+            requestState.reset();
+
+            // add the current stations point to the pickups && dropoffs
+            requestState.pickups.emplace_back(
+                INVALID_ID, // PdLoc ID
+                targetEdge, // Location in road network
+                inputGraph.toPsgEdge(targetEdge), // Location in passenger road network
+                travelTime, // Walking time from origin to this pickup or
+                            // from this dropoff to destination.
+                INFTYKARRI, // Vehicle driving time from this pickup/dropoff to the origin/destination.
+                INFTYKARRI // Vehicle driving time from origin/destination to this pickup/dropoff.
+            );
+
+            ellipticBchSearches.runForStation();
+            relevantPdLocsFilter.filterOrdinary(vehicles);
+            relevantPdLocsFilter.filterBeforeNextStop(vehicles);
+
+            insertTargetEdges(vehicles, targetStop);
+        }
     }
 
     inline std::vector<std::string> journeyToText(
