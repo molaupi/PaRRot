@@ -218,6 +218,7 @@ public:
             for (int pos = 0; pos < numStops; pos++) {
                 const auto vehicleStopVertex = getVertexFromVehiclePosition(vehId, pos);
                 constructionGraph.set(VehicleId, vehicleStopVertex, vehId);
+
                 constructionGraph.addEdge(vehicleStopVertex, Vertex(targetStopDummy))
                     .set(Weight, INFTY);
                 constructionGraph.addEdge(Vertex(sourceStopDummy), vehicleStopVertex)
@@ -235,7 +236,7 @@ public:
             requestState.reset();
 
             // add the current stations point to the pickups && dropoffs
-            requestState.pickups.emplace_back(
+            requestState.pickups.push_back({
                 INVALID_ID, // PdLoc ID
                 edgeIdOfStation[station], // Location in road network
                 inputGraph.toPsgEdge(edgeIdOfStation[station]), // Location in passenger road network
@@ -243,7 +244,7 @@ public:
                    // from this dropoff to destination.
                 INFTYKARRI, // Vehicle driving time from this pickup/dropoff to the origin/destination.
                 INFTYKARRI // Vehicle driving time from origin/destination to this pickup/dropoff.
-            );
+            });
 
             ellipticBchSearches.runForStation();
             relevantPdLocsFilter.filterOrdinary(vehicles);

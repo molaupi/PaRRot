@@ -117,49 +117,35 @@ public:
     // same methods as above, but with insertion infos
     void filterOrdinary(std::vector<InsertionInfo>& intersectionOfVehicles)
     {
-        Timer timer;
-
-        const int numRelStopsForPickups = filterOrdinaryPickups(intersectionOfVehicles);
-        const int numRelStopsForDropoffs = filterOrdinaryDropoffs(intersectionOfVehicles);
-
-        const int64_t time = timer.elapsed<std::chrono::nanoseconds>();
-        requestState.stats().ordAssignmentsStats.filterRelevantPDLocsTime += time;
-        requestState.stats().ordAssignmentsStats.numRelevantStopsForPickups += numRelStopsForPickups;
-        requestState.stats().ordAssignmentsStats.numRelevantStopsForDropoffs += numRelStopsForDropoffs;
+        filterOrdinaryPickups(intersectionOfVehicles);
+        filterOrdinaryDropoffs(intersectionOfVehicles);
     }
 
-    int filterOrdinaryPickups(std::vector<InsertionInfo>& intersectionOfVehicles)
+    void filterOrdinaryPickups(std::vector<InsertionInfo>& intersectionOfVehicles)
     {
-        return filter<false, false>(feasiblePickupDistances, relOrdinaryPickups, intersectionOfVehicles, 1);
+        filter<false, false>(feasiblePickupDistances, relOrdinaryPickups, intersectionOfVehicles, 1);
     }
 
-    int filterOrdinaryDropoffs(std::vector<InsertionInfo>& intersectionOfVehicles)
+    void filterOrdinaryDropoffs(std::vector<InsertionInfo>& intersectionOfVehicles)
     {
-        return filter<false, true>(feasibleDropoffDistances, relOrdinaryDropoffs, intersectionOfVehicles, 1);
+        filter<false, true>(feasibleDropoffDistances, relOrdinaryDropoffs, intersectionOfVehicles, 1);
     }
 
     void filterBeforeNextStop(std::vector<InsertionInfo>& intersectionOfVehicles)
     {
-        Timer timer;
-
-        const int numRelStopsForPickups = filterPickupsBeforeNextStop(intersectionOfVehicles);
-        const int numRelStopsForDropoffs = filterDropoffsBeforeNextStop(intersectionOfVehicles);
-
-        const int64_t time = timer.elapsed<std::chrono::nanoseconds>();
-        requestState.stats().pbnsAssignmentsStats.filterRelevantPDLocsTime += time;
-        requestState.stats().pbnsAssignmentsStats.numRelevantStopsForPickups += numRelStopsForPickups;
-        requestState.stats().pbnsAssignmentsStats.numRelevantStopsForDropoffs += numRelStopsForDropoffs;
+        filterPickupsBeforeNextStop(intersectionOfVehicles);
+        filterDropoffsBeforeNextStop(intersectionOfVehicles);
     }
 
-    int filterPickupsBeforeNextStop(std::vector<InsertionInfo>& intersectionOfVehicles)
+    void filterPickupsBeforeNextStop(std::vector<InsertionInfo>& intersectionOfVehicles)
     {
-        return filter<true, false>(feasiblePickupDistances,
+        filter<true, false>(feasiblePickupDistances,
             relPickupsBeforeNextStop, intersectionOfVehicles, 1);
     }
 
-    int filterDropoffsBeforeNextStop(std::vector<InsertionInfo>& intersectionOfVehicles)
+    void filterDropoffsBeforeNextStop(std::vector<InsertionInfo>& intersectionOfVehicles)
     {
-        return filter<true, true>(feasibleDropoffDistances,
+        filter<true, true>(feasibleDropoffDistances,
             relDropoffsBeforeNextStop, intersectionOfVehicles, 1);
     }
 
@@ -231,11 +217,13 @@ private:
                             const auto& distToPDLoc = distsToPDLocs[id];
                             const auto& distFromPDLoc = distsFromPDLocs[id];
 
+                            int detour = 0;
+
                             bool isRelevant;
                             if constexpr (isDropoff) {
-                                isRelevant = isDropoffRelevant(fleet[vehId], i, id, distToPDLoc, distFromPDLoc);
+                                isRelevant = isDropoffRelevant(fleet[vehId], i, id, distToPDLoc, distFromPDLoc, detour);
                             } else {
-                                isRelevant = isPickupRelevant(fleet[vehId], i, id, distToPDLoc, distFromPDLoc);
+                                isRelevant = isPickupRelevant(fleet[vehId], i, id, distToPDLoc, distFromPDLoc, detour);
                             }
 
                             if (isRelevant) {
@@ -332,33 +320,28 @@ private:
                             const auto& distToPDLoc = distsToPDLocs[id];
                             const auto& distFromPDLoc = distsFromPDLocs[id];
 
+                            // we want to insert this into the StopInsertionInfo, hence we pass it to the isDropOff/PickupRelevant
+                            int detour = 0;
+
                             bool isRelevant;
                             if constexpr (isDropoff) {
                                 isRelevant = isDropoffRelevant(fleet[vehId], i, id, distToPDLoc,
-                                    distFromPDLoc);
+                                    distFromPDLoc, detour);
                             } else {
                                 isRelevant = isPickupRelevant(fleet[vehId], i, id, distToPDLoc,
-                                    distFromPDLoc);
+                                    distFromPDLoc, detour);
                             }
 
                             if (isRelevant) {
                                 rel.relevantSpots.push_back(
                                     { i, id, distToPDLoc, distFromPDLoc });
 
-                                // TODO check detour, leeway
-                                // detour was defined in LOUD as:
-                                /*
-                                const auto detour = std::max(
-                                    distance - (minDepTimes[toStop] - minDepTimes[fromStop] - stopTime),
-                                    0
-                                );
-                                */
                                 // is reverse dist to stopId in distsToPDLocs bzw. in distsFromPDLocs?
-                                intersectionOfVehicles.emplace_back(
+                                intersectionOfVehicles.push_back({
                                     vehId, // vehicleId
                                     stopId, // insertionPosition
-                                    0, // detour
-                                    0, // leeway
+                                    detour, // detour
+                                    routeState.leewayOfLegStartingAt(stopId), // leeway
                                     distToPDLoc, // distTo
                                     distFromPDLoc, // distFrom
                                     0, // reverseDistTo
@@ -366,7 +349,7 @@ private:
                                     routeState.schedArrTimesFor(vehId)[stopId], // minArrTime
                                     routeState.schedDepTimesFor(vehId)[stopId], // minDepTime
                                     routeState.maxArrTimesFor(vehId)[stopId] // maxDepTime
-                                );
+                                });
                             }
                         }
                     }
@@ -388,7 +371,7 @@ private:
 
     inline bool isPickupRelevant(const Vehicle& veh, const int stopIndex, const unsigned int pickupId,
         const int distFromStopToPickup,
-        const int distFromPickupToNextStop) const
+        const int distFromPickupToNextStop, int& initialPickupDetour)
     {
         using namespace time_utils;
 
@@ -404,7 +387,7 @@ private:
 
         const auto depTimeAtPickup = getActualDepTimeAtPickup(vehId, stopIndex, distFromStopToPickup, p,
             requestState, routeState, inputConfig);
-        const auto initialPickupDetour = calcInitialPickupDetour(vehId, stopIndex, INVALID_INDEX, depTimeAtPickup,
+        initialPickupDetour = calcInitialPickupDetour(vehId, stopIndex, INVALID_INDEX, depTimeAtPickup,
             distFromPickupToNextStop, requestState,
             routeState);
 
@@ -425,7 +408,7 @@ private:
 
     inline bool isDropoffRelevant(const Vehicle& veh, const int stopIndex, const unsigned int dropoffId,
         const int distFromStopToDropoff,
-        const int distFromDropoffToNextStop)
+        const int distFromDropoffToNextStop, int& initialDropoffDetour)
     {
         using namespace time_utils;
 
@@ -449,7 +432,7 @@ private:
             return false;
 
         const bool isDropoffAtExistingStop = d.loc == stopLocations[stopIndex];
-        const int initialDropoffDetour = calcInitialDropoffDetour(vehId, stopIndex, distFromStopToDropoff,
+        initialDropoffDetour = calcInitialDropoffDetour(vehId, stopIndex, distFromStopToDropoff,
             distFromDropoffToNextStop,
             isDropoffAtExistingStop,
             routeState, inputConfig);

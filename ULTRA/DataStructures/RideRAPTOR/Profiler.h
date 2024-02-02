@@ -311,7 +311,6 @@ public:
         data.writeValuesToFile(outputFile, metrics, phases, additionalValues);
     }
 
-private:
     inline void printStatistics() const noexcept
     {
         TimeData::printHeader(metrics, phases);
@@ -320,6 +319,7 @@ private:
         std::cout << "Total time: " << String::musToString(totalTime) << std::endl;
     }
 
+private:
     Timer totalTimer;
     double totalTime;
     Timer phaseTimer;

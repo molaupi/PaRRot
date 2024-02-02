@@ -439,6 +439,8 @@ int main(int argc, char* argv[])
         RAPTOR::Data raptor(raptorFileName);
         std::cout << "done.\n";
 
+        raptor.printInfo();
+
         // Build the RideRAPTOR data
         std::cout << "Building RideRAPTOR data... " << std::flush;
 
@@ -460,7 +462,10 @@ int main(int argc, char* argv[])
             ellipticSearches,
             edgeIdOfStation);
 
+        rideRaptor.buildRideTransferGraph();
         std::cout << "done.\n";
+
+        rideRaptor.rideTransferGraph.printAnalysis();
 
     } catch (std::exception& e) {
         std::cerr << argv[0] << ": " << e.what() << '\n';

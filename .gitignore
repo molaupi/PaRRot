@@ -1,5 +1,6 @@
 **/.DS_Store
 Runners/rideRAPTOR
+Runners/test.*
 Networks/*
 KARRI/Publications/KaRRi/Inputs/*
 KARRI/RawData/CMakeFiles/*
