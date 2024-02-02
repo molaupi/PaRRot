@@ -4,6 +4,7 @@
 #include <cstdlib>
 #include <fstream>
 #include <iostream>
+#include <random>
 
 #include "../ULTRA/DataStructures/RAPTOR/Data.h"
 #include "../ULTRA/DataStructures/RideRAPTOR/Data.h"
@@ -97,6 +98,7 @@ inline void printUsage()
            "  -veh-g <file>             vehicle road network in binary format.\n"
            "  -psg-g <file>             passenger road (and path) network in binary "
            "format.\n"
+           "  -r <file>                 requests in CSV format.\n"
            "  -v <file>                 vehicles in CSV format.\n"
            "  -s <sec>                  stop time (in s). (dflt: 60s)\n"
            "  -w <sec>                  maximum wait time (in s). (dflt: 300s)\n"
@@ -158,6 +160,7 @@ int main(int argc, char* argv[])
         const auto vehicleNetworkFileName = clp.getValue<std::string>("veh-g");
         const auto passengerNetworkFileName = clp.getValue<std::string>("psg-g");
         const auto vehicleFileName = clp.getValue<std::string>("v");
+        const auto requestFileName = clp.getValue<std::string>("r");
         const auto vehHierarchyFileName = clp.getValue<std::string>("veh-h");
         const auto psgHierarchyFileName = clp.getValue<std::string>("psg-h");
         const auto vehSepDecompFileName = clp.getValue<std::string>("veh-d");
@@ -282,6 +285,42 @@ int main(int argc, char* argv[])
 
         // Create Route State for empty routes.
         karri::RouteState routeState(fleet, inputConfig.stopTime);
+
+        // Read the request data from file.
+        std::cout << "Reading request data from file... " << std::flush;
+        std::vector<karri::Request> requests;
+        int origin, destination, requestTime, numRiders;
+        io::CSVReader<4, io::trim_chars<' '>> reqFileReader(requestFileName);
+
+        if (csvFilesInLoudFormat) {
+            reqFileReader.read_header(io::ignore_missing_column, "pickup_spot",
+                "dropoff_spot", "min_dep_time", "num_riders");
+        } else {
+            reqFileReader.read_header(io::ignore_missing_column, "origin",
+                "destination", "req_time", "num_riders");
+        }
+
+        numRiders = -1;
+        while (
+            reqFileReader.read_row(origin, destination, requestTime, numRiders)) {
+            if (origin < 0 || origin >= vehGraphOrigIdToSeqId.size() || vehGraphOrigIdToSeqId[origin] == INVALID_ID)
+                throw std::invalid_argument("invalid location -- '" + std::to_string(origin) + "'");
+            if (destination < 0 || destination >= vehGraphOrigIdToSeqId.size() || vehGraphOrigIdToSeqId[destination] == INVALID_ID)
+                throw std::invalid_argument("invalid location -- '" + std::to_string(destination) + "'");
+            if (numRiders > maxCapacity)
+                throw std::invalid_argument("number of riders '" + std::to_string(numRiders) + "' is larger than max vehicle capacity (" + std::to_string(maxCapacity) + ")");
+            const auto originSeqId = vehGraphOrigIdToSeqId[origin];
+            assert(vehicleInputGraph.toPsgEdge(originSeqId) != CarEdgeToPsgEdgeAttribute::defaultValue());
+            const auto destSeqId = vehGraphOrigIdToSeqId[destination];
+            assert(vehicleInputGraph.toPsgEdge(destSeqId) != CarEdgeToPsgEdgeAttribute::defaultValue());
+            const int requestId = static_cast<int>(requests.size());
+            if (numRiders == -1) // If number of riders was not specified, assume one rider
+                numRiders = 1;
+            requests.push_back(
+                { requestId, originSeqId, destSeqId, requestTime * 10, numRiders });
+            numRiders = -1;
+        }
+        std::cout << "done.\n";
 
 #ifdef KARRI_USE_CCHS
 
@@ -563,6 +602,39 @@ int main(int argc, char* argv[])
             lastStopBucketsEnv.generateIdleBucketEntries(veh);
         }
 
+        // 1) run some requests to start the vehicles
+        int numberOfSimulatedRequests = 100;
+        int startTimeOfSimulatedRequest = 0;
+        int endTimeOfSimulatedRequest = 24 * 60 * 60; // midnight in secs
+
+        /* std::vector<karri::Request> simulatedRequests; */
+        /* simulatedRequests.reserve(numberOfSimulatedRequests); */
+
+        /* // generate random requests */
+        /* std::mt19937 randomGenerator(2 + 42); */
+        /* std::uniform_int_distribution<> locationDistribution(0, psgInputGraph.numEdges() >> 1); */
+        /* std::uniform_int_distribution<> timeDistribution(startTimeOfSimulatedRequest, endTimeOfSimulatedRequest + 1); */
+
+        /* for (int reqId = 0; reqId < numberOfSimulatedRequests; ++reqId) { */
+        /*     simulatedRequests.push_back({ */
+        /*         reqId, */
+        /*         locationDistribution(randomGenerator), */
+        /*         locationDistribution(randomGenerator), */
+        /*         timeDistribution(randomGenerator), */
+        /*         1 // num of passenger */
+        /*     }); */
+        /* } */
+        requests.resize(500);
+
+        // Run simulation:
+        using EventSimulationImpl = karri::EventSimulation<InsertionFinderImpl, SystemStateUpdaterImpl, karri::RouteState>;
+        EventSimulationImpl eventSimulation(fleet, requests, inputConfig.stopTime,
+            insertionFinder, systemStateUpdater,
+            routeState, true);
+
+        eventSimulation.run();
+
+        // 2) now the RideRAPTOR stuff
         // Read the station mapping file
         std::cout << "Reading station mapping from file... " << std::flush;
         std::vector<int> edgeIdOfStation;

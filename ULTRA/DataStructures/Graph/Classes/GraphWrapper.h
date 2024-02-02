@@ -617,6 +617,6 @@ private:
     GRAPH graph;
 };
 
-#define FORALL_VERTICES(G, u) for (const Vertex v : G.vertices())
-#define FORALL_EDGES(G, e) for (const Edge e : G.edges())
-#define FORALL_INCIDENT_EDGES(G, u, e) for (const Edge e : G.edgesFrom(u))
+/* #define FORALL_VERTICES(G, u) for (const Vertex v : G.vertices()) */
+/* #define FORALL_EDGES(G, e) for (const Edge e : G.edges()) */
+/* #define FORALL_INCIDENT_EDGES(G, u, e) for (const Edge e : G.edgesFrom(u)) */
