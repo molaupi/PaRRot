@@ -18,7 +18,9 @@
 #include "../KARRI/Algorithms/KaRRi/EllipticBCH/EllipticBCHSearches.h"
 #include "../KARRI/Algorithms/KaRRi/EllipticBCH/EllipticBucketsEnvironment.h"
 #include "../KARRI/Algorithms/KaRRi/EllipticBCH/FeasibleEllipticDistances.h"
-#include "../KARRI/Algorithms/KaRRi/EventSimulation.h"
+
+#include "../KARRI/Algorithms/KaRRi/SimulateOnlyRequests.h"
+
 #include "../KARRI/Algorithms/KaRRi/InputConfig.h"
 #include "../KARRI/Algorithms/KaRRi/LastStopSearches/SortedLastStopBucketsEnvironment.h"
 #include "../KARRI/Algorithms/KaRRi/LastStopSearches/UnsortedLastStopBucketsEnvironment.h"
@@ -603,16 +605,18 @@ int main(int argc, char* argv[])
         }
 
         // 1) run some requests to start the vehicles
-        int numberOfSimulatedRequests = 100;
-        int startTimeOfSimulatedRequest = 0;
-        int endTimeOfSimulatedRequest = 24 * 60 * 60; // midnight in secs
+        std::cout << "Simulate some initial requests to the system ..." << std::flush;
+        /* int numberOfSimulatedRequests = 100; */
+        /* int startTimeOfSimulatedRequest = 0; */
+        /* int endTimeOfSimulatedRequest = 24 * 60 * 60; // midnight in secs */
 
+        /* // TODO check how to create random requests */
         /* std::vector<karri::Request> simulatedRequests; */
         /* simulatedRequests.reserve(numberOfSimulatedRequests); */
 
         /* // generate random requests */
         /* std::mt19937 randomGenerator(2 + 42); */
-        /* std::uniform_int_distribution<> locationDistribution(0, psgInputGraph.numEdges() >> 1); */
+        /* std::uniform_int_distribution<> locationDistribution(0, vehicleInputGraph.numEdges() - 1); */
         /* std::uniform_int_distribution<> timeDistribution(startTimeOfSimulatedRequest, endTimeOfSimulatedRequest + 1); */
 
         /* for (int reqId = 0; reqId < numberOfSimulatedRequests; ++reqId) { */
@@ -624,15 +628,18 @@ int main(int argc, char* argv[])
         /*         1 // num of passenger */
         /*     }); */
         /* } */
+
         requests.resize(500);
 
         // Run simulation:
-        using EventSimulationImpl = karri::EventSimulation<InsertionFinderImpl, SystemStateUpdaterImpl, karri::RouteState>;
+        using EventSimulationImpl = karri::SimulateOnlyRequests<InsertionFinderImpl, SystemStateUpdaterImpl,
+            karri::RouteState>;
         EventSimulationImpl eventSimulation(fleet, requests, inputConfig.stopTime,
             insertionFinder, systemStateUpdater,
             routeState, true);
-
         eventSimulation.run();
+
+        std::cout << "done.\n";
 
         // 2) now the RideRAPTOR stuff
         // Read the station mapping file

@@ -291,8 +291,7 @@ public:
         // Copied from init()
         // Find pickups at existing stops for new request and initialize distances.
         const auto pickupsAtExistingStops = findPDLocsAtExistingStops<PICKUP>(requestState.pickups);
-        feasibleEllipticPickups.init(requestState.numPickups(),
-            pickupsAtExistingStops, inputGraph);
+        feasibleEllipticPickups.init(requestState.numPickups(), pickupsAtExistingStops, inputGraph);
 
         // ******************************
 
