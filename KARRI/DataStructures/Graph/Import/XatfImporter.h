@@ -44,6 +44,8 @@
 #include "../Attributes/TravelTimeAttribute.h"
 #include "../Attributes/XatfRoadCategoryAttribute.h"
 
+namespace karri {
+
 // An importer for reading graphs in XATF file format. First, the Graph class repeatedly calls
 // nextVertex to read the next vertex from disk and fetches various vertex attributes. Then it
 // repeatedly calls nextEdge to read the next edge from disk and fetches various edge attributes.
@@ -342,4 +344,5 @@ inline CapacityAttribute::Type XatfImporter::getValue<CapacityAttribute>() const
         return 0;
     else
         return std::round(9000.0 * NUM_LANES[cat] * FREE_FLOW_SPEED[cat] / (5 * FREE_FLOW_SPEED[cat] + 9 * VEHICLE_LENGTH));
+}
 }

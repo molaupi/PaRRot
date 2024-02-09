@@ -28,6 +28,8 @@
 #include <cassert>
 #include <vector>
 
+namespace karri {
+
 /// Stores upward distances from last stops of vehicles to vertices in buckets.
 /// Stores entries for idle vehicles and non-idle vehicles separately in order to
 /// sort them by distance to the vertex and arrival time at the vertex, respectively.
@@ -82,7 +84,8 @@ public:
             Bucket(entries.begin() + pos.start + pos.numIdleEntries, entries.begin() + pos.end) };
     }
 
-    Bucket getUnsortedBucketOf(const int v) const
+    // Returns full bucket in arbitrary order.
+    Bucket getBucketOf(const int v) const
     {
         assert(v >= 0);
         assert(v < bucketPositions.size());
@@ -281,3 +284,4 @@ private:
     std::vector<BucketPosition> bucketPositions;
     std::vector<BucketEntryT> entries;
 };
+}

@@ -51,7 +51,8 @@
 #include "../Algorithms/KaRRi/EllipticBCH/FeasibleEllipticDistances.h"
 #include "../Algorithms/KaRRi/EventSimulation.h"
 #include "../Algorithms/KaRRi/InputConfig.h"
-#include "../Algorithms/KaRRi/LastStopSearches/SortedLastStopBucketsEnvironment.h"
+#include "../Algorithms/KaRRi/LastStopSearches/FullSortedLastStopBucketsEnvironment.h"
+#include "../Algorithms/KaRRi/LastStopSearches/OnlyDistSortedLastStopBucketsEnvironment.h"
 #include "../Algorithms/KaRRi/LastStopSearches/UnsortedLastStopBucketsEnvironment.h"
 #include "../Algorithms/KaRRi/OrdinaryAssignments/OrdinaryAssignmentsFinder.h"
 #include "../Algorithms/KaRRi/PDDistanceQueries/PDDistances.h"
@@ -469,13 +470,14 @@ int main(int argc, char* argv[])
         // Otherwise, we use no-op last stop buckets.
 
 #if KARRI_PALS_STRATEGY == KARRI_COL || KARRI_PALS_STRATEGY == KARRI_IND || KARRI_DALS_STRATEGY == KARRI_COL || KARRI_DALS_STRATEGY == KARRI_IND
-
-        static constexpr bool LAST_STOP_SORTED_BUCKETS = KARRI_LAST_STOP_BCH_SORTED_BUCKETS;
-        using LastStopBucketsEnv = std::conditional_t<LAST_STOP_SORTED_BUCKETS,
-            SortedLastStopBucketsEnvironment<VehicleInputGraph, VehCHEnv>,
-            UnsortedLastStopBucketsEnvironment<VehicleInputGraph, VehCHEnv>>;
+#if KARRI_LAST_STOP_BCH_SORTING == KARRI_LAST_STOP_FULL_SORTED
+        using LastStopBucketsEnv = FullSortedLastStopBucketsEnvironment<VehicleInputGraph, VehCHEnv>;
+#elif KARRI_LAST_STOP_BCH_SORTING == KARRI_LAST_STOP_ONLY_DIST_SORTED
+        using LastStopBucketsEnv = OnlyDistSortedLastStopBucketsEnvironment<VehicleInputGraph, VehCHEnv>;
+#else
+        using LastStopBucketsEnv = UnsortedLastStopBucketsEnvironment<VehicleInputGraph, VehCHEnv>;
+#endif
         LastStopBucketsEnv lastStopBucketsEnv(vehicleInputGraph, *vehChEnv, routeState, reqState.stats().updateStats);
-
 #else
         using LastStopBucketsEnv = NoOpLastStopBucketsEnvironment;
         LastStopBucketsEnv lastStopBucketsEnv;

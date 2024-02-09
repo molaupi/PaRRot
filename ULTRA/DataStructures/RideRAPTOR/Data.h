@@ -235,9 +235,9 @@ public:
             vehicles.clear();
             requestState.reset();
 
-            // add the current stations point to the pickups && dropoffs
+            // add the current stations point to the pickups
             requestState.pickups.push_back({
-                INVALID_ID, // PdLoc ID
+                0, // PdLoc ID
                 edgeIdOfStation[station], // Location in road network
                 inputGraph.toPsgEdge(edgeIdOfStation[station]), // Location in passenger road network
                 0, // Walking time from origin to this pickup or
@@ -245,6 +245,8 @@ public:
                 INFTYKARRI, // Vehicle driving time from this pickup/dropoff to the origin/destination.
                 INFTYKARRI // Vehicle driving time from origin/destination to this pickup/dropoff.
             });
+
+            assert(requestState.numPickups() == 1);
 
             ellipticBchSearches.runForStation();
             relevantPdLocsFilter.filterOrdinary(vehicles);
@@ -289,7 +291,7 @@ public:
 
             // add the current stations point to the pickups && dropoffs
             requestState.pickups.emplace_back(
-                INVALID_ID, // PdLoc ID
+                0, // PdLoc ID
                 sourceEdge, // Location in road network
                 inputGraph.toPsgEdge(sourceEdge), // Location in passenger road network
                 travelTime, // Walking time from origin to this pickup or

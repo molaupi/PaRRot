@@ -538,28 +538,28 @@ public:
         return graph.get(EdgeId, edge);
     }
 
-    inline LatLng latLng(const int v) { return latLng(Vertex(v)); }
+    inline karri::LatLng latLng(const int v) { return latLng(Vertex(v)); }
 
-    inline LatLng latLng(const Vertex vertex)
+    inline karri::LatLng latLng(const Vertex vertex)
     {
         AssertMsg(graph.isVertex(vertex), vertex << " is not a valid vertex!");
         AssertMsg(graph.HasEdgeAttribute(Coordinates),
             "Missing graph attribute Coordinates");
 
         Geometry::Point& coordinate = graph.get(Coordinates, vertex);
-        return LatLng(coordinate.latitude, coordinate.longitude);
+        return karri::LatLng(coordinate.latitude, coordinate.longitude);
     }
 
-    inline LatLng latLng(const int v) const { return latLng(Vertex(v)); }
+    inline karri::LatLng latLng(const int v) const { return latLng(Vertex(v)); }
 
-    inline LatLng latLng(const Vertex vertex) const
+    inline karri::LatLng latLng(const Vertex vertex) const
     {
         AssertMsg(graph.isVertex(vertex), vertex << " is not a valid vertex!");
         AssertMsg(graph.HasEdgeAttribute(Coordinates),
             "Missing graph attribute Coordinates");
 
         Geometry::Point& coordinate = graph.get(Coordinates, vertex);
-        return LatLng(coordinate.latitude, coordinate.longitude);
+        return karri::LatLng(coordinate.latitude, coordinate.longitude);
     }
 
     inline std::pair<int, int> unpackingInfo(const int e)

@@ -1,6 +1,6 @@
 file(REMOVE_RECURSE
-  "CMakeFiles/RunP2PAlgo.dir/RunP2PAlgo.cc.o"
-  "CMakeFiles/RunP2PAlgo.dir/RunP2PAlgo.cc.o.d"
+  "CMakeFiles/RunP2PAlgo.dir/RunP2PAlgo.o"
+  "CMakeFiles/RunP2PAlgo.dir/RunP2PAlgo.o.d"
   "RunP2PAlgo"
   "RunP2PAlgo.pdb"
 )

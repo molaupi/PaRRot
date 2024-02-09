@@ -246,6 +246,8 @@ private:
 
         // Next event for this vehicle is the departure at this stop:
         vehicleEvents.increaseKey(vehId, reachedStop.depTime);
+        // TODO
+        // check here for the vehicle idle state
         systemStateUpdater.notifyStopStarted(fleet[vehId]);
 
         const auto time = timer.elapsed<std::chrono::nanoseconds>();

@@ -531,9 +531,11 @@ CMakeFiles/karri.dir/KaRRi.o: \
  /home/patrick/Documents/KIT/PARROT/KARRI/Launchers/../Algorithms/KaRRi/EventSimulation.h \
  /home/patrick/Documents/KIT/PARROT/KARRI/Launchers/../Algorithms/KaRRi/../../Tools/CommandLine/ProgressBar.h \
  /usr/lib/gcc/x86_64-linux-gnu/13/include/omp.h \
- /home/patrick/Documents/KIT/PARROT/KARRI/Launchers/../Algorithms/KaRRi/LastStopSearches/SortedLastStopBucketsEnvironment.h \
+ /home/patrick/Documents/KIT/PARROT/KARRI/Launchers/../Algorithms/KaRRi/LastStopSearches/FullSortedLastStopBucketsEnvironment.h \
  /home/patrick/Documents/KIT/PARROT/KARRI/Launchers/../Algorithms/KaRRi/LastStopSearches/../../Buckets/BucketEntry.h \
  /home/patrick/Documents/KIT/PARROT/KARRI/Launchers/../Algorithms/KaRRi/LastStopSearches/../../Buckets/LastStopBucketContainer.h \
+ /home/patrick/Documents/KIT/PARROT/KARRI/Launchers/../Algorithms/KaRRi/LastStopSearches/LastStopBucketsSortingType.h \
+ /home/patrick/Documents/KIT/PARROT/KARRI/Launchers/../Algorithms/KaRRi/LastStopSearches/OnlyDistSortedLastStopBucketsEnvironment.h \
  /home/patrick/Documents/KIT/PARROT/KARRI/Launchers/../Algorithms/KaRRi/LastStopSearches/UnsortedLastStopBucketsEnvironment.h \
  /home/patrick/Documents/KIT/PARROT/KARRI/Launchers/../Algorithms/KaRRi/OrdinaryAssignments/OrdinaryAssignmentsFinder.h \
  /home/patrick/Documents/KIT/PARROT/KARRI/Launchers/../Algorithms/KaRRi/OrdinaryAssignments/../PDDistanceQueries/PDDistances.h \
@@ -546,6 +548,16 @@ CMakeFiles/karri.dir/KaRRi.o: \
  /home/patrick/Documents/KIT/PARROT/KARRI/Launchers/../Algorithms/KaRRi/PbnsAssignments/VehicleLocator.h \
  /home/patrick/Documents/KIT/PARROT/KARRI/Launchers/../Algorithms/KaRRi/PbnsAssignments/../../CH/CHPathUnpacker.h \
  /home/patrick/Documents/KIT/PARROT/KARRI/Launchers/../Algorithms/KaRRi/RequestState/RelevantPDLocsFilter.h \
+ /home/patrick/Documents/KIT/PARROT/KARRI/Launchers/../Algorithms/KaRRi/RequestState/../../../../ULTRA/DataStructures/RideRAPTOR/Entities/InsertionInfo.h \
+ /home/patrick/Documents/KIT/PARROT/KARRI/Launchers/../Algorithms/KaRRi/RequestState/../../../../ULTRA/DataStructures/RideRAPTOR/Entities/../../../Helpers/Types.h \
+ /home/patrick/Documents/KIT/PARROT/KARRI/Launchers/../Algorithms/KaRRi/RequestState/../../../../ULTRA/DataStructures/RideRAPTOR/Entities/../../../Helpers/TaggedInteger.h \
+ /home/patrick/Documents/KIT/PARROT/KARRI/Launchers/../Algorithms/KaRRi/RequestState/../../../../ULTRA/DataStructures/RideRAPTOR/Entities/../../../Helpers/Assert.h \
+ /home/patrick/Documents/KIT/PARROT/KARRI/Launchers/../Algorithms/KaRRi/RequestState/../../../../ULTRA/DataStructures/RideRAPTOR/Entities/../../../Helpers/HighlightText.h \
+ /home/patrick/Documents/KIT/PARROT/KARRI/Launchers/../Algorithms/KaRRi/RequestState/../../../../ULTRA/DataStructures/RideRAPTOR/Entities/../../../Helpers/Meta.h \
+ /usr/include/c++/13/cxxabi.h \
+ /usr/include/x86_64-linux-gnu/c++/13/bits/cxxabi_tweaks.h \
+ /home/patrick/Documents/KIT/PARROT/KARRI/Launchers/../Algorithms/KaRRi/RequestState/../../../../ULTRA/DataStructures/RideRAPTOR/Entities/../../../Helpers/String/String.h \
+ /home/patrick/Documents/KIT/PARROT/KARRI/Launchers/../Algorithms/KaRRi/RequestState/../../../../ULTRA/DataStructures/RideRAPTOR/Entities/../../../Helpers/String/../Ranges/ReverseRange.h \
  /home/patrick/Documents/KIT/PARROT/KARRI/Launchers/../Algorithms/KaRRi/RequestState/RequestStateInitializer.h \
  /home/patrick/Documents/KIT/PARROT/KARRI/Launchers/../Algorithms/KaRRi/RequestState/VehicleToPDLocQuery.h \
  /home/patrick/Documents/KIT/PARROT/KARRI/Launchers/../Algorithms/KaRRi/RequestState/../../../DataStructures/Containers/FastResetFlagArray.h \

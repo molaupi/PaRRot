@@ -688,9 +688,11 @@ CMakeFiles/rideRAPTOR.dir/RunRideRaptor.o: \
  /home/patrick/Documents/KIT/PARROT/Runners/../KARRI/Algorithms/KaRRi/SimulateOnlyRequests.h \
  /home/patrick/Documents/KIT/PARROT/Runners/../KARRI/Algorithms/KaRRi/../../Tools/CommandLine/ProgressBar.h \
  /usr/lib/gcc/x86_64-linux-gnu/13/include/omp.h \
- /home/patrick/Documents/KIT/PARROT/Runners/../KARRI/Algorithms/KaRRi/LastStopSearches/SortedLastStopBucketsEnvironment.h \
+ /home/patrick/Documents/KIT/PARROT/Runners/../KARRI/Algorithms/KaRRi/LastStopSearches/FullSortedLastStopBucketsEnvironment.h \
  /home/patrick/Documents/KIT/PARROT/Runners/../KARRI/Algorithms/KaRRi/LastStopSearches/../../Buckets/BucketEntry.h \
  /home/patrick/Documents/KIT/PARROT/Runners/../KARRI/Algorithms/KaRRi/LastStopSearches/../../Buckets/LastStopBucketContainer.h \
+ /home/patrick/Documents/KIT/PARROT/Runners/../KARRI/Algorithms/KaRRi/LastStopSearches/LastStopBucketsSortingType.h \
+ /home/patrick/Documents/KIT/PARROT/Runners/../KARRI/Algorithms/KaRRi/LastStopSearches/OnlyDistSortedLastStopBucketsEnvironment.h \
  /home/patrick/Documents/KIT/PARROT/Runners/../KARRI/Algorithms/KaRRi/LastStopSearches/UnsortedLastStopBucketsEnvironment.h \
  /home/patrick/Documents/KIT/PARROT/Runners/../KARRI/Algorithms/KaRRi/OrdinaryAssignments/OrdinaryAssignmentsFinder.h \
  /home/patrick/Documents/KIT/PARROT/Runners/../KARRI/Algorithms/KaRRi/OrdinaryAssignments/../PDDistanceQueries/PDDistances.h \

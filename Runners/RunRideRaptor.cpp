@@ -22,7 +22,8 @@
 #include "../KARRI/Algorithms/KaRRi/SimulateOnlyRequests.h"
 
 #include "../KARRI/Algorithms/KaRRi/InputConfig.h"
-#include "../KARRI/Algorithms/KaRRi/LastStopSearches/SortedLastStopBucketsEnvironment.h"
+#include "../KARRI/Algorithms/KaRRi/LastStopSearches/FullSortedLastStopBucketsEnvironment.h"
+#include "../KARRI/Algorithms/KaRRi/LastStopSearches/OnlyDistSortedLastStopBucketsEnvironment.h"
 #include "../KARRI/Algorithms/KaRRi/LastStopSearches/UnsortedLastStopBucketsEnvironment.h"
 #include "../KARRI/Algorithms/KaRRi/OrdinaryAssignments/OrdinaryAssignmentsFinder.h"
 #include "../KARRI/Algorithms/KaRRi/PDDistanceQueries/PDDistances.h"
@@ -180,7 +181,7 @@ int main(int argc, char* argv[])
 
         // Read the vehicle network from file.
         std::cout << "Reading vehicle network from file... " << std::flush;
-        using VehicleVertexAttributes = karri::VertexAttrs<LatLngAttribute, OsmNodeIdAttribute>;
+        using VehicleVertexAttributes = karri::VertexAttrs<karri::LatLngAttribute, OsmNodeIdAttribute>;
         using VehicleEdgeAttributes = karri::EdgeAttrs<EdgeIdAttribute, EdgeTailAttribute, FreeFlowSpeedAttribute,
             TravelTimeAttribute, CarEdgeToPsgEdgeAttribute,
             OsmRoadCategoryAttribute>;
@@ -219,7 +220,7 @@ int main(int argc, char* argv[])
 
         // Read the passenger network from file.
         std::cout << "Reading passenger network from file... " << std::flush;
-        using PsgVertexAttributes = karri::VertexAttrs<LatLngAttribute, OsmNodeIdAttribute>;
+        using PsgVertexAttributes = karri::VertexAttrs<karri::LatLngAttribute, OsmNodeIdAttribute>;
         using PsgEdgeAttributes = karri::EdgeAttrs<EdgeIdAttribute, EdgeTailAttribute, PsgEdgeToCarEdgeAttribute,
             TravelTimeAttribute>;
         using PsgInputGraph = karri::StaticGraph<PsgVertexAttributes, PsgEdgeAttributes>;
@@ -502,12 +503,14 @@ int main(int argc, char* argv[])
 
 #if KARRI_PALS_STRATEGY == KARRI_COL || KARRI_PALS_STRATEGY == KARRI_IND || KARRI_DALS_STRATEGY == KARRI_COL || KARRI_DALS_STRATEGY == KARRI_IND
 
-        static constexpr bool LAST_STOP_SORTED_BUCKETS = KARRI_LAST_STOP_BCH_SORTED_BUCKETS;
-        using LastStopBucketsEnv = std::conditional_t<LAST_STOP_SORTED_BUCKETS,
-            karri::SortedLastStopBucketsEnvironment<VehicleInputGraph, VehCHEnv>,
-            karri::UnsortedLastStopBucketsEnvironment<VehicleInputGraph, VehCHEnv>>;
+#if KARRI_LAST_STOP_BCH_SORTING == KARRI_LAST_STOP_FULL_SORTED
+        using LastStopBucketsEnv = karri::FullSortedLastStopBucketsEnvironment<VehicleInputGraph, VehCHEnv>;
+#elif KARRI_LAST_STOP_BCH_SORTING == KARRI_LAST_STOP_ONLY_DIST_SORTED
+        using LastStopBucketsEnv = karri::OnlyDistSortedLastStopBucketsEnvironment<VehicleInputGraph, VehCHEnv>;
+#else
+        using LastStopBucketsEnv = karri::UnsortedLastStopBucketsEnvironment<VehicleInputGraph, VehCHEnv>;
+#endif
         LastStopBucketsEnv lastStopBucketsEnv(vehicleInputGraph, *vehChEnv, routeState, reqState.stats().updateStats);
-
 #else
         using LastStopBucketsEnv = karri::NoOpLastStopBucketsEnvironment;
         LastStopBucketsEnv lastStopBucketsEnv;
@@ -629,7 +632,7 @@ int main(int argc, char* argv[])
         /*     }); */
         /* } */
 
-        requests.resize(500);
+        requests.resize(100);
 
         // Run simulation:
         using EventSimulationImpl = karri::SimulateOnlyRequests<InsertionFinderImpl, SystemStateUpdaterImpl,

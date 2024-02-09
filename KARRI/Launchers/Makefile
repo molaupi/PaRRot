@@ -57,10 +57,10 @@ RM = /usr/bin/cmake -E rm -f
 EQUALS = =
 
 # The top-level source directory on which CMake was run.
-CMAKE_SOURCE_DIR = /home/patrick/Documents/KIT/PARROT/KARRI
+CMAKE_SOURCE_DIR = /home/patrick/Documents/KIT/PARROT/KARRI/Launchers
 
 # The top-level build directory on which CMake was run.
-CMAKE_BINARY_DIR = /home/patrick/Documents/KIT/PARROT/KARRI
+CMAKE_BINARY_DIR = /home/patrick/Documents/KIT/PARROT/KARRI/Launchers
 
 #=============================================================================
 # Targets provided globally by CMake.
@@ -87,14 +87,14 @@ rebuild_cache/fast: rebuild_cache
 
 # The main all target
 all: cmake_check_build_system
-	cd /home/patrick/Documents/KIT/PARROT/KARRI && $(CMAKE_COMMAND) -E cmake_progress_start /home/patrick/Documents/KIT/PARROT/KARRI/CMakeFiles /home/patrick/Documents/KIT/PARROT/KARRI/Launchers//CMakeFiles/progress.marks
-	cd /home/patrick/Documents/KIT/PARROT/KARRI && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 Launchers/all
-	$(CMAKE_COMMAND) -E cmake_progress_start /home/patrick/Documents/KIT/PARROT/KARRI/CMakeFiles 0
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/patrick/Documents/KIT/PARROT/KARRI/Launchers/CMakeFiles /home/patrick/Documents/KIT/PARROT/KARRI/Launchers//CMakeFiles/progress.marks
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 all
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/patrick/Documents/KIT/PARROT/KARRI/Launchers/CMakeFiles 0
 .PHONY : all
 
 # The main clean target
 clean:
-	cd /home/patrick/Documents/KIT/PARROT/KARRI && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 Launchers/clean
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 clean
 .PHONY : clean
 
 # The main clean target
@@ -103,94 +103,74 @@ clean/fast: clean
 
 # Prepare targets for installation.
 preinstall: all
-	cd /home/patrick/Documents/KIT/PARROT/KARRI && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 Launchers/preinstall
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 preinstall
 .PHONY : preinstall
 
 # Prepare targets for installation.
 preinstall/fast:
-	cd /home/patrick/Documents/KIT/PARROT/KARRI && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 Launchers/preinstall
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 preinstall
 .PHONY : preinstall/fast
 
 # clear depends
 depend:
-	cd /home/patrick/Documents/KIT/PARROT/KARRI && $(CMAKE_COMMAND) -S$(CMAKE_SOURCE_DIR) -B$(CMAKE_BINARY_DIR) --check-build-system CMakeFiles/Makefile.cmake 1
+	$(CMAKE_COMMAND) -S$(CMAKE_SOURCE_DIR) -B$(CMAKE_BINARY_DIR) --check-build-system CMakeFiles/Makefile.cmake 1
 .PHONY : depend
 
-# Convenience name for target.
-Launchers/CMakeFiles/RunP2PAlgo.dir/rule:
-	cd /home/patrick/Documents/KIT/PARROT/KARRI && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 Launchers/CMakeFiles/RunP2PAlgo.dir/rule
-.PHONY : Launchers/CMakeFiles/RunP2PAlgo.dir/rule
+#=============================================================================
+# Target rules for targets named RunP2PAlgo
 
-# Convenience name for target.
-RunP2PAlgo: Launchers/CMakeFiles/RunP2PAlgo.dir/rule
+# Build rule for target.
+RunP2PAlgo: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 RunP2PAlgo
 .PHONY : RunP2PAlgo
 
 # fast build rule for target.
 RunP2PAlgo/fast:
-	cd /home/patrick/Documents/KIT/PARROT/KARRI && $(MAKE) $(MAKESILENT) -f Launchers/CMakeFiles/RunP2PAlgo.dir/build.make Launchers/CMakeFiles/RunP2PAlgo.dir/build
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/RunP2PAlgo.dir/build.make CMakeFiles/RunP2PAlgo.dir/build
 .PHONY : RunP2PAlgo/fast
 
-# Convenience name for target.
-Launchers/CMakeFiles/karri.dir/rule:
-	cd /home/patrick/Documents/KIT/PARROT/KARRI && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 Launchers/CMakeFiles/karri.dir/rule
-.PHONY : Launchers/CMakeFiles/karri.dir/rule
+#=============================================================================
+# Target rules for targets named karri
 
-# Convenience name for target.
-karri: Launchers/CMakeFiles/karri.dir/rule
+# Build rule for target.
+karri: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 karri
 .PHONY : karri
 
 # fast build rule for target.
 karri/fast:
-	cd /home/patrick/Documents/KIT/PARROT/KARRI && $(MAKE) $(MAKESILENT) -f Launchers/CMakeFiles/karri.dir/build.make Launchers/CMakeFiles/karri.dir/build
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/karri.dir/build.make CMakeFiles/karri.dir/build
 .PHONY : karri/fast
 
-KaRRi.o: KaRRi.cpp.o
+# target to build an object file
+KaRRi.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/karri.dir/build.make CMakeFiles/karri.dir/KaRRi.o
 .PHONY : KaRRi.o
 
-# target to build an object file
-KaRRi.cpp.o:
-	cd /home/patrick/Documents/KIT/PARROT/KARRI && $(MAKE) $(MAKESILENT) -f Launchers/CMakeFiles/karri.dir/build.make Launchers/CMakeFiles/karri.dir/KaRRi.cpp.o
-.PHONY : KaRRi.cpp.o
-
-KaRRi.i: KaRRi.cpp.i
+# target to preprocess a source file
+KaRRi.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/karri.dir/build.make CMakeFiles/karri.dir/KaRRi.i
 .PHONY : KaRRi.i
 
-# target to preprocess a source file
-KaRRi.cpp.i:
-	cd /home/patrick/Documents/KIT/PARROT/KARRI && $(MAKE) $(MAKESILENT) -f Launchers/CMakeFiles/karri.dir/build.make Launchers/CMakeFiles/karri.dir/KaRRi.cpp.i
-.PHONY : KaRRi.cpp.i
-
-KaRRi.s: KaRRi.cpp.s
+# target to generate assembly for a file
+KaRRi.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/karri.dir/build.make CMakeFiles/karri.dir/KaRRi.s
 .PHONY : KaRRi.s
 
-# target to generate assembly for a file
-KaRRi.cpp.s:
-	cd /home/patrick/Documents/KIT/PARROT/KARRI && $(MAKE) $(MAKESILENT) -f Launchers/CMakeFiles/karri.dir/build.make Launchers/CMakeFiles/karri.dir/KaRRi.cpp.s
-.PHONY : KaRRi.cpp.s
-
-RunP2PAlgo.o: RunP2PAlgo.cc.o
+# target to build an object file
+RunP2PAlgo.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/RunP2PAlgo.dir/build.make CMakeFiles/RunP2PAlgo.dir/RunP2PAlgo.o
 .PHONY : RunP2PAlgo.o
 
-# target to build an object file
-RunP2PAlgo.cc.o:
-	cd /home/patrick/Documents/KIT/PARROT/KARRI && $(MAKE) $(MAKESILENT) -f Launchers/CMakeFiles/RunP2PAlgo.dir/build.make Launchers/CMakeFiles/RunP2PAlgo.dir/RunP2PAlgo.cc.o
-.PHONY : RunP2PAlgo.cc.o
-
-RunP2PAlgo.i: RunP2PAlgo.cc.i
+# target to preprocess a source file
+RunP2PAlgo.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/RunP2PAlgo.dir/build.make CMakeFiles/RunP2PAlgo.dir/RunP2PAlgo.i
 .PHONY : RunP2PAlgo.i
 
-# target to preprocess a source file
-RunP2PAlgo.cc.i:
-	cd /home/patrick/Documents/KIT/PARROT/KARRI && $(MAKE) $(MAKESILENT) -f Launchers/CMakeFiles/RunP2PAlgo.dir/build.make Launchers/CMakeFiles/RunP2PAlgo.dir/RunP2PAlgo.cc.i
-.PHONY : RunP2PAlgo.cc.i
-
-RunP2PAlgo.s: RunP2PAlgo.cc.s
-.PHONY : RunP2PAlgo.s
-
 # target to generate assembly for a file
-RunP2PAlgo.cc.s:
-	cd /home/patrick/Documents/KIT/PARROT/KARRI && $(MAKE) $(MAKESILENT) -f Launchers/CMakeFiles/RunP2PAlgo.dir/build.make Launchers/CMakeFiles/RunP2PAlgo.dir/RunP2PAlgo.cc.s
-.PHONY : RunP2PAlgo.cc.s
+RunP2PAlgo.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/RunP2PAlgo.dir/build.make CMakeFiles/RunP2PAlgo.dir/RunP2PAlgo.s
+.PHONY : RunP2PAlgo.s
 
 # Help Target
 help:
@@ -219,6 +199,6 @@ help:
 # No rule that depends on this can have commands that come from listfiles
 # because they might be regenerated.
 cmake_check_build_system:
-	cd /home/patrick/Documents/KIT/PARROT/KARRI && $(CMAKE_COMMAND) -S$(CMAKE_SOURCE_DIR) -B$(CMAKE_BINARY_DIR) --check-build-system CMakeFiles/Makefile.cmake 0
+	$(CMAKE_COMMAND) -S$(CMAKE_SOURCE_DIR) -B$(CMAKE_BINARY_DIR) --check-build-system CMakeFiles/Makefile.cmake 0
 .PHONY : cmake_check_build_system
 

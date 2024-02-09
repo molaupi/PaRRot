@@ -1,6 +1,6 @@
 file(REMOVE_RECURSE
-  "CMakeFiles/karri.dir/KaRRi.cpp.o"
-  "CMakeFiles/karri.dir/KaRRi.cpp.o.d"
+  "CMakeFiles/karri.dir/KaRRi.o"
+  "CMakeFiles/karri.dir/KaRRi.o.d"
   "karri"
   "karri.pdb"
 )

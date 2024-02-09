@@ -104,6 +104,8 @@ private:
     {
         requestStateInitializer.initializeRequestState(req);
 
+        /* std::cout << reqState.originalRequest.requestTime << std::endl; */
+
         // Initialize components according to new request state:
         ellipticBchSearches.init();
         pdDistanceSearches.init();

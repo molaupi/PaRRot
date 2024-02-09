@@ -365,7 +365,7 @@ private:
 
         assert(std::all_of(
             rel.relevantSpots.begin(), rel.relevantSpots.end(), [&](const auto& h) {
-                return h.distToPDLoc < INFTY && h.distFromPDLocToNextStop < INFTY;
+                return h.distToPDLoc < INFTYKARRI && h.distFromPDLocToNextStop < INFTYKARRI;
             }));
     }
 

@@ -18,7 +18,9 @@ CMakeFiles/rideRAPTOR.dir/RunRideRaptor.o: RunRideRaptor.cpp \
   /home/patrick/Documents/KIT/PARROT/KARRI/Algorithms/KaRRi/EllipticBCH/FeasibleEllipticDistances.h \
   /home/patrick/Documents/KIT/PARROT/KARRI/Algorithms/Buckets/BucketEntry.h \
   /home/patrick/Documents/KIT/PARROT/KARRI/Algorithms/Buckets/LastStopBucketContainer.h \
-  /home/patrick/Documents/KIT/PARROT/KARRI/Algorithms/KaRRi/LastStopSearches/SortedLastStopBucketsEnvironment.h \
+  /home/patrick/Documents/KIT/PARROT/KARRI/Algorithms/KaRRi/LastStopSearches/FullSortedLastStopBucketsEnvironment.h \
+  /home/patrick/Documents/KIT/PARROT/KARRI/Algorithms/KaRRi/LastStopSearches/LastStopBucketsSortingType.h \
+  /home/patrick/Documents/KIT/PARROT/KARRI/Algorithms/KaRRi/LastStopSearches/OnlyDistSortedLastStopBucketsEnvironment.h \
   /home/patrick/Documents/KIT/PARROT/KARRI/Algorithms/KaRRi/LastStopSearches/UnsortedLastStopBucketsEnvironment.h \
   /home/patrick/Documents/KIT/PARROT/KARRI/Algorithms/KaRRi/PDDistanceQueries/PDDistances.h \
   /home/patrick/Documents/KIT/PARROT/KARRI/Algorithms/KaRRi/OrdinaryAssignments/OrdinaryAssignmentsFinder.h \
@@ -1146,6 +1148,10 @@ CMakeFiles/rideRAPTOR.dir/RunRideRaptor.o: RunRideRaptor.cpp \
 
 /usr/include/x86_64-linux-gnu/bits/atomic_wide_counter.h:
 
+/usr/include/x86_64-linux-gnu/asm/types.h:
+
+/usr/include/x86_64-linux-gnu/asm/posix_types_64.h:
+
 /usr/include/boost/core/allocator_access.hpp:
 
 /usr/include/boost/container_hash/detail/float_functions.hpp:
@@ -1188,8 +1194,6 @@ CMakeFiles/rideRAPTOR.dir/RunRideRaptor.o: RunRideRaptor.cpp \
 
 /home/patrick/Documents/KIT/PARROT/ULTRA/Algorithms/CH/Preprocessing/CHData.h:
 
-/home/patrick/Documents/KIT/PARROT/KARRI/Tools/Workarounds.h:
-
 /usr/include/boost/config/detail/select_stdlib_config.hpp:
 
 /usr/lib/gcc/x86_64-linux-gnu/13/include/omp.h:
@@ -1215,6 +1219,10 @@ CMakeFiles/rideRAPTOR.dir/RunRideRaptor.o: RunRideRaptor.cpp \
 /usr/include/c++/13/bits/ptr_traits.h:
 
 /usr/include/linux/posix_types.h:
+
+/home/patrick/Documents/KIT/PARROT/ULTRA/DataStructures/Geometry/Metric.h:
+
+/usr/include/stdc-predef.h:
 
 /usr/include/boost/config/helper_macros.hpp:
 
@@ -1275,10 +1283,6 @@ CMakeFiles/rideRAPTOR.dir/RunRideRaptor.o: RunRideRaptor.cpp \
 /usr/include/c++/13/bits/concept_check.h:
 
 /usr/include/boost/align/alignment_of.hpp:
-
-/usr/include/boost/detail/container_fwd.hpp:
-
-/home/patrick/Documents/KIT/PARROT/KARRI/Algorithms/KaRRi/Stats/PerformanceStats.h:
 
 /home/patrick/Documents/KIT/PARROT/KARRI/Algorithms/KaRRi/Stats/OsmRoadCategoryStats.h:
 
@@ -1386,6 +1390,12 @@ CMakeFiles/rideRAPTOR.dir/RunRideRaptor.o: RunRideRaptor.cpp \
 
 /usr/include/c++/13/bits/postypes.h:
 
+/usr/lib/gcc/x86_64-linux-gnu/13/include/stddef.h:
+
+/home/patrick/Documents/KIT/PARROT/KARRI/DataStructures/Utilities/IteratorRange.h:
+
+/home/patrick/Documents/KIT/PARROT/KARRI/DataStructures/Graph/Attributes/EdgeTailAttribute.h:
+
 /usr/lib/gcc/x86_64-linux-gnu/13/include/xopintrin.h:
 
 /home/patrick/Documents/KIT/PARROT/ULTRA/Helpers/Ranges/IndexRange.h:
@@ -1397,6 +1407,24 @@ CMakeFiles/rideRAPTOR.dir/RunRideRaptor.o: RunRideRaptor.cpp \
 /home/patrick/Documents/KIT/PARROT/ULTRA/Helpers/Helpers.h:
 
 /home/patrick/Documents/KIT/PARROT/ULTRA/Helpers/ConstructorTags.h:
+
+/home/patrick/Documents/KIT/PARROT/KARRI/Algorithms/KaRRi/AssignmentCostFunctions/TimeIsMoneyCostFunction.h:
+
+/home/patrick/Documents/KIT/PARROT/KARRI/Algorithms/KaRRi/AssignmentFinder.h:
+
+/home/patrick/Documents/KIT/PARROT/ULTRA/Helpers/Vector/Vector.h:
+
+/home/patrick/Documents/KIT/PARROT/ULTRA/Helpers/IO/File.h:
+
+/usr/include/x86_64-linux-gnu/bits/mathcalls-helper-functions.h:
+
+/home/patrick/Documents/KIT/PARROT/KARRI/Algorithms/KaRRi/BaseObjects/Vehicle.h:
+
+/home/patrick/Documents/KIT/PARROT/KARRI/Algorithms/Buckets/DynamicBucketContainer.h:
+
+/usr/include/boost/dynamic_bitset/detail/lowest_bit.hpp:
+
+/usr/include/c++/13/bits/stl_raw_storage_iter.h:
 
 /home/patrick/Documents/KIT/PARROT/KARRI/Algorithms/KaRRi/SystemStateUpdater.h:
 
@@ -1430,12 +1458,6 @@ CMakeFiles/rideRAPTOR.dir/RunRideRaptor.o: RunRideRaptor.cpp \
 
 RunRideRaptor.cpp:
 
-/usr/include/x86_64-linux-gnu/asm/types.h:
-
-/usr/include/boost/align/aligned_allocator_forward.hpp:
-
-/home/patrick/Documents/KIT/PARROT/KARRI/DataStructures/Geometry/LatLng.h:
-
 /home/patrick/Documents/KIT/PARROT/KARRI/Algorithms/KaRRi/PDDistanceQueries/PDDistances.h:
 
 /usr/include/asm-generic/types.h:
@@ -1448,9 +1470,13 @@ RunRideRaptor.cpp:
 
 /usr/include/strings.h:
 
-/usr/include/boost/current_function.hpp:
-
 /home/patrick/Documents/KIT/PARROT/KARRI/Algorithms/KaRRi/PbnsAssignments/PBNSAssignmentsFinder.h:
+
+/home/patrick/Documents/KIT/PARROT/ULTRA/Shell/ParameterizedCommand.h:
+
+/home/patrick/Documents/KIT/PARROT/KARRI/Algorithms/Buckets/LastStopBucketContainer.h:
+
+/home/patrick/Documents/KIT/PARROT/KARRI/Algorithms/CH/CHPathUnpacker.h:
 
 /usr/include/c++/13/bits/hashtable_policy.h:
 
@@ -1462,32 +1488,6 @@ RunRideRaptor.cpp:
 
 /usr/include/string.h:
 
-/usr/include/boost/config/no_tr1/cmath.hpp:
-
-/usr/include/c++/13/stack:
-
-/usr/include/boost/move/algorithm.hpp:
-
-/usr/include/boost/config.hpp:
-
-/usr/include/x86_64-linux-gnu/bits/types/struct_statx.h:
-
-/usr/include/c++/13/bits/stl_multimap.h:
-
-/usr/include/boost/align/detail/throw_exception.hpp:
-
-/home/patrick/Documents/KIT/PARROT/KARRI/Algorithms/KaRRi/LastStopSearches/UnsortedLastStopBucketsEnvironment.h:
-
-/home/patrick/Documents/KIT/PARROT/KARRI/DataStructures/Containers/TimestampedVector.h:
-
-/home/patrick/Documents/KIT/PARROT/KARRI/Algorithms/KaRRi/LastStopSearches/ClosestPDLocToLastStopBCHQuery.h:
-
-/home/patrick/Documents/KIT/PARROT/KARRI/Algorithms/KaRRi/PathTracker.h:
-
-/home/patrick/Documents/KIT/PARROT/KARRI/DataStructures/Graph/Attributes/EdgeTailAttribute.h:
-
-/home/patrick/Documents/KIT/PARROT/ULTRA/DataStructures/GTFS/Entities/Trip.h:
-
 /home/patrick/Documents/KIT/PARROT/ULTRA/Helpers/FileSystem/FileSystem.h:
 
 /usr/lib/gcc/x86_64-linux-gnu/13/include/avx512vpopcntdqintrin.h:
@@ -1495,6 +1495,24 @@ RunRideRaptor.cpp:
 /usr/include/c++/13/bits/codecvt.h:
 
 /usr/include/c++/13/bits/stl_tree.h:
+
+/home/patrick/Documents/KIT/PARROT/ULTRA/DataStructures/GTFS/Entities/Trip.h:
+
+/home/patrick/Documents/KIT/PARROT/KARRI/DataStructures/Containers/TimestampedVector.h:
+
+/home/patrick/Documents/KIT/PARROT/KARRI/Algorithms/KaRRi/LastStopSearches/ClosestPDLocToLastStopBCHQuery.h:
+
+/home/patrick/Documents/KIT/PARROT/KARRI/Algorithms/KaRRi/PathTracker.h:
+
+/home/patrick/Documents/KIT/PARROT/ULTRA/Algorithms/CH/Preprocessing/StopCriterion.h:
+
+/usr/include/x86_64-linux-gnu/bits/struct_rwlock.h:
+
+/usr/include/boost/container_hash/hash.hpp:
+
+/usr/include/c++/13/bits/stl_tempbuf.h:
+
+/home/patrick/Documents/KIT/PARROT/ULTRA/Helpers/Ranges/SparseRange.h:
 
 /usr/include/boost/move/detail/workaround.hpp:
 
@@ -1507,22 +1525,6 @@ RunRideRaptor.cpp:
 /usr/include/c++/13/bits/stl_pair.h:
 
 /home/patrick/Documents/KIT/PARROT/KARRI/Algorithms/Buckets/SortedBucketContainer.h:
-
-/usr/include/x86_64-linux-gnu/bits/struct_rwlock.h:
-
-/usr/include/boost/container_hash/hash.hpp:
-
-/home/patrick/Documents/KIT/PARROT/ULTRA/Algorithms/CH/Preprocessing/StopCriterion.h:
-
-/usr/include/c++/13/bits/stl_tempbuf.h:
-
-/home/patrick/Documents/KIT/PARROT/KARRI/Algorithms/KaRRi/AssignmentFinder.h:
-
-/home/patrick/Documents/KIT/PARROT/ULTRA/Helpers/Vector/Vector.h:
-
-/home/patrick/Documents/KIT/PARROT/ULTRA/Helpers/IO/File.h:
-
-/home/patrick/Documents/KIT/PARROT/KARRI/Algorithms/KaRRi/AssignmentCostFunctions/TimeIsMoneyCostFunction.h:
 
 /usr/lib/gcc/x86_64-linux-gnu/13/include/avxneconvertintrin.h:
 
@@ -1596,31 +1598,11 @@ RunRideRaptor.cpp:
 
 /home/patrick/Documents/KIT/PARROT/KARRI/Algorithms/KaRRi/LastStopSearches/LabelBucketContainer.h:
 
-/home/patrick/Documents/KIT/PARROT/KARRI/Algorithms/KaRRi/DalsAssignments/CollectiveBCHStrategy.h:
+/home/patrick/Documents/KIT/PARROT/KARRI/DataStructures/Geometry/LatLng.h:
 
-/usr/lib/gcc/x86_64-linux-gnu/13/include/keylockerintrin.h:
+/usr/include/boost/align/aligned_allocator_forward.hpp:
 
-/usr/include/boost/throw_exception.hpp:
-
-/home/patrick/Documents/KIT/PARROT/ULTRA/DataStructures/Attributes/AttributeHandle.h:
-
-/home/patrick/Documents/KIT/PARROT/KARRI/Algorithms/KaRRi/RequestState/VehicleToPDLocQuery.h:
-
-/usr/include/c++/13/condition_variable:
-
-/usr/include/asm-generic/ioctls.h:
-
-/usr/include/boost/dynamic_bitset_fwd.hpp:
-
-/usr/lib/gcc/x86_64-linux-gnu/13/include/xsaveoptintrin.h:
-
-/home/patrick/Documents/KIT/PARROT/ULTRA/DataStructures/Geometry/Rectangle.h:
-
-/usr/include/x86_64-linux-gnu/bits/time64.h:
-
-/usr/include/c++/13/ext/type_traits.h:
-
-/home/patrick/Documents/KIT/PARROT/ULTRA/Helpers/Ranges/SparseRange.h:
+/home/patrick/Documents/KIT/PARROT/KARRI/Tools/Workarounds.h:
 
 /home/patrick/Documents/KIT/PARROT/KARRI/Algorithms/KaRRi/EllipticBCH/EllipticBucketsEnvironment.h:
 
@@ -1630,6 +1612,38 @@ RunRideRaptor.cpp:
 
 /usr/include/c++/13/bits/hashtable.h:
 
+/home/patrick/Documents/KIT/PARROT/ULTRA/DataStructures/Attributes/AttributeHandle.h:
+
+/home/patrick/Documents/KIT/PARROT/KARRI/Algorithms/KaRRi/DalsAssignments/CollectiveBCHStrategy.h:
+
+/usr/lib/gcc/x86_64-linux-gnu/13/include/keylockerintrin.h:
+
+/usr/include/boost/throw_exception.hpp:
+
+/usr/include/c++/13/cmath:
+
+/home/patrick/Documents/KIT/PARROT/KARRI/Algorithms/KaRRi/LastStopSearches/LastStopBucketsSortingType.h:
+
+/usr/include/c++/13/bits/stl_numeric.h:
+
+/home/patrick/Documents/KIT/PARROT/KARRI/Algorithms/KaRRi/RequestState/VehicleToPDLocQuery.h:
+
+/usr/include/c++/13/condition_variable:
+
+/usr/lib/gcc/x86_64-linux-gnu/13/include/xsaveoptintrin.h:
+
+/home/patrick/Documents/KIT/PARROT/ULTRA/DataStructures/Geometry/Rectangle.h:
+
+/usr/include/x86_64-linux-gnu/bits/time64.h:
+
+/usr/include/c++/13/ext/type_traits.h:
+
+/usr/include/asm-generic/ioctls.h:
+
+/usr/include/boost/dynamic_bitset_fwd.hpp:
+
+/home/patrick/Documents/KIT/PARROT/KARRI/Algorithms/KaRRi/LastStopSearches/OnlyDistSortedLastStopBucketsEnvironment.h:
+
 /home/patrick/Documents/KIT/PARROT/ULTRA/DataStructures/RideRAPTOR/Data.h:
 
 /usr/include/c++/13/bits/uses_allocator.h:
@@ -1638,23 +1652,9 @@ RunRideRaptor.cpp:
 
 /home/patrick/Documents/KIT/PARROT/KARRI/Algorithms/KaRRi/PalsAssignments/CollectiveBCHStrategy.h:
 
-/home/patrick/Documents/KIT/PARROT/KARRI/Algorithms/Buckets/LastStopBucketContainer.h:
+/home/patrick/Documents/KIT/PARROT/KARRI/Algorithms/KaRRi/LastStopSearches/UnsortedLastStopBucketsEnvironment.h:
 
-/home/patrick/Documents/KIT/PARROT/KARRI/Algorithms/CH/CHPathUnpacker.h:
-
-/home/patrick/Documents/KIT/PARROT/ULTRA/Shell/ParameterizedCommand.h:
-
-/home/patrick/Documents/KIT/PARROT/ULTRA/DataStructures/Geometry/Metric.h:
-
-/usr/include/stdc-predef.h:
-
-/usr/include/c++/13/functional:
-
-/usr/include/x86_64-linux-gnu/sys/stat.h:
-
-/home/patrick/Documents/KIT/PARROT/ULTRA/Helpers/String/Enumeration.h:
-
-/usr/include/c++/13/bits/hash_bytes.h:
+/usr/include/boost/align/detail/throw_exception.hpp:
 
 /home/patrick/Documents/KIT/PARROT/KARRI/Algorithms/KaRRi/PbnsAssignments/CurVehLocToPickupSearches.h:
 
@@ -1677,6 +1677,24 @@ RunRideRaptor.cpp:
 /usr/local/include/routingkit/permutation.h:
 
 /usr/include/c++/13/tr1/riemann_zeta.tcc:
+
+/usr/include/x86_64-linux-gnu/sys/stat.h:
+
+/home/patrick/Documents/KIT/PARROT/ULTRA/Helpers/String/Enumeration.h:
+
+/usr/include/c++/13/bits/hash_bytes.h:
+
+/usr/include/boost/config/no_tr1/cmath.hpp:
+
+/usr/include/c++/13/stack:
+
+/usr/include/boost/move/algorithm.hpp:
+
+/usr/include/boost/config.hpp:
+
+/usr/include/x86_64-linux-gnu/bits/types/struct_statx.h:
+
+/usr/include/c++/13/bits/stl_multimap.h:
 
 /usr/local/include/vectorclass/vectorclass.h:
 
@@ -1772,10 +1790,6 @@ RunRideRaptor.cpp:
 
 /usr/include/c++/13/algorithm:
 
-/usr/lib/gcc/x86_64-linux-gnu/13/include/stddef.h:
-
-/home/patrick/Documents/KIT/PARROT/KARRI/DataStructures/Utilities/IteratorRange.h:
-
 /home/patrick/Documents/KIT/PARROT/ULTRA/DataStructures/Graph/Classes/EdgeList.h:
 
 /usr/include/c++/13/bits/alloc_traits.h:
@@ -1800,9 +1814,9 @@ RunRideRaptor.cpp:
 
 /home/patrick/Documents/KIT/PARROT/KARRI/Algorithms/KaRRi/InputConfig.h:
 
-/usr/include/c++/13/iostream:
-
 /home/patrick/Documents/KIT/PARROT/KARRI/Algorithms/KaRRi/RouteState.h:
+
+/usr/include/c++/13/iostream:
 
 /usr/include/asm-generic/errno.h:
 
@@ -1906,15 +1920,11 @@ RunRideRaptor.cpp:
 
 /home/patrick/Documents/KIT/PARROT/KARRI/Tools/MachineSpecs.h:
 
-/usr/include/x86_64-linux-gnu/bits/mathcalls-helper-functions.h:
+/usr/include/boost/current_function.hpp:
 
-/home/patrick/Documents/KIT/PARROT/KARRI/Algorithms/KaRRi/BaseObjects/Vehicle.h:
+/home/patrick/Documents/KIT/PARROT/KARRI/Algorithms/KaRRi/Stats/PerformanceStats.h:
 
-/home/patrick/Documents/KIT/PARROT/KARRI/Algorithms/Buckets/DynamicBucketContainer.h:
-
-/usr/include/boost/dynamic_bitset/detail/lowest_bit.hpp:
-
-/usr/include/c++/13/bits/stl_raw_storage_iter.h:
+/usr/include/boost/detail/container_fwd.hpp:
 
 /usr/include/boost/detail/workaround.hpp:
 
@@ -1981,6 +1991,8 @@ RunRideRaptor.cpp:
 /usr/include/boost/type_traits/is_enum.hpp:
 
 /usr/include/x86_64-linux-gnu/bits/types/sigevent_t.h:
+
+/home/patrick/Documents/KIT/PARROT/KARRI/Algorithms/KaRRi/LastStopSearches/FullSortedLastStopBucketsEnvironment.h:
 
 /usr/include/c++/13/array:
 
@@ -2050,9 +2062,9 @@ RunRideRaptor.cpp:
 
 /usr/include/c++/13/bits/locale_classes.h:
 
-/home/patrick/Documents/KIT/PARROT/KARRI/Algorithms/KaRRi/RequestState/RequestState.h:
-
 /usr/include/boost/cstdint.hpp:
+
+/home/patrick/Documents/KIT/PARROT/KARRI/Algorithms/KaRRi/RequestState/RequestState.h:
 
 /usr/include/c++/13/bits/locale_classes.tcc:
 
@@ -2154,8 +2166,6 @@ RunRideRaptor.cpp:
 
 /usr/include/c++/13/bits/streambuf.tcc:
 
-/home/patrick/Documents/KIT/PARROT/KARRI/Algorithms/KaRRi/LastStopSearches/SortedLastStopBucketsEnvironment.h:
-
 /usr/include/c++/13/bits/stl_algo.h:
 
 /usr/include/c++/13/bits/stl_construct.h:
@@ -2187,8 +2197,6 @@ RunRideRaptor.cpp:
 /usr/include/stdio.h:
 
 /usr/include/c++/13/bits/stl_multiset.h:
-
-/usr/include/c++/13/bits/stl_numeric.h:
 
 /usr/include/c++/13/initializer_list:
 
@@ -2243,8 +2251,6 @@ RunRideRaptor.cpp:
 /usr/include/c++/13/stdexcept:
 
 /usr/include/c++/13/clocale:
-
-/usr/include/c++/13/cmath:
 
 /usr/include/x86_64-linux-gnu/bits/types/__mbstate_t.h:
 
@@ -2301,6 +2307,8 @@ RunRideRaptor.cpp:
 /usr/include/c++/13/ext/string_conversions.h:
 
 /usr/include/c++/13/fstream:
+
+/usr/include/c++/13/functional:
 
 /usr/include/c++/13/future:
 
@@ -2439,5 +2447,3 @@ RunRideRaptor.cpp:
 /usr/include/c++/13/memory:
 
 /usr/include/x86_64-linux-gnu/asm/ioctls.h:
-
-/usr/include/x86_64-linux-gnu/asm/posix_types_64.h:

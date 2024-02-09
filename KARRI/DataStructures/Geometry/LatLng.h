@@ -35,6 +35,8 @@
 #include "../../Tools/Workarounds.h"
 #include "Point.h"
 
+namespace karri {
+
 // This class represents a geographic point, specified by its latitude and longitude.
 class LatLng {
 public:
@@ -165,7 +167,7 @@ public:
     {
         const auto sinLat = std::sin(toRadians(latInDeg()));
         const int x = lng + DEG_180;
-        const int y = std::round(DEG_360 * (0.5 + std::log((1 + sinLat) / (1 - sinLat)) / (4 * PI)));
+        const int y = std::round(DEG_360 * (0.5 + std::log((1 + sinLat) / (1 - sinLat)) / (4 * PIKARRI)));
         return { x, y };
     }
 
@@ -214,4 +216,5 @@ inline std::string latLngForCsv(const LatLng& latLng)
     out.precision(LatLng::LOG_10_PRECISION + 2);
     out << "(" << latLng.latInDeg() << "|" << latLng.lngInDeg() << ")";
     return out.str();
+}
 }

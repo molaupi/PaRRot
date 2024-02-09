@@ -29,6 +29,8 @@
 
 #include "Bitwise.h"
 
+namespace karri {
+
 // The ratio of the circumference of a circle to its diameter.
 constexpr double PIKARRI = 3.14159265358979323846l;
 
@@ -79,4 +81,5 @@ template <typename T>
 inline int signum(const T val)
 {
     return (0 < val) - (val < 0);
+}
 }

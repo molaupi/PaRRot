@@ -29,6 +29,8 @@
 #include "../../Geometry/LatLng.h"
 #include "AbstractAttribute.h"
 
+namespace karri {
+
 // An attribute associating a LatLng with each vertex of a graph.
 class LatLngAttribute : public AbstractAttribute<LatLng> {
 public:
@@ -51,3 +53,4 @@ public:
 protected:
     static constexpr const char* NAME = "lat_lng"; // The attribute's unique name.
 };
+}

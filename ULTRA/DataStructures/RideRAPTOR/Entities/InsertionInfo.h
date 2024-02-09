@@ -1,5 +1,6 @@
 #pragma once
 
+#include "../../../Helpers/Types.h"
 #include <cstdint>
 
 namespace RIDERAPTOR {

@@ -42,7 +42,7 @@ class UnsortedLastStopBucketsEnvironment {
     using LastStopEntry = BucketEntry;
 
 public:
-    static constexpr bool SORTED = false;
+    static constexpr LastStopBucketsSortingType SORTING = UNSORTED;
 
     using BucketContainer = DynamicBucketContainer<LastStopEntry>;
 

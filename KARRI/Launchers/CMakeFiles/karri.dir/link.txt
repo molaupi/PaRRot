@@ -1,1 +1,1 @@
-/usr/bin/c++  -march=native -Werror -Wfatal-errors -Wpedantic -pedantic-errors      -Wall -Wextra -ftemplate-backtrace-limit=1 -Wno-unknown-pragmas -Wno-sign-compare -O3 CMakeFiles/karri.dir/KaRRi.cpp.o -o karri   -L/usr/local/lib  -Wl,-rpath,/usr/local/lib:/usr/lib/gcc/x86_64-linux-gnu/12 -lroutingkit /usr/lib/gcc/x86_64-linux-gnu/12/libgomp.so /usr/lib/x86_64-linux-gnu/libpthread.a 
+/usr/bin/c++ -rdynamic CMakeFiles/karri.dir/KaRRi.o -o karri 

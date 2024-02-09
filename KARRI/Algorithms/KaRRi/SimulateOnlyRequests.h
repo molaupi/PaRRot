@@ -74,7 +74,6 @@ public:
         , assignmentFinder(assignmentFinder)
         , systemStateUpdater(systemStateUpdater)
         , scheduledStops(scheduledStops)
-        , vehicleEvents(fleet.size())
         , requestEvents(requests.size())
         , vehicleState(fleet.size(), OUT_OF_SERVICE)
         , requestState(requests.size(), NOT_RECEIVED)
@@ -101,8 +100,6 @@ public:
               "occupancy\n"))
         , progressBar(requests.size(), verbose)
     {
-        for (const auto& veh : fleet)
-            vehicleEvents.insert(veh.vehicleId, veh.startOfServiceTime);
         for (const auto& req : requests)
             requestEvents.insert(req.requestId, req.requestTime);
     }
@@ -113,159 +110,10 @@ public:
             // Pop next event from either queue. Request event has precedence if at the same time as vehicle event.
             int id, occTime;
 
-            if (vehicleEvents.empty()) {
-                requestEvents.min(id, occTime);
-                handleRequestEvent(id, occTime);
-                continue;
-            }
-
-            if (vehicleEvents.minKey() < requestEvents.minKey()) {
-                vehicleEvents.min(id, occTime);
-                handleVehicleEvent(id, occTime);
-                continue;
-            }
-
             requestEvents.min(id, occTime);
-            handleRequestEvent(id, occTime);
+            // only receipt, no drop off or anything
+            handleRequestReceipt(id, occTime);
         }
-    }
-
-private:
-    void handleVehicleEvent(const int vehId, const int occTime)
-    {
-        switch (vehicleState[vehId]) {
-        case OUT_OF_SERVICE:
-            handleVehicleStartup(vehId, occTime);
-            break;
-        case IDLING:
-            handleVehicleShutdown(vehId, occTime);
-            break;
-        case DRIVING:
-            handleVehicleArrivalAtStop(vehId, occTime);
-            break;
-        case STOPPING:
-            handleVehicleDepartureFromStop(vehId, occTime);
-            break;
-        default:
-            break;
-        }
-    }
-
-    void handleRequestEvent(const int reqId, const int occTime)
-    {
-        switch (requestState[reqId]) {
-        case NOT_RECEIVED:
-            handleRequestReceipt(reqId, occTime);
-            break;
-        case ASSIGNED_TO_VEH:
-            // When assigned to a vehicle, there should be no request event until the dropoff.
-            // At that point the request state becomes WALKING_TO_DEST.
-            assert(false);
-            break;
-        case WALKING_TO_DEST:
-            handleWalkingArrivalAtDest(reqId, occTime);
-            break;
-        case FINISHED:
-            assert(false);
-            break;
-        default:
-            break;
-        }
-    }
-
-    void handleVehicleStartup(const int vehId, const int occTime)
-    {
-        assert(vehicleState[vehId] == OUT_OF_SERVICE);
-        assert(fleet[vehId].startOfServiceTime == occTime);
-        unused(occTime);
-        Timer timer;
-
-        // Vehicle may have already been assigned stops. In this case it will start driving right away:
-        if (scheduledStops.hasNextScheduledStop(vehId)) {
-            vehicleState[vehId] = DRIVING;
-            vehicleEvents.increaseKey(vehId, scheduledStops.getNextScheduledStop(vehId).arrTime);
-        } else {
-            vehicleState[vehId] = IDLING;
-            vehicleEvents.increaseKey(vehId, fleet[vehId].endOfServiceTime);
-        }
-
-        const auto time = timer.elapsed<std::chrono::nanoseconds>();
-        eventSimulationStatsLogger << occTime << ",VehicleStartup," << time << '\n';
-    }
-
-    void handleVehicleShutdown(const int vehId, const int occTime)
-    {
-        assert(vehicleState[vehId] == IDLING);
-        assert(fleet[vehId].endOfServiceTime == occTime);
-        unused(occTime);
-        assert(!scheduledStops.hasNextScheduledStop(vehId));
-        Timer timer;
-
-        vehicleState[vehId] = OUT_OF_SERVICE;
-
-        int id, key;
-        vehicleEvents.deleteMin(id, key);
-        assert(id == vehId && key == occTime);
-        systemStateUpdater.notifyVehicleReachedEndOfServiceTime(fleet[vehId]);
-
-        const auto time = timer.elapsed<std::chrono::nanoseconds>();
-        eventSimulationStatsLogger << occTime << ",VehicleShutdown," << time << '\n';
-    }
-
-    void handleVehicleArrivalAtStop(const int vehId, const int occTime)
-    {
-        assert(vehicleState[vehId] == DRIVING);
-        assert(scheduledStops.getNextScheduledStop(vehId).arrTime == occTime);
-        Timer timer;
-
-        const auto prevStop = scheduledStops.getCurrentOrPrevScheduledStop(vehId);
-        legStatsLogger << vehId << ','
-                       << prevStop.depTime - prevStop.arrTime << ','
-                       << prevStop.depTime << ','
-                       << occTime << ','
-                       << occTime - prevStop.depTime << ','
-                       << prevStop.occupancyInFollowingLeg << '\n';
-
-        vehicleState[vehId] = STOPPING;
-        const auto reachedStop = scheduledStops.getNextScheduledStop(vehId);
-
-        // Handle dropoffs at reached stop: Insert walking arrival event at the time when passenger will arrive at
-        // destination. Thus, all requests are logged in the order of the arrival at their destination.
-        for (const auto& reqId : reachedStop.requestsDroppedOffHere) {
-            const auto& reqData = requestData[reqId];
-            requestState[reqId] = WALKING_TO_DEST;
-            requestEvents.insert(reqId, occTime + reqData.walkingTimeFromDropoff);
-        }
-
-        // Next event for this vehicle is the departure at this stop:
-        vehicleEvents.increaseKey(vehId, reachedStop.depTime);
-        systemStateUpdater.notifyStopStarted(fleet[vehId]);
-
-        const auto time = timer.elapsed<std::chrono::nanoseconds>();
-        eventSimulationStatsLogger << occTime << ",VehicleArrival," << time << '\n';
-    }
-
-    void handleVehicleDepartureFromStop(const int vehId, const int occTime)
-    {
-        assert(vehicleState[vehId] == STOPPING);
-        assert(scheduledStops.getCurrentOrPrevScheduledStop(vehId).depTime == occTime);
-        Timer timer;
-
-        if (!scheduledStops.hasNextScheduledStop(vehId)) {
-            vehicleState[vehId] = IDLING;
-            vehicleEvents.increaseKey(vehId, fleet[vehId].endOfServiceTime);
-        } else {
-            // Remember departure time for all requests picked up at this stop:
-            const auto curStop = scheduledStops.getCurrentOrPrevScheduledStop(vehId);
-            for (const auto& reqId : curStop.requestsPickedUpHere) {
-                requestData[reqId].depTime = occTime;
-            }
-            vehicleState[vehId] = DRIVING;
-            vehicleEvents.increaseKey(vehId, scheduledStops.getNextScheduledStop(vehId).arrTime);
-        }
-
-        const auto time = timer.elapsed<std::chrono::nanoseconds>();
-        eventSimulationStatsLogger << occTime << ",VehicleDeparture," << time << '\n';
     }
 
     void handleRequestReceipt(const int reqId, const int occTime)
@@ -319,51 +167,7 @@ private:
         systemStateUpdater.insertBestAssignment(pickupStopId, dropoffStopId);
         systemStateUpdater.writePerformanceLogs();
         assert(pickupStopId >= 0 && dropoffStopId >= 0);
-
-        const auto vehId = bestAsgn.vehicle->vehicleId;
-        switch (vehicleState[vehId]) {
-        case STOPPING:
-            // Update event time to departure time at current stop since it may have changed
-            vehicleEvents.updateKey(vehId, scheduledStops.getCurrentOrPrevScheduledStop(vehId).depTime);
-            break;
-        case IDLING:
-            vehicleState[vehId] = VehicleState::DRIVING;
-            [[fallthrough]];
-        case DRIVING:
-            // Update event time to arrival time at next stop since it may have changed (also for case of idling).
-            vehicleEvents.updateKey(vehId, scheduledStops.getNextScheduledStop(vehId).arrTime);
-            [[fallthrough]];
-        default:
-            break;
-        }
-    }
-
-    void handleWalkingArrivalAtDest(const int reqId, const int occTime)
-    {
-        assert(requestState[reqId] == WALKING_TO_DEST);
-        Timer timer;
-
-        const auto& reqData = requestData[reqId];
-        requestState[reqId] = FINISHED;
-        int id, key;
-        requestEvents.deleteMin(id, key);
-        assert(id == reqId && key == occTime);
-
-        const auto waitTime = reqData.depTime - requests[reqId].requestTime;
-        const auto arrTime = occTime;
-        const auto rideTime = occTime - reqData.walkingTimeFromDropoff - reqData.depTime;
-        const auto tripTime = arrTime - requests[reqId].requestTime;
-        assignmentQualityStats << reqId << ','
-                               << arrTime << ','
-                               << waitTime << ','
-                               << rideTime << ','
-                               << tripTime << ','
-                               << reqData.walkingTimeToPickup << ','
-                               << reqData.walkingTimeFromDropoff << ','
-                               << reqData.assignmentCost << '\n';
-
-        const auto time = timer.elapsed<std::chrono::nanoseconds>();
-        eventSimulationStatsLogger << occTime << ",RequestWalkingArrival," << time << '\n';
+        // ...
     }
 
     const Fleet& fleet;
@@ -373,7 +177,6 @@ private:
     SystemStateUpdaterT& systemStateUpdater;
     const ScheduledStopsT& scheduledStops;
 
-    AddressableQuadHeap vehicleEvents;
     AddressableQuadHeap requestEvents;
 
     std::vector<VehicleState> vehicleState;
