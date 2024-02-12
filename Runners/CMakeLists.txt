@@ -185,7 +185,8 @@ target_compile_definitions(rideRAPTOR PRIVATE KARRI_LAST_STOP_ONLY_DIST_SORTED=$
 target_compile_definitions(rideRAPTOR PRIVATE KARRI_LAST_STOP_UNSORTED=${UNSORTED_CODE})
 set(KARRI_LAST_STOP_SORTING_ARG_VALUES FULL ONLY_DIST UNSORTED)
 
-set(KARRI_LAST_STOP_BCH_SORTING FULL CACHE STRING "Type of sorting to use for buckets for last stop BCH searches: FULL, ONLY_DIST, or UNSORTED. (Applies for COL, IND)")
+# Patrick: I changed the default to ONLY_DIST
+set(KARRI_LAST_STOP_BCH_SORTING ONLY_DIST CACHE STRING "Type of sorting to use for buckets for last stop BCH searches: FULL, ONLY_DIST, or UNSORTED. (Applies for COL, IND)")
 set_property(CACHE KARRI_LAST_STOP_BCH_SORTING PROPERTY STRINGS ${KARRI_LAST_STOP_SORTING_ARG_VALUES})
 list(FIND KARRI_LAST_STOP_SORTING_ARG_VALUES ${KARRI_LAST_STOP_BCH_SORTING} index)
 if (index EQUAL -1)

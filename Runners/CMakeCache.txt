@@ -303,6 +303,9 @@ KARRI_WALKING_COST_SCALE:STRING=0
 //Single output directory for building all libraries.
 LIBRARY_OUTPUT_PATH:PATH=
 
+//No help, variable specified on the command line.
+ONLY_DIST_SORTED_CODE:UNINITIALIZED=ONLY_DIST_SORTED_CODE
+
 //Value Computed by CMake
 Project_BINARY_DIR:STATIC=/home/patrick/Documents/KIT/PARROT/Runners
 

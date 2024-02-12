@@ -35,6 +35,8 @@
 // the type of information to insert into the ridetransfer graph
 #include "../../../../ULTRA/DataStructures/RideRAPTOR/Entities/InsertionInfo.h"
 
+#include "../../../assert_ex.h"
+
 namespace karri {
 
 // Filters information about feasible distances found by elliptic BCH searches to pickups/dropoffs that are relevant
@@ -208,7 +210,6 @@ private:
                     }
 
                     if (minCost <= requestState.getBestCost()) {
-
                         ++numStopsRelevant;
                         // Check each PD loc
                         const auto& distsToPDLocs = feasible.distancesToRelevantPDLocsFor(stopId);
@@ -381,8 +382,10 @@ private:
         if (distFromStopToPickup >= INFTYKARRI || distFromPickupToNextStop >= INFTYKARRI)
             return false;
 
-        assert(distFromStopToPickup + distFromPickupToNextStop >= calcLengthOfLegStartingAt(stopIndex, vehId, routeState));
+        // added by Patrick, to print the values
+        ASSERT_EX(distFromStopToPickup + distFromPickupToNextStop >= calcLengthOfLegStartingAt(stopIndex, vehId, routeState), std::cerr << "\n***********\ndistFromStopToPickup: " << distFromStopToPickup << ", distFromPickupToNextStop: " << distFromPickupToNextStop << ", calcLengthOfLegStartingAt: " << calcLengthOfLegStartingAt(stopIndex, vehId, routeState) << "\n***********\n");
 
+        assert(distFromStopToPickup + distFromPickupToNextStop >= calcLengthOfLegStartingAt(stopIndex, vehId, routeState));
         const auto& p = requestState.pickups[pickupId];
 
         const auto depTimeAtPickup = getActualDepTimeAtPickup(vehId, stopIndex, distFromStopToPickup, p,

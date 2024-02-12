@@ -24,7 +24,6 @@
 
 #pragma once
 
-#include "../../DataStructures/Queues/AddressableKHeap.h"
 #include "../../Tools/CommandLine/ProgressBar.h"
 #include "../../Tools/Logging/LogManager.h"
 #include "../../Tools/Timer.h"
@@ -74,7 +73,6 @@ public:
         , assignmentFinder(assignmentFinder)
         , systemStateUpdater(systemStateUpdater)
         , scheduledStops(scheduledStops)
-        , requestEvents(requests.size())
         , vehicleState(fleet.size(), OUT_OF_SERVICE)
         , requestState(requests.size(), NOT_RECEIVED)
         , requestData(requests.size(), RequestData())
@@ -100,19 +98,16 @@ public:
               "occupancy\n"))
         , progressBar(requests.size(), verbose)
     {
-        for (const auto& req : requests)
-            requestEvents.insert(req.requestId, req.requestTime);
     }
 
     void run()
     {
-        while (!requestEvents.empty()) {
-            // Pop next event from either queue. Request event has precedence if at the same time as vehicle event.
-            int id, occTime;
-
-            requestEvents.min(id, occTime);
+        assert(std::is_sorted(requests.begin(), requests.end(), [](const auto& left, const auto& right) {
+            return left.requestTime < right.requestTime;
+        }));
+        for (int i(0); i < requests.size(); ++i) {
             // only receipt, no drop off or anything
-            handleRequestReceipt(id, occTime);
+            handleRequestReceipt(i, requests[i].requestTime);
         }
     }
 
@@ -130,7 +125,7 @@ public:
         applyAssignment(asgnFinderResponse, reqId, occTime);
 
         const auto time = timer.elapsed<std::chrono::nanoseconds>();
-        eventSimulationStatsLogger << occTime << ",RequestReceipt," << time << '\n';
+        eventSimulationStatsLogger << occTime << "io,RequestReceipt," << time << '\n';
     }
 
     template <typename AssignmentFinderResponseT>
@@ -142,14 +137,9 @@ public:
             requestData[reqId].depTime = occTime;
             requestData[reqId].walkingTimeToPickup = 0;
             requestData[reqId].walkingTimeFromDropoff = asgnFinderResponse.getNotUsingVehicleDist();
-            requestEvents.increaseKey(reqId, occTime + asgnFinderResponse.getNotUsingVehicleDist());
             systemStateUpdater.writePerformanceLogs();
             return;
         }
-
-        int id, key;
-        requestEvents.deleteMin(id, key); // event for walking arrival at dest inserted at dropoff
-        assert(id == reqId && key == occTime);
 
         const auto& bestAsgn = asgnFinderResponse.getBestAssignment();
         if (!bestAsgn.vehicle || !bestAsgn.pickup || !bestAsgn.dropoff) {
@@ -167,7 +157,6 @@ public:
         systemStateUpdater.insertBestAssignment(pickupStopId, dropoffStopId);
         systemStateUpdater.writePerformanceLogs();
         assert(pickupStopId >= 0 && dropoffStopId >= 0);
-        // ...
     }
 
     const Fleet& fleet;
@@ -176,8 +165,6 @@ public:
     AssignmentFinderT& assignmentFinder;
     SystemStateUpdaterT& systemStateUpdater;
     const ScheduledStopsT& scheduledStops;
-
-    AddressableQuadHeap requestEvents;
 
     std::vector<VehicleState> vehicleState;
     std::vector<RequestState> requestState;
