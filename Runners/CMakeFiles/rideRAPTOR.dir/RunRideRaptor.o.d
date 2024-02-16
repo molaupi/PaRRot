@@ -209,25 +209,15 @@ CMakeFiles/rideRAPTOR.dir/RunRideRaptor.o: \
  /usr/include/c++/13/bits/random.tcc /usr/include/c++/13/numeric \
  /usr/include/c++/13/bits/stl_numeric.h \
  /usr/include/c++/13/pstl/glue_numeric_defs.h \
- /home/patrick/Documents/KIT/PARROT/Runners/../ULTRA/DataStructures/RAPTOR/Data.h \
- /usr/include/c++/13/iomanip /usr/include/c++/13/locale \
- /usr/include/c++/13/bits/locale_facets_nonio.h /usr/include/c++/13/ctime \
- /usr/include/x86_64-linux-gnu/c++/13/bits/time_members.h \
- /usr/include/x86_64-linux-gnu/c++/13/bits/messages_members.h \
- /usr/include/libintl.h /usr/include/c++/13/bits/locale_facets_nonio.tcc \
- /usr/include/c++/13/bits/locale_conv.h \
- /usr/include/c++/13/bits/quoted_string.h /usr/include/c++/13/sstream \
- /usr/include/c++/13/bits/sstream.tcc /usr/include/c++/13/map \
- /usr/include/c++/13/bits/stl_tree.h \
- /usr/include/c++/13/bits/node_handle.h \
- /usr/include/c++/13/bits/stl_map.h \
- /usr/include/c++/13/bits/stl_multimap.h \
- /usr/include/c++/13/bits/erase_if.h \
- /home/patrick/Documents/KIT/PARROT/Runners/../ULTRA/DataStructures/RAPTOR/../../Algorithms/Dijkstra/Dijkstra.h \
- /usr/include/c++/13/set /usr/include/c++/13/bits/stl_set.h \
- /usr/include/c++/13/bits/stl_multiset.h \
- /home/patrick/Documents/KIT/PARROT/Runners/../ULTRA/DataStructures/RAPTOR/../../Algorithms/Dijkstra/../../DataStructures/Attributes/AttributeNames.h \
- /home/patrick/Documents/KIT/PARROT/Runners/../ULTRA/DataStructures/RAPTOR/../../Algorithms/Dijkstra/../../DataStructures/Attributes/../../Helpers/Meta.h \
+ /home/patrick/Documents/KIT/PARROT/Runners/../ULTRA/Algorithms/RideRAPTOR/RideRAPTOR.h \
+ /home/patrick/Documents/KIT/PARROT/Runners/../ULTRA/Algorithms/RideRAPTOR/../../../KARRI/Algorithms/KaRRi/BaseObjects/RideRAPTORRequest.h \
+ /home/patrick/Documents/KIT/PARROT/Runners/../ULTRA/Algorithms/RideRAPTOR/../../../KARRI/Algorithms/KaRRi/BaseObjects/../../../../ULTRA/DataStructures/RideRAPTOR/Entities/InsertionInfo.h \
+ /home/patrick/Documents/KIT/PARROT/Runners/../ULTRA/Algorithms/RideRAPTOR/../../../KARRI/Algorithms/KaRRi/BaseObjects/../../../../ULTRA/DataStructures/RideRAPTOR/Entities/../../../Helpers/Types.h \
+ /home/patrick/Documents/KIT/PARROT/Runners/../ULTRA/Algorithms/RideRAPTOR/../../../KARRI/Algorithms/KaRRi/BaseObjects/../../../../ULTRA/DataStructures/RideRAPTOR/Entities/../../../Helpers/TaggedInteger.h \
+ /usr/include/c++/13/sstream /usr/include/c++/13/bits/sstream.tcc \
+ /home/patrick/Documents/KIT/PARROT/Runners/../ULTRA/Algorithms/RideRAPTOR/../../../KARRI/Algorithms/KaRRi/BaseObjects/../../../../ULTRA/DataStructures/RideRAPTOR/Entities/../../../Helpers/Assert.h \
+ /home/patrick/Documents/KIT/PARROT/Runners/../ULTRA/Algorithms/RideRAPTOR/../../../KARRI/Algorithms/KaRRi/BaseObjects/../../../../ULTRA/DataStructures/RideRAPTOR/Entities/../../../Helpers/HighlightText.h \
+ /home/patrick/Documents/KIT/PARROT/Runners/../ULTRA/Algorithms/RideRAPTOR/../../../KARRI/Algorithms/KaRRi/BaseObjects/../../../../ULTRA/DataStructures/RideRAPTOR/Entities/../../../Helpers/Meta.h \
  /usr/include/c++/13/cxxabi.h \
  /usr/include/x86_64-linux-gnu/c++/13/bits/cxxabi_tweaks.h \
  /usr/lib/gcc/x86_64-linux-gnu/13/include/emmintrin.h \
@@ -235,7 +225,7 @@ CMakeFiles/rideRAPTOR.dir/RunRideRaptor.o: \
  /usr/lib/gcc/x86_64-linux-gnu/13/include/mmintrin.h \
  /usr/lib/gcc/x86_64-linux-gnu/13/include/mm_malloc.h \
  /usr/include/c++/13/stdlib.h \
- /home/patrick/Documents/KIT/PARROT/Runners/../ULTRA/DataStructures/RAPTOR/../../Algorithms/Dijkstra/../../DataStructures/Attributes/../../Helpers/String/String.h \
+ /home/patrick/Documents/KIT/PARROT/Runners/../ULTRA/Algorithms/RideRAPTOR/../../../KARRI/Algorithms/KaRRi/BaseObjects/../../../../ULTRA/DataStructures/RideRAPTOR/Entities/../../../Helpers/String/String.h \
  /usr/lib/gcc/x86_64-linux-gnu/13/include/limits.h \
  /usr/lib/gcc/x86_64-linux-gnu/13/include/syslimits.h \
  /usr/include/limits.h /usr/include/x86_64-linux-gnu/bits/posix1_lim.h \
@@ -244,20 +234,30 @@ CMakeFiles/rideRAPTOR.dir/RunRideRaptor.o: \
  /usr/include/x86_64-linux-gnu/bits/posix2_lim.h \
  /usr/include/x86_64-linux-gnu/bits/xopen_lim.h \
  /usr/include/x86_64-linux-gnu/bits/uio_lim.h /usr/include/c++/13/bitset \
- /home/patrick/Documents/KIT/PARROT/Runners/../ULTRA/DataStructures/RAPTOR/../../Algorithms/Dijkstra/../../DataStructures/Attributes/../../Helpers/String/../Assert.h \
- /home/patrick/Documents/KIT/PARROT/Runners/../ULTRA/DataStructures/RAPTOR/../../Algorithms/Dijkstra/../../DataStructures/Attributes/../../Helpers/String/../HighlightText.h \
- /home/patrick/Documents/KIT/PARROT/Runners/../ULTRA/DataStructures/RAPTOR/../../Algorithms/Dijkstra/../../DataStructures/Attributes/../../Helpers/String/../Ranges/ReverseRange.h \
- /home/patrick/Documents/KIT/PARROT/Runners/../ULTRA/DataStructures/RAPTOR/../../Algorithms/Dijkstra/../../DataStructures/Container/ExternalKHeap.h \
- /home/patrick/Documents/KIT/PARROT/Runners/../ULTRA/DataStructures/RAPTOR/../../Algorithms/Dijkstra/../../DataStructures/Container/Set.h \
- /home/patrick/Documents/KIT/PARROT/Runners/../ULTRA/DataStructures/RAPTOR/../../Algorithms/Dijkstra/../../DataStructures/Container/../../Helpers/ConstructorTags.h \
- /home/patrick/Documents/KIT/PARROT/Runners/../ULTRA/DataStructures/RAPTOR/../../Algorithms/Dijkstra/../../DataStructures/Container/../../Helpers/Helpers.h \
+ /usr/include/c++/13/ctime \
+ /home/patrick/Documents/KIT/PARROT/Runners/../ULTRA/Algorithms/RideRAPTOR/../../../KARRI/Algorithms/KaRRi/BaseObjects/../../../../ULTRA/DataStructures/RideRAPTOR/Entities/../../../Helpers/String/../Ranges/ReverseRange.h \
+ /home/patrick/Documents/KIT/PARROT/Runners/../ULTRA/Algorithms/RideRAPTOR/../../../KARRI/Algorithms/KaRRi/BaseObjects/Request.h \
+ /home/patrick/Documents/KIT/PARROT/Runners/../ULTRA/Algorithms/RideRAPTOR/../../../KARRI/Algorithms/KaRRi/BaseObjects/../../../Tools/Constants.h \
+ /home/patrick/Documents/KIT/PARROT/Runners/../ULTRA/Algorithms/RideRAPTOR/../../DataStructures/Container/Map.h \
+ /usr/include/c++/13/map /usr/include/c++/13/bits/stl_tree.h \
+ /usr/include/c++/13/bits/node_handle.h \
+ /usr/include/c++/13/bits/stl_map.h \
+ /usr/include/c++/13/bits/stl_multimap.h \
+ /usr/include/c++/13/bits/erase_if.h \
+ /home/patrick/Documents/KIT/PARROT/Runners/../ULTRA/Algorithms/RideRAPTOR/../../DataStructures/Container/../../Helpers/Ranges/SimultaneousRange.h \
+ /home/patrick/Documents/KIT/PARROT/Runners/../ULTRA/Algorithms/RideRAPTOR/../../DataStructures/Container/../../Helpers/Vector/Vector.h \
+ /home/patrick/Documents/KIT/PARROT/Runners/../ULTRA/Algorithms/RideRAPTOR/../../DataStructures/Container/../../Helpers/Vector/../Helpers.h \
  /usr/include/c++/13/chrono /usr/include/c++/13/bits/chrono.h \
  /usr/include/c++/13/ratio /usr/include/c++/13/bits/parse_numbers.h \
- /usr/include/c++/13/thread /usr/include/c++/13/bits/std_thread.h \
+ /usr/include/c++/13/set /usr/include/c++/13/bits/stl_set.h \
+ /usr/include/c++/13/bits/stl_multiset.h /usr/include/c++/13/thread \
+ /usr/include/c++/13/bits/std_thread.h \
  /usr/include/c++/13/bits/this_thread_sleep.h \
- /home/patrick/Documents/KIT/PARROT/Runners/../ULTRA/DataStructures/RAPTOR/../../Algorithms/Dijkstra/../../DataStructures/Container/../../Helpers/IO/Serialization.h \
+ /home/patrick/Documents/KIT/PARROT/Runners/../ULTRA/Algorithms/RideRAPTOR/../../DataStructures/Container/Set.h \
+ /home/patrick/Documents/KIT/PARROT/Runners/../ULTRA/Algorithms/RideRAPTOR/../../DataStructures/Container/../../Helpers/ConstructorTags.h \
+ /home/patrick/Documents/KIT/PARROT/Runners/../ULTRA/Algorithms/RideRAPTOR/../../DataStructures/Container/../../Helpers/IO/Serialization.h \
  /usr/include/c++/13/array /usr/include/c++/13/compare \
- /home/patrick/Documents/KIT/PARROT/Runners/../ULTRA/DataStructures/RAPTOR/../../Algorithms/Dijkstra/../../DataStructures/Container/../../Helpers/IO/../FileSystem/FileSystem.h \
+ /home/patrick/Documents/KIT/PARROT/Runners/../ULTRA/Algorithms/RideRAPTOR/../../DataStructures/Container/../../Helpers/IO/../FileSystem/FileSystem.h \
  /usr/include/dirent.h /usr/include/x86_64-linux-gnu/bits/dirent.h \
  /usr/include/x86_64-linux-gnu/bits/dirent_ext.h \
  /usr/include/x86_64-linux-gnu/sys/stat.h \
@@ -316,93 +316,101 @@ CMakeFiles/rideRAPTOR.dir/RunRideRaptor.o: \
  /usr/include/x86_64-linux-gnu/bits/termios-tcflow.h \
  /usr/include/x86_64-linux-gnu/bits/termios-misc.h \
  /usr/include/x86_64-linux-gnu/sys/ttydefaults.h \
- /home/patrick/Documents/KIT/PARROT/Runners/../ULTRA/DataStructures/RAPTOR/../../Algorithms/Dijkstra/../../DataStructures/Container/../../Helpers/IO/../Vector/Vector.h \
- /home/patrick/Documents/KIT/PARROT/Runners/../ULTRA/DataStructures/RAPTOR/../../Algorithms/Dijkstra/../../DataStructures/Container/../../Helpers/IO/File.h \
- /home/patrick/Documents/KIT/PARROT/Runners/../ULTRA/DataStructures/RAPTOR/../../Algorithms/Dijkstra/../../DataStructures/Container/../../Helpers/IO/../String/Enumeration.h \
- /home/patrick/Documents/KIT/PARROT/Runners/../ULTRA/DataStructures/RAPTOR/../../Algorithms/Dijkstra/../../DataStructures/Container/../../Helpers/Types.h \
- /home/patrick/Documents/KIT/PARROT/Runners/../ULTRA/DataStructures/RAPTOR/../../Algorithms/Dijkstra/../../DataStructures/Container/../../Helpers/TaggedInteger.h \
- /home/patrick/Documents/KIT/PARROT/Runners/../ULTRA/DataStructures/RAPTOR/../../Algorithms/Dijkstra/../../DataStructures/Container/../../Helpers/Vector/Permutation.h \
- /home/patrick/Documents/KIT/PARROT/Runners/../ULTRA/DataStructures/RAPTOR/../../Algorithms/Dijkstra/../../Helpers/Timer.h \
+ /home/patrick/Documents/KIT/PARROT/Runners/../ULTRA/Algorithms/RideRAPTOR/../../DataStructures/Container/../../Helpers/IO/File.h \
+ /usr/include/c++/13/iomanip /usr/include/c++/13/locale \
+ /usr/include/c++/13/bits/locale_facets_nonio.h \
+ /usr/include/x86_64-linux-gnu/c++/13/bits/time_members.h \
+ /usr/include/x86_64-linux-gnu/c++/13/bits/messages_members.h \
+ /usr/include/libintl.h /usr/include/c++/13/bits/locale_facets_nonio.tcc \
+ /usr/include/c++/13/bits/locale_conv.h \
+ /usr/include/c++/13/bits/quoted_string.h \
+ /home/patrick/Documents/KIT/PARROT/Runners/../ULTRA/Algorithms/RideRAPTOR/../../DataStructures/Container/../../Helpers/IO/../String/Enumeration.h \
+ /home/patrick/Documents/KIT/PARROT/Runners/../ULTRA/Algorithms/RideRAPTOR/../../DataStructures/Container/../../Helpers/Vector/Permutation.h \
+ /home/patrick/Documents/KIT/PARROT/Runners/../ULTRA/Algorithms/RideRAPTOR/../../DataStructures/RAPTOR/Data.h \
+ /home/patrick/Documents/KIT/PARROT/Runners/../ULTRA/Algorithms/RideRAPTOR/../../DataStructures/RAPTOR/../../Algorithms/Dijkstra/Dijkstra.h \
+ /home/patrick/Documents/KIT/PARROT/Runners/../ULTRA/Algorithms/RideRAPTOR/../../DataStructures/RAPTOR/../../Algorithms/Dijkstra/../../DataStructures/Attributes/AttributeNames.h \
+ /home/patrick/Documents/KIT/PARROT/Runners/../ULTRA/Algorithms/RideRAPTOR/../../DataStructures/RAPTOR/../../Algorithms/Dijkstra/../../DataStructures/Container/ExternalKHeap.h \
+ /home/patrick/Documents/KIT/PARROT/Runners/../ULTRA/Algorithms/RideRAPTOR/../../DataStructures/RAPTOR/../../Algorithms/Dijkstra/../../Helpers/Timer.h \
  /usr/include/x86_64-linux-gnu/sys/time.h \
- /home/patrick/Documents/KIT/PARROT/Runners/../ULTRA/DataStructures/RAPTOR/../../Helpers/Ranges/Range.h \
- /home/patrick/Documents/KIT/PARROT/Runners/../ULTRA/DataStructures/RAPTOR/../../Helpers/Ranges/SubRange.h \
- /home/patrick/Documents/KIT/PARROT/Runners/../ULTRA/DataStructures/RAPTOR/../Container/Map.h \
- /home/patrick/Documents/KIT/PARROT/Runners/../ULTRA/DataStructures/RAPTOR/../Container/../../Helpers/Ranges/SimultaneousRange.h \
- /home/patrick/Documents/KIT/PARROT/Runners/../ULTRA/DataStructures/RAPTOR/../Geometry/Rectangle.h \
- /home/patrick/Documents/KIT/PARROT/Runners/../ULTRA/DataStructures/RAPTOR/../Geometry/Point.h \
- /home/patrick/Documents/KIT/PARROT/Runners/../ULTRA/DataStructures/RAPTOR/../Graph/Graph.h \
- /home/patrick/Documents/KIT/PARROT/Runners/../ULTRA/DataStructures/RAPTOR/../Graph/Classes/DynamicGraph.h \
- /home/patrick/Documents/KIT/PARROT/Runners/../ULTRA/DataStructures/RAPTOR/../Graph/Classes/../../../Helpers/Ranges/IndexRange.h \
- /home/patrick/Documents/KIT/PARROT/Runners/../ULTRA/DataStructures/RAPTOR/../Graph/Classes/../../../Helpers/Ranges/IndirectEdgeRange.h \
- /home/patrick/Documents/KIT/PARROT/Runners/../ULTRA/DataStructures/RAPTOR/../Graph/Classes/../../../Helpers/Ranges/../../DataStructures/Graph/Classes/GraphInterface.h \
- /home/patrick/Documents/KIT/PARROT/Runners/../ULTRA/DataStructures/RAPTOR/../Graph/Classes/../../../Helpers/Ranges/../../DataStructures/Graph/Classes/../../Attributes/Attributes.h \
- /home/patrick/Documents/KIT/PARROT/Runners/../ULTRA/DataStructures/RAPTOR/../Graph/Classes/../../../Helpers/Ranges/../../DataStructures/Graph/Classes/../../Attributes/Attribute.h \
- /home/patrick/Documents/KIT/PARROT/Runners/../ULTRA/DataStructures/RAPTOR/../Graph/Classes/../../../Helpers/Ranges/../../DataStructures/Graph/Classes/../../Attributes/AttributeHandle.h \
- /home/patrick/Documents/KIT/PARROT/Runners/../ULTRA/DataStructures/RAPTOR/../Graph/Classes/../../../Helpers/Ranges/../../DataStructures/Graph/Classes/../../Attributes/AttributeRecord.h \
- /home/patrick/Documents/KIT/PARROT/Runners/../ULTRA/DataStructures/RAPTOR/../Graph/Classes/../../../Helpers/Ranges/SparseRange.h \
- /home/patrick/Documents/KIT/PARROT/Runners/../ULTRA/DataStructures/RAPTOR/../Graph/Classes/../Utils/Utils.h \
- /home/patrick/Documents/KIT/PARROT/Runners/../ULTRA/DataStructures/RAPTOR/../Graph/Classes/../Utils/../../../Algorithms/DepthFirstSearch.h \
- /home/patrick/Documents/KIT/PARROT/Runners/../ULTRA/DataStructures/RAPTOR/../Graph/Classes/../Utils/../../../Algorithms/StronglyConnectedComponents.h \
- /home/patrick/Documents/KIT/PARROT/Runners/../ULTRA/DataStructures/RAPTOR/../Graph/Classes/EdgeList.h \
- /home/patrick/Documents/KIT/PARROT/Runners/../ULTRA/DataStructures/RAPTOR/../Graph/Classes/../../../Helpers/Console/ProgressBar.h \
- /home/patrick/Documents/KIT/PARROT/Runners/../ULTRA/DataStructures/RAPTOR/../Graph/Classes/../../../Helpers/Ranges/DirectEdgeRange.h \
- /home/patrick/Documents/KIT/PARROT/Runners/../ULTRA/DataStructures/RAPTOR/../Graph/Classes/StaticGraph.h \
- /home/patrick/Documents/KIT/PARROT/Runners/../ULTRA/DataStructures/RAPTOR/../Graph/Utils/Conversion.h \
- /home/patrick/Documents/KIT/PARROT/Runners/../ULTRA/DataStructures/RAPTOR/../Graph/Utils/IO.h \
- /home/patrick/Documents/KIT/PARROT/Runners/../ULTRA/DataStructures/RAPTOR/../Intermediate/Data.h \
- /home/patrick/Documents/KIT/PARROT/Runners/../ULTRA/DataStructures/RAPTOR/../Intermediate/../../Helpers/Console/Progress.h \
- /home/patrick/Documents/KIT/PARROT/Runners/../ULTRA/DataStructures/RAPTOR/../Intermediate/../../Helpers/IO/ParserCSV.h \
+ /home/patrick/Documents/KIT/PARROT/Runners/../ULTRA/Algorithms/RideRAPTOR/../../DataStructures/RAPTOR/../../Helpers/Ranges/Range.h \
+ /home/patrick/Documents/KIT/PARROT/Runners/../ULTRA/Algorithms/RideRAPTOR/../../DataStructures/RAPTOR/../../Helpers/Ranges/SubRange.h \
+ /home/patrick/Documents/KIT/PARROT/Runners/../ULTRA/Algorithms/RideRAPTOR/../../DataStructures/RAPTOR/../Geometry/Rectangle.h \
+ /home/patrick/Documents/KIT/PARROT/Runners/../ULTRA/Algorithms/RideRAPTOR/../../DataStructures/RAPTOR/../Geometry/Point.h \
+ /home/patrick/Documents/KIT/PARROT/Runners/../ULTRA/Algorithms/RideRAPTOR/../../DataStructures/RAPTOR/../Graph/Graph.h \
+ /home/patrick/Documents/KIT/PARROT/Runners/../ULTRA/Algorithms/RideRAPTOR/../../DataStructures/RAPTOR/../Graph/Classes/DynamicGraph.h \
+ /home/patrick/Documents/KIT/PARROT/Runners/../ULTRA/Algorithms/RideRAPTOR/../../DataStructures/RAPTOR/../Graph/Classes/../../../Helpers/Ranges/IndexRange.h \
+ /home/patrick/Documents/KIT/PARROT/Runners/../ULTRA/Algorithms/RideRAPTOR/../../DataStructures/RAPTOR/../Graph/Classes/../../../Helpers/Ranges/IndirectEdgeRange.h \
+ /home/patrick/Documents/KIT/PARROT/Runners/../ULTRA/Algorithms/RideRAPTOR/../../DataStructures/RAPTOR/../Graph/Classes/../../../Helpers/Ranges/../../DataStructures/Graph/Classes/GraphInterface.h \
+ /home/patrick/Documents/KIT/PARROT/Runners/../ULTRA/Algorithms/RideRAPTOR/../../DataStructures/RAPTOR/../Graph/Classes/../../../Helpers/Ranges/../../DataStructures/Graph/Classes/../../Attributes/Attributes.h \
+ /home/patrick/Documents/KIT/PARROT/Runners/../ULTRA/Algorithms/RideRAPTOR/../../DataStructures/RAPTOR/../Graph/Classes/../../../Helpers/Ranges/../../DataStructures/Graph/Classes/../../Attributes/Attribute.h \
+ /home/patrick/Documents/KIT/PARROT/Runners/../ULTRA/Algorithms/RideRAPTOR/../../DataStructures/RAPTOR/../Graph/Classes/../../../Helpers/Ranges/../../DataStructures/Graph/Classes/../../Attributes/AttributeHandle.h \
+ /home/patrick/Documents/KIT/PARROT/Runners/../ULTRA/Algorithms/RideRAPTOR/../../DataStructures/RAPTOR/../Graph/Classes/../../../Helpers/Ranges/../../DataStructures/Graph/Classes/../../Attributes/AttributeRecord.h \
+ /home/patrick/Documents/KIT/PARROT/Runners/../ULTRA/Algorithms/RideRAPTOR/../../DataStructures/RAPTOR/../Graph/Classes/../../../Helpers/Ranges/SparseRange.h \
+ /home/patrick/Documents/KIT/PARROT/Runners/../ULTRA/Algorithms/RideRAPTOR/../../DataStructures/RAPTOR/../Graph/Classes/../Utils/Utils.h \
+ /home/patrick/Documents/KIT/PARROT/Runners/../ULTRA/Algorithms/RideRAPTOR/../../DataStructures/RAPTOR/../Graph/Classes/../Utils/../../../Algorithms/DepthFirstSearch.h \
+ /home/patrick/Documents/KIT/PARROT/Runners/../ULTRA/Algorithms/RideRAPTOR/../../DataStructures/RAPTOR/../Graph/Classes/../Utils/../../../Algorithms/StronglyConnectedComponents.h \
+ /home/patrick/Documents/KIT/PARROT/Runners/../ULTRA/Algorithms/RideRAPTOR/../../DataStructures/RAPTOR/../Graph/Classes/EdgeList.h \
+ /home/patrick/Documents/KIT/PARROT/Runners/../ULTRA/Algorithms/RideRAPTOR/../../DataStructures/RAPTOR/../Graph/Classes/../../../Helpers/Console/ProgressBar.h \
+ /home/patrick/Documents/KIT/PARROT/Runners/../ULTRA/Algorithms/RideRAPTOR/../../DataStructures/RAPTOR/../Graph/Classes/../../../Helpers/Ranges/DirectEdgeRange.h \
+ /home/patrick/Documents/KIT/PARROT/Runners/../ULTRA/Algorithms/RideRAPTOR/../../DataStructures/RAPTOR/../Graph/Classes/StaticGraph.h \
+ /home/patrick/Documents/KIT/PARROT/Runners/../ULTRA/Algorithms/RideRAPTOR/../../DataStructures/RAPTOR/../Graph/Utils/Conversion.h \
+ /home/patrick/Documents/KIT/PARROT/Runners/../ULTRA/Algorithms/RideRAPTOR/../../DataStructures/RAPTOR/../Graph/Utils/IO.h \
+ /home/patrick/Documents/KIT/PARROT/Runners/../ULTRA/Algorithms/RideRAPTOR/../../DataStructures/RAPTOR/../Intermediate/Data.h \
+ /home/patrick/Documents/KIT/PARROT/Runners/../ULTRA/Algorithms/RideRAPTOR/../../DataStructures/RAPTOR/../Intermediate/../../Helpers/Console/Progress.h \
+ /home/patrick/Documents/KIT/PARROT/Runners/../ULTRA/Algorithms/RideRAPTOR/../../DataStructures/RAPTOR/../Intermediate/../../Helpers/IO/ParserCSV.h \
  /usr/include/c++/13/future /usr/include/c++/13/mutex \
  /usr/include/c++/13/bits/std_mutex.h \
  /usr/include/c++/13/bits/unique_lock.h \
  /usr/include/c++/13/condition_variable \
  /usr/include/c++/13/bits/atomic_futex.h /usr/include/c++/13/atomic \
  /usr/include/c++/13/bits/std_function.h \
- /home/patrick/Documents/KIT/PARROT/Runners/../ULTRA/DataStructures/RAPTOR/../Intermediate/../GTFS/Data.h \
- /home/patrick/Documents/KIT/PARROT/Runners/../ULTRA/DataStructures/RAPTOR/../Intermediate/../GTFS/Entities/Agency.h \
- /home/patrick/Documents/KIT/PARROT/Runners/../ULTRA/DataStructures/RAPTOR/../Intermediate/../GTFS/Entities/Calendar.h \
- /home/patrick/Documents/KIT/PARROT/Runners/../ULTRA/DataStructures/RAPTOR/../Intermediate/../GTFS/Entities/../../../Helpers/Calendar.h \
- /home/patrick/Documents/KIT/PARROT/Runners/../ULTRA/DataStructures/RAPTOR/../Intermediate/../GTFS/Entities/CalendarDate.h \
- /home/patrick/Documents/KIT/PARROT/Runners/../ULTRA/DataStructures/RAPTOR/../Intermediate/../GTFS/Entities/Frequency.h \
- /home/patrick/Documents/KIT/PARROT/Runners/../ULTRA/DataStructures/RAPTOR/../Intermediate/../GTFS/Entities/Route.h \
- /home/patrick/Documents/KIT/PARROT/Runners/../ULTRA/DataStructures/RAPTOR/../Intermediate/../GTFS/Entities/Vehicle.h \
- /home/patrick/Documents/KIT/PARROT/Runners/../ULTRA/DataStructures/RAPTOR/../Intermediate/../GTFS/Entities/Stop.h \
- /home/patrick/Documents/KIT/PARROT/Runners/../ULTRA/DataStructures/RAPTOR/../Intermediate/../GTFS/Entities/StopTime.h \
- /home/patrick/Documents/KIT/PARROT/Runners/../ULTRA/DataStructures/RAPTOR/../Intermediate/../GTFS/Entities/Transfer.h \
- /home/patrick/Documents/KIT/PARROT/Runners/../ULTRA/DataStructures/RAPTOR/../Intermediate/../GTFS/Entities/Trip.h \
- /home/patrick/Documents/KIT/PARROT/Runners/../ULTRA/DataStructures/RAPTOR/../Intermediate/../Geometry/CoordinateTree.h \
- /home/patrick/Documents/KIT/PARROT/Runners/../ULTRA/DataStructures/RAPTOR/../Intermediate/../Geometry/Metric.h \
- /home/patrick/Documents/KIT/PARROT/Runners/../ULTRA/DataStructures/RAPTOR/../Intermediate/Entities/Stop.h \
- /home/patrick/Documents/KIT/PARROT/Runners/../ULTRA/DataStructures/RAPTOR/../Intermediate/Entities/StopEvent.h \
- /home/patrick/Documents/KIT/PARROT/Runners/../ULTRA/DataStructures/RAPTOR/../Intermediate/Entities/Trip.h \
- /home/patrick/Documents/KIT/PARROT/Runners/../ULTRA/DataStructures/RAPTOR/Entities/Journey.h \
- /home/patrick/Documents/KIT/PARROT/Runners/../ULTRA/DataStructures/RAPTOR/Entities/Route.h \
- /home/patrick/Documents/KIT/PARROT/Runners/../ULTRA/DataStructures/RAPTOR/Entities/RouteSegment.h \
- /home/patrick/Documents/KIT/PARROT/Runners/../ULTRA/DataStructures/RAPTOR/Entities/Stop.h \
- /home/patrick/Documents/KIT/PARROT/Runners/../ULTRA/DataStructures/RAPTOR/Entities/StopEvent.h \
- /home/patrick/Documents/KIT/PARROT/Runners/../ULTRA/DataStructures/RAPTOR/Entities/TripIterator.h \
- /home/patrick/Documents/KIT/PARROT/Runners/../ULTRA/DataStructures/RideRAPTOR/Data.h \
- /home/patrick/Documents/KIT/PARROT/Runners/../ULTRA/DataStructures/RideRAPTOR/../../Algorithms/CH/CH.h \
- /home/patrick/Documents/KIT/PARROT/Runners/../ULTRA/DataStructures/RideRAPTOR/../../Algorithms/CH/../../Helpers/Ranges/ConcatenatedRange.h \
- /home/patrick/Documents/KIT/PARROT/Runners/../ULTRA/DataStructures/RideRAPTOR/../../Algorithms/CH/Preprocessing/CHBuilder.h \
- /home/patrick/Documents/KIT/PARROT/Runners/../ULTRA/DataStructures/RideRAPTOR/../../Algorithms/CH/Preprocessing/CHData.h \
- /home/patrick/Documents/KIT/PARROT/Runners/../ULTRA/DataStructures/RideRAPTOR/../../Algorithms/CH/Preprocessing/KeyFunction.h \
- /home/patrick/Documents/KIT/PARROT/Runners/../ULTRA/DataStructures/RideRAPTOR/../../Algorithms/CH/Preprocessing/WitnessSearch.h \
- /home/patrick/Documents/KIT/PARROT/Runners/../ULTRA/DataStructures/RideRAPTOR/../../Algorithms/CH/Preprocessing/Profiler.h \
- /home/patrick/Documents/KIT/PARROT/Runners/../ULTRA/DataStructures/RideRAPTOR/../../Algorithms/CH/Preprocessing/StopCriterion.h \
- /home/patrick/Documents/KIT/PARROT/Runners/../ULTRA/DataStructures/RideRAPTOR/../../Algorithms/CH/Query/BucketQuery.h \
- /home/patrick/Documents/KIT/PARROT/Runners/../ULTRA/DataStructures/RideRAPTOR/../../Algorithms/CH/Query/CHQuery.h \
- /home/patrick/Documents/KIT/PARROT/Runners/../ULTRA/DataStructures/RideRAPTOR/../../DataStructures/Graph/Classes/GraphWrapper.h \
- /home/patrick/Documents/KIT/PARROT/Runners/../ULTRA/DataStructures/RideRAPTOR/../../DataStructures/Graph/Classes/../../../../KARRI/DataStructures/Geometry/LatLng.h \
- /home/patrick/Documents/KIT/PARROT/Runners/../ULTRA/DataStructures/RideRAPTOR/../../DataStructures/Graph/Classes/../../../../KARRI/DataStructures/Geometry/../../Tools/Constants.h \
- /home/patrick/Documents/KIT/PARROT/Runners/../ULTRA/DataStructures/RideRAPTOR/../../DataStructures/Graph/Classes/../../../../KARRI/DataStructures/Geometry/../../Tools/Math.h \
- /home/patrick/Documents/KIT/PARROT/Runners/../ULTRA/DataStructures/RideRAPTOR/../../DataStructures/Graph/Classes/../../../../KARRI/DataStructures/Geometry/../../Tools/Bitwise.h \
- /home/patrick/Documents/KIT/PARROT/Runners/../ULTRA/DataStructures/RideRAPTOR/../../DataStructures/Graph/Classes/../../../../KARRI/DataStructures/Geometry/../../Tools/Workarounds.h \
- /home/patrick/Documents/KIT/PARROT/Runners/../ULTRA/DataStructures/RideRAPTOR/../../DataStructures/Graph/Classes/../../../../KARRI/DataStructures/Geometry/Point.h \
- /home/patrick/Documents/KIT/PARROT/Runners/../ULTRA/DataStructures/RideRAPTOR/../../DataStructures/RideRAPTOR/Entities/Journey.h \
- /home/patrick/Documents/KIT/PARROT/Runners/../ULTRA/DataStructures/RideRAPTOR/../../DataStructures/RideRAPTOR/Entities/../../../../KARRI/Algorithms/KaRRi/BaseObjects/Vehicle.h \
- /home/patrick/Documents/KIT/PARROT/Runners/../ULTRA/DataStructures/RideRAPTOR/../../Shell/Shell.h \
- /home/patrick/Documents/KIT/PARROT/Runners/../ULTRA/DataStructures/RideRAPTOR/../../Shell/BasicShell.h \
+ /home/patrick/Documents/KIT/PARROT/Runners/../ULTRA/Algorithms/RideRAPTOR/../../DataStructures/RAPTOR/../Intermediate/../GTFS/Data.h \
+ /home/patrick/Documents/KIT/PARROT/Runners/../ULTRA/Algorithms/RideRAPTOR/../../DataStructures/RAPTOR/../Intermediate/../GTFS/Entities/Agency.h \
+ /home/patrick/Documents/KIT/PARROT/Runners/../ULTRA/Algorithms/RideRAPTOR/../../DataStructures/RAPTOR/../Intermediate/../GTFS/Entities/Calendar.h \
+ /home/patrick/Documents/KIT/PARROT/Runners/../ULTRA/Algorithms/RideRAPTOR/../../DataStructures/RAPTOR/../Intermediate/../GTFS/Entities/../../../Helpers/Calendar.h \
+ /home/patrick/Documents/KIT/PARROT/Runners/../ULTRA/Algorithms/RideRAPTOR/../../DataStructures/RAPTOR/../Intermediate/../GTFS/Entities/CalendarDate.h \
+ /home/patrick/Documents/KIT/PARROT/Runners/../ULTRA/Algorithms/RideRAPTOR/../../DataStructures/RAPTOR/../Intermediate/../GTFS/Entities/Frequency.h \
+ /home/patrick/Documents/KIT/PARROT/Runners/../ULTRA/Algorithms/RideRAPTOR/../../DataStructures/RAPTOR/../Intermediate/../GTFS/Entities/Route.h \
+ /home/patrick/Documents/KIT/PARROT/Runners/../ULTRA/Algorithms/RideRAPTOR/../../DataStructures/RAPTOR/../Intermediate/../GTFS/Entities/Vehicle.h \
+ /home/patrick/Documents/KIT/PARROT/Runners/../ULTRA/Algorithms/RideRAPTOR/../../DataStructures/RAPTOR/../Intermediate/../GTFS/Entities/Stop.h \
+ /home/patrick/Documents/KIT/PARROT/Runners/../ULTRA/Algorithms/RideRAPTOR/../../DataStructures/RAPTOR/../Intermediate/../GTFS/Entities/StopTime.h \
+ /home/patrick/Documents/KIT/PARROT/Runners/../ULTRA/Algorithms/RideRAPTOR/../../DataStructures/RAPTOR/../Intermediate/../GTFS/Entities/Transfer.h \
+ /home/patrick/Documents/KIT/PARROT/Runners/../ULTRA/Algorithms/RideRAPTOR/../../DataStructures/RAPTOR/../Intermediate/../GTFS/Entities/Trip.h \
+ /home/patrick/Documents/KIT/PARROT/Runners/../ULTRA/Algorithms/RideRAPTOR/../../DataStructures/RAPTOR/../Intermediate/../Geometry/CoordinateTree.h \
+ /home/patrick/Documents/KIT/PARROT/Runners/../ULTRA/Algorithms/RideRAPTOR/../../DataStructures/RAPTOR/../Intermediate/../Geometry/Metric.h \
+ /home/patrick/Documents/KIT/PARROT/Runners/../ULTRA/Algorithms/RideRAPTOR/../../DataStructures/RAPTOR/../Intermediate/Entities/Stop.h \
+ /home/patrick/Documents/KIT/PARROT/Runners/../ULTRA/Algorithms/RideRAPTOR/../../DataStructures/RAPTOR/../Intermediate/Entities/StopEvent.h \
+ /home/patrick/Documents/KIT/PARROT/Runners/../ULTRA/Algorithms/RideRAPTOR/../../DataStructures/RAPTOR/../Intermediate/Entities/Trip.h \
+ /home/patrick/Documents/KIT/PARROT/Runners/../ULTRA/Algorithms/RideRAPTOR/../../DataStructures/RAPTOR/Entities/Journey.h \
+ /home/patrick/Documents/KIT/PARROT/Runners/../ULTRA/Algorithms/RideRAPTOR/../../DataStructures/RAPTOR/Entities/Route.h \
+ /home/patrick/Documents/KIT/PARROT/Runners/../ULTRA/Algorithms/RideRAPTOR/../../DataStructures/RAPTOR/Entities/RouteSegment.h \
+ /home/patrick/Documents/KIT/PARROT/Runners/../ULTRA/Algorithms/RideRAPTOR/../../DataStructures/RAPTOR/Entities/Stop.h \
+ /home/patrick/Documents/KIT/PARROT/Runners/../ULTRA/Algorithms/RideRAPTOR/../../DataStructures/RAPTOR/Entities/StopEvent.h \
+ /home/patrick/Documents/KIT/PARROT/Runners/../ULTRA/Algorithms/RideRAPTOR/../../DataStructures/RAPTOR/Entities/TripIterator.h \
+ /home/patrick/Documents/KIT/PARROT/Runners/../ULTRA/Algorithms/RideRAPTOR/../../DataStructures/RAPTOR/Entities/ArrivalLabel.h \
+ /home/patrick/Documents/KIT/PARROT/Runners/../ULTRA/Algorithms/RideRAPTOR/../../DataStructures/RAPTOR/Entities/../TransferModes.h \
+ /home/patrick/Documents/KIT/PARROT/Runners/../ULTRA/Algorithms/RideRAPTOR/../../DataStructures/RAPTOR/Entities/EarliestArrivalTime.h \
+ /home/patrick/Documents/KIT/PARROT/Runners/../ULTRA/Algorithms/RideRAPTOR/../../DataStructures/RideRAPTOR/Data.h \
+ /home/patrick/Documents/KIT/PARROT/Runners/../ULTRA/Algorithms/RideRAPTOR/../../DataStructures/RideRAPTOR/../../Algorithms/CH/CH.h \
+ /home/patrick/Documents/KIT/PARROT/Runners/../ULTRA/Algorithms/RideRAPTOR/../../DataStructures/RideRAPTOR/../../Algorithms/CH/../../Helpers/Ranges/ConcatenatedRange.h \
+ /home/patrick/Documents/KIT/PARROT/Runners/../ULTRA/Algorithms/RideRAPTOR/../../DataStructures/RideRAPTOR/../../Algorithms/CH/Preprocessing/CHBuilder.h \
+ /home/patrick/Documents/KIT/PARROT/Runners/../ULTRA/Algorithms/RideRAPTOR/../../DataStructures/RideRAPTOR/../../Algorithms/CH/Preprocessing/CHData.h \
+ /home/patrick/Documents/KIT/PARROT/Runners/../ULTRA/Algorithms/RideRAPTOR/../../DataStructures/RideRAPTOR/../../Algorithms/CH/Preprocessing/KeyFunction.h \
+ /home/patrick/Documents/KIT/PARROT/Runners/../ULTRA/Algorithms/RideRAPTOR/../../DataStructures/RideRAPTOR/../../Algorithms/CH/Preprocessing/WitnessSearch.h \
+ /home/patrick/Documents/KIT/PARROT/Runners/../ULTRA/Algorithms/RideRAPTOR/../../DataStructures/RideRAPTOR/../../Algorithms/CH/Preprocessing/Profiler.h \
+ /home/patrick/Documents/KIT/PARROT/Runners/../ULTRA/Algorithms/RideRAPTOR/../../DataStructures/RideRAPTOR/../../Algorithms/CH/Preprocessing/StopCriterion.h \
+ /home/patrick/Documents/KIT/PARROT/Runners/../ULTRA/Algorithms/RideRAPTOR/../../DataStructures/RideRAPTOR/../../Algorithms/CH/Query/BucketQuery.h \
+ /home/patrick/Documents/KIT/PARROT/Runners/../ULTRA/Algorithms/RideRAPTOR/../../DataStructures/RideRAPTOR/../../Algorithms/CH/Query/CHQuery.h \
+ /home/patrick/Documents/KIT/PARROT/Runners/../ULTRA/Algorithms/RideRAPTOR/../../DataStructures/RideRAPTOR/../../DataStructures/Graph/Classes/GraphWrapper.h \
+ /home/patrick/Documents/KIT/PARROT/Runners/../ULTRA/Algorithms/RideRAPTOR/../../DataStructures/RideRAPTOR/../../DataStructures/Graph/Classes/../../../../KARRI/DataStructures/Geometry/LatLng.h \
+ /home/patrick/Documents/KIT/PARROT/Runners/../ULTRA/Algorithms/RideRAPTOR/../../DataStructures/RideRAPTOR/../../DataStructures/Graph/Classes/../../../../KARRI/DataStructures/Geometry/../../Tools/Math.h \
+ /home/patrick/Documents/KIT/PARROT/Runners/../ULTRA/Algorithms/RideRAPTOR/../../DataStructures/RideRAPTOR/../../DataStructures/Graph/Classes/../../../../KARRI/DataStructures/Geometry/../../Tools/Bitwise.h \
+ /home/patrick/Documents/KIT/PARROT/Runners/../ULTRA/Algorithms/RideRAPTOR/../../DataStructures/RideRAPTOR/../../DataStructures/Graph/Classes/../../../../KARRI/DataStructures/Geometry/../../Tools/Workarounds.h \
+ /home/patrick/Documents/KIT/PARROT/Runners/../ULTRA/Algorithms/RideRAPTOR/../../DataStructures/RideRAPTOR/../../DataStructures/Graph/Classes/../../../../KARRI/DataStructures/Geometry/Point.h \
+ /home/patrick/Documents/KIT/PARROT/Runners/../ULTRA/Algorithms/RideRAPTOR/../../DataStructures/RideRAPTOR/../../DataStructures/RideRAPTOR/Entities/Journey.h \
+ /home/patrick/Documents/KIT/PARROT/Runners/../ULTRA/Algorithms/RideRAPTOR/../../DataStructures/RideRAPTOR/../../DataStructures/RideRAPTOR/Entities/../../../../KARRI/Algorithms/KaRRi/BaseObjects/Vehicle.h \
+ /home/patrick/Documents/KIT/PARROT/Runners/../ULTRA/Algorithms/RideRAPTOR/../../DataStructures/RideRAPTOR/../../Shell/Shell.h \
+ /home/patrick/Documents/KIT/PARROT/Runners/../ULTRA/Algorithms/RideRAPTOR/../../DataStructures/RideRAPTOR/../../Shell/BasicShell.h \
  /usr/include/x86_64-linux-gnu/sys/ioctl.h \
  /usr/include/x86_64-linux-gnu/bits/ioctls.h \
  /usr/include/x86_64-linux-gnu/asm/ioctls.h \
@@ -410,23 +418,21 @@ CMakeFiles/rideRAPTOR.dir/RunRideRaptor.o: \
  /usr/include/x86_64-linux-gnu/asm/ioctl.h \
  /usr/include/asm-generic/ioctl.h \
  /usr/include/x86_64-linux-gnu/bits/ioctl-types.h \
- /home/patrick/Documents/KIT/PARROT/Runners/../ULTRA/DataStructures/RideRAPTOR/../../Shell/Command.h \
- /home/patrick/Documents/KIT/PARROT/Runners/../ULTRA/DataStructures/RideRAPTOR/../../Shell/LineBuffer.h \
- /home/patrick/Documents/KIT/PARROT/Runners/../ULTRA/DataStructures/RideRAPTOR/../../Shell/ParameterizedCommand.h \
- /home/patrick/Documents/KIT/PARROT/Runners/../ULTRA/DataStructures/RideRAPTOR/DistanceMatrix.h \
- /home/patrick/Documents/KIT/PARROT/Runners/../ULTRA/DataStructures/RideRAPTOR/Entities/InsertionInfo.h \
- /home/patrick/Documents/KIT/PARROT/Runners/../ULTRA/DataStructures/RideRAPTOR/Profiler.h \
- /home/patrick/Documents/KIT/PARROT/Runners/../ULTRA/DataStructures/RideRAPTOR/../../../KARRI/Algorithms/KaRRi/CostCalculator.h \
- /home/patrick/Documents/KIT/PARROT/Runners/../ULTRA/DataStructures/RideRAPTOR/../../../KARRI/Algorithms/KaRRi/AssignmentCostFunctions/TimeIsMoneyCostFunction.h \
- /home/patrick/Documents/KIT/PARROT/Runners/../ULTRA/DataStructures/RideRAPTOR/../../../KARRI/Algorithms/KaRRi/BaseObjects/Assignment.h \
- /home/patrick/Documents/KIT/PARROT/Runners/../ULTRA/DataStructures/RideRAPTOR/../../../KARRI/Algorithms/KaRRi/BaseObjects/Request.h \
- /home/patrick/Documents/KIT/PARROT/Runners/../ULTRA/DataStructures/RideRAPTOR/../../../KARRI/Algorithms/KaRRi/InputConfig.h \
- /home/patrick/Documents/KIT/PARROT/Runners/../ULTRA/DataStructures/RideRAPTOR/../../../KARRI/Algorithms/KaRRi/RouteState.h \
+ /home/patrick/Documents/KIT/PARROT/Runners/../ULTRA/Algorithms/RideRAPTOR/../../DataStructures/RideRAPTOR/../../Shell/Command.h \
+ /home/patrick/Documents/KIT/PARROT/Runners/../ULTRA/Algorithms/RideRAPTOR/../../DataStructures/RideRAPTOR/../../Shell/LineBuffer.h \
+ /home/patrick/Documents/KIT/PARROT/Runners/../ULTRA/Algorithms/RideRAPTOR/../../DataStructures/RideRAPTOR/../../Shell/ParameterizedCommand.h \
+ /home/patrick/Documents/KIT/PARROT/Runners/../ULTRA/Algorithms/RideRAPTOR/../../DataStructures/RideRAPTOR/DistanceMatrix.h \
+ /home/patrick/Documents/KIT/PARROT/Runners/../ULTRA/Algorithms/RideRAPTOR/../../DataStructures/RideRAPTOR/Profiler.h \
+ /home/patrick/Documents/KIT/PARROT/Runners/../ULTRA/Algorithms/RideRAPTOR/../../DataStructures/RideRAPTOR/../../../KARRI/Algorithms/KaRRi/CostCalculator.h \
+ /home/patrick/Documents/KIT/PARROT/Runners/../ULTRA/Algorithms/RideRAPTOR/../../DataStructures/RideRAPTOR/../../../KARRI/Algorithms/KaRRi/AssignmentCostFunctions/TimeIsMoneyCostFunction.h \
+ /home/patrick/Documents/KIT/PARROT/Runners/../ULTRA/Algorithms/RideRAPTOR/../../DataStructures/RideRAPTOR/../../../KARRI/Algorithms/KaRRi/BaseObjects/Assignment.h \
+ /home/patrick/Documents/KIT/PARROT/Runners/../ULTRA/Algorithms/RideRAPTOR/../../DataStructures/RideRAPTOR/../../../KARRI/Algorithms/KaRRi/InputConfig.h \
+ /home/patrick/Documents/KIT/PARROT/Runners/../ULTRA/Algorithms/RideRAPTOR/../../DataStructures/RideRAPTOR/../../../KARRI/Algorithms/KaRRi/RouteState.h \
  /usr/include/c++/13/stack /usr/include/c++/13/deque \
  /usr/include/c++/13/bits/stl_deque.h /usr/include/c++/13/bits/deque.tcc \
  /usr/include/c++/13/bits/stl_stack.h \
- /home/patrick/Documents/KIT/PARROT/Runners/../ULTRA/DataStructures/RideRAPTOR/../../../KARRI/Algorithms/KaRRi/../../DataStructures/Containers/BitVector.h \
- /home/patrick/Documents/KIT/PARROT/Runners/../ULTRA/DataStructures/RideRAPTOR/../../../KARRI/Algorithms/KaRRi/../../DataStructures/Containers/../../Tools/Simd/AlignedVector.h \
+ /home/patrick/Documents/KIT/PARROT/Runners/../ULTRA/Algorithms/RideRAPTOR/../../DataStructures/RideRAPTOR/../../../KARRI/Algorithms/KaRRi/../../DataStructures/Containers/BitVector.h \
+ /home/patrick/Documents/KIT/PARROT/Runners/../ULTRA/Algorithms/RideRAPTOR/../../DataStructures/RideRAPTOR/../../../KARRI/Algorithms/KaRRi/../../DataStructures/Containers/../../Tools/Simd/AlignedVector.h \
  /usr/include/boost/align/aligned_allocator.hpp \
  /usr/include/boost/align/detail/add_reference.hpp \
  /usr/include/boost/config.hpp /usr/include/boost/config/user.hpp \
@@ -457,17 +463,17 @@ CMakeFiles/rideRAPTOR.dir/RunRideRaptor.o: \
  /usr/include/boost/static_assert.hpp \
  /usr/include/boost/detail/workaround.hpp \
  /usr/include/boost/config/workaround.hpp \
- /home/patrick/Documents/KIT/PARROT/Runners/../ULTRA/DataStructures/RideRAPTOR/../../../KARRI/Algorithms/KaRRi/../../DataStructures/Containers/../../Tools/Simd/../CompilerSpecific.h \
- /home/patrick/Documents/KIT/PARROT/Runners/../ULTRA/DataStructures/RideRAPTOR/../../../KARRI/Algorithms/KaRRi/../../DataStructures/Containers/../../Tools/Simd/../MachineSpecs.h \
- /home/patrick/Documents/KIT/PARROT/Runners/../ULTRA/DataStructures/RideRAPTOR/../../../KARRI/Algorithms/KaRRi/../../DataStructures/Utilities/DynamicRagged2DArrays.h \
- /home/patrick/Documents/KIT/PARROT/Runners/../ULTRA/DataStructures/RideRAPTOR/../../../KARRI/Algorithms/KaRRi/../../DataStructures/Utilities/IteratorRange.h \
+ /home/patrick/Documents/KIT/PARROT/Runners/../ULTRA/Algorithms/RideRAPTOR/../../DataStructures/RideRAPTOR/../../../KARRI/Algorithms/KaRRi/../../DataStructures/Containers/../../Tools/Simd/../CompilerSpecific.h \
+ /home/patrick/Documents/KIT/PARROT/Runners/../ULTRA/Algorithms/RideRAPTOR/../../DataStructures/RideRAPTOR/../../../KARRI/Algorithms/KaRRi/../../DataStructures/Containers/../../Tools/Simd/../MachineSpecs.h \
+ /home/patrick/Documents/KIT/PARROT/Runners/../ULTRA/Algorithms/RideRAPTOR/../../DataStructures/RideRAPTOR/../../../KARRI/Algorithms/KaRRi/../../DataStructures/Utilities/DynamicRagged2DArrays.h \
+ /home/patrick/Documents/KIT/PARROT/Runners/../ULTRA/Algorithms/RideRAPTOR/../../DataStructures/RideRAPTOR/../../../KARRI/Algorithms/KaRRi/../../DataStructures/Utilities/IteratorRange.h \
  /usr/include/c++/13/iterator /usr/include/c++/13/bits/stream_iterator.h \
- /home/patrick/Documents/KIT/PARROT/Runners/../ULTRA/DataStructures/RideRAPTOR/../../../KARRI/Algorithms/KaRRi/TimeUtils.h \
- /home/patrick/Documents/KIT/PARROT/Runners/../ULTRA/DataStructures/RideRAPTOR/../../../KARRI/Algorithms/KaRRi/EllipticBCH/EllipticBCHSearches.h \
- /home/patrick/Documents/KIT/PARROT/Runners/../ULTRA/DataStructures/RideRAPTOR/../../../KARRI/Algorithms/KaRRi/EllipticBCH/../../../DataStructures/Labels/BasicLabelSet.h \
- /home/patrick/Documents/KIT/PARROT/Runners/../ULTRA/DataStructures/RideRAPTOR/../../../KARRI/Algorithms/KaRRi/EllipticBCH/../../../DataStructures/Labels/../../Tools/TemplateProgramming.h \
- /home/patrick/Documents/KIT/PARROT/Runners/../ULTRA/DataStructures/RideRAPTOR/../../../KARRI/Algorithms/KaRRi/EllipticBCH/../../../DataStructures/Labels/ParentInfo.h \
- /home/patrick/Documents/KIT/PARROT/Runners/../ULTRA/DataStructures/RideRAPTOR/../../../KARRI/Algorithms/KaRRi/EllipticBCH/../../../DataStructures/Labels/SimdLabelSet.h \
+ /home/patrick/Documents/KIT/PARROT/Runners/../ULTRA/Algorithms/RideRAPTOR/../../DataStructures/RideRAPTOR/../../../KARRI/Algorithms/KaRRi/TimeUtils.h \
+ /home/patrick/Documents/KIT/PARROT/Runners/../ULTRA/Algorithms/RideRAPTOR/../../DataStructures/RideRAPTOR/../../../KARRI/Algorithms/KaRRi/EllipticBCH/EllipticBCHSearches.h \
+ /home/patrick/Documents/KIT/PARROT/Runners/../ULTRA/Algorithms/RideRAPTOR/../../DataStructures/RideRAPTOR/../../../KARRI/Algorithms/KaRRi/EllipticBCH/../../../DataStructures/Labels/BasicLabelSet.h \
+ /home/patrick/Documents/KIT/PARROT/Runners/../ULTRA/Algorithms/RideRAPTOR/../../DataStructures/RideRAPTOR/../../../KARRI/Algorithms/KaRRi/EllipticBCH/../../../DataStructures/Labels/../../Tools/TemplateProgramming.h \
+ /home/patrick/Documents/KIT/PARROT/Runners/../ULTRA/Algorithms/RideRAPTOR/../../DataStructures/RideRAPTOR/../../../KARRI/Algorithms/KaRRi/EllipticBCH/../../../DataStructures/Labels/ParentInfo.h \
+ /home/patrick/Documents/KIT/PARROT/Runners/../ULTRA/Algorithms/RideRAPTOR/../../DataStructures/RideRAPTOR/../../../KARRI/Algorithms/KaRRi/EllipticBCH/../../../DataStructures/Labels/SimdLabelSet.h \
  /usr/local/include/vectorclass/vectorclass.h \
  /usr/local/include/vectorclass/instrset.h \
  /usr/lib/gcc/x86_64-linux-gnu/13/include/x86intrin.h \
@@ -573,22 +579,22 @@ CMakeFiles/rideRAPTOR.dir/RunRideRaptor.o: \
  /usr/local/include/vectorclass/vectorf512e.h \
  /usr/local/include/vectorclass/vectori512se.h \
  /usr/local/include/vectorclass/vector_convert.h \
- /home/patrick/Documents/KIT/PARROT/Runners/../ULTRA/DataStructures/RideRAPTOR/../../../KARRI/Algorithms/KaRRi/EllipticBCH/../../../Tools/Logging/NullLogger.h \
- /home/patrick/Documents/KIT/PARROT/Runners/../ULTRA/DataStructures/RideRAPTOR/../../../KARRI/Algorithms/KaRRi/EllipticBCH/../../../Tools/Timer.h \
- /home/patrick/Documents/KIT/PARROT/Runners/../ULTRA/DataStructures/RideRAPTOR/../../../KARRI/Algorithms/KaRRi/EllipticBCH/../LastStopSearches/LastStopsAtVertices.h \
- /home/patrick/Documents/KIT/PARROT/Runners/../ULTRA/DataStructures/RideRAPTOR/../../../KARRI/Algorithms/KaRRi/EllipticBCH/../RequestState/RequestState.h \
- /home/patrick/Documents/KIT/PARROT/Runners/../ULTRA/DataStructures/RideRAPTOR/../../../KARRI/Algorithms/KaRRi/EllipticBCH/../RequestState/../../../DataStructures/Containers/Subset.h \
- /home/patrick/Documents/KIT/PARROT/Runners/../ULTRA/DataStructures/RideRAPTOR/../../../KARRI/Algorithms/KaRRi/EllipticBCH/../RequestState/../../../Tools/Logging/LogManager.h \
+ /home/patrick/Documents/KIT/PARROT/Runners/../ULTRA/Algorithms/RideRAPTOR/../../DataStructures/RideRAPTOR/../../../KARRI/Algorithms/KaRRi/EllipticBCH/../../../Tools/Logging/NullLogger.h \
+ /home/patrick/Documents/KIT/PARROT/Runners/../ULTRA/Algorithms/RideRAPTOR/../../DataStructures/RideRAPTOR/../../../KARRI/Algorithms/KaRRi/EllipticBCH/../../../Tools/Timer.h \
+ /home/patrick/Documents/KIT/PARROT/Runners/../ULTRA/Algorithms/RideRAPTOR/../../DataStructures/RideRAPTOR/../../../KARRI/Algorithms/KaRRi/EllipticBCH/../LastStopSearches/LastStopsAtVertices.h \
+ /home/patrick/Documents/KIT/PARROT/Runners/../ULTRA/Algorithms/RideRAPTOR/../../DataStructures/RideRAPTOR/../../../KARRI/Algorithms/KaRRi/EllipticBCH/../RequestState/RequestState.h \
+ /home/patrick/Documents/KIT/PARROT/Runners/../ULTRA/Algorithms/RideRAPTOR/../../DataStructures/RideRAPTOR/../../../KARRI/Algorithms/KaRRi/EllipticBCH/../RequestState/../../../DataStructures/Containers/Subset.h \
+ /home/patrick/Documents/KIT/PARROT/Runners/../ULTRA/Algorithms/RideRAPTOR/../../DataStructures/RideRAPTOR/../../../KARRI/Algorithms/KaRRi/EllipticBCH/../RequestState/../../../Tools/Logging/LogManager.h \
  /usr/include/c++/13/unordered_map \
  /usr/include/c++/13/bits/unordered_map.h \
  /usr/include/c++/13/bits/hashtable.h \
  /usr/include/c++/13/bits/hashtable_policy.h \
  /usr/include/c++/13/bits/enable_special_members.h \
- /home/patrick/Documents/KIT/PARROT/Runners/../ULTRA/DataStructures/RideRAPTOR/../../../KARRI/Algorithms/KaRRi/EllipticBCH/../RequestState/../RequestState/FindPDLocsInRadiusQuery.h \
- /home/patrick/Documents/KIT/PARROT/Runners/../ULTRA/DataStructures/RideRAPTOR/../../../KARRI/Algorithms/KaRRi/EllipticBCH/../RequestState/../RequestState/../../../DataStructures/Graph/Attributes/PsgEdgeToCarEdgeAttribute.h \
- /home/patrick/Documents/KIT/PARROT/Runners/../ULTRA/DataStructures/RideRAPTOR/../../../KARRI/Algorithms/KaRRi/EllipticBCH/../RequestState/../RequestState/../../../DataStructures/Graph/Attributes/AbstractAttribute.h \
- /home/patrick/Documents/KIT/PARROT/Runners/../ULTRA/DataStructures/RideRAPTOR/../../../KARRI/Algorithms/KaRRi/EllipticBCH/../RequestState/../RequestState/../../Dijkstra/Dijkstra.h \
- /home/patrick/Documents/KIT/PARROT/Runners/../ULTRA/DataStructures/RideRAPTOR/../../../KARRI/Algorithms/KaRRi/EllipticBCH/../RequestState/../RequestState/../../Dijkstra/../../DataStructures/Graph/Graph.h \
+ /home/patrick/Documents/KIT/PARROT/Runners/../ULTRA/Algorithms/RideRAPTOR/../../DataStructures/RideRAPTOR/../../../KARRI/Algorithms/KaRRi/EllipticBCH/../RequestState/../RequestState/FindPDLocsInRadiusQuery.h \
+ /home/patrick/Documents/KIT/PARROT/Runners/../ULTRA/Algorithms/RideRAPTOR/../../DataStructures/RideRAPTOR/../../../KARRI/Algorithms/KaRRi/EllipticBCH/../RequestState/../RequestState/../../../DataStructures/Graph/Attributes/PsgEdgeToCarEdgeAttribute.h \
+ /home/patrick/Documents/KIT/PARROT/Runners/../ULTRA/Algorithms/RideRAPTOR/../../DataStructures/RideRAPTOR/../../../KARRI/Algorithms/KaRRi/EllipticBCH/../RequestState/../RequestState/../../../DataStructures/Graph/Attributes/AbstractAttribute.h \
+ /home/patrick/Documents/KIT/PARROT/Runners/../ULTRA/Algorithms/RideRAPTOR/../../DataStructures/RideRAPTOR/../../../KARRI/Algorithms/KaRRi/EllipticBCH/../RequestState/../RequestState/../../Dijkstra/Dijkstra.h \
+ /home/patrick/Documents/KIT/PARROT/Runners/../ULTRA/Algorithms/RideRAPTOR/../../DataStructures/RideRAPTOR/../../../KARRI/Algorithms/KaRRi/EllipticBCH/../RequestState/../RequestState/../../Dijkstra/../../DataStructures/Graph/Graph.h \
  /usr/include/boost/dynamic_bitset.hpp \
  /usr/include/boost/dynamic_bitset/dynamic_bitset.hpp \
  /usr/include/c++/13/climits /usr/include/boost/dynamic_bitset/config.hpp \
@@ -647,39 +653,40 @@ CMakeFiles/rideRAPTOR.dir/RunRideRaptor.o: \
  /usr/include/boost/detail/container_fwd.hpp /usr/include/c++/13/list \
  /usr/include/c++/13/bits/stl_list.h /usr/include/c++/13/bits/list.tcc \
  /usr/include/c++/13/complex \
- /home/patrick/Documents/KIT/PARROT/Runners/../ULTRA/DataStructures/RideRAPTOR/../../../KARRI/Algorithms/KaRRi/EllipticBCH/../RequestState/../RequestState/../../Dijkstra/../../DataStructures/Graph/../../Tools/BinaryIO.h \
- /home/patrick/Documents/KIT/PARROT/Runners/../ULTRA/DataStructures/RideRAPTOR/../../../KARRI/Algorithms/KaRRi/EllipticBCH/../RequestState/../RequestState/../../Dijkstra/../../DataStructures/Graph/../../Tools/ContainerHelpers.h \
- /home/patrick/Documents/KIT/PARROT/Runners/../ULTRA/DataStructures/RideRAPTOR/../../../KARRI/Algorithms/KaRRi/EllipticBCH/../RequestState/../RequestState/../../Dijkstra/../../DataStructures/Graph/../Utilities/PermutationKARRI.h \
- /home/patrick/Documents/KIT/PARROT/Runners/../ULTRA/DataStructures/RideRAPTOR/../../../KARRI/Algorithms/KaRRi/EllipticBCH/../RequestState/../RequestState/../../Dijkstra/../../DataStructures/Graph/Export/DefaultExporter.h \
- /home/patrick/Documents/KIT/PARROT/Runners/../ULTRA/DataStructures/RideRAPTOR/../../../KARRI/Algorithms/KaRRi/EllipticBCH/../RequestState/../RequestState/../../Dijkstra/../../DataStructures/Graph/Import/XatfImporter.h \
- /home/patrick/Documents/KIT/PARROT/Runners/../ULTRA/DataStructures/RideRAPTOR/../../../KARRI/Algorithms/KaRRi/EllipticBCH/../RequestState/../RequestState/../../Dijkstra/../../DataStructures/Graph/Import/../../../Tools/LexicalCast.h \
- /home/patrick/Documents/KIT/PARROT/Runners/../ULTRA/DataStructures/RideRAPTOR/../../../KARRI/Algorithms/KaRRi/EllipticBCH/../RequestState/../RequestState/../../Dijkstra/../../DataStructures/Graph/Import/../../../Tools/StringHelpers.h \
- /home/patrick/Documents/KIT/PARROT/Runners/../ULTRA/DataStructures/RideRAPTOR/../../../KARRI/Algorithms/KaRRi/EllipticBCH/../RequestState/../RequestState/../../Dijkstra/../../DataStructures/Graph/Import/../Attributes/CapacityAttribute.h \
- /home/patrick/Documents/KIT/PARROT/Runners/../ULTRA/DataStructures/RideRAPTOR/../../../KARRI/Algorithms/KaRRi/EllipticBCH/../RequestState/../RequestState/../../Dijkstra/../../DataStructures/Graph/Import/../Attributes/LatLngAttribute.h \
- /home/patrick/Documents/KIT/PARROT/Runners/../ULTRA/DataStructures/RideRAPTOR/../../../KARRI/Algorithms/KaRRi/EllipticBCH/../RequestState/../RequestState/../../Dijkstra/../../DataStructures/Graph/Import/../Attributes/LengthAttribute.h \
- /home/patrick/Documents/KIT/PARROT/Runners/../ULTRA/DataStructures/RideRAPTOR/../../../KARRI/Algorithms/KaRRi/EllipticBCH/../RequestState/../RequestState/../../Dijkstra/../../DataStructures/Graph/Import/../Attributes/NumLanesAttribute.h \
- /home/patrick/Documents/KIT/PARROT/Runners/../ULTRA/DataStructures/RideRAPTOR/../../../KARRI/Algorithms/KaRRi/EllipticBCH/../RequestState/../RequestState/../../Dijkstra/../../DataStructures/Graph/Import/../Attributes/TravelTimeAttribute.h \
- /home/patrick/Documents/KIT/PARROT/Runners/../ULTRA/DataStructures/RideRAPTOR/../../../KARRI/Algorithms/KaRRi/EllipticBCH/../RequestState/../RequestState/../../Dijkstra/../../DataStructures/Graph/Import/../Attributes/XatfRoadCategoryAttribute.h \
- /home/patrick/Documents/KIT/PARROT/Runners/../ULTRA/DataStructures/RideRAPTOR/../../../KARRI/Algorithms/KaRRi/EllipticBCH/../RequestState/../RequestState/../../Dijkstra/../../DataStructures/Labels/Containers/ParentLabelContainer.h \
- /home/patrick/Documents/KIT/PARROT/Runners/../ULTRA/DataStructures/RideRAPTOR/../../../KARRI/Algorithms/KaRRi/EllipticBCH/../RequestState/../RequestState/../../Dijkstra/../../DataStructures/Labels/Containers/StampedDistanceLabelContainer.h \
- /home/patrick/Documents/KIT/PARROT/Runners/../ULTRA/DataStructures/RideRAPTOR/../../../KARRI/Algorithms/KaRRi/EllipticBCH/../RequestState/../RequestState/../../Dijkstra/../../DataStructures/Queues/AddressableKHeap.h \
- /home/patrick/Documents/KIT/PARROT/Runners/../ULTRA/DataStructures/RideRAPTOR/../../../KARRI/Algorithms/KaRRi/EllipticBCH/../RequestState/../Stats/OsmRoadCategoryStats.h \
- /home/patrick/Documents/KIT/PARROT/Runners/../ULTRA/DataStructures/RideRAPTOR/../../../KARRI/Algorithms/KaRRi/EllipticBCH/../RequestState/../Stats/../../../DataStructures/Graph/Attributes/OsmRoadCategoryAttribute.h \
- /home/patrick/Documents/KIT/PARROT/Runners/../ULTRA/DataStructures/RideRAPTOR/../../../KARRI/Algorithms/KaRRi/EllipticBCH/../RequestState/../Stats/../../../DataStructures/Graph/Attributes/../../../Tools/EnumParser.h \
- /home/patrick/Documents/KIT/PARROT/Runners/../ULTRA/DataStructures/RideRAPTOR/../../../KARRI/Algorithms/KaRRi/EllipticBCH/../RequestState/../Stats/PerformanceStats.h \
- /home/patrick/Documents/KIT/PARROT/Runners/../ULTRA/DataStructures/RideRAPTOR/../../../KARRI/Algorithms/KaRRi/EllipticBCH/BucketEntryWithLeeway.h \
- /home/patrick/Documents/KIT/PARROT/Runners/../ULTRA/DataStructures/RideRAPTOR/../../../KARRI/Algorithms/KaRRi/EllipticBCH/../../CH/CH.h \
+ /home/patrick/Documents/KIT/PARROT/Runners/../ULTRA/Algorithms/RideRAPTOR/../../DataStructures/RideRAPTOR/../../../KARRI/Algorithms/KaRRi/EllipticBCH/../RequestState/../RequestState/../../Dijkstra/../../DataStructures/Graph/../../Tools/BinaryIO.h \
+ /home/patrick/Documents/KIT/PARROT/Runners/../ULTRA/Algorithms/RideRAPTOR/../../DataStructures/RideRAPTOR/../../../KARRI/Algorithms/KaRRi/EllipticBCH/../RequestState/../RequestState/../../Dijkstra/../../DataStructures/Graph/../../Tools/ContainerHelpers.h \
+ /home/patrick/Documents/KIT/PARROT/Runners/../ULTRA/Algorithms/RideRAPTOR/../../DataStructures/RideRAPTOR/../../../KARRI/Algorithms/KaRRi/EllipticBCH/../RequestState/../RequestState/../../Dijkstra/../../DataStructures/Graph/../Utilities/PermutationKARRI.h \
+ /home/patrick/Documents/KIT/PARROT/Runners/../ULTRA/Algorithms/RideRAPTOR/../../DataStructures/RideRAPTOR/../../../KARRI/Algorithms/KaRRi/EllipticBCH/../RequestState/../RequestState/../../Dijkstra/../../DataStructures/Graph/Export/DefaultExporter.h \
+ /home/patrick/Documents/KIT/PARROT/Runners/../ULTRA/Algorithms/RideRAPTOR/../../DataStructures/RideRAPTOR/../../../KARRI/Algorithms/KaRRi/EllipticBCH/../RequestState/../RequestState/../../Dijkstra/../../DataStructures/Graph/Import/XatfImporter.h \
+ /home/patrick/Documents/KIT/PARROT/Runners/../ULTRA/Algorithms/RideRAPTOR/../../DataStructures/RideRAPTOR/../../../KARRI/Algorithms/KaRRi/EllipticBCH/../RequestState/../RequestState/../../Dijkstra/../../DataStructures/Graph/Import/../../../Tools/LexicalCast.h \
+ /home/patrick/Documents/KIT/PARROT/Runners/../ULTRA/Algorithms/RideRAPTOR/../../DataStructures/RideRAPTOR/../../../KARRI/Algorithms/KaRRi/EllipticBCH/../RequestState/../RequestState/../../Dijkstra/../../DataStructures/Graph/Import/../../../Tools/StringHelpers.h \
+ /home/patrick/Documents/KIT/PARROT/Runners/../ULTRA/Algorithms/RideRAPTOR/../../DataStructures/RideRAPTOR/../../../KARRI/Algorithms/KaRRi/EllipticBCH/../RequestState/../RequestState/../../Dijkstra/../../DataStructures/Graph/Import/../Attributes/CapacityAttribute.h \
+ /home/patrick/Documents/KIT/PARROT/Runners/../ULTRA/Algorithms/RideRAPTOR/../../DataStructures/RideRAPTOR/../../../KARRI/Algorithms/KaRRi/EllipticBCH/../RequestState/../RequestState/../../Dijkstra/../../DataStructures/Graph/Import/../Attributes/LatLngAttribute.h \
+ /home/patrick/Documents/KIT/PARROT/Runners/../ULTRA/Algorithms/RideRAPTOR/../../DataStructures/RideRAPTOR/../../../KARRI/Algorithms/KaRRi/EllipticBCH/../RequestState/../RequestState/../../Dijkstra/../../DataStructures/Graph/Import/../Attributes/LengthAttribute.h \
+ /home/patrick/Documents/KIT/PARROT/Runners/../ULTRA/Algorithms/RideRAPTOR/../../DataStructures/RideRAPTOR/../../../KARRI/Algorithms/KaRRi/EllipticBCH/../RequestState/../RequestState/../../Dijkstra/../../DataStructures/Graph/Import/../Attributes/NumLanesAttribute.h \
+ /home/patrick/Documents/KIT/PARROT/Runners/../ULTRA/Algorithms/RideRAPTOR/../../DataStructures/RideRAPTOR/../../../KARRI/Algorithms/KaRRi/EllipticBCH/../RequestState/../RequestState/../../Dijkstra/../../DataStructures/Graph/Import/../Attributes/TravelTimeAttribute.h \
+ /home/patrick/Documents/KIT/PARROT/Runners/../ULTRA/Algorithms/RideRAPTOR/../../DataStructures/RideRAPTOR/../../../KARRI/Algorithms/KaRRi/EllipticBCH/../RequestState/../RequestState/../../Dijkstra/../../DataStructures/Graph/Import/../Attributes/XatfRoadCategoryAttribute.h \
+ /home/patrick/Documents/KIT/PARROT/Runners/../ULTRA/Algorithms/RideRAPTOR/../../DataStructures/RideRAPTOR/../../../KARRI/Algorithms/KaRRi/EllipticBCH/../RequestState/../RequestState/../../Dijkstra/../../DataStructures/Labels/Containers/ParentLabelContainer.h \
+ /home/patrick/Documents/KIT/PARROT/Runners/../ULTRA/Algorithms/RideRAPTOR/../../DataStructures/RideRAPTOR/../../../KARRI/Algorithms/KaRRi/EllipticBCH/../RequestState/../RequestState/../../Dijkstra/../../DataStructures/Labels/Containers/StampedDistanceLabelContainer.h \
+ /home/patrick/Documents/KIT/PARROT/Runners/../ULTRA/Algorithms/RideRAPTOR/../../DataStructures/RideRAPTOR/../../../KARRI/Algorithms/KaRRi/EllipticBCH/../RequestState/../RequestState/../../Dijkstra/../../DataStructures/Queues/AddressableKHeap.h \
+ /home/patrick/Documents/KIT/PARROT/Runners/../ULTRA/Algorithms/RideRAPTOR/../../DataStructures/RideRAPTOR/../../../KARRI/Algorithms/KaRRi/EllipticBCH/../RequestState/../Stats/OsmRoadCategoryStats.h \
+ /home/patrick/Documents/KIT/PARROT/Runners/../ULTRA/Algorithms/RideRAPTOR/../../DataStructures/RideRAPTOR/../../../KARRI/Algorithms/KaRRi/EllipticBCH/../RequestState/../Stats/../../../DataStructures/Graph/Attributes/OsmRoadCategoryAttribute.h \
+ /home/patrick/Documents/KIT/PARROT/Runners/../ULTRA/Algorithms/RideRAPTOR/../../DataStructures/RideRAPTOR/../../../KARRI/Algorithms/KaRRi/EllipticBCH/../RequestState/../Stats/../../../DataStructures/Graph/Attributes/../../../Tools/EnumParser.h \
+ /home/patrick/Documents/KIT/PARROT/Runners/../ULTRA/Algorithms/RideRAPTOR/../../DataStructures/RideRAPTOR/../../../KARRI/Algorithms/KaRRi/EllipticBCH/../RequestState/../Stats/PerformanceStats.h \
+ /home/patrick/Documents/KIT/PARROT/Runners/../ULTRA/Algorithms/RideRAPTOR/../../DataStructures/RideRAPTOR/../../../KARRI/Algorithms/KaRRi/EllipticBCH/BucketEntryWithLeeway.h \
+ /home/patrick/Documents/KIT/PARROT/Runners/../ULTRA/Algorithms/RideRAPTOR/../../DataStructures/RideRAPTOR/../../../KARRI/Algorithms/KaRRi/EllipticBCH/../../CH/CH.h \
  /usr/local/include/routingkit/contraction_hierarchy.h \
  /usr/local/include/routingkit/bit_vector.h \
  /usr/local/include/routingkit/id_queue.h \
  /usr/local/include/routingkit/constants.h \
  /usr/local/include/routingkit/permutation.h \
  /usr/local/include/routingkit/timestamp_flag.h \
- /home/patrick/Documents/KIT/PARROT/Runners/../ULTRA/DataStructures/RideRAPTOR/../../../KARRI/Algorithms/KaRRi/EllipticBCH/../../CH/../../DataStructures/Graph/Attributes/TraversalCostAttribute.h \
- /home/patrick/Documents/KIT/PARROT/Runners/../ULTRA/DataStructures/RideRAPTOR/../../../KARRI/Algorithms/KaRRi/EllipticBCH/../../CH/../../DataStructures/Graph/Attributes/UnpackingInfoAttribute.h \
- /home/patrick/Documents/KIT/PARROT/Runners/../ULTRA/DataStructures/RideRAPTOR/../../../KARRI/Algorithms/KaRRi/RequestState/RelevantPDLocs.h \
- /home/patrick/Documents/KIT/PARROT/Runners/../ULTRA/DataStructures/RideRAPTOR/../../../KARRI/Algorithms/KaRRi/RequestState/RelevantPDLocsFilter.h \
- /home/patrick/Documents/KIT/PARROT/Runners/../ULTRA/DataStructures/RideRAPTOR/../../../KARRI/Algorithms/KaRRi/RequestState/../../../assert_ex.h \
+ /home/patrick/Documents/KIT/PARROT/Runners/../ULTRA/Algorithms/RideRAPTOR/../../DataStructures/RideRAPTOR/../../../KARRI/Algorithms/KaRRi/EllipticBCH/../../CH/../../DataStructures/Graph/Attributes/TraversalCostAttribute.h \
+ /home/patrick/Documents/KIT/PARROT/Runners/../ULTRA/Algorithms/RideRAPTOR/../../DataStructures/RideRAPTOR/../../../KARRI/Algorithms/KaRRi/EllipticBCH/../../CH/../../DataStructures/Graph/Attributes/UnpackingInfoAttribute.h \
+ /home/patrick/Documents/KIT/PARROT/Runners/../ULTRA/Algorithms/RideRAPTOR/../../DataStructures/RideRAPTOR/../../../KARRI/Algorithms/KaRRi/RequestState/RelevantPDLocs.h \
+ /home/patrick/Documents/KIT/PARROT/Runners/../ULTRA/Algorithms/RideRAPTOR/../../DataStructures/RideRAPTOR/../../../KARRI/Algorithms/KaRRi/RequestState/RelevantPDLocsFilter.h \
+ /home/patrick/Documents/KIT/PARROT/Runners/../ULTRA/Algorithms/RideRAPTOR/../../DataStructures/RideRAPTOR/../../../KARRI/Algorithms/KaRRi/RequestState/../../../assert_ex.h \
+ /home/patrick/Documents/KIT/PARROT/Runners/../ULTRA/Algorithms/RideRAPTOR/Profiler.h \
  /home/patrick/Documents/KIT/PARROT/Runners/../KARRI/Algorithms/KaRRi/AssignmentFinder.h \
  /home/patrick/Documents/KIT/PARROT/Runners/../KARRI/Algorithms/KaRRi/DalsAssignments/DALSAssignmentsFinder.h \
  /home/patrick/Documents/KIT/PARROT/Runners/../KARRI/Algorithms/KaRRi/EllipticBCH/EllipticBucketsEnvironment.h \

@@ -4,15 +4,16 @@
 #include <string>
 #include <vector>
 
-#include "../../../KARRI/Algorithms/KaRRi/BaseObjeccts/RideRAPTORRequest.h"
+#include "../../../KARRI/Algorithms/KaRRi/BaseObjects/RideRAPTORRequest.h"
 #include "../../DataStructures/Container/Map.h"
 #include "../../DataStructures/Container/Set.h"
 #include "../../DataStructures/RAPTOR/Data.h"
+#include "../../DataStructures/RAPTOR/Entities/ArrivalLabel.h"
 #include "../../DataStructures/RAPTOR/Entities/EarliestArrivalTime.h"
 #include "../../DataStructures/RideRAPTOR/Data.h"
 #include "../../DataStructures/RideRAPTOR/Entities/Journey.h"
-#include "../RAPTOR/InitialTransfers.h"
-#include "../RAPTOR/Profiler.h"
+/* #include "../RAPTOR/InitialTransfers.h" */
+#include "Profiler.h"
 
 namespace RAPTOR {
 
@@ -23,8 +24,8 @@ struct RideOptimizationFlags {
     bool UseDistanceMatrix;
 };
 
-template <bool TARGET_PRUNING, typename PROFILER = NoProfiler,
-    bool TRANSITIVE = false, bool USE_MIN_TRANSFER_TIMES = false>
+// loooks wyld, that many template arguments
+template <typename FeasibleDistancesT, typename InputGraphT, typename CHEnvT, typename EllipticBCHSearchesT, bool TARGET_PRUNING, typename PROFILER = NoProfiler, bool TRANSITIVE = false, bool USE_MIN_TRANSFER_TIMES = false>
 class RideRAPTOR {
 public:
     static constexpr bool TargetPruning = TARGET_PRUNING;
@@ -35,7 +36,7 @@ public:
     static constexpr bool SeparateRouteAndTransferEntries = !Transitive | UseMinTransferTimes;
     static constexpr int RoundFactor = SeparateRouteAndTransferEntries ? 2 : 1;
     using ArrivalTime = EarliestArrivalTime<SeparateRouteAndTransferEntries>;
-    using Type = RideRAPTOR<TargetPruning, Profiler, Transitive, UseMinTransferTimes>;
+    using Type = RideRAPTOR<FeasibleDistancesT, InputGraphT, CHEnvT, EllipticBCHSearchesT, TargetPruning, Profiler, Transitive, UseMinTransferTimes>;
     using InitialTransferGraph = TransferGraph;
     using SourceType = StopId;
     using Journey = RIDERAPTOR::Journey;
@@ -72,7 +73,7 @@ private:
     using Round = std::vector<EarliestArrivalLabel>;
 
 public:
-    RideRAPTOR(RIDERAPTOR::Data& data,
+    RideRAPTOR(RIDERAPTOR::Data<FeasibleDistancesT, InputGraphT, CHEnvT, EllipticBCHSearchesT>& data,
         RideOptimizationFlags optimizationFlags = { true, true, true, true },
         const Profiler& profilerTemplate = Profiler())
         : data(data)
@@ -80,9 +81,9 @@ public:
         , stopsUpdatedByRoute(data.raptorData.numberOfStops() + 2)
         , stopsUpdatedByTransfer(data.raptorData.numberOfStops() + 2)
         , routesServingUpdatedStops(data.raptorData.numberOfRoutes())
-        , initialWalkingTransfers(data.walkingCH, FORWARD,
-              data.raptorData.numberOfStops(),
-              data.maxWalkTime)
+        /* , initialWalkingTransfers(data.walkingCH, FORWARD, */
+        /*       data.raptorData.numberOfStops(), */
+        /*       data.maxWalkTime) */
         , sourceEdge(noEdge)
         , sourceVertex(noVertex)
         , sourceStop(noStop)
@@ -119,13 +120,13 @@ public:
         profiler.initialize();
     }
 
-    template <typename ATTRIBUTE>
-    RideRAPTOR(RIDERAPTOR::Data& data, const InitialTransferGraph&,
-        const InitialTransferGraph&, const ATTRIBUTE,
-        const Profiler& = Profiler())
-        : RideRAPTOR(data)
-    {
-    }
+    /* template <typename ATTRIBUTE> */
+    /* RideRAPTOR(RIDERAPTOR::Data& data, const InitialTransferGraph&, */
+    /*     const InitialTransferGraph&, const ATTRIBUTE, */
+    /*     const Profiler& = Profiler()) */
+    /*     : RideRAPTOR(data) */
+    /* { */
+    /* } */
 
     inline void run(const Edge source, const int departureTime, const Edge target,
         const size_t maxRounds = INFTY) noexcept
@@ -143,13 +144,15 @@ public:
         data.extendRideTransferGraph(sourceStop, sourceEdge, targetStop,
             targetEdge);
         profiler.donePhase(PHASE_INIT_RIDE);
+        // since we don't want to model 10 min bucket ch walking in the beginning / end, i just relax the "normal" footpaths
+        /* profiler.startPhase(); */
+        /* if (!data.raptorData.isStop(targetStop) || !data.raptorData.isStop(sourceStop)) { */
+        /*     initialWalkingTransfers.run(sourceVertex, targetVertex); */
+        /* } */
+        /* profiler.donePhase(PHASE_INIT_WALK); */
         profiler.startPhase();
-        if (!data.raptorData.isStop(targetStop) || !data.raptorData.isStop(sourceStop)) {
-            initialWalkingTransfers.run(sourceVertex, targetVertex);
-        }
-        profiler.donePhase(PHASE_INIT_WALK);
-        profiler.startPhase();
-        relaxInitialWalkingTransfer();
+        /* relaxInitialWalkingTransfer(); */
+        relaxTransfers();
         profiler.donePhase(PHASE_TRANSFERS_WALKING);
         profiler.startPhase();
         relaxRideTransfers();
@@ -313,16 +316,17 @@ private:
     {
         sourceDepartureTime = departureTime;
         sourceEdge = source;
-        sourceVertex = data.disp.inputGraph.get(FromVertex, source);
-        if (data.raptorData.isStop(sourceVertex)) {
-            sourceStop = StopId(sourceVertex);
-        }
+        sourceVertex = data.inputGraph.get(FromVertex, source);
+
+        // assert this
+        assert(data.raptorData.isStop(sourceVertex));
+        sourceStop = StopId(sourceVertex);
 
         targetEdge = target;
-        targetVertex = data.disp.inputGraph.get(FromVertex, target);
-        if (data.raptorData.isStop(targetVertex)) {
-            targetStop = StopId(targetVertex);
-        }
+        targetVertex = data.inputGraph.get(FromVertex, target);
+        // assert this
+        assert(data.raptorData.isStop(targetVertex));
+        targetStop = StopId(targetVertex);
 
         startNewRound();
         arrivalByRoute(sourceStop, sourceDepartureTime);
@@ -409,47 +413,47 @@ private:
         }
     }
 
-    inline void relaxInitialWalkingTransfer()
-    {
-        for (const Vertex stop : initialWalkingTransfers.getForwardPOIs()) {
-            if (stop == targetStop || stop == sourceStop)
-                continue;
-            AssertMsg(data.raptorData.isStop(stop),
-                "Reached POI " << stop << " is not a stop!");
-            AssertMsg(initialWalkingTransfers.getForwardDistance(stop) != INFTY,
-                "Vertex " << stop << " was not reached!");
+    /* inline void relaxInitialWalkingTransfer() */
+    /* { */
+    /*     for (const Vertex stop : initialWalkingTransfers.getForwardPOIs()) { */
+    /*         if (stop == targetStop || stop == sourceStop) */
+    /*             continue; */
+    /*         AssertMsg(data.raptorData.isStop(stop), */
+    /*             "Reached POI " << stop << " is not a stop!"); */
+    /*         AssertMsg(initialWalkingTransfers.getForwardDistance(stop) != INFTY, */
+    /*             "Vertex " << stop << " was not reached!"); */
 
-            profiler.countMetric(METRIC_DIRECT_WALKING);
+    /*         profiler.countMetric(METRIC_DIRECT_WALKING); */
 
-            const int arrivalTime = sourceDepartureTime + initialWalkingTransfers.getForwardDistance(stop);
-            if (arrivalByTransfer(StopId(stop), arrivalTime)) {
-                EarliestArrivalLabel& label = currentRound()[stop];
-                label.parent = sourceStop;
-                label.parentDepartureTime = sourceDepartureTime;
-                label.usesRoute = false;
-                label.usesRide = false;
-                label.transferId = noEdge;
-            }
-        }
+    /*         const int arrivalTime = sourceDepartureTime + initialWalkingTransfers.getForwardDistance(stop); */
+    /*         if (arrivalByTransfer(StopId(stop), arrivalTime)) { */
+    /*             EarliestArrivalLabel& label = currentRound()[stop]; */
+    /*             label.parent = sourceStop; */
+    /*             label.parentDepartureTime = sourceDepartureTime; */
+    /*             label.usesRoute = false; */
+    /*             label.usesRide = false; */
+    /*             label.transferId = noEdge; */
+    /*         } */
+    /*     } */
 
-        if (initialWalkingTransfers.getDistance() <= data.maxWalkTime) {
-            profiler.countMetric(METRIC_DIRECT_WALKING);
-            const int arrivalTime = sourceDepartureTime + initialWalkingTransfers.getDistance();
-            if (arrivalByTransfer(targetStop, arrivalTime)) {
-                walkingDistance = initialWalkingTransfers.getDistance();
-                EarliestArrivalLabel& label = currentRound()[targetStop];
-                label.parent = sourceStop;
-                label.parentDepartureTime = sourceDepartureTime;
-                label.usesRoute = false;
-                label.usesRide = false;
-                label.transferId = noEdge;
-            }
-        }
+    /*     if (initialWalkingTransfers.getDistance() <= data.maxWalkTime) { */
+    /*         profiler.countMetric(METRIC_DIRECT_WALKING); */
+    /*         const int arrivalTime = sourceDepartureTime + initialWalkingTransfers.getDistance(); */
+    /*         if (arrivalByTransfer(targetStop, arrivalTime)) { */
+    /*             walkingDistance = initialWalkingTransfers.getDistance(); */
+    /*             EarliestArrivalLabel& label = currentRound()[targetStop]; */
+    /*             label.parent = sourceStop; */
+    /*             label.parentDepartureTime = sourceDepartureTime; */
+    /*             label.usesRoute = false; */
+    /*             label.usesRide = false; */
+    /*             label.transferId = noEdge; */
+    /*         } */
+    /*     } */
 
-        if (data.raptorData.isStop(sourceStop)) {
-            relaxTransfers();
-        }
-    }
+    /*     if (data.raptorData.isStop(sourceStop)) { */
+    /*         relaxTransfers(); */
+    /*     } */
+    /* } */
 
     inline void relaxTransfers() noexcept
     {
@@ -478,19 +482,19 @@ private:
                 }
             }
 
-            if (initialWalkingTransfers.getBackwardDistance(stop) != INFTY) {
-                profiler.countMetric(METRIC_DIRECT_WALKING);
+            /* if (initialWalkingTransfers.getBackwardDistance(stop) != INFTY) { */
+            /*     profiler.countMetric(METRIC_DIRECT_WALKING); */
 
-                const int arrivalTime = earliestArrivalTime + initialWalkingTransfers.getBackwardDistance(stop);
-                if (arrivalByTransfer(targetStop, arrivalTime)) {
-                    EarliestArrivalLabel& label = currentRound()[targetStop];
-                    label.parent = stop;
-                    label.parentDepartureTime = earliestArrivalTime;
-                    label.usesRoute = false;
-                    label.usesRide = false;
-                    label.transferId = noEdge;
-                }
-            }
+            /*     const int arrivalTime = earliestArrivalTime + initialWalkingTransfers.getBackwardDistance(stop); */
+            /*     if (arrivalByTransfer(targetStop, arrivalTime)) { */
+            /*         EarliestArrivalLabel& label = currentRound()[targetStop]; */
+            /*         label.parent = stop; */
+            /*         label.parentDepartureTime = earliestArrivalTime; */
+            /*         label.usesRoute = false; */
+            /*         label.usesRide = false; */
+            /*         label.transferId = noEdge; */
+            /*     } */
+            /* } */
 
             if constexpr (SeparateRouteAndTransferEntries) {
                 const int arrivalTime = earliestArrivalTime + getMinTransferTime(stop);
@@ -565,9 +569,11 @@ private:
 
                     const bool useDistance = optimizationFlags.UseDistanceMatrix && areStops;
                     karri::RideRAPTORRequest req;
-                    req.pickupSpot = pickup;
-                    req.dropoffSpot = dropoff;
-                    req.minDepTime = earliestArrivalTime;
+                    req.origin = pickup;
+                    req.destination = dropoff;
+                    // TODO this way previously minDepTime <=> requestTime ??
+                    req.requestTime = earliestArrivalTime;
+
                     req.vehicleId = vehId;
                     req.directDistance = useDistance ? data.distanceMatrix.getDistance(fromStop, toStop)
                                                      : INFTY;
@@ -582,8 +588,8 @@ private:
                     profiler.countMetric(METRIC_TRIED_RIDES);
                     if (!useDistance)
                         profiler.startExtraTimer();
-                    const auto [departureTime, arrivalTime] = useDistance ? data.disp.tryInsertionForVehicle<true>(req)
-                                                                          : data.disp.tryInsertionForVehicle<false>(req);
+                    const auto [departureTime, arrivalTime] = useDistance ? data.disp.template tryInsertionForVehicle<true>(req)
+                                                                          : data.disp.template tryInsertionForVehicle<false>(req);
                     if (!useDistance)
                         profiler.countMetric(METRIC_CHSEARCHES);
                     if (!useDistance)
@@ -727,7 +733,7 @@ private:
     }
 
 private:
-    RIDERAPTOR::Data& data;
+    RIDERAPTOR::Data<FeasibleDistancesT, InputGraphT, CHEnvT, EllipticBCHSearchesT>& data;
     std::vector<Round> rounds;
 
     std::vector<ArrivalTime> earliestArrival;
@@ -736,7 +742,7 @@ private:
     IndexedSet<false, StopId> stopsUpdatedByTransfer;
     IndexedMap<StopIndex, false, RouteId> routesServingUpdatedStops;
 
-    BucketCHInitialTransfers initialWalkingTransfers;
+    /* BucketCHInitialTransfers initialWalkingTransfers; */
 
     Edge sourceEdge;
     Vertex sourceVertex;

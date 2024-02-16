@@ -52,30 +52,34 @@ CMakeFiles/rideRAPTOR.dir/RunRideRaptor.o
  /home/patrick/Documents/KIT/PARROT/KARRI/DataStructures/Graph/Attributes/FreeFlowSpeedAttribute.h
  /home/patrick/Documents/KIT/PARROT/KARRI/DataStructures/Graph/Attributes/OsmNodeIdAttribute.h
  /home/patrick/Documents/KIT/PARROT/KARRI/Tools/CommandLine/CommandLineParser.h
- /home/patrick/Documents/KIT/PARROT/ULTRA/Helpers/Meta.h
  /home/patrick/Documents/KIT/PARROT/ULTRA/Helpers/Assert.h
  /home/patrick/Documents/KIT/PARROT/ULTRA/Helpers/HighlightText.h
+ /home/patrick/Documents/KIT/PARROT/ULTRA/Helpers/Meta.h
  /home/patrick/Documents/KIT/PARROT/ULTRA/Helpers/Ranges/ReverseRange.h
  /home/patrick/Documents/KIT/PARROT/ULTRA/Helpers/String/String.h
- /home/patrick/Documents/KIT/PARROT/ULTRA/DataStructures/Attributes/AttributeNames.h
- /home/patrick/Documents/KIT/PARROT/ULTRA/Helpers/ConstructorTags.h
- /home/patrick/Documents/KIT/PARROT/ULTRA/Helpers/Helpers.h
- /home/patrick/Documents/KIT/PARROT/ULTRA/Helpers/FileSystem/FileSystem.h
- /home/patrick/Documents/KIT/PARROT/ULTRA/Helpers/String/Enumeration.h
- /home/patrick/Documents/KIT/PARROT/ULTRA/Helpers/Vector/Vector.h
- /home/patrick/Documents/KIT/PARROT/ULTRA/Helpers/IO/File.h
- /home/patrick/Documents/KIT/PARROT/ULTRA/Helpers/IO/Serialization.h
  /home/patrick/Documents/KIT/PARROT/ULTRA/Helpers/TaggedInteger.h
  /home/patrick/Documents/KIT/PARROT/ULTRA/Helpers/Types.h
+ /home/patrick/Documents/KIT/PARROT/ULTRA/DataStructures/RideRAPTOR/Entities/InsertionInfo.h
+ /home/patrick/Documents/KIT/PARROT/KARRI/Tools/Constants.h
+ /home/patrick/Documents/KIT/PARROT/KARRI/Algorithms/KaRRi/BaseObjects/Request.h
+ /home/patrick/Documents/KIT/PARROT/KARRI/Algorithms/KaRRi/BaseObjects/RideRAPTORRequest.h
+ /home/patrick/Documents/KIT/PARROT/ULTRA/Helpers/ConstructorTags.h
+ /home/patrick/Documents/KIT/PARROT/ULTRA/Helpers/FileSystem/FileSystem.h
+ /home/patrick/Documents/KIT/PARROT/ULTRA/Helpers/String/Enumeration.h
+ /home/patrick/Documents/KIT/PARROT/ULTRA/Helpers/IO/File.h
+ /home/patrick/Documents/KIT/PARROT/ULTRA/Helpers/IO/Serialization.h
+ /home/patrick/Documents/KIT/PARROT/ULTRA/Helpers/Ranges/SimultaneousRange.h
+ /home/patrick/Documents/KIT/PARROT/ULTRA/Helpers/Helpers.h
  /home/patrick/Documents/KIT/PARROT/ULTRA/Helpers/Vector/Permutation.h
- /home/patrick/Documents/KIT/PARROT/ULTRA/DataStructures/Container/ExternalKHeap.h
+ /home/patrick/Documents/KIT/PARROT/ULTRA/Helpers/Vector/Vector.h
+ /home/patrick/Documents/KIT/PARROT/ULTRA/DataStructures/Container/Map.h
  /home/patrick/Documents/KIT/PARROT/ULTRA/DataStructures/Container/Set.h
+ /home/patrick/Documents/KIT/PARROT/ULTRA/DataStructures/Attributes/AttributeNames.h
+ /home/patrick/Documents/KIT/PARROT/ULTRA/DataStructures/Container/ExternalKHeap.h
  /home/patrick/Documents/KIT/PARROT/ULTRA/Helpers/Timer.h
  /home/patrick/Documents/KIT/PARROT/ULTRA/Algorithms/Dijkstra/Dijkstra.h
  /home/patrick/Documents/KIT/PARROT/ULTRA/Helpers/Ranges/Range.h
  /home/patrick/Documents/KIT/PARROT/ULTRA/Helpers/Ranges/SubRange.h
- /home/patrick/Documents/KIT/PARROT/ULTRA/Helpers/Ranges/SimultaneousRange.h
- /home/patrick/Documents/KIT/PARROT/ULTRA/DataStructures/Container/Map.h
  /home/patrick/Documents/KIT/PARROT/ULTRA/DataStructures/Geometry/Point.h
  /home/patrick/Documents/KIT/PARROT/ULTRA/DataStructures/Geometry/Rectangle.h
  /home/patrick/Documents/KIT/PARROT/ULTRA/Helpers/Console/ProgressBar.h
@@ -118,6 +122,9 @@ CMakeFiles/rideRAPTOR.dir/RunRideRaptor.o
  /home/patrick/Documents/KIT/PARROT/ULTRA/DataStructures/Intermediate/Entities/StopEvent.h
  /home/patrick/Documents/KIT/PARROT/ULTRA/DataStructures/Intermediate/Entities/Trip.h
  /home/patrick/Documents/KIT/PARROT/ULTRA/DataStructures/RAPTOR/Data.h
+ /home/patrick/Documents/KIT/PARROT/ULTRA/DataStructures/RAPTOR/TransferModes.h
+ /home/patrick/Documents/KIT/PARROT/ULTRA/DataStructures/RAPTOR/Entities/ArrivalLabel.h
+ /home/patrick/Documents/KIT/PARROT/ULTRA/DataStructures/RAPTOR/Entities/EarliestArrivalTime.h
  /home/patrick/Documents/KIT/PARROT/ULTRA/DataStructures/RAPTOR/Entities/Journey.h
  /home/patrick/Documents/KIT/PARROT/ULTRA/DataStructures/RAPTOR/Entities/Route.h
  /home/patrick/Documents/KIT/PARROT/ULTRA/DataStructures/RAPTOR/Entities/RouteSegment.h
@@ -132,7 +139,6 @@ CMakeFiles/rideRAPTOR.dir/RunRideRaptor.o
  /home/patrick/Documents/KIT/PARROT/KARRI/DataStructures/Utilities/IteratorRange.h
  /home/patrick/Documents/KIT/PARROT/KARRI/Algorithms/KaRRi/AssignmentCostFunctions/TimeIsMoneyCostFunction.h
  /home/patrick/Documents/KIT/PARROT/KARRI/Algorithms/KaRRi/BaseObjects/Assignment.h
- /home/patrick/Documents/KIT/PARROT/KARRI/Algorithms/KaRRi/BaseObjects/Request.h
  /home/patrick/Documents/KIT/PARROT/KARRI/Algorithms/KaRRi/CostCalculator.h
  /home/patrick/Documents/KIT/PARROT/KARRI/Tools/TemplateProgramming.h
  /home/patrick/Documents/KIT/PARROT/KARRI/DataStructures/Labels/BasicLabelSet.h
@@ -191,7 +197,6 @@ CMakeFiles/rideRAPTOR.dir/RunRideRaptor.o
  /home/patrick/Documents/KIT/PARROT/ULTRA/Algorithms/CH/Query/BucketQuery.h
  /home/patrick/Documents/KIT/PARROT/ULTRA/Algorithms/CH/Query/CHQuery.h
  /home/patrick/Documents/KIT/PARROT/KARRI/Tools/Bitwise.h
- /home/patrick/Documents/KIT/PARROT/KARRI/Tools/Constants.h
  /home/patrick/Documents/KIT/PARROT/KARRI/Tools/Math.h
  /home/patrick/Documents/KIT/PARROT/KARRI/Tools/Workarounds.h
  /home/patrick/Documents/KIT/PARROT/KARRI/DataStructures/Geometry/LatLng.h
@@ -206,8 +211,9 @@ CMakeFiles/rideRAPTOR.dir/RunRideRaptor.o
  /home/patrick/Documents/KIT/PARROT/ULTRA/Shell/Shell.h
  /home/patrick/Documents/KIT/PARROT/ULTRA/DataStructures/RideRAPTOR/Data.h
  /home/patrick/Documents/KIT/PARROT/ULTRA/DataStructures/RideRAPTOR/DistanceMatrix.h
- /home/patrick/Documents/KIT/PARROT/ULTRA/DataStructures/RideRAPTOR/Entities/InsertionInfo.h
  /home/patrick/Documents/KIT/PARROT/ULTRA/DataStructures/RideRAPTOR/Profiler.h
+ /home/patrick/Documents/KIT/PARROT/ULTRA/Algorithms/RideRAPTOR/Profiler.h
+ /home/patrick/Documents/KIT/PARROT/ULTRA/Algorithms/RideRAPTOR/RideRAPTOR.h
  /usr/include/alloca.h
  /usr/include/asm-generic/bitsperlong.h
  /usr/include/asm-generic/errno-base.h

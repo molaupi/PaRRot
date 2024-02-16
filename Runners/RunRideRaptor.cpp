@@ -6,8 +6,10 @@
 #include <iostream>
 #include <random>
 
+#include "../ULTRA/Algorithms/RideRAPTOR/RideRAPTOR.h"
 #include "../ULTRA/DataStructures/RAPTOR/Data.h"
 #include "../ULTRA/DataStructures/RideRAPTOR/Data.h"
+#include "../ULTRA/DataStructures/RideRAPTOR/DistanceMatrix.h"
 
 #include "../KARRI/Algorithms/CH/CH.h"
 #include "../KARRI/Algorithms/KaRRi/AssignmentFinder.h"
@@ -648,7 +650,9 @@ int main(int argc, char* argv[])
         EventSimulationImpl eventSimulation(fleet, requests, inputConfig.stopTime,
             insertionFinder, systemStateUpdater,
             routeState, true);
-        eventSimulation.run();
+
+        // TODO
+        /* eventSimulation.run(); */
 
         std::cout << "done.\n";
 
@@ -700,6 +704,65 @@ int main(int argc, char* argv[])
         std::cout << "done.\n";
 
         rideRaptor.rideTransferGraph.printAnalysis();
+
+        std::cout << "Convert the karri::CH to ULTRA::CH... " << std::flush;
+
+        // convert from KARRI:CH to ULTRA::CH
+        auto& karriVehCH = vehChEnv->getCH();
+        auto& karriUpCHGraph = karriVehCH.upwardGraph();
+        auto& karriDownCHGraph = karriVehCH.downwardGraph();
+
+        CHConstructionGraph upCHGraph;
+        CHConstructionGraph downCHGraph;
+
+        upCHGraph.addVertices(karriUpCHGraph.numVertices());
+        upCHGraph.reserve(karriUpCHGraph.numVertices(), karriUpCHGraph.numEdges());
+
+        // TODO need to fix the ViaVertex
+        FORALL_VALID_EDGES(karriUpCHGraph, v, e)
+        {
+            auto edgeHandle = upCHGraph.addEdge(Vertex(v), Vertex(karriUpCHGraph.edgeHead(e)));
+            edgeHandle.set(Weight, karriUpCHGraph.traversalCost(e));
+            // since UnpackingInfoAttribute is defined a little weird (via the two edges directly, rather than the ViaVertex itself), we need to get the Vertex
+            auto& unpackingInfoOfEdge = karriUpCHGraph.unpackingInfo(e);
+            if (unpackingInfoOfEdge.second == INVALID_EDGE) {
+                // this case, the edge was an input edge => set invalid vertex as viavertex
+                edgeHandle.set(ViaVertex, noVertex);
+            } else {
+                // otherwise take the FromVertex / edgeTail from the first edge
+                edgeHandle.set(ViaVertex, Vertex(karriUpCHGraph.edgeHead(unpackingInfoOfEdge.second)));
+            }
+        }
+
+        downCHGraph.addVertices(karriDownCHGraph.numVertices());
+        downCHGraph.reserve(karriDownCHGraph.numVertices(), karriDownCHGraph.numEdges());
+
+        FORALL_VALID_EDGES(karriDownCHGraph, v, e)
+        {
+            auto edgeHandle = upCHGraph.addEdge(Vertex(v), Vertex(karriDownCHGraph.edgeHead(e)));
+            edgeHandle.set(Weight, karriDownCHGraph.traversalCost(e));
+            // since UnpackingInfoAttribute is defined a little weird (via the two edges directly, rather than the ViaVertex itself), we need to get the Vertex
+            auto& unpackingInfoOfEdge = karriDownCHGraph.unpackingInfo(e);
+            if (unpackingInfoOfEdge.second == INVALID_EDGE) {
+                // this case, the edge was an input edge => set invalid vertex as viavertex
+                edgeHandle.set(ViaVertex, noVertex);
+            } else {
+                // otherwise take the FromVertex / edgeTail from the first edge
+                edgeHandle.set(ViaVertex, Vertex(karriDownCHGraph.edgeHead(unpackingInfoOfEdge.second)));
+            }
+        }
+
+        CH::CH ch(std::move(upCHGraph), std::move(downCHGraph));
+
+        std::cout << "done.\n";
+
+        // Build Distance Matrix for RideRAPTOR
+        std::cout << "Build the DistanceMatrix... " << std::flush;
+
+        RIDERAPTOR::DistanceMatrix matrix(raptor.numberOfStops());
+        RIDERAPTOR::fillDistanceMatrix(matrix, raptor, ch);
+
+        std::cout << "done.\n";
 
     } catch (std::exception& e) {
         std::cerr << argv[0] << ": " << e.what() << '\n';
