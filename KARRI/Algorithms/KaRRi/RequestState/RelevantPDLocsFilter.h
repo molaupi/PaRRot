@@ -347,9 +347,9 @@ private:
                                     distFromPDLoc, // distFrom
                                     0, // reverseDistTo
                                     0, // reverseDistFrom
-                                    routeState.schedArrTimesFor(vehId)[stopId], // minArrTime
-                                    routeState.schedDepTimesFor(vehId)[stopId], // minDepTime
-                                    routeState.maxArrTimesFor(vehId)[stopId] // maxDepTime
+                                    routeState.schedArrTimesFor(vehId)[i], // minArrTime
+                                    routeState.schedDepTimesFor(vehId)[i], // minDepTime
+                                    routeState.maxArrTimesFor(vehId)[i] // maxDepTime
                                 });
                             }
                         }

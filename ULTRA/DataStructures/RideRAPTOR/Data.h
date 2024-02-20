@@ -150,11 +150,8 @@ public:
         , walkingCH(walkingCH)
         , distanceMatrix(distanceMatrix)
         , maxWalkTime(maxWalkTime)
-        , stopCounter(fleet.size(), 0)
-        , accumulatedNumStops(fleet.size() + 1)
         , sourceStopDummy(raptorData.numberOfStops())
         , targetStopDummy(raptorData.numberOfStops() + 1)
-        , numberOfStops(raptorData.numberOfStops() + 2)
         , fleet(fleet)
         , inputGraph(inputGraph)
         , ch(chEnv.getCH())
@@ -172,6 +169,9 @@ public:
         , relevantPdLocsFilter(fleet, inputGraph, chEnv, calculator, requestState, routeState, inputConfig, feasiblePickupDistances, feasibleDropoffDistances, relOrdinaryPickups, relOrdinaryDropoffs, relPickupsBeforeNextStop, relDropoffsBeforeNextStop)
         , ellipticBchSearches(ellipticBchSearches)
         , edgeIdOfStation(edgeIdOfStation)
+            , stopCounter(fleet.size(), 0)
+            , accumulatedNumStops(fleet.size() + 1)
+            , numberOfStops(raptorData.numberOfStops() + 2)
         , profiler(profilerTemplate)
     {
         profiler.registerPhases(
@@ -197,7 +197,8 @@ public:
         for (size_t i(0); i < fleet.size(); ++i) {
             // is i == vehid??
             auto& vehicle = fleet[i];
-            const auto& vehid = vehicle.vehicleId;
+            const auto& vehId = vehicle.vehicleId;
+            unused(vehId);
 
             accumulatedNumStops[i] = runningSum;
             runningSum += routeState.numStopsOf(i);
@@ -249,8 +250,8 @@ public:
             assert(requestState.numPickups() == 1);
 
             ellipticBchSearches.runForStation();
-            relevantPdLocsFilter.filterOrdinary(vehicles);
-            relevantPdLocsFilter.filterBeforeNextStop(vehicles);
+            relevantPdLocsFilter.filterOrdinaryPickups(vehicles);
+            relevantPdLocsFilter.filterPickupsBeforeNextStop(vehicles);
 
             profiler.countMetric(METRIC_BCHSEARCHES, 2);
             profiler.countMetric(METRIC_NEARBYVEHICLEROUTES, vehicles.size());
@@ -572,9 +573,9 @@ private:
 
 public:
     const RAPTOR::Data& raptorData;
+    CH::CH walkingCH;
     RideTransferGraph rideTransferGraph;
     const DistanceMatrix& distanceMatrix;
-    CH::CH walkingCH;
     const int maxWalkTime;
 
     const StopId sourceStopDummy;

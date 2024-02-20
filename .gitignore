@@ -240,3 +240,8 @@ KARRI/RawData/CMakeFiles/*
 ./.git/hooks/pre-applypatch.sample
 ./.git/hooks/pre-merge-commit.sample
 ./.git/hooks/post-update.sample
+
+
+# Moritz: CLion auto generated files
+.idea/
+cmake-build-*
