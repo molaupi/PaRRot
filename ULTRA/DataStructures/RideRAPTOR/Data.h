@@ -169,9 +169,9 @@ public:
         , relevantPdLocsFilter(fleet, inputGraph, chEnv, calculator, requestState, routeState, inputConfig, feasiblePickupDistances, feasibleDropoffDistances, relOrdinaryPickups, relOrdinaryDropoffs, relPickupsBeforeNextStop, relDropoffsBeforeNextStop)
         , ellipticBchSearches(ellipticBchSearches)
         , edgeIdOfStation(edgeIdOfStation)
-            , stopCounter(fleet.size(), 0)
-            , accumulatedNumStops(fleet.size() + 1)
-            , numberOfStops(raptorData.numberOfStops() + 2)
+        , stopCounter(fleet.size(), 0)
+        , accumulatedNumStops(fleet.size() + 1)
+        , numberOfStops(raptorData.numberOfStops() + 2)
         , profiler(profilerTemplate)
     {
         profiler.registerPhases(

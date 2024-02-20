@@ -354,8 +354,8 @@ private:
         const auto& pickup = requestState.pickups[label.pickupId];
         const auto& dropoff = requestState.dropoffs[label.dropoffId];
         const int minVehTimeTillDepAtPickup = label.distToPickup + inputConfig.stopTime;
-//        const int minPsgTimeTillDepAtPickup = std::max(label.distToPickup + inputConfig.stopTime,
-//            pickup.walkingDist);
+        //        const int minPsgTimeTillDepAtPickup = std::max(label.distToPickup + inputConfig.stopTime,
+        //            pickup.walkingDist);
         const int minPsgTimeTillDepAtPickup = pickup.walkingDist;
         return calculator.calcCostForPairedAssignmentAfterLastStop(minVehTimeTillDepAtPickup,
             minPsgTimeTillDepAtPickup,
@@ -535,8 +535,7 @@ private:
         using F = CostCalculator::CostFunction;
         const auto maxDepTimeDiff = std::max(label1.distToPickup + inputConfig.stopTime, pickup1.walkingDist) - (label2.distToPickup + inputConfig.stopTime);
         const auto maxDetourDiff = maxDepTimeDiff + label1.directDistance - label2.directDistance;
-        const auto maxTripDiff = std::max(label1.distToPickup + inputConfig.stopTime, pickup1.walkingDist) + label1.directDistance + dropoff1.walkingDist -
-                (std::min(label2.distToPickup + inputConfig.stopTime, pickup2.walkingDist) + label2.directDistance + dropoff2.walkingDist);
+        const auto maxTripDiff = std::max(label1.distToPickup + inputConfig.stopTime, pickup1.walkingDist) + label1.directDistance + dropoff1.walkingDist - (std::min(label2.distToPickup + inputConfig.stopTime, pickup2.walkingDist) + label2.directDistance + dropoff2.walkingDist);
         const auto walkDiff = pickup1.walkingDist + dropoff1.walkingDist - pickup2.walkingDist - dropoff2.walkingDist;
 
         const auto maxWaitVioDiff = F::WAIT_VIO_WEIGHT * std::max(maxDepTimeDiff, 0);

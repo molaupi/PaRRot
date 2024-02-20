@@ -635,7 +635,7 @@ int main(int argc, char* argv[])
         std::sort(requests.begin(), requests.end(), [](const auto& left, const auto& right) {
             return left.requestTime < right.requestTime;
         });
-        requests.resize(1000);
+        requests.resize(500);
 
         int i(0);
         for (auto& req : requests) {
