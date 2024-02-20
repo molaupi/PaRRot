@@ -68,13 +68,11 @@ inline TransferGraph getOverheadGraph(RAPTOR::Data& raptorData,
 struct RideRaptorParameter {
     RideRaptorParameter() { }
 
-    RideRaptorParameter(int stopTime, double alpha, int beta, int maxIdleTime,
-        int maxWalkTime)
+    RideRaptorParameter(int stopTime, double alpha, int beta, int maxIdleTime)
         : stopTime(stopTime)
         , alpha(alpha)
         , beta(beta)
         , maxIdleTime(maxIdleTime)
-        , maxWalkTime(maxWalkTime)
     {
     }
 
@@ -88,20 +86,19 @@ struct RideRaptorParameter {
     double alpha;
     int beta;
     int maxIdleTime;
-    int maxWalkTime;
 
     void readFrom(const std::string& fileName,
         const std::string& separator = ".")
     {
         IO::deserialize(fileName + separator + "parameter", stopTime, alpha, beta,
-            maxIdleTime, maxWalkTime);
+            maxIdleTime);
     }
 
     void writeTo(const std::string& fileName,
         const std::string& separator = ".")
     {
         IO::serialize(fileName + separator + "parameter", stopTime, alpha, beta,
-            maxIdleTime, maxWalkTime);
+            maxIdleTime);
     }
 };
 
@@ -121,11 +118,9 @@ public:
         karri::RelevantPDLocs& relDropoffsBeforeNextStop,
         EllipticBCHSearchesT& ellipticBchSearches,
         const std::vector<int>& edgeIdOfStation,
-        CH::CH walkingCH = CH::CH(),
-        const int maxWalkTime = 600,
         const DistanceMatrix& distanceMatrix = DistanceMatrix(),
         const std::string& separator = ".", const Profiler& profilerTemplate = Profiler())
-        : Data(raptorData, fleet, inputGraph, chEnv, calculator, requestState, routeState, inputConfig, feasiblePickupDistances, feasibleDropoffDistances, relOrdinaryPickups, relOrdinaryDropoffs, relPickupsBeforeNextStop, relDropoffsBeforeNextStop, ellipticBchSearches, edgeIdOfStation, walkingCH, maxWalkTime, distanceMatrix, profilerTemplate)
+        : Data(raptorData, fleet, inputGraph, chEnv, calculator, requestState, routeState, inputConfig, feasiblePickupDistances, feasibleDropoffDistances, relOrdinaryPickups, relOrdinaryDropoffs, relPickupsBeforeNextStop, relDropoffsBeforeNextStop, ellipticBchSearches, edgeIdOfStation, distanceMatrix, profilerTemplate)
     {
         readRideDataFrom(fileName, separator);
     }
@@ -143,13 +138,10 @@ public:
         karri::RelevantPDLocs& relDropoffsBeforeNextStop,
         EllipticBCHSearchesT& ellipticBchSearches,
         const std::vector<int>& edgeIdOfStation,
-        CH::CH walkingCH = CH::CH(), const int maxWalkTime = 600,
         const DistanceMatrix& distanceMatrix = DistanceMatrix(),
         const Profiler& profilerTemplate = Profiler())
         : raptorData(raptorData)
-        , walkingCH(walkingCH)
         , distanceMatrix(distanceMatrix)
-        , maxWalkTime(maxWalkTime)
         , stopCounter(fleet.size(), 0)
         , accumulatedNumStops(fleet.size() + 1)
         , sourceStopDummy(raptorData.numberOfStops())
@@ -447,6 +439,10 @@ public:
         rideTransferGraph.writeBinary(fileName + separator + "rideTransferGraph");
     }
 
+    /* inline void setDistanceMatrix(DistanceMatrix &newDistanceMatrix) noexcept { */
+    /*     distanceMatrix = newDistanceMatrix; */
+    /* } */
+
 private:
     template <bool INSERT_OUTGOING = true>
     void insertVehicleEdges(const std::vector<StopInsertionInfo> insertionInfos,
@@ -574,8 +570,6 @@ public:
     const RAPTOR::Data& raptorData;
     RideTransferGraph rideTransferGraph;
     const DistanceMatrix& distanceMatrix;
-    CH::CH walkingCH;
-    const int maxWalkTime;
 
     const StopId sourceStopDummy;
     const StopId targetStopDummy;

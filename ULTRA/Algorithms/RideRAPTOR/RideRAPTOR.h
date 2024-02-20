@@ -25,7 +25,7 @@ struct RideOptimizationFlags {
 };
 
 // loooks wyld, that many template arguments
-template <typename FeasibleDistancesT, typename InputGraphT, typename CHEnvT, typename EllipticBCHSearchesT, bool TARGET_PRUNING, typename PROFILER = NoProfiler, bool TRANSITIVE = false, bool USE_MIN_TRANSFER_TIMES = false>
+template <typename FeasibleDistancesT, typename InputGraphT, typename CHEnvT, typename EllipticBCHSearchesT, bool TARGET_PRUNING = true, typename PROFILER = NoProfiler, bool TRANSITIVE = false, bool USE_MIN_TRANSFER_TIMES = false>
 class RideRAPTOR {
 public:
     static constexpr bool TargetPruning = TARGET_PRUNING;
@@ -81,9 +81,6 @@ public:
         , stopsUpdatedByRoute(data.raptorData.numberOfStops() + 2)
         , stopsUpdatedByTransfer(data.raptorData.numberOfStops() + 2)
         , routesServingUpdatedStops(data.raptorData.numberOfRoutes())
-        /* , initialWalkingTransfers(data.walkingCH, FORWARD, */
-        /*       data.raptorData.numberOfStops(), */
-        /*       data.maxWalkTime) */
         , sourceEdge(noEdge)
         , sourceVertex(noVertex)
         , sourceStop(noStop)
@@ -91,7 +88,6 @@ public:
         , targetVertex(noVertex)
         , targetStop(noStop)
         , sourceDepartureTime(never)
-        , walkingDistance(INFTY)
         , profiler(profilerTemplate)
         , optimizationFlags(optimizationFlags)
     {
@@ -144,12 +140,6 @@ public:
         data.extendRideTransferGraph(sourceStop, sourceEdge, targetStop,
             targetEdge);
         profiler.donePhase(PHASE_INIT_RIDE);
-        // since we don't want to model 10 min bucket ch walking in the beginning / end, i just relax the "normal" footpaths
-        /* profiler.startPhase(); */
-        /* if (!data.raptorData.isStop(targetStop) || !data.raptorData.isStop(sourceStop)) { */
-        /*     initialWalkingTransfers.run(sourceVertex, targetVertex); */
-        /* } */
-        /* profiler.donePhase(PHASE_INIT_WALK); */
         profiler.startPhase();
         /* relaxInitialWalkingTransfer(); */
         relaxTransfers();
@@ -253,10 +243,8 @@ public:
 
     inline int getWalkingArrivalTime() const noexcept
     {
-        return sourceDepartureTime + walkingDistance;
+        return sourceDepartureTime;
     }
-
-    inline int getWalkingTravelTime() const noexcept { return walkingDistance; }
 
     inline std::vector<Vertex> getPath(const StopId stop) const
     {
@@ -281,7 +269,6 @@ public:
         sourceStop = StopId(data.raptorData.numberOfStops());
         targetStop = StopId(data.raptorData.numberOfStops() + 1);
         sourceDepartureTime = never;
-        walkingDistance = INFTY;
         if constexpr (RESET_CAPACITIES) {
             std::vector<Round>().swap(rounds);
             std::vector<ArrivalTime>(earliestArrival.size(), never)
@@ -742,8 +729,6 @@ private:
     IndexedSet<false, StopId> stopsUpdatedByTransfer;
     IndexedMap<StopIndex, false, RouteId> routesServingUpdatedStops;
 
-    /* BucketCHInitialTransfers initialWalkingTransfers; */
-
     Edge sourceEdge;
     Vertex sourceVertex;
     StopId sourceStop;
@@ -751,7 +736,6 @@ private:
     Vertex targetVertex;
     StopId targetStop;
     int sourceDepartureTime;
-    int walkingDistance;
 
     Profiler profiler;
     RideOptimizationFlags optimizationFlags;

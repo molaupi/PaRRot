@@ -675,35 +675,10 @@ int main(int argc, char* argv[])
         // Read the RAPTOR data
         std::cout << "Reading RAPTOR data from file... " << std::flush;
         RAPTOR::Data raptor(raptorFileName);
+        raptor.useImplicitDepartureBufferTimes();
         std::cout << "done.\n";
 
         raptor.printInfo();
-
-        // Build the RideRAPTOR data
-        std::cout << "Building RideRAPTOR data... " << std::flush;
-
-        RIDERAPTOR::Data<FeasibleEllipticDistancesImpl, VehicleInputGraph, VehCHEnv, EllipticBCHSearchesImpl> rideRaptor(
-            raptor,
-            fleet,
-            vehicleInputGraph,
-            *vehChEnv,
-            calc,
-            reqState,
-            routeState,
-            inputConfig,
-            feasibleEllipticPickups,
-            feasibleEllipticDropoffs,
-            relOrdinaryPickups,
-            relOrdinaryDropoffs,
-            relPickupsBeforeNextStop,
-            relDropoffsBeforeNextStop,
-            ellipticSearches,
-            edgeIdOfStation);
-
-        rideRaptor.buildRideTransferGraph();
-        std::cout << "done.\n";
-
-        rideRaptor.rideTransferGraph.printAnalysis();
 
         std::cout << "Convert the karri::CH to ULTRA::CH... " << std::flush;
 
@@ -718,7 +693,6 @@ int main(int argc, char* argv[])
         upCHGraph.addVertices(karriUpCHGraph.numVertices());
         upCHGraph.reserve(karriUpCHGraph.numVertices(), karriUpCHGraph.numEdges());
 
-        // TODO need to fix the ViaVertex
         FORALL_VALID_EDGES(karriUpCHGraph, v, e)
         {
             auto edgeHandle = upCHGraph.addEdge(Vertex(v), Vertex(karriUpCHGraph.edgeHead(e)));
@@ -730,7 +704,7 @@ int main(int argc, char* argv[])
                 edgeHandle.set(ViaVertex, noVertex);
             } else {
                 // otherwise take the FromVertex / edgeTail from the first edge
-                edgeHandle.set(ViaVertex, Vertex(karriUpCHGraph.edgeHead(unpackingInfoOfEdge.second)));
+                edgeHandle.set(ViaVertex, Vertex(karriDownCHGraph.edgeHead(unpackingInfoOfEdge.first)));
             }
         }
 
@@ -748,7 +722,7 @@ int main(int argc, char* argv[])
                 edgeHandle.set(ViaVertex, noVertex);
             } else {
                 // otherwise take the FromVertex / edgeTail from the first edge
-                edgeHandle.set(ViaVertex, Vertex(karriDownCHGraph.edgeHead(unpackingInfoOfEdge.second)));
+                edgeHandle.set(ViaVertex, Vertex(karriUpCHGraph.edgeHead(unpackingInfoOfEdge.first)));
             }
         }
 
@@ -761,6 +735,39 @@ int main(int argc, char* argv[])
 
         RIDERAPTOR::DistanceMatrix matrix(raptor.numberOfStops());
         RIDERAPTOR::fillDistanceMatrix(matrix, raptor, ch);
+
+        std::cout << "done.\n";
+
+        // Build the RideRAPTOR data
+        std::cout << "Building RideRAPTOR data... " << std::flush;
+
+        RIDERAPTOR::Data<FeasibleEllipticDistancesImpl, VehicleInputGraph, VehCHEnv, EllipticBCHSearchesImpl> rideRAPTORData(
+            raptor,
+            fleet,
+            vehicleInputGraph,
+            *vehChEnv,
+            calc,
+            reqState,
+            routeState,
+            inputConfig,
+            feasibleEllipticPickups,
+            feasibleEllipticDropoffs,
+            relOrdinaryPickups,
+            relOrdinaryDropoffs,
+            relPickupsBeforeNextStop,
+            relDropoffsBeforeNextStop,
+            ellipticSearches,
+            edgeIdOfStation,
+            matrix);
+
+        rideRAPTORData.buildRideTransferGraph();
+        std::cout << "done.\n";
+
+        rideRAPTORData.rideTransferGraph.printAnalysis();
+
+        // Run some RideRAPTOR Queries
+        std::cout << "Create RideRAPTOR Query Object... " << std::flush;
+        RAPTOR::RideRAPTOR<FeasibleEllipticDistancesImpl, VehicleInputGraph, VehCHEnv, EllipticBCHSearchesImpl> rideRAPTORQuery(rideRAPTORData);
 
         std::cout << "done.\n";
 
