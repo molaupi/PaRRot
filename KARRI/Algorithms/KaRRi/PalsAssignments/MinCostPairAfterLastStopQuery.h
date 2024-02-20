@@ -73,7 +73,8 @@ public:
         const CostCalculator& calculator,
         const LastStopBucketsEnvT& lastStopBucketsEnv,
         const RequestState& requestState, const InputConfig& inputConfig)
-        : inputGraph(inputGraph)
+        : chQuery(chEnv.template getFullCHQuery<>())
+        , inputGraph(inputGraph)
         , ch(chEnv.getCH())
         , queryGraph(ch.downwardGraph())
         , oppositeGraph(ch.upwardGraph())
@@ -353,8 +354,9 @@ private:
         const auto& pickup = requestState.pickups[label.pickupId];
         const auto& dropoff = requestState.dropoffs[label.dropoffId];
         const int minVehTimeTillDepAtPickup = label.distToPickup + inputConfig.stopTime;
-        const int minPsgTimeTillDepAtPickup = std::max(label.distToPickup + inputConfig.stopTime,
-            pickup.walkingDist);
+        //        const int minPsgTimeTillDepAtPickup = std::max(label.distToPickup + inputConfig.stopTime,
+        //            pickup.walkingDist);
+        const int minPsgTimeTillDepAtPickup = pickup.walkingDist;
         return calculator.calcCostForPairedAssignmentAfterLastStop(minVehTimeTillDepAtPickup,
             minPsgTimeTillDepAtPickup,
             label.directDistance, pickup.walkingDist,
@@ -533,7 +535,7 @@ private:
         using F = CostCalculator::CostFunction;
         const auto maxDepTimeDiff = std::max(label1.distToPickup + inputConfig.stopTime, pickup1.walkingDist) - (label2.distToPickup + inputConfig.stopTime);
         const auto maxDetourDiff = maxDepTimeDiff + label1.directDistance - label2.directDistance;
-        const auto maxTripDiff = maxDetourDiff + dropoff1.walkingDist - dropoff2.walkingDist;
+        const auto maxTripDiff = std::max(label1.distToPickup + inputConfig.stopTime, pickup1.walkingDist) + label1.directDistance + dropoff1.walkingDist - (std::min(label2.distToPickup + inputConfig.stopTime, pickup2.walkingDist) + label2.directDistance + dropoff2.walkingDist);
         const auto walkDiff = pickup1.walkingDist + dropoff1.walkingDist - pickup2.walkingDist - dropoff2.walkingDist;
 
         const auto maxWaitVioDiff = F::WAIT_VIO_WEIGHT * std::max(maxDepTimeDiff, 0);
@@ -563,6 +565,7 @@ private:
             auto bucket = lastStopBuckets.getBucketOf(rank);
             for (const auto& entry : bucket) {
                 ++numEntriesScannedInBucket;
+                ++numEntriesScannedInBucket;
                 const int fullDistToPickup = entry.distToTarget + label.distToPickup;
                 tryTentativeAssignment(entry.targetId, fullDistToPickup, asgn);
             }
@@ -573,6 +576,7 @@ private:
             for (const auto& entry : bucket) {
                 ++numEntriesScannedInBucket;
                 const int fullDistToPickup = entry.distToTarget + label.distToPickup;
+
                 // Vehicles are ordered by distToTarget, i.e. once we scan a vehicle where the lower bound cost
                 // based on the vehicle distance to the pickup (i.e. irrespective of possible vehicle waiting for
                 // the passenger at the pickup) is larger than the best known assignment cost, the rest of the
@@ -580,12 +584,12 @@ private:
                 // with the vehicles (given constant pickup and dropoff).
                 const auto vehTimeTillDepAtPickup = fullDistToPickup + inputConfig.stopTime;
                 const auto lowerBoundCostForEarlyBreak = calculator.calcCostForPairedAssignmentAfterLastStop(
-                    vehTimeTillDepAtPickup, std::max(pickup.walkingDist, vehTimeTillDepAtPickup),
+                    vehTimeTillDepAtPickup, pickup.walkingDist,
                     directDist, pickup.walkingDist, dropoff.walkingDist, requestState);
                 if (lowerBoundCostForEarlyBreak > upperBoundCostWithConstraints)
                     break;
 
-                tryTentativeAssignment(entry.targetId, fullDistToPickup, asgn);
+                tryTentativeAssignment(entry.targetId, fullDistToPickup, asgn, lowerBoundCostForEarlyBreak);
             }
         } else {
 
@@ -647,8 +651,9 @@ private:
         numEntriesScanned += numEntriesScannedInBucket;
     }
 
-    inline void tryTentativeAssignment(const int vehId, const int fullDistToPickup, Assignment& asgn)
+    inline void tryTentativeAssignment(const int vehId, const int fullDistToPickup, Assignment& asgn, int lowerBoundCost = 0)
     {
+        unused(lowerBoundCost);
 
         const int& numStops = routeState.numStopsOf(vehId);
         asgn.vehicle = &fleet[vehId];
@@ -661,6 +666,7 @@ private:
         // that does not, then we have to still register the vehicle as seen in order to later be able to find
         // out that a PALS assignment better than the upper bound cost may exist.
         const auto costIgnoringHardConstraints = calculator.calcWithoutHardConstraints(asgn, requestState);
+        assert(lowerBoundCost <= costIgnoringHardConstraints);
 
         assert(bestCostWithoutConstraints <= upperBoundCostWithConstraints);
         if (costIgnoringHardConstraints > bestCostWithoutConstraints)
@@ -683,6 +689,9 @@ private:
         const auto costWithHardConstraints = calculator.calc(asgn, requestState);
         upperBoundCostWithConstraints = std::min(upperBoundCostWithConstraints, costWithHardConstraints);
     }
+
+    // todo: remove CHQuery used for debugging
+    typename CHEnvT::template FullCHQuery<> chQuery;
 
     const InputGraphT& inputGraph;
     const CH& ch;

@@ -651,8 +651,7 @@ int main(int argc, char* argv[])
             insertionFinder, systemStateUpdater,
             routeState, true);
 
-        // TODO
-        /* eventSimulation.run(); */
+        eventSimulation.run();
 
         std::cout << "done.\n";
 

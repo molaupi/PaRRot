@@ -271,8 +271,10 @@ public:
         } else {
             // If vehicle is currently idle, the vehicle can leave its current stop at the earliest when the
             // request is made. In that case, we update the arrival time to count the idling as one stopTime.
-            schedDepTimes[end - 1] = std::max(schedDepTimes[end - 1], requestState.originalRequest.requestTime);
-            schedArrTimes[end - 1] = schedDepTimes[end - 1] - stopTime;
+            if (end - start == 1) {
+                schedDepTimes[end - 1] = std::max(schedDepTimes[end - 1], requestState.originalRequest.requestTime);
+                schedArrTimes[end - 1] = schedDepTimes[end - 1] - stopTime;
+            }
             ++pickupIndex;
             ++dropoffIndex;
             stableInsertion(vehId, pickupIndex, getUnusedStopId(), pos, stopIds, stopLocations,

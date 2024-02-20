@@ -168,13 +168,13 @@ struct TimeData {
         additionalNames.push_back("Avg_Stations_Ellipse");
         additionalNames.push_back("Avg_Ellipses_Station");
 
-        for (const auto name : additionalNames) {
+        for (const auto& name : additionalNames) {
             outputFile << name << ',';
         }
-        for (const Metric metric : metrics) {
+        for (const Metric& metric : metrics) {
             outputFile << MetricNames[metric] << ',';
         }
-        for (const Phase phase : phases) {
+        for (const Phase& phase : phases) {
             outputFile << PhaseNames[phase] << ',';
         }
         outputFile << "total_time" << '\n';
