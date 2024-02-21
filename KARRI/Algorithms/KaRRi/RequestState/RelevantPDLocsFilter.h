@@ -67,6 +67,7 @@ public:
         , relOrdinaryDropoffs(relOrdinaryDropoffs)
         , relPickupsBeforeNextStop(relPickupsBeforeNextStop)
         , relDropoffsBeforeNextStop(relDropoffsBeforeNextStop)
+        , numVehiclesInRange(0)
     {
     }
 
@@ -260,8 +261,6 @@ private:
         // lower bounds.
         using namespace time_utils;
 
-        // int numStopsRelevant = 0;
-
         rel.relevantSpots.clear();
         rel.vehiclesWithRelevantSpots.clear();
 
@@ -313,7 +312,6 @@ private:
                     }
 
                     if (minCost <= requestState.getBestCost()) {
-                        // ++numStopsRelevant;
                         // Check each PD loc
                         const auto& distsToPDLocs = feasible.distancesToRelevantPDLocsFor(stopId);
                         const auto& distsFromPDLocs = feasible.distancesFromRelevantPDLocsToNextStopOf(stopId);
@@ -326,12 +324,15 @@ private:
 
                             bool isRelevant;
                             if constexpr (isDropoff) {
-                                isRelevant = isDropoffRelevant(fleet[vehId], i, id, distToPDLoc,
+                                isRelevant = isDropoffRelevant<true>(fleet[vehId], i, id, distToPDLoc,
                                     distFromPDLoc, detour);
                             } else {
-                                isRelevant = isPickupRelevant(fleet[vehId], i, id, distToPDLoc,
+                                isRelevant = isPickupRelevant<true>(fleet[vehId], i, id, distToPDLoc,
                                     distFromPDLoc, detour);
                             }
+
+                            // TODO
+                            numVehiclesInRange += isRelevant;
 
                             if (isRelevant) {
                                 rel.relevantSpots.push_back(
@@ -340,7 +341,7 @@ private:
                                 // is reverse dist to stopId in distsToPDLocs bzw. in distsFromPDLocs?
                                 intersectionOfVehicles.push_back({
                                     vehId, // vehicleId
-                                    stopId, // insertionPosition
+                                    i, // insertionPosition
                                     detour, // detour
                                     routeState.leewayOfLegStartingAt(stopId), // leeway
                                     distToPDLoc, // distTo
@@ -370,6 +371,7 @@ private:
             }));
     }
 
+    template <bool IS_FOR_STATION = false>
     inline bool isPickupRelevant(const Vehicle& veh, const int stopIndex, const unsigned int pickupId,
         const int distFromStopToPickup,
         const int distFromPickupToNextStop, int& initialPickupDetour)
@@ -378,21 +380,27 @@ private:
 
         const int& vehId = veh.vehicleId;
 
-        assert(routeState.occupanciesFor(vehId)[stopIndex] + requestState.originalRequest.numRiders <= veh.capacity);
+        assert(!IS_FOR_STATION || routeState.occupanciesFor(vehId)[stopIndex] + requestState.originalRequest.numRiders <= veh.capacity);
         if (distFromStopToPickup >= INFTYKARRI || distFromPickupToNextStop >= INFTYKARRI)
             return false;
 
         // added by Patrick, to print the values
-        ASSERT_EX(distFromStopToPickup + distFromPickupToNextStop >= calcLengthOfLegStartingAt(stopIndex, vehId, routeState), std::cerr << "\n***********\ndistFromStopToPickup: " << distFromStopToPickup << ", distFromPickupToNextStop: " << distFromPickupToNextStop << ", calcLengthOfLegStartingAt: " << calcLengthOfLegStartingAt(stopIndex, vehId, routeState) << "\n***********\n");
+        /* ASSERT_EX(distFromStopToPickup + distFromPickupToNextStop >= calcLengthOfLegStartingAt(stopIndex, vehId, routeState), std::cerr << "\n***********\ndistFromStopToPickup: " << distFromStopToPickup << ", distFromPickupToNextStop: " << distFromPickupToNextStop << ", calcLengthOfLegStartingAt: " << calcLengthOfLegStartingAt(stopIndex, vehId, routeState) << "\n***********\n"); */
 
         assert(distFromStopToPickup + distFromPickupToNextStop >= calcLengthOfLegStartingAt(stopIndex, vehId, routeState));
         const auto& p = requestState.pickups[pickupId];
 
         const auto depTimeAtPickup = getActualDepTimeAtPickup(vehId, stopIndex, distFromStopToPickup, p,
             requestState, routeState, inputConfig);
-        initialPickupDetour = calcInitialPickupDetour(vehId, stopIndex, INVALID_INDEX, depTimeAtPickup,
-            distFromPickupToNextStop, requestState,
-            routeState);
+
+        // TODO distFromStopToPickup + distFromPickupToNextStop
+        // TODO check in the future for PAIRED Insertion pickup && dropoff
+        if (IS_FOR_STATION)
+            initialPickupDetour = distFromStopToPickup + distFromPickupToNextStop;
+        else
+            initialPickupDetour = calcInitialPickupDetour(vehId, stopIndex, INVALID_INDEX, depTimeAtPickup,
+                distFromPickupToNextStop, requestState,
+                routeState);
 
         if (doesPickupDetourViolateHardConstraints(veh, requestState, stopIndex, initialPickupDetour, routeState))
             return false;
@@ -409,6 +417,7 @@ private:
         return true;
     }
 
+    template <bool IS_FOR_STATION = false>
     inline bool isDropoffRelevant(const Vehicle& veh, const int stopIndex, const unsigned int dropoffId,
         const int distFromStopToDropoff,
         const int distFromDropoffToNextStop, int& initialDropoffDetour)
@@ -516,5 +525,9 @@ private:
     RelevantPDLocs& relOrdinaryDropoffs;
     RelevantPDLocs& relPickupsBeforeNextStop;
     RelevantPDLocs& relDropoffsBeforeNextStop;
+
+public:
+    // Stats by Patrick
+    size_t numVehiclesInRange;
 };
 }

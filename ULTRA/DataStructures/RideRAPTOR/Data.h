@@ -16,6 +16,7 @@
 #include "../../DataStructures/Graph/Utils/Conversion.h"
 #include "../../DataStructures/RAPTOR/Data.h"
 #include "../../DataStructures/RideRAPTOR/Entities/Journey.h"
+#include "../../Helpers/Console/Progress.h"
 #include "../../Helpers/ConstructorTags.h"
 #include "../../Helpers/Vector/Permutation.h"
 #include "../../Shell/Shell.h"
@@ -224,9 +225,15 @@ public:
         std::vector<StopInsertionInfo> vehicles;
         vehicles.reserve(fleet.size());
 
+        std::cout << "Progress:\n";
+        Progress progress(raptorData.numberOfStops());
+
         for (const auto station : raptorData.stops()) {
             vehicles.clear();
             requestState.reset();
+            requestState.originalRequest.numRiders = 1;
+            requestState.originalRequest.requestId = 0;
+            requestState.originalRequest.requestTime = 0;
 
             // add the current stations point to the pickups
             requestState.pickups.push_back({
@@ -242,13 +249,20 @@ public:
             assert(requestState.numPickups() == 1);
 
             ellipticBchSearches.runForStation();
+
+            relevantPdLocsFilter.numVehiclesInRange = 0;
+
             relevantPdLocsFilter.filterOrdinaryPickups(vehicles);
             relevantPdLocsFilter.filterPickupsBeforeNextStop(vehicles);
+
+            /* std::cout << "# of vehicles: " << relevantPdLocsFilter.numVehiclesInRange << std::endl; */
 
             profiler.countMetric(METRIC_BCHSEARCHES, 2);
             profiler.countMetric(METRIC_NEARBYVEHICLEROUTES, vehicles.size());
             insertVehicleEdges(vehicles, station, constructionGraph);
+            ++progress;
         }
+        progress.finished();
         profiler.donePhase(PHASE_BCHSEARCHES);
 
         profiler.startPhase(PHASE_SORT_EDGES);
@@ -310,7 +324,7 @@ public:
 
             // add the current stations point to the pickups && dropoffs
             requestState.pickups.emplace_back(
-                INVALID_ID, // PdLoc ID
+                0, // PdLoc ID
                 targetEdge, // Location in road network
                 inputGraph.toPsgEdge(targetEdge), // Location in passenger road network
                 travelTime, // Walking time from origin to this pickup or

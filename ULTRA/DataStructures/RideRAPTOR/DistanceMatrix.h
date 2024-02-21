@@ -11,6 +11,7 @@
 #include "../../Algorithms/CH/Query/BucketQuery.h"
 #include "../../DataStructures/Graph/Graph.h"
 #include "../../DataStructures/RAPTOR/Data.h"
+#include "../../Helpers/Console/Progress.h"
 
 namespace RIDERAPTOR {
 
@@ -67,17 +68,19 @@ inline void fillDistanceMatrix(DistanceMatrix& matrix, RAPTOR::Data& raptorData,
     using CHQuery = CH::Query<CHGraph, true, false, true>;
     CHQuery query(networkCH, FORWARD, raptorData.numberOfStops());
 
-    for (const auto fromStop : raptorData.stops()) {
-        if (fromStop.value() % 500 == 0) {
-            std::cout << "Stop " << fromStop << " done." << std::endl;
-        }
+    std::cout << "Progress:\n";
+    Progress progress(raptorData.numberOfStops());
 
+    for (const auto fromStop : raptorData.stops()) {
         query.run<FORWARD, BACKWARD>(Vertex(fromStop));
         for (const auto toStop : raptorData.stops()) {
             matrix.setDistance(fromStop, toStop,
                 query.getForwardDistance(Vertex(toStop)));
         }
+        ++progress;
     }
+
+    progress.finished();
 }
 
 inline void fillDistanceMatrixUsingBCH(DistanceMatrix& matrix,

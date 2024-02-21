@@ -292,7 +292,6 @@ public:
         // Find pickups at existing stops for new request and initialize distances.
         const auto pickupsAtExistingStops = findPDLocsAtExistingStops<PICKUP>(requestState.pickups);
         feasibleEllipticPickups.init(requestState.numPickups(), pickupsAtExistingStops, inputGraph);
-
         // ******************************
 
         updateDistancesToPdLocs.setCurFeasible(&feasibleEllipticPickups);
@@ -392,9 +391,11 @@ private:
     {
         std::vector<PDLocAtExistingStop> res;
 
+        assert(pdLocs.size() > 0);
         for (const auto& pdLoc : pdLocs) {
             const auto head = inputGraph.edgeHead(pdLoc.loc);
             const auto headRank = ch.rank(head);
+
             for (const auto& e : sourceBuckets.getBucketOf(headRank)) {
                 if (e.distToTarget == 0) {
                     const int vehId = routeState.vehicleIdOf(e.targetId);
