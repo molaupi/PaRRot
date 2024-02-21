@@ -252,8 +252,8 @@ public:
 
             relevantPdLocsFilter.numVehiclesInRange = 0;
 
-            relevantPdLocsFilter.filterOrdinaryPickups(vehicles);
-            relevantPdLocsFilter.filterPickupsBeforeNextStop(vehicles);
+            relevantPdLocsFilter.filterOrdinaryPickupsForStation(vehicles);
+            relevantPdLocsFilter.filterPickupsBeforeNextStopForStation(vehicles);
 
             /* std::cout << "# of vehicles: " << relevantPdLocsFilter.numVehiclesInRange << std::endl; */
 
