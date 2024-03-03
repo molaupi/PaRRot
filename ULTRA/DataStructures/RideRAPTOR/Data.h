@@ -38,8 +38,7 @@
 namespace RIDERAPTOR {
 
 using ConstructionGraph = DynamicGraph<List<Attribute<VehicleId, int>>, List<Attribute<Weight, int>, Attribute<InsertionInfo, StopInsertionInfo>>>;
-using RideTransferGraph = DynamicGraph<List<Attribute<VehicleId, int>>, List<Attribute<Weight, int>, Attribute<InsertionInfo, StopInsertionInfo>>>;
-using RoadGraph = GraphWrapper<KaRRiGraph>;
+using RideTransferGraph = StaticGraph<List<Attribute<VehicleId, int>>, List<Attribute<Weight, int>, Attribute<InsertionInfo, StopInsertionInfo>>>;
 
 inline TransferGraph getOverheadGraph(RAPTOR::Data& raptorData,
     TransferGraph& graph) noexcept
@@ -106,27 +105,28 @@ struct RideRaptorParameter {
 template <typename FeasibleDistancesT, typename InputGraphT, typename CHEnvT, typename EllipticBCHSearchesT>
 class Data {
 public:
-    Data(const std::string& fileName, const RAPTOR::Data& raptorData,
-        const karri::Fleet& fleet, const InputGraphT& inputGraph,
-        const CHEnvT& chEnv, const karri::CostCalculator& calculator,
-        karri::RequestState& requestState, const karri::RouteState& routeState,
-        const karri::InputConfig& inputConfig,
-        const FeasibleDistancesT& feasiblePickupDistances,
-        const FeasibleDistancesT& feasibleDropoffDistances,
-        karri::RelevantPDLocs& relOrdinaryPickups,
-        karri::RelevantPDLocs& relOrdinaryDropoffs,
-        karri::RelevantPDLocs& relPickupsBeforeNextStop,
-        karri::RelevantPDLocs& relDropoffsBeforeNextStop,
-        EllipticBCHSearchesT& ellipticBchSearches,
-        const std::vector<int>& edgeIdOfStation,
-        const DistanceMatrix& distanceMatrix = DistanceMatrix(),
-        const std::string& separator = ".", const Profiler& profilerTemplate = Profiler())
-        : Data(raptorData, fleet, inputGraph, chEnv, calculator, requestState, routeState, inputConfig, feasiblePickupDistances, feasibleDropoffDistances, relOrdinaryPickups, relOrdinaryDropoffs, relPickupsBeforeNextStop, relDropoffsBeforeNextStop, ellipticBchSearches, edgeIdOfStation, distanceMatrix, profilerTemplate)
-    {
-        readRideDataFrom(fileName, separator);
-    }
+    /* Data(const std::string& fileName, const RAPTOR::Data& raptorData, */
+    /*     const karri::Fleet& fleet, const InputGraphT& inputGraph, */
+    /*     const CHEnvT& chEnv, const karri::CostCalculator& calculator, */
+    /*     karri::RequestState& requestState, const karri::RouteState& routeState, */
+    /*     const karri::InputConfig& inputConfig, */
+    /*     const FeasibleDistancesT& feasiblePickupDistances, */
+    /*     const FeasibleDistancesT& feasibleDropoffDistances, */
+    /*     karri::RelevantPDLocs& relOrdinaryPickups, */
+    /*     karri::RelevantPDLocs& relOrdinaryDropoffs, */
+    /*     karri::RelevantPDLocs& relPickupsBeforeNextStop, */
+    /*     karri::RelevantPDLocs& relDropoffsBeforeNextStop, */
+    /*     EllipticBCHSearchesT& ellipticBchSearches, */
+    /*     const std::vector<int>& edgeIdOfStation, */
+    /*     const DistanceMatrix& distanceMatrix = DistanceMatrix(), */
+    /*     const std::string& separator = ".", const Profiler& profilerTemplate = Profiler()) */
+    /*     : Data(raptorData, fleet, inputGraph, chEnv, calculator, requestState, routeState, inputConfig, feasiblePickupDistances, feasibleDropoffDistances, relOrdinaryPickups, relOrdinaryDropoffs, relPickupsBeforeNextStop, relDropoffsBeforeNextStop, ellipticBchSearches, edgeIdOfStation, distanceMatrix, profilerTemplate) */
+    /* { */
+    /*     readRideDataFrom(fileName, separator); */
+    /* } */
 
     Data(const RAPTOR::Data& raptorData,
+        CH::CH& psgCH,
         const karri::Fleet& fleet, const InputGraphT& inputGraph,
         const CHEnvT& chEnv, const karri::CostCalculator& calculator,
         karri::RequestState& requestState, const karri::RouteState& routeState,
@@ -142,6 +142,7 @@ public:
         const DistanceMatrix& distanceMatrix = DistanceMatrix(),
         const Profiler& profilerTemplate = Profiler())
         : raptorData(raptorData)
+        , walkingCH(psgCH)
         , distanceMatrix(distanceMatrix)
         , sourceStopDummy(raptorData.numberOfStops())
         , targetStopDummy(raptorData.numberOfStops() + 1)
@@ -162,11 +163,19 @@ public:
         , relevantPdLocsFilter(fleet, inputGraph, chEnv, calculator, requestState, routeState, inputConfig, feasiblePickupDistances, feasibleDropoffDistances, relOrdinaryPickups, relOrdinaryDropoffs, relPickupsBeforeNextStop, relDropoffsBeforeNextStop)
         , ellipticBchSearches(ellipticBchSearches)
         , edgeIdOfStation(edgeIdOfStation)
+        , vertexToStation(inputGraph.numVertices(), noStop)
         , stopCounter(fleet.size(), 0)
         , accumulatedNumStops(fleet.size() + 1)
-        , numberOfStops(raptorData.numberOfStops() + 2)
         , profiler(profilerTemplate)
     {
+        // Build the mapping of vertex to station
+        for (StopId station(0); station < raptorData.numberOfStops(); ++station) {
+            assert(raptorData.isStop(station));
+            assert(station < edgeIdOfStation.size());
+            assert(edgeIdOfStation[station] < inputGraph.numEdges());
+
+            vertexToStation[inputGraph.edgeTail(edgeIdOfStation[station])] = station;
+        }
         profiler.registerPhases(
             { PHASE_BUILDTRANSFERGRAPH, PHASE_BCHSEARCHES, PHASE_SORT_EDGES });
         profiler.registerMetrics(
@@ -178,6 +187,8 @@ public:
         profiler.countMetric(METRIC_VEHICLES, fleet.size());
         profiler.countMetric(METRIC_STATIONS, raptorData.numberOfStops());
     }
+
+    inline int numberOfStops() const { return raptorData.numberOfStops() + 2; }
 
     void buildRideTransferGraph()
     {
@@ -204,7 +215,7 @@ public:
 
         profiler.startPhase(PHASE_BUILDTRANSFERGRAPH);
         ConstructionGraph constructionGraph;
-        constructionGraph.addVertices(numberOfStops);
+        constructionGraph.addVertices(numberOfStops());
         constructionGraph.addVertices(accumulatedNumStops.back());
 
         for (int vehId = 0; vehId < accumulatedNumStops.size() - 1; vehId++) {
@@ -250,12 +261,8 @@ public:
 
             ellipticBchSearches.runForStation();
 
-            relevantPdLocsFilter.numVehiclesInRange = 0;
-
             relevantPdLocsFilter.filterOrdinaryPickupsForStation(vehicles);
             relevantPdLocsFilter.filterPickupsBeforeNextStopForStation(vehicles);
-
-            /* std::cout << "# of vehicles: " << relevantPdLocsFilter.numVehiclesInRange << std::endl; */
 
             profiler.countMetric(METRIC_BCHSEARCHES, 2);
             profiler.countMetric(METRIC_NEARBYVEHICLEROUTES, vehicles.size());
@@ -270,6 +277,7 @@ public:
         profiler.donePhase(PHASE_SORT_EDGES);
 
         profiler.startPhase(PHASE_BUILDTRANSFERGRAPH);
+        rideTransferGraph.clear();
         Graph::move(std::move(constructionGraph), rideTransferGraph);
         profiler.donePhase(PHASE_BUILDTRANSFERGRAPH);
 
@@ -278,8 +286,7 @@ public:
         profiler.done();
     }
 
-    void extendRideTransferGraph(StopId sourceStop, Edge sourceEdge,
-        StopId targetStop, Edge targetEdge)
+    void extendRideTransferGraph(StopId sourceStop, Edge sourceEdge, StopId targetStop, Edge targetEdge)
     {
         if (raptorData.isStop(sourceStop) && raptorData.isStop(targetStop)) {
             return;
@@ -289,53 +296,57 @@ public:
         vehicles.reserve(fleet.size());
 
         if (!raptorData.isStop(sourceStop)) {
-            /* const auto sourceTail = inputGraph.get(FromVertex, sourceEdge); */
-            /* const auto sourceHead = inputGraph.get(ToVertex, sourceEdge); */
-            const auto travelTime = inputGraph.get(TravelTime, sourceEdge);
+            int travelTime = inputGraph.travelTime(sourceEdge);
 
             vehicles.clear();
             requestState.reset();
+            requestState.originalRequest.numRiders = 1;
+            requestState.originalRequest.requestId = 0;
+            requestState.originalRequest.requestTime = 0;
 
             // add the current stations point to the pickups && dropoffs
-            requestState.pickups.emplace_back(
+            requestState.pickups.push_back({
                 0, // PdLoc ID
-                sourceEdge, // Location in road network
-                inputGraph.toPsgEdge(sourceEdge), // Location in passenger road network
+                int(sourceEdge), // Location in road network
+                inputGraph.toPsgEdge(int(sourceEdge)), // Location in passenger road network
                 travelTime, // Walking time from origin to this pickup or
                             // from this dropoff to destination.
                 INFTYKARRI, // Vehicle driving time from this pickup/dropoff to the origin/destination.
                 INFTYKARRI // Vehicle driving time from origin/destination to this pickup/dropoff.
-            );
+            });
 
             ellipticBchSearches.runForStation();
-            relevantPdLocsFilter.filterOrdinary(vehicles);
-            relevantPdLocsFilter.filterBeforeNextStop(vehicles);
+
+            relevantPdLocsFilter.filterOrdinaryPickupsForStation(vehicles);
+            relevantPdLocsFilter.filterPickupsBeforeNextStopForStation(vehicles);
 
             insertSourceEdges(vehicles, sourceStop);
         }
 
         if (!raptorData.isStop(targetStop)) {
-            /* const auto targetTail = inputGraph.get(FromVertex, targetEdge); */
-            /* const auto targetHead = inputGraph.get(ToVertex, targetEdge); */
-            const auto travelTime = inputGraph.get(TravelTime, targetEdge);
+            int travelTime = inputGraph.travelTime(int(targetEdge));
 
             vehicles.clear();
             requestState.reset();
+            requestState.originalRequest.numRiders = 1;
+            requestState.originalRequest.requestId = 0;
+            requestState.originalRequest.requestTime = 0;
 
             // add the current stations point to the pickups && dropoffs
-            requestState.pickups.emplace_back(
+            requestState.pickups.push_back({
                 0, // PdLoc ID
-                targetEdge, // Location in road network
-                inputGraph.toPsgEdge(targetEdge), // Location in passenger road network
+                int(targetEdge), // Location in road network
+                int(inputGraph.toPsgEdge(int(targetEdge))), // Location in passenger road network
                 travelTime, // Walking time from origin to this pickup or
                             // from this dropoff to destination.
                 INFTYKARRI, // Vehicle driving time from this pickup/dropoff to the origin/destination.
                 INFTYKARRI // Vehicle driving time from origin/destination to this pickup/dropoff.
-            );
+            });
 
             ellipticBchSearches.runForStation();
-            relevantPdLocsFilter.filterOrdinary(vehicles);
-            relevantPdLocsFilter.filterBeforeNextStop(vehicles);
+
+            relevantPdLocsFilter.filterOrdinaryPickupsForStation(vehicles);
+            relevantPdLocsFilter.filterPickupsBeforeNextStopForStation(vehicles);
 
             insertTargetEdges(vehicles, targetStop);
         }
@@ -425,7 +436,7 @@ public:
 
     Vertex getVertexFromVehiclePosition(const int vehicleId, const int position)
     {
-        return Vertex(numberOfStops + accumulatedNumStops[vehicleId] + position);
+        return Vertex(numberOfStops() + accumulatedNumStops[vehicleId] + position);
     }
 
     inline const Profiler& getProfiler() const noexcept { return profiler; }
@@ -436,10 +447,10 @@ public:
         // TODO
         // readFrom method anpassen
         /* disp.readFrom(fileName + separator + "dispatcher", separator); */
-        IO::deserialize(fileName + separator + "stopCounter", stopCounter);
-        IO::deserialize(fileName + separator + "accumulatedNumStops",
-            accumulatedNumStops);
-        rideTransferGraph.readBinary(fileName + separator + "rideTransferGraph");
+        /* IO::deserialize(fileName + separator + "stopCounter", stopCounter); */
+        /* IO::deserialize(fileName + separator + "accumulatedNumStops", */
+        /*     accumulatedNumStops); */
+        /* rideTransferGraph.readBinary(fileName + separator + "rideTransferGraph"); */
     }
 
     void writeRideDataTo(const std::string& fileName,
@@ -448,15 +459,16 @@ public:
         // TODO
         // writeTo method anpassen
         /* disp.writeTo(fileName + separator + "dispatcher", separator); */
-        IO::serialize(fileName + separator + "stopCounter", stopCounter);
-        IO::serialize(fileName + separator + "accumulatedNumStops",
-            accumulatedNumStops);
-        rideTransferGraph.writeBinary(fileName + separator + "rideTransferGraph");
+        /* IO::serialize(fileName + separator + "stopCounter", stopCounter); */
+        /* IO::serialize(fileName + separator + "accumulatedNumStops", */
+        /*     accumulatedNumStops); */
+        /* rideTransferGraph.writeBinary(fileName + separator + "rideTransferGraph"); */
     }
 
-    /* inline void setDistanceMatrix(DistanceMatrix &newDistanceMatrix) noexcept { */
-    /*     distanceMatrix = newDistanceMatrix; */
-    /* } */
+    inline void setDistanceMatrix(DistanceMatrix& newDistanceMatrix) noexcept
+    {
+        distanceMatrix = newDistanceMatrix;
+    }
 
 private:
     template <bool INSERT_OUTGOING = true>
@@ -522,7 +534,7 @@ private:
         const Vertex targetVertex)
     {
         // "reseet" everything
-        for (auto vertex = numberOfStops; vertex < rideTransferGraph.numVertices();
+        for (auto vertex = numberOfStops(); vertex < rideTransferGraph.numVertices();
              vertex++) {
             const auto edge = rideTransferGraph.findEdge(Vertex(vertex), targetVertex);
             rideTransferGraph.set(Weight, edge, INFTY);
@@ -614,11 +626,11 @@ public:
 
     // maps the station to an edge id
     const std::vector<int>& edgeIdOfStation;
+    // maps a vertex id to a station id
+    std::vector<StopId> vertexToStation;
 
-private:
     std::vector<int> stopCounter;
     std::vector<int> accumulatedNumStops;
-    const int numberOfStops;
     Profiler profiler;
 };
 } // namespace RIDERAPTOR

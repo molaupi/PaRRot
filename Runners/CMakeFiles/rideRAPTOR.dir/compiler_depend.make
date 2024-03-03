@@ -213,6 +213,7 @@ CMakeFiles/rideRAPTOR.dir/RunRideRaptor.o: RunRideRaptor.cpp \
   /home/patrick/Documents/KIT/PARROT/ULTRA/DataStructures/RideRAPTOR/Profiler.h \
   /home/patrick/Documents/KIT/PARROT/ULTRA/Algorithms/RideRAPTOR/Profiler.h \
   /home/patrick/Documents/KIT/PARROT/ULTRA/Algorithms/RideRAPTOR/RideRAPTOR.h \
+  /home/patrick/Documents/KIT/PARROT/ULTRA/DataStructures/Queries/Queries.h \
   /usr/include/alloca.h \
   /usr/include/asm-generic/bitsperlong.h \
   /usr/include/asm-generic/errno-base.h \
@@ -929,8 +930,6 @@ CMakeFiles/rideRAPTOR.dir/RunRideRaptor.o: RunRideRaptor.cpp \
 
 /usr/lib/gcc/x86_64-linux-gnu/13/include/avx512fp16intrin.h:
 
-/usr/lib/gcc/x86_64-linux-gnu/13/include/avx512erintrin.h:
-
 /usr/lib/gcc/x86_64-linux-gnu/13/include/avx512dqintrin.h:
 
 /usr/lib/gcc/x86_64-linux-gnu/13/include/avx512bitalgintrin.h:
@@ -1226,6 +1225,10 @@ CMakeFiles/rideRAPTOR.dir/RunRideRaptor.o: RunRideRaptor.cpp \
 /usr/include/asm-generic/bitsperlong.h:
 
 /usr/include/alloca.h:
+
+/usr/lib/gcc/x86_64-linux-gnu/13/include/avx512erintrin.h:
+
+/home/patrick/Documents/KIT/PARROT/ULTRA/DataStructures/Queries/Queries.h:
 
 /usr/include/c++/13/bits/align.h:
 
@@ -1965,6 +1968,10 @@ RunRideRaptor.cpp:
 
 /usr/include/boost/dynamic_bitset/detail/dynamic_bitset.hpp:
 
+/usr/include/unistd.h:
+
+/usr/include/boost/exception/exception.hpp:
+
 /usr/include/x86_64-linux-gnu/asm/ioctl.h:
 
 /usr/include/c++/13/bits/cpp_type_traits.h:
@@ -2013,6 +2020,10 @@ RunRideRaptor.cpp:
 
 /usr/include/boost/move/iterator.hpp:
 
+/usr/include/c++/13/backward/auto_ptr.h:
+
+/usr/include/boost/move/traits.hpp:
+
 /usr/include/c++/13/istream:
 
 /usr/lib/gcc/x86_64-linux-gnu/13/include/amxint8intrin.h:
@@ -2034,10 +2045,6 @@ RunRideRaptor.cpp:
 /usr/include/c++/13/array:
 
 /usr/include/c++/13/atomic:
-
-/usr/include/boost/move/traits.hpp:
-
-/usr/include/c++/13/backward/auto_ptr.h:
 
 /usr/include/c++/13/backward/binders.h:
 
@@ -2464,7 +2471,3 @@ RunRideRaptor.cpp:
 /usr/include/stdlib.h:
 
 /usr/include/time.h:
-
-/usr/include/boost/exception/exception.hpp:
-
-/usr/include/unistd.h:

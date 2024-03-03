@@ -7,6 +7,7 @@
 #include <random>
 
 #include "../ULTRA/Algorithms/RideRAPTOR/RideRAPTOR.h"
+#include "../ULTRA/DataStructures/Queries/Queries.h"
 #include "../ULTRA/DataStructures/RAPTOR/Data.h"
 #include "../ULTRA/DataStructures/RideRAPTOR/Data.h"
 #include "../ULTRA/DataStructures/RideRAPTOR/DistanceMatrix.h"
@@ -135,6 +136,8 @@ inline void printUsage()
            "(specify name without file suffix).\n"
            "  -station-mapping <file>   file which maps the station used in RAPTOR to edges in the given road graph\n"
            "  -raptor-data <file>       file with the precomputed RAPTOR data\n"
+           "  -num-queries <int>        number of random station-to-station queries (dflt: 1000)\n"
+           "  -num-initial-req <int>    number of initial requests to simulate (dflt: 2000)\n"
            "  -help                     show usage help text.\n";
 }
 
@@ -174,6 +177,8 @@ int main(int argc, char* argv[])
         // new
         const auto stationMappingFileName = clp.getValue<std::string>("station-mapping");
         const auto raptorFileName = clp.getValue<std::string>("raptor-data");
+        const auto numberOfRandomStationQueries = clp.getValue<int>("num-queries", 1000);
+        const auto numberOfInitialRequests = clp.getValue<int>("num-initial-req", 2000);
 
         auto outputFileName = clp.getValue<std::string>("o");
         if (endsWith(outputFileName, ".csv"))
@@ -611,34 +616,13 @@ int main(int argc, char* argv[])
 
         // 1) run some requests to start the vehicles
         std::cout << "Simulate some initial requests to the system ..." << std::flush;
-        /* int numberOfSimulatedRequests = 100; */
-        /* int startTimeOfSimulatedRequest = 0; */
-        /* int endTimeOfSimulatedRequest = 24 * 60 * 60; // midnight in secs */
-
-        /* // TODO check how to create random requests */
-        /* std::vector<karri::Request> simulatedRequests; */
-        /* simulatedRequests.reserve(numberOfSimulatedRequests); */
-
-        /* // generate random requests */
-        /* std::mt19937 randomGenerator(2 + 42); */
-        /* std::uniform_int_distribution<> locationDistribution(0, vehicleInputGraph.numEdges() - 1); */
-        /* std::uniform_int_distribution<> timeDistribution(startTimeOfSimulatedRequest, endTimeOfSimulatedRequest + 1); */
-
-        /* for (int reqId = 0; reqId < numberOfSimulatedRequests; ++reqId) { */
-        /*     simulatedRequests.push_back({ */
-        /*         reqId, */
-        /*         locationDistribution(randomGenerator), */
-        /*         locationDistribution(randomGenerator), */
-        /*         timeDistribution(randomGenerator), */
-        /*         1 // num of passenger */
-        /*     }); */
-        /* } */
+        // TODO @future
+        // check how to create random requests (note that edges need to be in both graphs)
 
         std::sort(requests.begin(), requests.end(), [](const auto& left, const auto& right) {
             return left.requestTime < right.requestTime;
         });
-        /* std::cout << "# Requests: " << requests.size() << std::endl; */
-        requests.resize(2000);
+        requests.resize(std::min((size_t)numberOfInitialRequests, requests.size()));
 
         int i(0);
         for (auto& req : requests) {
@@ -680,62 +664,125 @@ int main(int argc, char* argv[])
 
         raptor.printInfo();
 
-        // TODO
-        /*         std::cout << "Convert the karri::CH to ULTRA::CH... " << std::flush; */
+        std::cout << "Convert the karri::CH to ULTRA::CH... " << std::flush;
+        std::cout << "[Vehicle CH]... " << std::flush;
 
-        /*         // convert from KARRI:CH to ULTRA::CH */
-        /*         auto& karriVehCH = vehChEnv->getCH(); */
-        /*         auto& karriUpCHGraph = karriVehCH.upwardGraph(); */
-        /*         auto& karriDownCHGraph = karriVehCH.downwardGraph(); */
+        // convert from KARRI:CH to ULTRA::CH
+        auto& karriVehCH = vehChEnv->getCH();
+        auto& karriUpCHGraph = karriVehCH.upwardGraph();
+        auto& karriDownCHGraph = karriVehCH.downwardGraph();
 
-        /*         CHConstructionGraph upCHGraph; */
-        /*         CHConstructionGraph downCHGraph; */
+        CHConstructionGraph upCHGraph;
+        CHConstructionGraph downCHGraph;
 
-        /*         upCHGraph.addVertices(karriUpCHGraph.numVertices()); */
-        /*         upCHGraph.reserve(karriUpCHGraph.numVertices(), karriUpCHGraph.numEdges()); */
+        upCHGraph.addVertices(karriUpCHGraph.numVertices());
+        upCHGraph.reserve(karriUpCHGraph.numVertices(), karriUpCHGraph.numEdges());
 
-        /*         FORALL_VALID_EDGES(karriUpCHGraph, v, e) */
-        /*         { */
-        /*             auto edgeHandle = upCHGraph.addEdge(Vertex(v), Vertex(karriUpCHGraph.edgeHead(e))); */
-        /*             edgeHandle.set(Weight, karriUpCHGraph.traversalCost(e)); */
-        /*             // since UnpackingInfoAttribute is defined a little weird (via the two edges directly, rather than the ViaVertex itself), we need to get the Vertex */
-        /*             auto& unpackingInfoOfEdge = karriUpCHGraph.unpackingInfo(e); */
-        /*             if (unpackingInfoOfEdge.second == INVALID_EDGE) { */
-        /*                 // this case, the edge was an input edge => set invalid vertex as viavertex */
-        /*                 edgeHandle.set(ViaVertex, noVertex); */
-        /*             } else { */
-        /*                 // otherwise take the FromVertex / edgeTail from the first edge */
-        /*                 edgeHandle.set(ViaVertex, Vertex(karriDownCHGraph.edgeHead(unpackingInfoOfEdge.first))); */
-        /*             } */
-        /*         } */
+        FORALL_VALID_EDGES(karriUpCHGraph, v, e)
+        {
+            auto edgeHandle = upCHGraph.addEdge(Vertex(v), Vertex(karriUpCHGraph.edgeHead(e)));
+            edgeHandle.set(Weight, karriUpCHGraph.traversalCost(e));
+            // since UnpackingInfoAttribute is defined a little weird (via the two edges directly, rather than the ViaVertex itself), we need to get the Vertex
+            auto& unpackingInfoOfEdge = karriUpCHGraph.unpackingInfo(e);
+            if (unpackingInfoOfEdge.second == INVALID_EDGE) {
+                // this case, the edge was an input edge => set invalid vertex as viavertex
+                edgeHandle.set(ViaVertex, noVertex);
+            } else {
+                // otherwise take the FromVertex / edgeTail from the first edge
+                edgeHandle.set(ViaVertex, Vertex(karriDownCHGraph.edgeHead(unpackingInfoOfEdge.first)));
+            }
+        }
 
-        /*         downCHGraph.addVertices(karriDownCHGraph.numVertices()); */
-        /*         downCHGraph.reserve(karriDownCHGraph.numVertices(), karriDownCHGraph.numEdges()); */
+        downCHGraph.addVertices(karriDownCHGraph.numVertices());
+        downCHGraph.reserve(karriDownCHGraph.numVertices(), karriDownCHGraph.numEdges());
 
-        /*         FORALL_VALID_EDGES(karriDownCHGraph, v, e) */
-        /*         { */
-        /*             auto edgeHandle = upCHGraph.addEdge(Vertex(v), Vertex(karriDownCHGraph.edgeHead(e))); */
-        /*             edgeHandle.set(Weight, karriDownCHGraph.traversalCost(e)); */
-        /*             // since UnpackingInfoAttribute is defined a little weird (via the two edges directly, rather than the ViaVertex itself), we need to get the Vertex */
-        /*             auto& unpackingInfoOfEdge = karriDownCHGraph.unpackingInfo(e); */
-        /*             if (unpackingInfoOfEdge.second == INVALID_EDGE) { */
-        /*                 // this case, the edge was an input edge => set invalid vertex as viavertex */
-        /*                 edgeHandle.set(ViaVertex, noVertex); */
-        /*             } else { */
-        /*                 // otherwise take the FromVertex / edgeTail from the first edge */
-        /*                 edgeHandle.set(ViaVertex, Vertex(karriUpCHGraph.edgeHead(unpackingInfoOfEdge.first))); */
-        /*             } */
-        /*         } */
+        FORALL_VALID_EDGES(karriDownCHGraph, v, e)
+        {
+            auto edgeHandle = downCHGraph.addEdge(Vertex(v), Vertex(karriDownCHGraph.edgeHead(e)));
+            edgeHandle.set(Weight, karriDownCHGraph.traversalCost(e));
+            // since UnpackingInfoAttribute is defined a little weird (via the two edges directly, rather than the ViaVertex itself), we need to get the Vertex
+            auto& unpackingInfoOfEdge = karriDownCHGraph.unpackingInfo(e);
+            if (unpackingInfoOfEdge.second == INVALID_EDGE) {
+                // this case, the edge was an input edge => set invalid vertex as viavertex
+                edgeHandle.set(ViaVertex, noVertex);
+            } else {
+                // otherwise take the FromVertex / edgeTail from the first edge
+                edgeHandle.set(ViaVertex, Vertex(karriUpCHGraph.edgeHead(unpackingInfoOfEdge.first)));
+            }
+        }
 
-        /*         CH::CH ch(std::move(upCHGraph), std::move(downCHGraph)); */
+        CH::CH vehicleCh(std::move(upCHGraph), std::move(downCHGraph));
 
-        /*         std::cout << "done.\n"; */
+        /* std::cout << "## Psg FORWARD ##" << std::endl; */
+        /* vehicleCh.getGraph(FORWARD).printAnalysis(); */
+        /* std::cout << "## Psg BACKWARD ##" << std::endl; */
+        /* vehicleCh.getGraph(BACKWARD).printAnalysis(); */
+
+        std::cout << "[Passenger CH]... " << std::flush;
+        // convert from KARRI:CH to ULTRA::CH
+        auto& karriPsgCH = psgChEnv->getCH();
+        auto& karriPsgUpCHGraph = karriPsgCH.upwardGraph();
+        auto& karriPsgDownCHGraph = karriPsgCH.downwardGraph();
+
+        assert(karriPsgUpCHGraph.numVertices() == karriPsgDownCHGraph.numVertices());
+
+        CHConstructionGraph upPsgCHGraph;
+        CHConstructionGraph downPsgCHGraph;
+
+        upPsgCHGraph.addVertices(karriPsgUpCHGraph.numVertices());
+        upPsgCHGraph.reserve(karriPsgUpCHGraph.numVertices(), karriPsgUpCHGraph.numEdges());
+
+        FORALL_VALID_EDGES(karriPsgUpCHGraph, v, e)
+        {
+            auto edgeHandle = upPsgCHGraph.addEdge(Vertex(v), Vertex(karriPsgUpCHGraph.edgeHead(e)));
+            edgeHandle.set(Weight, karriPsgUpCHGraph.traversalCost(e));
+            // since UnpackingInfoAttribute is defined a little weird (via the two edges directly, rather than the ViaVertex itself), we need to get the Vertex
+            auto& unpackingInfoOfEdge = karriPsgUpCHGraph.unpackingInfo(e);
+            if (unpackingInfoOfEdge.second == INVALID_EDGE) {
+                // this case, the edge was an input edge => set invalid vertex as viavertex
+                edgeHandle.set(ViaVertex, noVertex);
+            } else {
+                // otherwise take the FromVertex / edgeTail from the first edge
+                assert(unpackingInfoOfEdge.first < karriPsgDownCHGraph.numEdges());
+                edgeHandle.set(ViaVertex, Vertex(karriPsgDownCHGraph.edgeHead(unpackingInfoOfEdge.first)));
+            }
+        }
+
+        downPsgCHGraph.addVertices(karriPsgDownCHGraph.numVertices());
+        downPsgCHGraph.reserve(karriPsgDownCHGraph.numVertices(), karriPsgDownCHGraph.numEdges());
+
+        FORALL_VALID_EDGES(karriPsgDownCHGraph, v, e)
+        {
+            auto edgeHandle = downPsgCHGraph.addEdge(Vertex(v), Vertex(karriPsgDownCHGraph.edgeHead(e)));
+            edgeHandle.set(Weight, karriPsgDownCHGraph.traversalCost(e));
+            // TODO
+            edgeHandle.set(ViaVertex, noVertex);
+            /* // since UnpackingInfoAttribute is defined a little weird (via the two edges directly, rather than the ViaVertex itself), we need to get the Vertex */
+            /* auto& unpackingInfoOfEdge = karriPsgDownCHGraph.unpackingInfo(e); */
+            /* if (unpackingInfoOfEdge.second == INVALID_EDGE) { */
+            /*     // this case, the edge was an input edge => set invalid vertex as viavertex */
+            /*     edgeHandle.set(ViaVertex, noVertex); */
+            /* } else { */
+            /*     // otherwise take the FromVertex / edgeTail from the first edge */
+            /*     assert(unpackingInfoOfEdge.first < karriPsgUpCHGraph.numEdges()); */
+            /*     edgeHandle.set(ViaVertex, Vertex(karriPsgUpCHGraph.edgeHead(unpackingInfoOfEdge.first))); */
+            /* } */
+        }
+
+        CH::CH psgCh(std::move(upPsgCHGraph), std::move(downPsgCHGraph));
+
+        /* std::cout << "## Psg FORWARD ##" << std::endl; */
+        /* psgCh.getGraph(FORWARD).printAnalysis(); */
+        /* std::cout << "## Psg BACKWARD ##" << std::endl; */
+        /* psgCh.getGraph(BACKWARD).printAnalysis(); */
+
+        std::cout << "done.\n";
 
         // Build Distance Matrix for RideRAPTOR
         std::cout << "Build the DistanceMatrix... " << std::flush;
 
         RIDERAPTOR::DistanceMatrix matrix(raptor.numberOfStops());
-        /* RIDERAPTOR::fillDistanceMatrix(matrix, raptor, ch); */
+        RIDERAPTOR::fillDistanceMatrix(matrix, raptor, vehicleCh);
 
         std::cout << "done.\n";
 
@@ -744,6 +791,7 @@ int main(int argc, char* argv[])
 
         RIDERAPTOR::Data<FeasibleEllipticDistancesImpl, VehicleInputGraph, VehCHEnv, EllipticBCHSearchesImpl> rideRAPTORData(
             raptor,
+            psgCh,
             fleet,
             vehicleInputGraph,
             *vehChEnv,
@@ -768,7 +816,35 @@ int main(int argc, char* argv[])
 
         // Run some RideRAPTOR Queries
         std::cout << "Create RideRAPTOR Query Object... " << std::flush;
-        RAPTOR::RideRAPTOR<FeasibleEllipticDistancesImpl, VehicleInputGraph, VehCHEnv, EllipticBCHSearchesImpl> rideRAPTORQuery(rideRAPTORData);
+        RAPTOR::RideRAPTOR<
+            FeasibleEllipticDistancesImpl,
+            VehicleInputGraph,
+            VehCHEnv,
+            EllipticBCHSearchesImpl,
+            true, // Target Pruning
+            RAPTOR::AggregateProfiler,
+            true, // transitive
+            false // USE_MIN_TRANSFER_TIMES
+            >
+            rideRAPTORQuery(rideRAPTORData);
+        std::cout << "done.\n";
+
+        std::cout << "Create Random Station Queries ... " << std::flush;
+        std::vector<StopQuery> randomStationQueries = generateRandomStopQueries(raptor.numberOfStops(), numberOfRandomStationQueries, 0, 24 * 60 * 60);
+        std::cout << "done.\n";
+
+        std::cout << "Running the queries ... " << std::flush;
+        Progress queryProgress(numberOfRandomStationQueries);
+
+        for (auto& stationQuery : randomStationQueries) {
+            rideRAPTORQuery.run(
+                Edge(edgeIdOfStation[stationQuery.source]),
+                stationQuery.departureTime,
+                Edge(edgeIdOfStation[stationQuery.target]));
+            ++queryProgress;
+        }
+        queryProgress.finished();
+        rideRAPTORQuery.getProfiler().printStatistics();
 
         std::cout << "done.\n";
 

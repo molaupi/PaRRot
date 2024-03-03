@@ -606,6 +606,11 @@ public:
         currentRoundData->metricValue[metric]++;
     }
 
+    inline void countMetric(const Metric metric, int value) const noexcept
+    {
+        currentRoundData->metricValue[metric] += value;
+    }
+
     inline double getTotalTime() const noexcept { return totalTime / numQueries; }
 
     inline double getExtraRoundTime(const ExtraRound extraRound) const noexcept

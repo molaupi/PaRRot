@@ -142,12 +142,12 @@ public:
 
     void filterPickupsBeforeNextStopForStation(std::vector<InsertionInfo>& intersectionOfVehicles)
     {
-        filterForStation<true, false>(feasiblePickupDistances,intersectionOfVehicles, 1);
+        filterForStation<true, false>(feasiblePickupDistances, intersectionOfVehicles, 1);
     }
 
     void filterDropoffsBeforeNextStopForStation(std::vector<InsertionInfo>& intersectionOfVehicles)
     {
-        filterForStation<true, true>(feasibleDropoffDistances,intersectionOfVehicles, 1);
+        filterForStation<true, true>(feasibleDropoffDistances, intersectionOfVehicles, 1);
     }
 
 private:
@@ -343,8 +343,8 @@ private:
             requestState, routeState, inputConfig);
 
         initialPickupDetour = calcInitialPickupDetour(vehId, stopIndex, INVALID_INDEX, depTimeAtPickup,
-                distFromPickupToNextStop, requestState,
-                routeState);
+            distFromPickupToNextStop, requestState,
+            routeState);
 
         if (doesPickupDetourViolateHardConstraints(veh, requestState, stopIndex, initialPickupDetour, routeState))
             return false;

@@ -687,6 +687,7 @@ CMakeFiles/rideRAPTOR.dir/RunRideRaptor.o: \
  /home/patrick/Documents/KIT/PARROT/Runners/../ULTRA/Algorithms/RideRAPTOR/../../DataStructures/RideRAPTOR/../../../KARRI/Algorithms/KaRRi/RequestState/RelevantPDLocsFilter.h \
  /home/patrick/Documents/KIT/PARROT/Runners/../ULTRA/Algorithms/RideRAPTOR/../../DataStructures/RideRAPTOR/../../../KARRI/Algorithms/KaRRi/RequestState/../../../assert_ex.h \
  /home/patrick/Documents/KIT/PARROT/Runners/../ULTRA/Algorithms/RideRAPTOR/Profiler.h \
+ /home/patrick/Documents/KIT/PARROT/Runners/../ULTRA/DataStructures/Queries/Queries.h \
  /home/patrick/Documents/KIT/PARROT/Runners/../KARRI/Algorithms/KaRRi/AssignmentFinder.h \
  /home/patrick/Documents/KIT/PARROT/Runners/../KARRI/Algorithms/KaRRi/DalsAssignments/DALSAssignmentsFinder.h \
  /home/patrick/Documents/KIT/PARROT/Runners/../KARRI/Algorithms/KaRRi/EllipticBCH/EllipticBucketsEnvironment.h \

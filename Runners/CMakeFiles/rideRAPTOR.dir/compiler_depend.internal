@@ -214,6 +214,7 @@ CMakeFiles/rideRAPTOR.dir/RunRideRaptor.o
  /home/patrick/Documents/KIT/PARROT/ULTRA/DataStructures/RideRAPTOR/Profiler.h
  /home/patrick/Documents/KIT/PARROT/ULTRA/Algorithms/RideRAPTOR/Profiler.h
  /home/patrick/Documents/KIT/PARROT/ULTRA/Algorithms/RideRAPTOR/RideRAPTOR.h
+ /home/patrick/Documents/KIT/PARROT/ULTRA/DataStructures/Queries/Queries.h
  /usr/include/alloca.h
  /usr/include/asm-generic/bitsperlong.h
  /usr/include/asm-generic/errno-base.h
