@@ -830,20 +830,29 @@ int main(int argc, char* argv[])
         std::cout << "done.\n";
 
         std::cout << "Create Random Station Queries ... " << std::flush;
-        std::vector<StopQuery> randomStationQueries = generateRandomStopQueries(raptor.numberOfStops(), numberOfRandomStationQueries, 0, 24 * 60 * 60);
+        std::vector<EdgeQuery> randomEdgeQueries = generateRandomEdgeQueries(vehicleInputGraph.numEdges(), numberOfRandomStationQueries, 0, 24 * 60 * 60);
+
         std::cout << "done.\n";
 
         std::cout << "Running the queries ... " << std::flush;
         Progress queryProgress(numberOfRandomStationQueries);
 
-        for (auto& stationQuery : randomStationQueries) {
+        /* for (auto& stationQuery : randomEdgeQueries) { */
+        /*     rideRAPTORQuery.run( */
+        /*         Edge(edgeIdOfStation[stationQuery.source]), */
+        /*         stationQuery.departureTime, */
+        /*         Edge(edgeIdOfStation[stationQuery.target])); */
+        /*     ++queryProgress; */
+        /* } */
+        for (auto& edgeQuery : randomEdgeQueries) {
             rideRAPTORQuery.run(
-                Edge(edgeIdOfStation[stationQuery.source]),
-                stationQuery.departureTime,
-                Edge(edgeIdOfStation[stationQuery.target]));
+                edgeQuery.source,
+                edgeQuery.departureTime,
+                edgeQuery.target);
             ++queryProgress;
         }
         queryProgress.finished();
+
         rideRAPTORQuery.getProfiler().printStatistics();
 
         std::cout << "done.\n";

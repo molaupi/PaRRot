@@ -40,6 +40,7 @@ namespace RIDERAPTOR {
 using ConstructionGraph = DynamicGraph<List<Attribute<VehicleId, int>>, List<Attribute<Weight, int>, Attribute<InsertionInfo, StopInsertionInfo>>>;
 using RideTransferGraph = StaticGraph<List<Attribute<VehicleId, int>>, List<Attribute<Weight, int>, Attribute<InsertionInfo, StopInsertionInfo>>>;
 
+// Why?
 inline TransferGraph getOverheadGraph(RAPTOR::Data& raptorData,
     TransferGraph& graph) noexcept
 {
@@ -125,7 +126,7 @@ public:
     /*     readRideDataFrom(fileName, separator); */
     /* } */
 
-    Data(const RAPTOR::Data& raptorData,
+    Data(RAPTOR::Data& raptorData,
         CH::CH& psgCH,
         const karri::Fleet& fleet, const InputGraphT& inputGraph,
         const CHEnvT& chEnv, const karri::CostCalculator& calculator,
@@ -168,6 +169,10 @@ public:
         , accumulatedNumStops(fleet.size() + 1)
         , profiler(profilerTemplate)
     {
+        // extend the transfer graph by two vertices => these will be the dummy stops
+        raptorData.transferGraph.addVertices((size_t)2);
+        AssertMsg(raptorData.transferGraph.numVertices() == raptorData.numberOfStops() + 2, "The two additional vertices were not added correctly!");
+
         // Build the mapping of vertex to station
         for (StopId station(0); station < raptorData.numberOfStops(); ++station) {
             assert(raptorData.isStop(station));
@@ -533,10 +538,11 @@ private:
     void insertTargetEdges(const std::vector<StopInsertionInfo> insertionInfos,
         const Vertex targetVertex)
     {
-        // "reseet" everything
+        // "reset" everything
         for (auto vertex = numberOfStops(); vertex < rideTransferGraph.numVertices();
              vertex++) {
             const auto edge = rideTransferGraph.findEdge(Vertex(vertex), targetVertex);
+            AssertMsg(rideTransferGraph.isEdge(edge), "Edge is not valid! " << vertex << " -> " << targetVertex);
             rideTransferGraph.set(Weight, edge, INFTY);
             StopInsertionInfo info;
             rideTransferGraph.set(InsertionInfo, edge, info);
@@ -594,7 +600,7 @@ private:
     }
 
 public:
-    const RAPTOR::Data& raptorData;
+    RAPTOR::Data& raptorData;
     CH::CH walkingCH;
     RideTransferGraph rideTransferGraph;
     const DistanceMatrix& distanceMatrix;

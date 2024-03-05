@@ -42,6 +42,45 @@ inline std::vector<VertexQuery> generateRandomVertexQueries(
     return queries;
 }
 
+struct EdgeQuery {
+    EdgeQuery(const Edge source = noEdge, const Edge target = noEdge,
+        const int departureTime = never)
+        : source(source)
+        , target(target)
+        , departureTime(departureTime)
+    {
+    }
+
+    inline friend std::ostream& operator<<(std::ostream& out,
+        const EdgeQuery& query) noexcept
+    {
+        return out << query.source << " -> " << query.target << " @ "
+                   << query.departureTime << std::endl;
+    }
+
+    Edge source;
+    Edge target;
+    int departureTime;
+};
+
+inline std::vector<EdgeQuery> generateRandomEdgeQueries(
+    const size_t numEdges, const size_t numQueries, const int startTime = 0,
+    const int endTime = 24 * 60 * 60) noexcept
+{
+    std::mt19937 randomGenerator(42);
+    std::uniform_int_distribution<> edgeDistribution(0, numEdges - 1);
+    std::uniform_int_distribution<> timeDistribution(startTime, endTime - 1);
+    std::vector<EdgeQuery> queries;
+    queries.reserve(numQueries);
+    for (size_t i = 0; i < numQueries; i++) {
+        queries.emplace_back(Edge(edgeDistribution(randomGenerator)),
+            Edge(edgeDistribution(randomGenerator)),
+            timeDistribution(randomGenerator));
+    }
+
+    return queries;
+}
+
 struct OneToAllQuery {
     OneToAllQuery(const Vertex source = noVertex, const int departureTime = never)
         : source(source)

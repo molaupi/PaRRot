@@ -84,10 +84,10 @@ public:
         , routesServingUpdatedStops(data.raptorData.numberOfRoutes())
         , sourceEdge(noEdge)
         , sourceVertex(noVertex)
-        , sourceStop(noStop)
+        , sourceStop(data.raptorData.numberOfStops())
         , targetEdge(noEdge)
         , targetVertex(noVertex)
-        , targetStop(noStop)
+        , targetStop(data.raptorData.numberOfStops() + 1)
         , sourceDepartureTime(never)
         , profiler(profilerTemplate)
         , optimizationFlags(optimizationFlags)
@@ -120,24 +120,30 @@ public:
     inline void run(const Edge source, const int departureTime, const Edge target, const size_t maxRounds = INFTY) noexcept
     {
         profiler.start();
+
         profiler.startExtraRound(EXTRA_ROUND_CLEAR);
         clear();
         profiler.doneRound();
 
         profiler.startExtraRound(EXTRA_ROUND_INITIALIZATION);
+
         profiler.startPhase();
         initialize(source, departureTime, target);
         profiler.donePhase(PHASE_INITIALIZATION);
+
         profiler.startPhase();
         data.extendRideTransferGraph(sourceStop, sourceEdge, targetStop, targetEdge);
         profiler.donePhase(PHASE_INIT_RIDE);
+
         profiler.startPhase();
         /* relaxInitialWalkingTransfer(); */
         relaxTransfers();
         profiler.donePhase(PHASE_TRANSFERS_WALKING);
+
         profiler.startPhase();
         relaxRideTransfers();
         profiler.donePhase(PHASE_TRANSFERS_RIDESHARING);
+
         profiler.doneRound();
 
         for (size_t i = 0; i < maxRounds; i++) {
@@ -255,8 +261,8 @@ public:
         routesServingUpdatedStops.clear();
         sourceEdge = noEdge;
         targetEdge = noEdge;
-        sourceStop = StopId(data.numberOfStops());
-        targetStop = StopId(data.numberOfStops() + 1);
+        sourceStop = StopId(data.raptorData.numberOfStops());
+        targetStop = StopId(data.raptorData.numberOfStops() + 1);
         sourceDepartureTime = never;
         if constexpr (RESET_CAPACITIES) {
             std::vector<Round>().swap(rounds);
@@ -297,11 +303,15 @@ private:
         if (data.raptorData.isStop(data.vertexToStation[sourceVertex]))
             sourceStop = data.vertexToStation[sourceVertex];
 
+        AssertMsg(data.raptorData.isStop(sourceStop) || sourceStop == data.raptorData.numberOfStops(), "SourceStop is not valid: " << sourceStop);
+
         targetEdge = target;
         targetVertex = Vertex(data.inputGraph.edgeTail(target));
 
         if (data.raptorData.isStop(data.vertexToStation[targetVertex]))
             targetStop = data.vertexToStation[targetVertex];
+
+        AssertMsg(data.raptorData.isStop(targetStop) || targetStop == data.raptorData.numberOfStops() + 1, "TargetStop is not valid: " << targetStop);
 
         startNewRound();
         arrivalByRoute(sourceStop, sourceDepartureTime);
@@ -435,6 +445,8 @@ private:
         stopsUpdatedByTransfer.clear();
         routesServingUpdatedStops.clear();
         for (const StopId stop : stopsUpdatedByRoute) {
+            if (!data.raptorData.isStop(stop))
+                continue;
             const int earliestArrivalTime = SeparateRouteAndTransferEntries
                 ? previousRound()[stop].arrivalTime
                 : currentRound()[stop].arrivalTime;

@@ -359,7 +359,6 @@ public:
         return result;
     }
 
-private:
     inline StopEvent* firstTripOfRoute(const RouteId route) noexcept
     {
         AssertMsg(isRoute(route),
@@ -1268,7 +1267,6 @@ public:
         return stopEventOrder;
     }
 
-private:
     inline bool overtakes(
         const SubRange<std::vector<StopEvent>>& tripA,
         const SubRange<std::vector<StopEvent>>& tripB) const noexcept
