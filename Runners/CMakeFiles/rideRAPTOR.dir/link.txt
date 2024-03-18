@@ -1,1 +1,1 @@
-/usr/bin/c++  -march=native -Werror -Wfatal-errors -Wpedantic -pedantic-errors      -Wall -Wextra -ftemplate-backtrace-limit=1 -Wno-unknown-pragmas -Wno-sign-compare -O3 CMakeFiles/rideRAPTOR.dir/RunRideRaptor.cpp.o -o rideRAPTOR  -lroutingkit /usr/lib/gcc/x86_64-linux-gnu/13/libgomp.so /usr/lib/x86_64-linux-gnu/libpthread.a 
+/usr/bin/c++ -O3 -DNDEBUG -rdynamic CMakeFiles/rideRAPTOR.dir/RunRideRaptor.o -o rideRAPTOR  -lroutingkit 

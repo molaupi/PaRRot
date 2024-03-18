@@ -291,7 +291,7 @@ int main(int argc, char* argv[])
                 capacity });
             maxCapacity = std::max(maxCapacity, capacity);
         }
-        std::cout << "done.\n";
+        std::cout << "done.\n[Read # " << fleet.size() << " vehicles]\n";
 
         // Create Route State for empty routes.
         karri::RouteState routeState(fleet, inputConfig.stopTime);

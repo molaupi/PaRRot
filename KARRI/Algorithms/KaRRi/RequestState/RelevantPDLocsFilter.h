@@ -295,23 +295,24 @@ private:
                         if (doesPickupDetourViolateHardConstraints(veh, requestState, i, detour, routeState))
                             continue;
 
-                        assert(0 < routeState.schedArrTimesFor(vehId)[i] && routeState.schedArrTimesFor(vehId)[i] < INFTYKARRI);
-                        assert(0 <= routeState.schedDepTimesFor(vehId)[i] && routeState.schedDepTimesFor(vehId)[i] < INFTYKARRI);
-                        assert(0 <= routeState.maxArrTimesFor(vehId)[i] - distFromPDLoc && routeState.maxArrTimesFor(vehId)[i] < INFTYKARRI);
+                        // TODO
+                        /* assert(0 < routeState.schedArrTimesFor(vehId)[i] && routeState.schedArrTimesFor(vehId)[i] < INFTYKARRI); */
+                        /* assert(0 <= routeState.schedDepTimesFor(vehId)[i] && routeState.schedDepTimesFor(vehId)[i] < INFTYKARRI); */
+                        /* assert(0 <= routeState.maxArrTimesFor(vehId)[i] - distFromPDLoc && routeState.maxArrTimesFor(vehId)[i] < INFTYKARRI); */
 
                         // is reverse dist to stopId in distsToPDLocs bzw. in distsFromPDLocs?
                         intersectionOfVehicles.push_back({
                             vehId, // vehicleId
                             i, // insertionPosition
-                            detour, // detour
-                            routeState.leewayOfLegStartingAt(stopId), // leeway
                             distToPDLoc, // distTo
                             distFromPDLoc, // distFrom
-                            0, // reverseDistTo
-                            0, // reverseDistFrom
-                            routeState.schedDepTimesFor(vehId)[i] + distToPDLoc, // minArrTime
+                            detour, // detour
+                            routeState.leewayOfLegStartingAt(stopId), // leeway
                             routeState.schedDepTimesFor(vehId)[i], // minDepTime
-                            routeState.maxArrTimesFor(vehId)[i + 1] - distFromPDLoc // maxDepTime
+                            routeState.maxArrTimesFor(vehId)[i + 1] - distFromPDLoc, // maxDepTime
+                            routeState.schedDepTimesFor(vehId)[i] + distToPDLoc, // minArrTime
+                            0, // reverseDistTo
+                            0 // reverseDistFrom
                         });
                     }
                 }

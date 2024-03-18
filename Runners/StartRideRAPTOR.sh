@@ -26,5 +26,5 @@ DIR=../Networks/Berlin/
     -o ${DIR}RideRAPTOR/ \
     -station-mapping ${DIR}ULTRA/stations.mapped.csv \
     -raptor-data ${DIR}ULTRA/raptor.binary \
-    -num-queries 1000 \
-    -num-initial-req 5000
+    -num-queries 10 \
+    -num-initial-req 500

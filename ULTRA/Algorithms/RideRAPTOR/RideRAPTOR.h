@@ -511,14 +511,12 @@ private:
                 const auto vehId = data.getVehicleFromVertex(vehicleVertex);
                 const auto& pickupInfo = data.rideTransferGraph.get(InsertionInfo, edgeFrom);
 
-                if (pickupInfo.vehicleId == RIDERAPTOR::noVehicleId)
+                if (pickupInfo.vehicleId == RIDERAPTOR::noVehicleId) [[unlikely]]
                     continue;
 
                 profiler.countMetric(METRIC_TOTAL_DE, (int)data.rideTransferGraph.outDegree(vehicleVertex));
 
                 if (optimizationFlags.UseTimePruning && (pickupInfo.minDepTime > earliestArrival[targetStop].getArrivalTimeByTransfer() || pickupInfo.maxDepTime < earliestArrivalTime)) {
-                    std::cout << pickupInfo.minDepTime << " > " << earliestArrival[targetStop].getArrivalTimeByTransfer() << "\n"
-                              << pickupInfo.maxDepTime << " < " << earliestArrivalTime << std::endl;
                     profiler.countMetric(METRIC_FILTERED_PICKUP_EDGES);
                     continue;
                 }
@@ -530,13 +528,13 @@ private:
                 for (const Edge edgeTo : data.rideTransferGraph.edgesFrom(vehicleVertex)) {
                     const auto toStop = StopId(data.rideTransferGraph.get(ToVertex, edgeTo));
 
-                    if (toStop == sourceStop || toStop == fromStop) {
+                    if (toStop == sourceStop || toStop == fromStop) [[unlikely]] {
                         continue;
                     }
                     const auto areStops = data.raptorData.isStop(fromStop) && data.raptorData.isStop(toStop);
 
                     const auto& dropoffInfo = data.rideTransferGraph.get(InsertionInfo, edgeTo);
-                    if (dropoffInfo.vehicleId == RIDERAPTOR::noVehicleId)
+                    if (dropoffInfo.vehicleId == RIDERAPTOR::noVehicleId) [[unlikely]]
                         continue;
 
                     assert(pickupInfo.insertionPosition <= dropoffInfo.insertionPosition);
