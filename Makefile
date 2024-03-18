@@ -116,6 +116,19 @@ depend:
 	$(CMAKE_COMMAND) -S$(CMAKE_SOURCE_DIR) -B$(CMAKE_BINARY_DIR) --check-build-system CMakeFiles/Makefile.cmake 1
 .PHONY : depend
 
+#=============================================================================
+# Target rules for targets named rideRAPTOR
+
+# Build rule for target.
+rideRAPTOR: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 rideRAPTOR
+.PHONY : rideRAPTOR
+
+# fast build rule for target.
+rideRAPTOR/fast:
+	$(MAKE) $(MAKESILENT) -f Runners/CMakeFiles/rideRAPTOR.dir/build.make Runners/CMakeFiles/rideRAPTOR.dir/build
+.PHONY : rideRAPTOR/fast
+
 # Help Target
 help:
 	@echo "The following are some of the valid targets for this Makefile:"
@@ -124,6 +137,7 @@ help:
 	@echo "... depend"
 	@echo "... edit_cache"
 	@echo "... rebuild_cache"
+	@echo "... rideRAPTOR"
 .PHONY : help
 
 

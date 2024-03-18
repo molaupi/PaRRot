@@ -28,6 +28,7 @@
 #include <cassert>
 #include <cmath>
 
+#include "../../../ULTRA/DataStructures/RideRAPTOR/Entities/InsertionInfo.h"
 #include "../../Tools/Constants.h"
 #include "../../Tools/Workarounds.h"
 #include "AssignmentCostFunctions/TimeIsMoneyCostFunction.h"
@@ -67,6 +68,84 @@ public:
         return calcBase<false>(asgn, context);
     }
 
+    // [PS] two edges from the rideTransferGraph, Stop -> Veh -> Stop
+    template <typename RequestContext>
+    std::pair<int, int> computeDepAndArrTime(const RIDERAPTOR::StopInsertionInfo& pickupInsertionInfo, const RIDERAPTOR::StopInsertionInfo& dropoffInsertionInfo, const RequestContext& context, const Fleet& fleet) const
+    {
+        // returns departure time and arrival time
+        // {INFTY, INFTY} is invalid
+        using namespace time_utils;
+
+        assert(pickupInsertionInfo.vehicleId == dropoffInsertionInfo.vehicleId);
+        assert(0 <= pickupInsertionInfo.insertionPosition);
+        assert(0 <= dropoffInsertionInfo.insertionPosition);
+        assert(pickupInsertionInfo.insertionPosition <= dropoffInsertionInfo.insertionPosition);
+
+        if (pickupInsertionInfo.distTo == INFTYKARRI || pickupInsertionInfo.distFrom == INFTYKARRI)
+            return { INFTYKARRI, INFTYKARRI };
+
+        if (dropoffInsertionInfo.distTo == INFTYKARRI || dropoffInsertionInfo.distFrom == INFTYKARRI)
+            return { INFTYKARRI, INFTYKARRI };
+
+        const auto numStops = routeState.numStopsOf(pickupInsertionInfo.vehicleId);
+        const auto actualDepTimeAtPickup = getVehDepTimeAtStopForRequest(pickupInsertionInfo.vehicleId, pickupInsertionInfo.insertionPosition, context, routeState);
+        const auto initialPickupDetour
+            = calcInitialPickupDetour(pickupInsertionInfo.vehicleId,
+                pickupInsertionInfo.insertionPosition,
+                dropoffInsertionInfo.insertionPosition,
+                actualDepTimeAtPickup,
+                pickupInsertionInfo.distFrom,
+                context,
+                routeState);
+
+        std::pair<int, int> result({ actualDepTimeAtPickup, INFTYKARRI });
+
+        const bool dropoffAtExistingStop = true;
+
+        const auto initialDropoffDetour = calcInitialDropoffDetour(pickupInsertionInfo.vehicleId,
+            dropoffInsertionInfo.insertionPosition,
+            dropoffInsertionInfo.distTo,
+            dropoffInsertionInfo.distFrom,
+            dropoffAtExistingStop,
+            routeState,
+            inputConfig);
+
+        const auto detourRightAfterDropoff = calcDetourRightAfterDropoff(pickupInsertionInfo.vehicleId,
+            pickupInsertionInfo.insertionPosition,
+            dropoffInsertionInfo.insertionPosition,
+            initialPickupDetour,
+            initialDropoffDetour,
+            routeState);
+        const auto residualDetourAtEnd = calcResidualTotalDetourForStopAfterDropoff(pickupInsertionInfo.vehicleId,
+            dropoffInsertionInfo.insertionPosition,
+            numStops - 1,
+            detourRightAfterDropoff,
+            routeState);
+
+        if (isAnyHardConstraintViolated(fleet[pickupInsertionInfo.vehicleId],
+                pickupInsertionInfo.insertionPosition,
+                dropoffInsertionInfo.insertionPosition,
+                context,
+                initialPickupDetour,
+                detourRightAfterDropoff,
+                residualDetourAtEnd,
+                dropoffAtExistingStop,
+                routeState))
+            return result;
+
+        result.second = getArrTimeAtDropoff(actualDepTimeAtPickup,
+            pickupInsertionInfo.insertionPosition,
+            dropoffInsertionInfo.insertionPosition,
+            pickupInsertionInfo.vehicleId,
+            dropoffInsertionInfo.distTo,
+            initialPickupDetour,
+            dropoffAtExistingStop,
+            routeState,
+            inputConfig);
+
+        return result;
+    }
+
     // Calculates the objective value for a given assignment.
     template <bool checkHardConstraints, typename RequestContext>
     int calcBase(const Assignment& asgn, const RequestContext& context) const
@@ -86,6 +165,7 @@ public:
         int addedTripTime = calcAddedTripTimeInInterval(vehId, asgn.pickupStopIdx, asgn.dropoffStopIdx,
             initialPickupDetour, routeState);
 
+        // [PS] immer true ?
         const bool dropoffAtExistingStop = isDropoffAtExistingStop(asgn, routeState);
         const auto initialDropoffDetour = calcInitialDropoffDetour(asgn, dropoffAtExistingStop, routeState,
             inputConfig);
@@ -97,11 +177,13 @@ public:
             detourRightAfterDropoff,
             routeState);
 
+        // [PS] ich muss doch *nur* die HardConstraints checken?
         if (checkHardConstraints && isAnyHardConstraintViolated(asgn, context, initialPickupDetour, detourRightAfterDropoff, residualDetourAtEnd, dropoffAtExistingStop, routeState))
             return INFTYKARRI;
 
         addedTripTime += calcAddedTripTimeAffectedByPickupAndDropoff(asgn, detourRightAfterDropoff, routeState);
 
+        // [PS] wir brauchen nur die arrTime and departureTime, nicht die Kosten selbst
         return calcCost(asgn, context, initialPickupDetour, residualDetourAtEnd,
             actualDepTimeAtPickup, dropoffAtExistingStop, addedTripTime);
     }

@@ -497,7 +497,6 @@ private:
         }
     }
 
-    // TODO set useDistance = true
     inline void relaxRideTransfers() noexcept
     {
         for (const StopId fromStop : stopsUpdatedByRoute) {
@@ -505,18 +504,21 @@ private:
                 ? previousRound()[fromStop].arrivalTime
                 : currentRound()[fromStop].arrivalTime;
 
-            int pickup = data.edgeIdOfStation[fromStop];
+            /* int pickup = data.edgeIdOfStation[fromStop]; */
 
             for (const Edge edgeFrom : data.rideTransferGraph.edgesFrom(fromStop)) {
                 const auto vehicleVertex = data.rideTransferGraph.get(ToVertex, edgeFrom);
                 const auto vehId = data.getVehicleFromVertex(vehicleVertex);
                 const auto& pickupInfo = data.rideTransferGraph.get(InsertionInfo, edgeFrom);
+
                 if (pickupInfo.vehicleId == RIDERAPTOR::noVehicleId)
                     continue;
 
                 profiler.countMetric(METRIC_TOTAL_DE, (int)data.rideTransferGraph.outDegree(vehicleVertex));
 
                 if (optimizationFlags.UseTimePruning && (pickupInfo.minDepTime > earliestArrival[targetStop].getArrivalTimeByTransfer() || pickupInfo.maxDepTime < earliestArrivalTime)) {
+                    std::cout << pickupInfo.minDepTime << " > " << earliestArrival[targetStop].getArrivalTimeByTransfer() << "\n"
+                              << pickupInfo.maxDepTime << " < " << earliestArrivalTime << std::endl;
                     profiler.countMetric(METRIC_FILTERED_PICKUP_EDGES);
                     continue;
                 }
@@ -527,16 +529,17 @@ private:
                 // relax all outgoing edges from the vehicleVertex
                 for (const Edge edgeTo : data.rideTransferGraph.edgesFrom(vehicleVertex)) {
                     const auto toStop = StopId(data.rideTransferGraph.get(ToVertex, edgeTo));
+
                     if (toStop == sourceStop || toStop == fromStop) {
                         continue;
                     }
-                    // TODO this should always be true
-                    const auto areStops = true;
-                    /* const auto areStops = data.raptorData.isStop(fromStop) && data.raptorData.isStop(toStop); */
+                    const auto areStops = data.raptorData.isStop(fromStop) && data.raptorData.isStop(toStop);
 
                     const auto& dropoffInfo = data.rideTransferGraph.get(InsertionInfo, edgeTo);
                     if (dropoffInfo.vehicleId == RIDERAPTOR::noVehicleId)
                         continue;
+
+                    assert(pickupInfo.insertionPosition <= dropoffInfo.insertionPosition);
 
                     const auto latestArrival = std::min(earliestArrival[toStop].getArrivalTimeByTransfer(),
                         earliestArrival[targetStop].getArrivalTimeByTransfer());
@@ -551,38 +554,20 @@ private:
                         continue;
                     }
 
-                    int dropoff = data.edgeIdOfStation[toStop];
+                    /* int dropoff = data.edgeIdOfStation[toStop]; */
 
                     /* const bool useDistance = optimizationFlags.UseDistanceMatrix && areStops; */
-                    const bool useDistance = true;
-
-                    karri::RideRAPTORRequest req;
-                    req.origin = pickup;
-                    req.destination = dropoff;
-                    req.requestTime = earliestArrivalTime;
-
-                    req.vehicleId = vehId;
-                    req.directDistance = useDistance ? data.distanceMatrix.getDistance(fromStop, toStop)
-                                                     : INFTY;
-                    req.pickupInfo = pickupInfo;
-                    req.dropoffInfo = dropoffInfo;
-
-                    // disp. TODO
-                    /* if (optimizationFlags.UseApproximation && !useDistance && !data.disp.isFeasible(req, latestArrival)) { */
-                    /*     profiler.countMetric(METRIC_FILTERED_BY_APPROX); */
-                    /*     continue; */
-                    /* } */
+                    /* const bool useDistance = true; */
 
                     profiler.countMetric(METRIC_TRIED_RIDES);
                     /* if (!useDistance) */
                     /*     profiler.startExtraTimer(); */
 
-                    // TODO
-                    /* const auto [departureTime, arrivalTime] = useDistance ? data.disp.template tryInsertionForVehicle<true>(req) */
-                    /*                                                       : data.disp.template tryInsertionForVehicle<false>(req); */
+                    const auto result = data.calculator.computeDepAndArrTime(pickupInfo, dropoffInfo, data.requestState, data.fleet);
 
-                    int departureTime = INFTY;
-                    int arrivalTime = INFTY;
+                    int departureTime = result.first;
+                    int arrivalTime = result.second;
+
                     /* if (!useDistance) */
                     /*     profiler.countMetric(METRIC_CHSEARCHES); */
                     /* if (!useDistance) */

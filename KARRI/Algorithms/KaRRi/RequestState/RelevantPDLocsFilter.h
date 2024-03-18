@@ -271,7 +271,8 @@ private:
             // Track relevant PD locs for each stop in the relevant PD locs data
             // structure. Entries are ordered by vehicle and by stop.
             const int beginStopIdx = beforeNextStop ? 0 : 1;
-            const int endStopIdx = beforeNextStop ? 1 : (isDropoff ? numStops : numStops - 1);
+            const int endStopIdx = beforeNextStop ? 1 : numStops - 1;
+            /* const int endStopIdx = beforeNextStop ? 1 : (isDropoff ? numStops : numStops - 1); */
             for (int i = beginStopIdx; i < endStopIdx; ++i) {
                 if ((!isDropoff || beforeNextStop) && occupancies[i] + requestState.originalRequest.numRiders > veh.capacity)
                     continue;
@@ -280,7 +281,6 @@ private:
 
                 // Insert entries at this stop
                 if (feasible.hasPotentiallyRelevantPDLocs(stopId)) {
-
                     const auto& distsToPDLocs = feasible.distancesToRelevantPDLocsFor(stopId);
                     const auto& distsFromPDLocs = feasible.distancesFromRelevantPDLocsToNextStopOf(stopId);
                     for (unsigned int id = 0; id < numPDLocs; ++id) {
@@ -290,16 +290,14 @@ private:
                         if (distToPDLoc >= INFTYKARRI || distFromPDLoc >= INFTYKARRI)
                             continue;
 
-                        // added by Patrick, to print the values
-                        /* ASSERT_EX(distFromStopToPickup + distFromPickupToNextStop >= calcLengthOfLegStartingAt(stopIndex, vehId, routeState), std::cerr << "\n***********\ndistFromStopToPickup: " << distFromStopToPickup << ", distFromPickupToNextStop: " << distFromPickupToNextStop << ", calcLengthOfLegStartingAt: " << calcLengthOfLegStartingAt(stopIndex, vehId, routeState) << "\n***********\n"); */
-
                         assert(distToPDLoc + distFromPDLoc >= calcLengthOfLegStartingAt(i, vehId, routeState));
                         const int detour = distToPDLoc + distFromPDLoc - calcLengthOfLegStartingAt(i, vehId, routeState);
                         if (doesPickupDetourViolateHardConstraints(veh, requestState, i, detour, routeState))
                             continue;
 
-                        // TODO
-                        ++numVehiclesInRange;
+                        assert(0 < routeState.schedArrTimesFor(vehId)[i] && routeState.schedArrTimesFor(vehId)[i] < INFTYKARRI);
+                        assert(0 <= routeState.schedDepTimesFor(vehId)[i] && routeState.schedDepTimesFor(vehId)[i] < INFTYKARRI);
+                        assert(0 <= routeState.maxArrTimesFor(vehId)[i] - distFromPDLoc && routeState.maxArrTimesFor(vehId)[i] < INFTYKARRI);
 
                         // is reverse dist to stopId in distsToPDLocs bzw. in distsFromPDLocs?
                         intersectionOfVehicles.push_back({
@@ -311,9 +309,9 @@ private:
                             distFromPDLoc, // distFrom
                             0, // reverseDistTo
                             0, // reverseDistFrom
-                            routeState.schedArrTimesFor(vehId)[i], // minArrTime
+                            routeState.schedDepTimesFor(vehId)[i] + distToPDLoc, // minArrTime
                             routeState.schedDepTimesFor(vehId)[i], // minDepTime
-                            routeState.maxArrTimesFor(vehId)[i] // maxDepTime
+                            routeState.maxArrTimesFor(vehId)[i + 1] - distFromPDLoc // maxDepTime
                         });
                     }
                 }
@@ -332,9 +330,6 @@ private:
         assert(routeState.occupanciesFor(vehId)[stopIndex] + requestState.originalRequest.numRiders <= veh.capacity);
         if (distFromStopToPickup >= INFTYKARRI || distFromPickupToNextStop >= INFTYKARRI)
             return false;
-
-        // added by Patrick, to print the values
-        /* ASSERT_EX(distFromStopToPickup + distFromPickupToNextStop >= calcLengthOfLegStartingAt(stopIndex, vehId, routeState), std::cerr << "\n***********\ndistFromStopToPickup: " << distFromStopToPickup << ", distFromPickupToNextStop: " << distFromPickupToNextStop << ", calcLengthOfLegStartingAt: " << calcLengthOfLegStartingAt(stopIndex, vehId, routeState) << "\n***********\n"); */
 
         assert(distFromStopToPickup + distFromPickupToNextStop >= calcLengthOfLegStartingAt(stopIndex, vehId, routeState));
         const auto& p = requestState.pickups[pickupId];

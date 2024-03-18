@@ -143,18 +143,17 @@ static INLINE bool isDropoffAtExistingStop(const Assignment& asgn, const RouteSt
 }
 
 static INLINE int
-getArrTimeAtDropoff(const int actualDepTimeAtPickup, const Assignment& asgn, const int initialPickupDetour,
-    const bool dropoffAtExistingStop, const RouteState& routeState,
-    const InputConfig& inputConfig)
+getArrTimeAtDropoff(const int actualDepTimeAtPickup, const int& pickupIndex,
+    const int& dropoffIndex, const int& vehId, const int& distToDropoff,
+    const int initialPickupDetour, const bool dropoffAtExistingStop,
+    const RouteState& routeState, const InputConfig& inputConfig)
 {
-    const auto pickupIndex = asgn.pickupStopIdx;
-    const auto dropoffIndex = asgn.dropoffStopIdx;
-    const auto& minDepTimes = routeState.schedDepTimesFor(asgn.vehicle->vehicleId);
-    const auto& minArrTimes = routeState.schedArrTimesFor(asgn.vehicle->vehicleId);
-    const auto& vehWaitTimesPrefixSum = routeState.vehWaitTimesPrefixSumFor(asgn.vehicle->vehicleId);
+    const auto& minDepTimes = routeState.schedDepTimesFor(vehId);
+    const auto& minArrTimes = routeState.schedArrTimesFor(vehId);
+    const auto& vehWaitTimesPrefixSum = routeState.vehWaitTimesPrefixSumFor(vehId);
 
     if (pickupIndex == dropoffIndex) {
-        return actualDepTimeAtPickup + asgn.distToDropoff;
+        return actualDepTimeAtPickup + distToDropoff;
     }
 
     assert(dropoffIndex > 0);
@@ -166,7 +165,15 @@ getArrTimeAtDropoff(const int actualDepTimeAtPickup, const Assignment& asgn, con
     }
 
     const auto depTimeAtPrevious = std::max(minDepTimes[dropoffIndex], arrTimeAtPrevious + inputConfig.stopTime);
-    return depTimeAtPrevious + asgn.distToDropoff;
+    return depTimeAtPrevious + distToDropoff;
+}
+
+static INLINE int
+getArrTimeAtDropoff(const int actualDepTimeAtPickup, const Assignment& asgn, const int initialPickupDetour,
+    const bool dropoffAtExistingStop, const RouteState& routeState,
+    const InputConfig& inputConfig)
+{
+    return getArrTimeAtDropoff(actualDepTimeAtPickup, asgn.pickupStopIdx, asgn.dropoffStopIdx, asgn.vehicle->vehicleId, asgn.distToDropoff, initialPickupDetour, dropoffAtExistingStop, routeState, inputConfig);
 }
 
 // Returns the accumulated vehicle wait time in the stop interval (fromIndex, toIndex].

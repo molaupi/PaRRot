@@ -1,6 +1,6 @@
 file(REMOVE_RECURSE
-  "CMakeFiles/rideRAPTOR.dir/RunRideRaptor.o"
-  "CMakeFiles/rideRAPTOR.dir/RunRideRaptor.o.d"
+  "CMakeFiles/rideRAPTOR.dir/RunRideRaptor.cpp.o"
+  "CMakeFiles/rideRAPTOR.dir/RunRideRaptor.cpp.o.d"
   "rideRAPTOR"
   "rideRAPTOR.pdb"
 )
