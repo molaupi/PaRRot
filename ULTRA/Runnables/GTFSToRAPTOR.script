@@ -1,8 +1,9 @@
-parseGTFS ../../Networks/Berlin/GTFS/ ../../Networks/Berlin/GTFS/GTFS.binary
-gtfsToIntermediate ../../Networks/Berlin/GTFS/GTFS.binary 20240123 20240124 true true ../../Networks/Berlin/intermediate.binary
+parseGTFS ../../Networks/Berlin/GTFS/ ../../Networks/Berlin/GTFS.binary
+gtfsToIntermediate ../../Networks/Berlin/GTFS.binary 20240123 20240124 false true ../../Networks/Berlin/intermediate.binary
 reduceGraph ../../Networks/Berlin/intermediate.binary ../../Networks/Berlin/intermediate.binary
 reduceToMaximumConnectedComponent ../../Networks/Berlin/intermediate.binary ../../Networks/Berlin/intermediate.binary
 reduceGraph ../../Networks/Berlin/intermediate.binary ../../Networks/Berlin/intermediate.binary
 makeOneHopTransfers ../../Networks/Berlin/intermediate.binary 86400 ../../Networks/Berlin/intermediate.binary true
 reduceGraph ../../Networks/Berlin/intermediate.binary ../../Networks/Berlin/intermediate.binary
 intermediateToRAPTOR ../../Networks/Berlin/intermediate.binary ../../Networks/Berlin/raptor.binary
+raptorToCSV ../../Networks/Berlin/raptor.binary ../../Networks/Berlin/CSV/
