@@ -26,9 +26,6 @@
 cmake_minimum_required(VERSION 3.14 FATAL_ERROR)
 project(RoutingFramework CXX)
 
-# Directories containing .cc source files.
- set(SOURCE_DIRECTORIES Runners)
-
 # Determine the language standard.
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_EXTENSIONS OFF)
@@ -66,47 +63,17 @@ if (CMAKE_BUILD_TYPE STREQUAL "Debug")
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -ftemplate-backtrace-limit=0")
 endif (CMAKE_BUILD_TYPE STREQUAL "Debug")
 
-include_directories(${CMAKE_SOURCE_DIR})
-
+# Dependencies installed via package manager
 find_package(OpenMP)
 find_library(PROJ_LIBRARY proj)
-find_library(RoutingKit_LIBRARY routingkit)
-find_package(nlohmann_json)
 
-find_path(CSV_INCLUDE_PATH csv.h REQUIRED)
-if (NOT CSV_INCLUDE_PATH)
-  message(FATAL_ERROR "csv.h cannot be found. Aborting.")
-endif ()
-message("Found csv.h in ${CSV_INCLUDE_PATH}")
-include_directories(SYSTEM ${CSV_INCLUDE_PATH})
+# Dependencies from git submodules and bundled libraries
+add_subdirectory(External)
 
-find_path(RANDOMC_INCLUDE_PATH randomc.h REQUIRED PATHS ${RANDOMC_INCLUDE_PATH} HINTS ${CSV_INCLUDE_PATH} PATH_SUFFIXES randomc)
-if (NOT RANDOMC_INCLUDE_PATH)
-  message(FATAL_ERROR "randomc.h cannot be found. Aborting.")
-endif ()
-message("Found randomc.h in ${RANDOMC_INCLUDE_PATH}")
-include_directories(${RANDOMC_INCLUDE_PATH})
+set(PARROT_INCLUDE_DIR ${CMAKE_SOURCE_DIR}/include)
 
-find_path(ROUTINGKIT_INCLUDE_PATH contraction_hierarchy.h REQUIRED PATHS ${ROUTINGKIT_INCLUDE_PATH} HINTS ${CSV_INCLUDE_PATH} PATH_SUFFIXES routingkit)
-if (NOT ROUTINGKIT_INCLUDE_PATH)
-  message(FATAL_ERROR "RoutingKit headers cannot be found (searched for contraction_hierarchy.h). Aborting.")
-endif ()
-message("Found RoutingKit headers in ${ROUTINGKIT_INCLUDE_PATH} (searched for contraction_hierarchy.h)")
-include_directories(${ROUTINGKIT_INCLUDE_PATH})
-
-find_path(STOCC_INCLUDE_PATH stocc.h REQUIRED PATHS ${STOCC_INCLUDE_PATH} HINTS ${CSV_INCLUDE_PATH} PATH_SUFFIXES stocc)
-if (NOT STOCC_INCLUDE_PATH)
-  message(FATAL_ERROR "stocc.h cannot be found. Aborting.")
-endif ()
-message("Found stocc.h in ${STOCC_INCLUDE_PATH}")
-include_directories(${STOCC_INCLUDE_PATH})
-
-find_path(VECTORCLASS_INCLUDE_PATH vectorclass.h REQUIRED PATHS ${VECTORCLASS_INCLUDE_PATH} HINTS ${CSV_INCLUDE_PATH} PATH_SUFFIXES vectorclass)
-if (NOT VECTORCLASS_INCLUDE_PATH)
-  message(FATAL_ERROR "vectorclass.h cannot be found. Aborting.")
-endif ()
-message("Found vectorclass.h in ${VECTORCLASS_INCLUDE_PATH}")
-include_directories(${VECTORCLASS_INCLUDE_PATH})
+# Directories containing .cc source files.
+set(SOURCE_DIRECTORIES Runners RawData)
 
 foreach(SRC_DIR ${SOURCE_DIRECTORIES})
   add_subdirectory(${SRC_DIR})

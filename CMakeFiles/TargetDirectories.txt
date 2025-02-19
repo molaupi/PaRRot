@@ -1,5 +1,0 @@
-/home/patrick/Documents/KIT/PARROT/CMakeFiles/edit_cache.dir
-/home/patrick/Documents/KIT/PARROT/CMakeFiles/rebuild_cache.dir
-/home/patrick/Documents/KIT/PARROT/Runners/CMakeFiles/rideRAPTOR.dir
-/home/patrick/Documents/KIT/PARROT/Runners/CMakeFiles/edit_cache.dir
-/home/patrick/Documents/KIT/PARROT/Runners/CMakeFiles/rebuild_cache.dir
