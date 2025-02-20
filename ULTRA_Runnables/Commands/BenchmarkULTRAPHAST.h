@@ -4,25 +4,25 @@
 #include <string>
 #include <vector>
 
-#include "../../Shell/Shell.h"
+#include "../../include/ULTRA/Shell/Shell.h"
 using namespace Shell;
 
-#include "../../Algorithms/CH/CH.h"
-#include "../../Algorithms/CH/Preprocessing/BidirectionalWitnessSearch.h"
-#include "../../Algorithms/CH/Preprocessing/CHBuilder.h"
-#include "../../Algorithms/CH/Preprocessing/KeyFunction.h"
-#include "../../Algorithms/CH/Preprocessing/StopCriterion.h"
-#include "../../Algorithms/CSA/OneToAllDijkstraCSA.h"
-#include "../../Algorithms/CSA/UPCSA.h"
-#include "../../Algorithms/RAPTOR/InitialTransfers.h"
-#include "../../Algorithms/RAPTOR/OneToAllDijkstraRAPTOR.h"
-#include "../../Algorithms/RAPTOR/UPRAPTOR.h"
-#include "../../Algorithms/TripBased/Query/UPQuery.h"
-#include "../../DataStructures/CSA/Data.h"
-#include "../../DataStructures/Queries/Queries.h"
-#include "../../DataStructures/RAPTOR/Data.h"
-#include "../../DataStructures/TripBased/Data.h"
-#include "../../Helpers/String/String.h"
+#include "../../include/ULTRA/Algorithms/CH/CH.h"
+#include "../../include/ULTRA/Algorithms/CH/Preprocessing/BidirectionalWitnessSearch.h"
+#include "../../include/ULTRA/Algorithms/CH/Preprocessing/CHBuilder.h"
+#include "../../include/ULTRA/Algorithms/CH/Preprocessing/KeyFunction.h"
+#include "../../include/ULTRA/Algorithms/CH/Preprocessing/StopCriterion.h"
+#include "../../include/ULTRA/Algorithms/CSA/OneToAllDijkstraCSA.h"
+#include "../../include/ULTRA/Algorithms/CSA/UPCSA.h"
+#include "../../include/ULTRA/Algorithms/RAPTOR/InitialTransfers.h"
+#include "../../include/ULTRA/Algorithms/RAPTOR/OneToAllDijkstraRAPTOR.h"
+#include "../../include/ULTRA/Algorithms/RAPTOR/UPRAPTOR.h"
+#include "../../include/ULTRA/Algorithms/TripBased/Query/UPQuery.h"
+#include "../../include/ULTRA/DataStructures/CSA/Data.h"
+#include "../../include/ULTRA/DataStructures/Queries/Queries.h"
+#include "../../include/ULTRA/DataStructures/RAPTOR/Data.h"
+#include "../../include/ULTRA/DataStructures/TripBased/Data.h"
+#include "../../include/ULTRA/Helpers/String/String.h"
 
 class RunOneToAllDijkstraCSAQueriesToVertices : public ParameterizedCommand {
 public:

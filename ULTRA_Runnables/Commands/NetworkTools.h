@@ -3,13 +3,13 @@
 #include <iostream>
 #include <string>
 
-#include "../../Algorithms/StronglyConnectedComponents.h"
-#include "../../DataStructures/CSA/Data.h"
-#include "../../DataStructures/Graph/Graph.h"
-#include "../../DataStructures/Intermediate/Data.h"
-#include "../../DataStructures/RAPTOR/Data.h"
-#include "../../Helpers/HighlightText.h"
-#include "../../Shell/Shell.h"
+#include "../../include/ULTRA/Algorithms/StronglyConnectedComponents.h"
+#include "../../include/ULTRA/DataStructures/CSA/Data.h"
+#include "../../include/ULTRA/DataStructures/Graph/Graph.h"
+#include "../../include/ULTRA/DataStructures/Intermediate/Data.h"
+#include "../../include/ULTRA/DataStructures/RAPTOR/Data.h"
+#include "../../include/ULTRA/Helpers/HighlightText.h"
+#include "../../include/ULTRA/Shell/Shell.h"
 
 using namespace Shell;
 

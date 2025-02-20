@@ -3,14 +3,14 @@
 #include <string>
 #include <vector>
 
-#include "../../Algorithms/CH/CH.h"
-#include "../../Algorithms/CH/Preprocessing/BidirectionalWitnessSearch.h"
-#include "../../Algorithms/CH/Preprocessing/CHBuilder.h"
-#include "../../DataStructures/CSA/Data.h"
-#include "../../DataStructures/Intermediate/Data.h"
-#include "../../DataStructures/RAPTOR/Data.h"
-#include "../../Helpers/MultiThreading.h"
-#include "../../Shell/Shell.h"
+#include "../../include/ULTRA/Algorithms/CH/CH.h"
+#include "../../include/ULTRA/Algorithms/CH/Preprocessing/BidirectionalWitnessSearch.h"
+#include "../../include/ULTRA/Algorithms/CH/Preprocessing/CHBuilder.h"
+#include "../../include/ULTRA/DataStructures/CSA/Data.h"
+#include "../../include/ULTRA/DataStructures/Intermediate/Data.h"
+#include "../../include/ULTRA/DataStructures/RAPTOR/Data.h"
+#include "../../include/ULTRA/Helpers/MultiThreading.h"
+#include "../../include/ULTRA/Shell/Shell.h"
 using namespace Shell;
 
 inline constexpr int ShortcutWeight = 1024;

@@ -2,14 +2,14 @@
 
 #include <string>
 
-#include "../../DataStructures/CSA/Data.h"
-#include "../../DataStructures/GTFS/Data.h"
-#include "../../DataStructures/Graph/Graph.h"
-#include "../../DataStructures/Intermediate/Data.h"
-#include "../../DataStructures/RAPTOR/Data.h"
-#include "../../DataStructures/RAPTOR/MultimodalData.h"
-#include "../../DataStructures/TripBased/MultimodalData.h"
-#include "../../Shell/Shell.h"
+#include "../../include/ULTRA/DataStructures/CSA/Data.h"
+#include "../../include/ULTRA/DataStructures/GTFS/Data.h"
+#include "../../include/ULTRA/DataStructures/Graph/Graph.h"
+#include "../../include/ULTRA/DataStructures/Intermediate/Data.h"
+#include "../../include/ULTRA/DataStructures/RAPTOR/Data.h"
+#include "../../include/ULTRA/DataStructures/RAPTOR/MultimodalData.h"
+#include "../../include/ULTRA/DataStructures/TripBased/MultimodalData.h"
+#include "../../include/ULTRA/Shell/Shell.h"
 
 using namespace Shell;
 

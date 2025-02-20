@@ -14,6 +14,9 @@ def modify_stops(csv_directory):
     # Concatenate stop_lat and stop_lon into a new column 'latlon'
     df['latlon'] = '(' + df['Latitude'].astype(str) + '|' + df['Longitude'].astype(str) + ')'
 
+    # Drop the specified columns
+    df = df.drop(['Latitude', 'Longitude', 'MinChangeTime'], axis=1)
+
     # Save the modified DataFrame to a new CSV file
     df.to_csv(output_file, index=False)
 

@@ -28,7 +28,7 @@
 #include "Entities/Stop.h"
 #include "Entities/StopEvent.h"
 #include "Entities/Trip.h"
-#include "KARRI/Tools/Workarounds.h"
+#include "../../../KARRI/Tools/Workarounds.h"
 
 namespace Intermediate {
 
