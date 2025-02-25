@@ -707,7 +707,7 @@ int main(int argc, char* argv[])
                 edgeHandle.set(ViaVertex, noVertex);
             } else {
                 // otherwise take the FromVertex / edgeTail from the first edge
-                edgeHandle.set(ViaVertex, Vertex(karriUpCHGraph.edgeHead(unpackingInfoOfEdge.first)));
+                edgeHandle.set(ViaVertex, Vertex(karriDownCHGraph.edgeHead(unpackingInfoOfEdge.first)));
             }
         }
 
