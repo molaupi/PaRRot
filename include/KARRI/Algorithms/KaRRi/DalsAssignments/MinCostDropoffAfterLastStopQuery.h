@@ -433,7 +433,8 @@ private:
                 ++numEntriesScannedHere;
 
                 const int vehId = entry.targetId;
-                const int arrTimeAtDropoff = std::min(entry.distToTarget, requestState.originalRequest.requestTime) + label.distToDropoff;
+                const int arrTimeAtDropoff = std::max(entry.distToTarget, requestState.originalRequest.requestTime) + label.distToDropoff;
+
 
                 const auto costFromLastStop = calculator.calcVehicleIndependentCostLowerBoundForDALSWithKnownMinArrTime(
                     dropoff.walkingDist, label.distToDropoff, arrTimeAtDropoff, requestState);
@@ -454,7 +455,7 @@ private:
                     continue;
 
                 const int depTimeAtLastStop = routeState.schedDepTimesFor(vehId)[routeState.numStopsOf(vehId) - 1];
-                const int fullDistToDropoff = arrTimeAtDropoff - depTimeAtLastStop;
+                const int fullDistToDropoff = entry.distToTarget + label.distToDropoff - depTimeAtLastStop;
                 const DropoffLabel labelAtVeh = { dropoff.id, fullDistToDropoff };
                 insertLabelAtVehicleAndClean(vehId, labelAtVeh);
             }
