@@ -4,7 +4,7 @@
 #include <string>
 #include <vector>
 
-#include "../../Shell/Shell.h"
+#include "../../include/ULTRA/Shell/Shell.h"
 using namespace Shell;
 
 #include "../../include/ULTRA/Algorithms/RAPTOR/Bounded/BoundedMcRAPTOR.h"
