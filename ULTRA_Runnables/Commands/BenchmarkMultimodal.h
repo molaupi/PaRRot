@@ -4,20 +4,20 @@
 #include <string>
 #include <vector>
 
-#include "../../Shell/Shell.h"
+#include "../../include/ULTRA/Shell/Shell.h"
 using namespace Shell;
 
-#include "../../Algorithms/RAPTOR/InitialTransfers.h"
-#include "../../Algorithms/RAPTOR/MultimodalMCR.h"
-#include "../../Algorithms/RAPTOR/MultimodalULTRAMcRAPTOR.h"
-#include "../../Algorithms/RAPTOR/ULTRABounded/MultimodalUBMHydRA.h"
-#include "../../Algorithms/RAPTOR/ULTRABounded/MultimodalUBMRAPTOR.h"
-#include "../../DataStructures/CSA/Data.h"
-#include "../../DataStructures/Queries/Queries.h"
-#include "../../DataStructures/RAPTOR/Data.h"
-#include "../../DataStructures/RAPTOR/MultimodalData.h"
-#include "../../DataStructures/TripBased/Data.h"
-#include "../../DataStructures/TripBased/MultimodalData.h"
+#include "../../include/ULTRA/Algorithms/RAPTOR/InitialTransfers.h"
+#include "../../include/ULTRA/Algorithms/RAPTOR/MultimodalMCR.h"
+#include "../../include/ULTRA/Algorithms/RAPTOR/MultimodalULTRAMcRAPTOR.h"
+#include "../../include/ULTRA/Algorithms/RAPTOR/ULTRABounded/MultimodalUBMHydRA.h"
+#include "../../include/ULTRA/Algorithms/RAPTOR/ULTRABounded/MultimodalUBMRAPTOR.h"
+#include "../../include/ULTRA/DataStructures/CSA/Data.h"
+#include "../../include/ULTRA/DataStructures/Queries/Queries.h"
+#include "../../include/ULTRA/DataStructures/RAPTOR/Data.h"
+#include "../../include/ULTRA/DataStructures/RAPTOR/MultimodalData.h"
+#include "../../include/ULTRA/DataStructures/TripBased/Data.h"
+#include "../../include/ULTRA/DataStructures/TripBased/MultimodalData.h"
 
 class RunMultimodalMCRQueries : public ParameterizedCommand {
 public:

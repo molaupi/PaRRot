@@ -1,6 +1,6 @@
-#include "../Helpers/Console/CommandLineParser.h"
-#include "../Helpers/MultiThreading.h"
-#include "../Shell/Shell.h"
+#include "../include/ULTRA/Helpers/Console/CommandLineParser.h"
+#include "../include/ULTRA/Helpers/MultiThreading.h"
+#include "../include/ULTRA/Shell/Shell.h"
 #include "Commands/NetworkIO.h"
 #include "Commands/NetworkTools.h"
 using namespace Shell;

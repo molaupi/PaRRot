@@ -14,7 +14,7 @@
 #include "AttributeHandle.h"
 #include "AttributeNames.h"
 #include "AttributeRecord.h"
-#include "KARRI/Tools/Workarounds.h"
+#include "../../../KARRI/Tools/Workarounds.h"
 
 using Meta::List;
 

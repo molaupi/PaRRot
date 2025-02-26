@@ -4,24 +4,24 @@
 #include <string>
 #include <vector>
 
-#include "../../Shell/Shell.h"
+#include "../../include/ULTRA/Shell/Shell.h"
 using namespace Shell;
 
-#include "../../Algorithms/CSA/CSA.h"
-#include "../../Algorithms/CSA/DijkstraCSA.h"
-#include "../../Algorithms/CSA/HLCSA.h"
-#include "../../Algorithms/CSA/ULTRACSA.h"
-#include "../../Algorithms/RAPTOR/DijkstraRAPTOR.h"
-#include "../../Algorithms/RAPTOR/HLRAPTOR.h"
-#include "../../Algorithms/RAPTOR/InitialTransfers.h"
-#include "../../Algorithms/RAPTOR/RAPTOR.h"
-#include "../../Algorithms/RAPTOR/ULTRARAPTOR.h"
-#include "../../Algorithms/TripBased/Query/Query.h"
-#include "../../Algorithms/TripBased/Query/TransitiveQuery.h"
-#include "../../DataStructures/CSA/Data.h"
-#include "../../DataStructures/Queries/Queries.h"
-#include "../../DataStructures/RAPTOR/Data.h"
-#include "../../DataStructures/TripBased/Data.h"
+#include "../../include/ULTRA/Algorithms/CSA/CSA.h"
+#include "../../include/ULTRA/Algorithms/CSA/DijkstraCSA.h"
+#include "../../include/ULTRA/Algorithms/CSA/HLCSA.h"
+#include "../../include/ULTRA/Algorithms/CSA/ULTRACSA.h"
+#include "../../include/ULTRA/Algorithms/RAPTOR/DijkstraRAPTOR.h"
+#include "../../include/ULTRA/Algorithms/RAPTOR/HLRAPTOR.h"
+#include "../../include/ULTRA/Algorithms/RAPTOR/InitialTransfers.h"
+#include "../../include/ULTRA/Algorithms/RAPTOR/RAPTOR.h"
+#include "../../include/ULTRA/Algorithms/RAPTOR/ULTRARAPTOR.h"
+#include "../../include/ULTRA/Algorithms/TripBased/Query/Query.h"
+#include "../../include/ULTRA/Algorithms/TripBased/Query/TransitiveQuery.h"
+#include "../../include/ULTRA/DataStructures/CSA/Data.h"
+#include "../../include/ULTRA/DataStructures/Queries/Queries.h"
+#include "../../include/ULTRA/DataStructures/RAPTOR/Data.h"
+#include "../../include/ULTRA/DataStructures/TripBased/Data.h"
 
 class RunTransitiveCSAQueries : public ParameterizedCommand {
 public:

@@ -3,21 +3,21 @@
 #include <iostream>
 #include <string>
 
-#include "../../Algorithms/RAPTOR/ULTRA/Builder.h"
-#include "../../Algorithms/RAPTOR/ULTRA/McBuilder.h"
-#include "../../Algorithms/RAPTOR/ULTRA/MultimodalMcBuilder.h"
-#include "../../Algorithms/TripBased/Preprocessing/McULTRABuilder.h"
-#include "../../Algorithms/TripBased/Preprocessing/MultimodalMcULTRABuilder.h"
-#include "../../Algorithms/TripBased/Preprocessing/ShortcutAugmenter.h"
-#include "../../Algorithms/TripBased/Preprocessing/StopEventGraphBuilder.h"
-#include "../../Algorithms/TripBased/Preprocessing/ULTRABuilder.h"
-#include "../../DataStructures/Graph/Graph.h"
-#include "../../DataStructures/RAPTOR/Data.h"
-#include "../../DataStructures/RAPTOR/TransferModes.h"
-#include "../../DataStructures/TripBased/Data.h"
-#include "../../Helpers/MultiThreading.h"
-#include "../../Helpers/String/String.h"
-#include "../../Shell/Shell.h"
+#include "../../include/ULTRA/Algorithms/RAPTOR/ULTRA/Builder.h"
+#include "../../include/ULTRA/Algorithms/RAPTOR/ULTRA/McBuilder.h"
+#include "../../include/ULTRA/Algorithms/RAPTOR/ULTRA/MultimodalMcBuilder.h"
+#include "../../include/ULTRA/Algorithms/TripBased/Preprocessing/McULTRABuilder.h"
+#include "../../include/ULTRA/Algorithms/TripBased/Preprocessing/MultimodalMcULTRABuilder.h"
+#include "../../include/ULTRA/Algorithms/TripBased/Preprocessing/ShortcutAugmenter.h"
+#include "../../include/ULTRA/Algorithms/TripBased/Preprocessing/StopEventGraphBuilder.h"
+#include "../../include/ULTRA/Algorithms/TripBased/Preprocessing/ULTRABuilder.h"
+#include "../../include/ULTRA/DataStructures/Graph/Graph.h"
+#include "../../include/ULTRA/DataStructures/RAPTOR/Data.h"
+#include "../../include/ULTRA/DataStructures/RAPTOR/TransferModes.h"
+#include "../../include/ULTRA/DataStructures/TripBased/Data.h"
+#include "../../include/ULTRA/Helpers/MultiThreading.h"
+#include "../../include/ULTRA/Helpers/String/String.h"
+#include "../../include/ULTRA/Shell/Shell.h"
 
 using namespace Shell;
 

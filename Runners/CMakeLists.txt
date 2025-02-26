@@ -35,4 +35,14 @@ if(OpenMP_FOUND)
     target_link_libraries(rideRAPTOR OpenMP::OpenMP_CXX)
 endif()
 
-include(KaRRi_compile_time_parameters.cmake)
+# Single Queries
+add_executable(PTaxi RunSingleQueries.cpp)
+target_compile_definitions(PTaxi PRIVATE CSV_IO_NO_THREAD)
+target_link_libraries(PTaxi routingkit vectorclass fast_cpp_csv_parser)
+target_include_directories(PTaxi PUBLIC ${PARROT_INCLUDE_DIR})
+if(OpenMP_FOUND)
+    target_link_libraries(PTaxi OpenMP::OpenMP_CXX)
+endif()
+
+include(KaRRi_compile_params_rideRAPTOR.cmake)
+include(KaRRi_compile_params_PTaxi.cmake)

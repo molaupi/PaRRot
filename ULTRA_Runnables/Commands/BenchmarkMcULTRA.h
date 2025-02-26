@@ -4,22 +4,22 @@
 #include <string>
 #include <vector>
 
-#include "../../Shell/Shell.h"
+#include "../../include/ULTRA/Shell/Shell.h"
 using namespace Shell;
 
-#include "../../Algorithms/RAPTOR/Bounded/BoundedMcRAPTOR.h"
-#include "../../Algorithms/RAPTOR/InitialTransfers.h"
-#include "../../Algorithms/RAPTOR/MCR.h"
-#include "../../Algorithms/RAPTOR/McRAPTOR.h"
-#include "../../Algorithms/RAPTOR/ULTRABounded/UBMHydRA.h"
-#include "../../Algorithms/RAPTOR/ULTRABounded/UBMRAPTOR.h"
-#include "../../Algorithms/RAPTOR/ULTRAMcRAPTOR.h"
-#include "../../Algorithms/TripBased/BoundedMcQuery/BoundedMcQuery.h"
-#include "../../Algorithms/TripBased/Query/McQuery.h"
-#include "../../DataStructures/CSA/Data.h"
-#include "../../DataStructures/Queries/Queries.h"
-#include "../../DataStructures/RAPTOR/Data.h"
-#include "../../DataStructures/TripBased/Data.h"
+#include "../../include/ULTRA/Algorithms/RAPTOR/Bounded/BoundedMcRAPTOR.h"
+#include "../../include/ULTRA/Algorithms/RAPTOR/InitialTransfers.h"
+#include "../../include/ULTRA/Algorithms/RAPTOR/MCR.h"
+#include "../../include/ULTRA/Algorithms/RAPTOR/McRAPTOR.h"
+#include "../../include/ULTRA/Algorithms/RAPTOR/ULTRABounded/UBMHydRA.h"
+#include "../../include/ULTRA/Algorithms/RAPTOR/ULTRABounded/UBMRAPTOR.h"
+#include "../../include/ULTRA/Algorithms/RAPTOR/ULTRAMcRAPTOR.h"
+#include "../../include/ULTRA/Algorithms/TripBased/BoundedMcQuery/BoundedMcQuery.h"
+#include "../../include/ULTRA/Algorithms/TripBased/Query/McQuery.h"
+#include "../../include/ULTRA/DataStructures/CSA/Data.h"
+#include "../../include/ULTRA/DataStructures/Queries/Queries.h"
+#include "../../include/ULTRA/DataStructures/RAPTOR/Data.h"
+#include "../../include/ULTRA/DataStructures/TripBased/Data.h"
 
 class RunTransitiveMcRAPTORQueries : public ParameterizedCommand {
 public:
