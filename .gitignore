@@ -27,10 +27,12 @@ compile_commands.json
 
 # Binary and generated files
 Runners/rideRAPTOR
+Runners/PTaxi
 Runners/test.*
 Networks/*
-ULTRA/Runnables/ULTRA
-ULTRA/Runnables/Network
+ULTRA_Runnables/ULTRA
+ULTRA_Runnables/ULTRAPHAST
+ULTRA_Runnables/Network
 
 # Generated input files
 KARRI/Inputs/
