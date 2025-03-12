@@ -22,20 +22,37 @@
 /// SOFTWARE.
 /// ******************************************************************************
 
+
 #pragma once
 namespace karri {
 
-struct InputConfig {
+    struct InputConfig {
 
-    int maxWaitTime = -1;
-    int stopTime = -1;
-    int pickupRadius = -1;
-    int dropoffRadius = -1;
-    int maxNumPickups = -1;
-    int maxNumDropoffs = -1;
-    double alpha = -1;
-    int beta = -1;
-    bool alwaysUseVehicle = false;
-};
+    public:
+        static InputConfig& getInstance()
+        {
+            static InputConfig instance; // Guaranteed to be destroyed.
+            // Instantiated on first use.
+            return instance;
+        }
+
+    private:
+        InputConfig() = default;
+
+    public:
+        // public deleted constructors for compiler error messages
+        InputConfig(InputConfig const&) = delete;
+        void operator=(InputConfig const&) = delete;
+
+        int maxWaitTime = -1;
+        int stopTime = -1;
+        int pickupRadius = -1;
+        int dropoffRadius = -1;
+        int maxNumPickups = -1;
+        int maxNumDropoffs = -1;
+        double alpha = -1;
+        int beta = -1;
+        bool alwaysUseVehicle = false;
+    };
 
 }

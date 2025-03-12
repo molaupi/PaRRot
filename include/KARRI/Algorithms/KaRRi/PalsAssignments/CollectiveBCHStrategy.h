@@ -22,154 +22,155 @@
 /// SOFTWARE.
 /// ******************************************************************************
 
+
 #pragma once
 
-#include "../../../DataStructures/Labels/BasicLabelSet.h"
-#include "../BaseObjects/Vehicle.h"
-#include "../RequestState/RequestState.h"
-#include "../RouteState.h"
-#include "IndividualBCHStrategy.h"
+
 #include "MinCostPairAfterLastStopQuery.h"
+#include "DataStructures/Labels/BasicLabelSet.h"
+#include "Algorithms/KaRRi/BaseObjects/Vehicle.h"
+#include "Algorithms/KaRRi/RouteState.h"
+#include "Algorithms/KaRRi/RequestState/RequestState.h"
+#include "IndividualBCHStrategy.h"
+
 
 namespace karri::PickupAfterLastStopStrategies {
 
 // A collective reverse BCH search that finds the best vehicle, pickup and dropoff for an assignment at the end of any
 // vehicle.
-template <typename InputGraphT,
-    typename CHEnvT,
-    typename LastStopBucketsEnvT,
-    typename VehicleToPDLocQueryT,
-    typename PDDistancesT,
-    typename FallbackLabelSetT>
-class CollectiveBCHStrategy {
+    template<typename InputGraphT,
+            typename CHEnvT,
+            typename LastStopBucketsEnvT,
+            typename VehicleToPDLocQueryT,
+            typename PDDistancesT,
+            typename FallbackLabelSetT>
+    class CollectiveBCHStrategy {
 
-    using MinCostPairAfterLastStopQueryInst = MinCostPairAfterLastStopQuery<InputGraphT, CHEnvT, LastStopBucketsEnvT, PDDistancesT>;
+        using MinCostPairAfterLastStopQueryInst = MinCostPairAfterLastStopQuery<InputGraphT, CHEnvT, LastStopBucketsEnvT, PDDistancesT>;
 
-    using FallbackIndividualBCHStrategy = IndividualBCHStrategy<InputGraphT, CHEnvT, LastStopBucketsEnvT, PDDistancesT, FallbackLabelSetT>;
+        using FallbackIndividualBCHStrategy = IndividualBCHStrategy<InputGraphT, CHEnvT, LastStopBucketsEnvT, PDDistancesT, FallbackLabelSetT>;
 
-public:
-    CollectiveBCHStrategy(const InputGraphT& inputGraph,
-        const Fleet& fleet,
-        const CHEnvT& chEnv,
-        VehicleToPDLocQueryT& vehicleToPDLocQuery,
-        const LastStopBucketsEnvT& lastStopBucketsEnv,
-        PDDistancesT& pdDistances,
-        const CostCalculator& calculator,
-        const RouteState& routeState,
-        RequestState& requestState,
-        const InputConfig& inputConfig)
-        : inputGraph(inputGraph)
-        , fleet(fleet)
-        , calculator(calculator)
-        , ch(chEnv.getCH())
-        , routeState(routeState)
-        , requestState(requestState)
-        , inputConfig(inputConfig)
-        , minCostSearch(inputGraph, fleet, chEnv, routeState, pdDistances, calculator, lastStopBucketsEnv,
-              requestState, inputConfig)
-        , vehicleToPDLocQuery(vehicleToPDLocQuery)
-        , pdDistances(pdDistances)
-        , fallbackStrategy(inputGraph, fleet, chEnv, calculator, lastStopBucketsEnv, pdDistances, routeState,
-              requestState, minCostSearch.getUpperBoundCostWithHardConstraints(), inputConfig)
-    {
-    }
+    public:
 
-    void tryPickupAfterLastStop()
-    {
+        CollectiveBCHStrategy(const InputGraphT &inputGraph,
+                              const Fleet &fleet,
+                              const CHEnvT &chEnv,
+                              VehicleToPDLocQueryT &vehicleToPDLocQuery,
+                              const LastStopBucketsEnvT &lastStopBucketsEnv,
+                              const CostCalculator &calculator,
+                              const RouteState &routeState,
+                              RequestState &requestState)
+                : inputGraph(inputGraph),
+                  fleet(fleet),
+                  calculator(calculator),
+                  ch(chEnv.getCH()),
+                  routeState(routeState),
+                  requestState(requestState),
+                  minCostSearch(inputGraph, fleet, chEnv, routeState, calculator, lastStopBucketsEnv,
+                                requestState),
+                  vehicleToPDLocQuery(vehicleToPDLocQuery),
+                  fallbackStrategy(inputGraph, fleet, chEnv, calculator, lastStopBucketsEnv, routeState,
+                                   requestState, minCostSearch.getUpperBoundCostWithHardConstraints()) {}
 
-        auto& stats = requestState.stats().palsAssignmentsStats;
-        Timer timer;
+        void tryPickupAfterLastStop(const PDDistancesT& pdDistances) {
 
-        // Find out if any pickup after any last stop can plausibly lead to a better assignment than the best known.
-        // First lower bound: Only the minimum PD distance
-        int costLowerBound = calculator.calcCostLowerBoundForPickupAfterLastStopIndependentOfVehicle(0,
-            requestState.minDirectPDDist,
-            requestState);
-        if (costLowerBound > requestState.getBestCost())
-            return;
 
-        std::vector<int> promisingDropoffIds;
+            auto &stats = requestState.stats().palsAssignmentsStats;
+            Timer timer;
 
-        static constexpr bool ONLY_PROMISING_DROPOFFS = KARRI_COL_PALS_ONLY_PROMISING_DROPOFFS;
-        if constexpr (ONLY_PROMISING_DROPOFFS) {
-            // Preparation: Compute vehicle distances from dropoffs to destination. Used to decide which dropoffs are
-            // promising.
-            vehicleToPDLocQuery.runReverse(requestState.dropoffs);
 
-            for (const auto& dropoff : requestState.dropoffs) {
-                if (dropoff.walkingDist <= dropoff.vehDistToCenter || calculator.isDropoffCostPromisingForAfterLastStop(dropoff, requestState)) {
-                    promisingDropoffIds.push_back(dropoff.id);
+            // Find out if any pickup after any last stop can plausibly lead to a better assignment than the best known.
+            // First lower bound: Only the minimum PD distance
+            int costLowerBound = calculator.calcCostLowerBoundForPickupAfterLastStopIndependentOfVehicle(0,
+                                                                                                         requestState.minDirectPDDist,
+                                                                                                         requestState);
+            if (costLowerBound > requestState.getBestCost())
+                return;
+
+
+            std::vector<int> promisingDropoffIds;
+
+            static constexpr bool ONLY_PROMISING_DROPOFFS = KARRI_COL_PALS_ONLY_PROMISING_DROPOFFS;
+            if constexpr (ONLY_PROMISING_DROPOFFS) {
+                // Preparation: Compute vehicle distances from dropoffs to destination. Used to decide which dropoffs are
+                // promising.
+                vehicleToPDLocQuery.runReverse(requestState.dropoffs);
+
+                for (const auto &dropoff: requestState.dropoffs) {
+                    if (dropoff.walkingDist <= dropoff.vehDistToCenter ||
+                        calculator.isDropoffCostPromisingForAfterLastStop(dropoff, requestState)) {
+                        promisingDropoffIds.push_back(dropoff.id);
+                    }
                 }
+                assert(promisingDropoffIds.front() == 0); // Assert destination itself is always promising
+                stats.collective_pickupVehDistQueryTime += vehicleToPDLocQuery.getRunTime();
+            } else {
+                promisingDropoffIds.resize(requestState.numDropoffs());
+                std::iota(promisingDropoffIds.begin(), promisingDropoffIds.end(), 0u);
             }
-            assert(promisingDropoffIds.front() == 0); // Assert destination itself is always promising
-            stats.collective_pickupVehDistQueryTime += vehicleToPDLocQuery.getRunTime();
-        } else {
-            promisingDropoffIds.resize(requestState.numDropoffs());
-            std::iota(promisingDropoffIds.begin(), promisingDropoffIds.end(), 0u);
-        }
 
-        const auto colInitTime = timer.elapsed<std::chrono::nanoseconds>();
-        stats.collective_initializationTime += colInitTime;
-        stats.collective_numPromisingDropoffs += promisingDropoffIds.size();
+            const auto colInitTime = timer.elapsed<std::chrono::nanoseconds>();
+            stats.collective_initializationTime += colInitTime;
+            stats.collective_numPromisingDropoffs += promisingDropoffIds.size();
 
-        minCostSearch.run(promisingDropoffIds, requestState.getBestCost());
+            minCostSearch.run(promisingDropoffIds, requestState.getBestCost(), pdDistances);
 
-        const auto searchTime = timer.elapsed<std::chrono::nanoseconds>();
-        stats.searchTime += searchTime;
+            const auto searchTime = timer.elapsed<std::chrono::nanoseconds>();
+            stats.searchTime += searchTime;
 
-        stats.collective_numInitialLabelsGenerated += minCostSearch.getNumInitialLabelsGenerated();
-        stats.collective_numInitialLabelsNotPruned += minCostSearch.getNumInitialLabelsNotPruned();
-        stats.collective_initializationTime += minCostSearch.getInitializationTime(); // Also contained in minCostSearch.getRunTime()
-        stats.collective_numDominationRelationTests += minCostSearch.getNumDominationRelationTests();
-        stats.numEdgeRelaxationsInSearchGraph += minCostSearch.getNumEdgeRelaxations();
-        stats.numVerticesOrLabelsSettled += minCostSearch.getNumLabelsRelaxed();
-        stats.numEntriesOrLastStopsScanned += minCostSearch.getNumEntriesScanned();
-        stats.numCandidateVehicles += 1;
+            stats.collective_numInitialLabelsGenerated += minCostSearch.getNumInitialLabelsGenerated();
+            stats.collective_numInitialLabelsNotPruned += minCostSearch.getNumInitialLabelsNotPruned();
+            stats.collective_initializationTime += minCostSearch.getInitializationTime(); // Also contained in minCostSearch.getRunTime()
+            stats.collective_numDominationRelationTests += minCostSearch.getNumDominationRelationTests();
+            stats.numEdgeRelaxationsInSearchGraph += minCostSearch.getNumEdgeRelaxations();
+            stats.numVerticesOrLabelsSettled += minCostSearch.getNumLabelsRelaxed();
+            stats.numEntriesOrLastStopsScanned += minCostSearch.getNumEntriesScanned();
+            stats.numCandidateVehicles += 1;
 
-        timer.restart();
+            timer.restart();
 
-        const int& minCost = minCostSearch.getBestCostWithoutConstraints();
-        const auto& asgn = minCostSearch.getBestAssignment();
-        if (!asgn.vehicle)
-            return;
 
-        const auto totalDetour = asgn.distToPickup + inputConfig.stopTime + asgn.distToDropoff + inputConfig.stopTime;
-        using time_utils::isServiceTimeConstraintViolated;
-        if (!isServiceTimeConstraintViolated(*asgn.vehicle, requestState, totalDetour, routeState)) {
-            // If assignment found by collective search adheres to service time constraint, we have found the
-            // best PALS assignment.
-            assert(calculator.calc(asgn, requestState) == minCost);
-            requestState.tryAssignmentWithKnownCost(asgn, minCost);
+            const int &minCost = minCostSearch.getBestCostWithoutConstraints();
+            const auto &asgn = minCostSearch.getBestAssignment();
+            if (!asgn.vehicle)
+                return;
+
+            const auto totalDetour = asgn.distToPickup + InputConfig::getInstance().stopTime + asgn.distToDropoff + InputConfig::getInstance().stopTime;
+            using time_utils::isServiceTimeConstraintViolated;
+            if (!isServiceTimeConstraintViolated(*asgn.vehicle, requestState, totalDetour, routeState)) {
+                // If assignment found by collective search adheres to service time constraint, we have found the
+                // best PALS assignment.
+                assert(calculator.calc(asgn, requestState) == minCost);
+                requestState.tryAssignmentWithKnownCost(asgn, minCost);
+
+                const auto tryAssignmentsTime = timer.elapsed<std::chrono::nanoseconds>();
+                stats.tryAssignmentsTime += tryAssignmentsTime;
+                stats.numAssignmentsTried += 1;
+                return;
+            }
 
             const auto tryAssignmentsTime = timer.elapsed<std::chrono::nanoseconds>();
             stats.tryAssignmentsTime += tryAssignmentsTime;
-            stats.numAssignmentsTried += 1;
-            return;
+            stats.collective_usedFallback = true;
+
+            // Otherwise fall back to computing distances explicitly:
+            fallbackStrategy.tryPickupAfterLastStop(pdDistances);
         }
 
-        const auto tryAssignmentsTime = timer.elapsed<std::chrono::nanoseconds>();
-        stats.tryAssignmentsTime += tryAssignmentsTime;
-        stats.collective_usedFallback = true;
+    private:
 
-        // Otherwise fall back to computing distances explicitly:
-        fallbackStrategy.tryPickupAfterLastStop();
-    }
+        const InputGraphT &inputGraph;
+        const Fleet &fleet;
+        const CostCalculator &calculator;
+        const CH &ch;
+        const RouteState &routeState;
+        RequestState &requestState;
 
-private:
-    const InputGraphT& inputGraph;
-    const Fleet& fleet;
-    const CostCalculator& calculator;
-    const CH& ch;
-    const RouteState& routeState;
-    RequestState& requestState;
-    const InputConfig& inputConfig;
+        MinCostPairAfterLastStopQueryInst minCostSearch;
+        VehicleToPDLocQueryT &vehicleToPDLocQuery;
 
-    MinCostPairAfterLastStopQueryInst minCostSearch;
-    VehicleToPDLocQueryT& vehicleToPDLocQuery;
 
-    PDDistancesT& pdDistances;
-
-    FallbackIndividualBCHStrategy fallbackStrategy;
-};
+        FallbackIndividualBCHStrategy fallbackStrategy;
+    };
 
 }

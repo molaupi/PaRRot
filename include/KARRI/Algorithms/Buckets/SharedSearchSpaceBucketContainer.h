@@ -22,14 +22,16 @@
 /// SOFTWARE.
 /// ******************************************************************************
 
+
 #pragma once
 
 #include <algorithm>
 #include <cassert>
 #include <vector>
 
-#include "../../DataStructures/Containers/TimestampedVector.h"
-#include "../../DataStructures/Utilities/DynamicRagged2DArrays.h"
+#include "DataStructures/Utilities/DynamicRagged2DArrays.h"
+#include "DataStructures/Containers/TimestampedVector.h"
+
 
 // A bucket container that is meant to be used when the set of sources of labels is known in advance and their search
 // spaces in the CH can be expected to be similar. Let k be the number of sources for which this bucket container will
@@ -44,25 +46,21 @@
 // Requires BucketEntryT to be default constructible and to provide a method e.cmpAndUpdate(const BucketEntryT& e) that
 // compares an existing entry e against a given entry e' and updates e accordingly. (This should usually consist of
 // comparing the distances in both entries).
-template <typename BucketEntryT>
+template<typename BucketEntryT>
 class SharedSearchSpaceBucketContainer {
     static_assert(std::is_default_constructible<BucketEntryT>());
-
 public:
+
     using Bucket = ConstantVectorRange<BucketEntryT>;
 
     // Constructs a container that can maintain buckets for the specified number of vertices.
     explicit SharedSearchSpaceBucketContainer(const int numVertices)
-        : numSearches(0)
-        , offsetForVertex(numVertices, INVALID_INDEX)
-        , entries(0)
-    {
+            : numSearches(0), offsetForVertex(numVertices, INVALID_INDEX), entries(0) {
         assert(numVertices >= 0);
     }
 
     // Returns the bucket of the specified vertex.
-    Bucket getBucketOf(const int vertex)
-    {
+    Bucket getBucketOf(const int vertex) {
         assert(vertex >= 0);
         assert(vertex < offsetForVertex.size());
 
@@ -70,12 +68,11 @@ public:
             return Bucket(entries.begin(), entries.begin());
 
         return Bucket(entries.begin() + offsetForVertex[vertex],
-            entries.begin() + offsetForVertex[vertex] + numSearches);
+                      entries.begin() + offsetForVertex[vertex] + numSearches);
     }
 
     // Inserts the given entry into the bucket of the specified vertex.
-    bool insertOrUpdate(const int vertex, const BucketEntryT& newEntry)
-    {
+    bool insertOrUpdate(const int vertex, const BucketEntryT &newEntry) {
         assert(vertex >= 0);
         assert(vertex < offsetForVertex.size());
         assert(newEntry.targetId >= 0);
@@ -89,7 +86,7 @@ public:
         }
 
         // If the entries for this vertex already exist, update the according entry
-        auto& entry = entries[offsetForVertex[vertex] + newEntry.targetId];
+        auto &entry = entries[offsetForVertex[vertex] + newEntry.targetId];
         assert(entry.targetId == BucketEntryT().targetId || entry.targetId == newEntry.targetId);
         entry.cmpAndUpdate(newEntry);
 
@@ -97,14 +94,14 @@ public:
     }
 
     // Removes all entries from all buckets.
-    void init(const int newNumSearches)
-    {
+    void init(const int newNumSearches) {
         numSearches = newNumSearches;
         offsetForVertex.clear();
         entries.clear();
     }
 
 private:
+
     int numSearches;
     TimestampedVector<int> offsetForVertex;
     std::vector<BucketEntryT> entries;

@@ -22,103 +22,107 @@
 /// SOFTWARE.
 /// ******************************************************************************
 
+
 #pragma once
 
+#include "Tools/Timer.h"
 #include "Algorithms/CH/CH.h"
 #include "Algorithms/KaRRi/RequestState/RequestState.h"
 #include "PDDistances.h"
-#include "Tools/Timer.h"
 
 namespace karri::PDDistanceQueryStrategies {
 
-template <typename InputGraphT,
-    typename CHEnvT,
-    typename LabelSetT>
-class CHStrategy {
+    template<typename InputGraphT,
+            typename CHEnvT,
+            typename LabelSetT>
+    class CHStrategy {
 
-public:
-    static constexpr int K = LabelSetT::K;
-    using DistanceLabel = typename LabelSetT::DistanceLabel;
+    public:
 
-    CHStrategy(const InputGraphT& inputGraph, const CHEnvT& chEnv,
-        PDDistances<LabelSetT>& distances,
-        RequestState& requestState)
-        : inputGraph(inputGraph)
-        , ch(chEnv.getCH())
-        , requestState(requestState)
-        , distances(distances)
-        , query(chEnv.template getFullCHQuery<LabelSetT>())
-    {
-    }
+        static constexpr int K = LabelSetT::K;
+        using DistanceLabel = typename LabelSetT::DistanceLabel;
+        using PDDistancesT = PDDistances<LabelSetT>;
 
-    // Computes all distances from every pickup to every dropoff and stores them in the given DirectPDDistances.
-    void run()
-    {
-        assert(requestState.pickups[0].loc == requestState.originalRequest.origin
-            && requestState.dropoffs[0].loc == requestState.originalRequest.destination);
-        Timer timer;
+        CHStrategy(const InputGraphT &inputGraph, const CHEnvT &chEnv,
+                    RequestState &requestState)
+                : inputGraph(inputGraph),
+                  ch(chEnv.getCH()),
+                  requestState(requestState),
+                  query(chEnv.template getFullCHQuery<LabelSetT>()) {}
 
-        if (requestState.numPickups() == 1 && requestState.numDropoffs() == 1) {
-            requestState.minDirectPDDist = requestState.originalReqDirectDist;
-            return;
+
+        // Computes all distances from every pickup to every dropoff and stores them in the given DirectPDDistances.
+        PDDistancesT run() {
+            assert(requestState.pickups[0].loc == requestState.originalRequest.origin
+                   && requestState.dropoffs[0].loc == requestState.originalRequest.destination);
+            Timer timer;
+
+            PDDistancesT pdDistances(requestState);
+
+            // Initialize distance from origin to dropoff
+            pdDistances.updateDistanceIfSmaller(0, 0, requestState.originalReqDirectDist);
+
+            const int64_t time = timer.elapsed<std::chrono::nanoseconds>();
+            requestState.stats().pdDistancesStats.initializationTime += time;
+            timer.restart();
+
+            if (requestState.numPickups() == 1 && requestState.numDropoffs() == 1) {
+                requestState.minDirectPDDist = requestState.originalReqDirectDist;
+                return pdDistances;
+            }
+
+            // Run batched queries from all pickups to all dropoffs
+            std::array<int, K> pickupHeadRanks;
+
+            int pickupId = 0;
+            while (pickupId < requestState.numPickups()) {
+                pickupHeadRanks[pickupId % K] = ch.rank(inputGraph.edgeHead(requestState.pickups[pickupId].loc));
+                ++pickupId;
+                if (pickupId % K == 0) {
+                    runWithAllDropoffs(pickupHeadRanks, pickupId - K, pdDistances);
+                }
+            }
+
+            // Finish potential partially filled batch. Fill with copies of first element.
+            if (pickupId % K != 0) {
+                for (int i = pickupId % K; i < K; ++i)
+                    pickupHeadRanks[i] = pickupHeadRanks[0];
+                runWithAllDropoffs(pickupHeadRanks, requestState.numPickups() / K * K, pdDistances);
+            }
+
+
+            requestState.minDirectPDDist = pdDistances.getMinDirectDistance();
+
+            const int64_t pickupSearchesTime = timer.elapsed<std::chrono::nanoseconds>();
+            requestState.stats().pdDistancesStats.pickupBchSearchTime += pickupSearchesTime;
+
+            return pdDistances;
         }
 
-        // Run batched queries from all pickups to all dropoffs
-        std::array<int, K> pickupHeadRanks;
+        void init() {
+            // no op
+        }
 
-        int pickupId = 0;
-        while (pickupId < requestState.numPickups()) {
-            pickupHeadRanks[pickupId % K] = ch.rank(inputGraph.edgeHead(requestState.pickups[pickupId].loc));
-            ++pickupId;
-            if (pickupId % K == 0) {
-                runWithAllDropoffs(pickupHeadRanks, pickupId - K);
+    private:
+
+        void runWithAllDropoffs(const std::array<int, K>& pickupHeadRanks, const int firstPickupIdInBatch, PDDistancesT & pdDistances) {
+            std::array<int, K> dropoffTailRank = {};
+
+            for (const auto& d : requestState.dropoffs) {
+                dropoffTailRank.fill(ch.rank(inputGraph.edgeTail(d.loc)));
+                const int offset = inputGraph.travelTime(d.loc);
+
+                query.run(pickupHeadRanks, dropoffTailRank);
+                const DistanceLabel dist = query.getAllDistances() + DistanceLabel(offset);
+                pdDistances.updateDistanceBatchIfSmaller(firstPickupIdInBatch, d.id, dist);
             }
         }
 
-        // Finish potential partially filled batch. Fill with copies of first element.
-        if (pickupId % K != 0) {
-            for (int i = pickupId % K; i < K; ++i)
-                pickupHeadRanks[i] = pickupHeadRanks[0];
-            runWithAllDropoffs(pickupHeadRanks, requestState.numPickups() / K * K);
-        }
+        const InputGraphT &inputGraph;
+        const CH &ch;
+        RequestState &requestState;
 
-        requestState.minDirectPDDist = distances.getMinDirectDistance();
-
-        const int64_t pickupSearchesTime = timer.elapsed<std::chrono::nanoseconds>();
-        requestState.stats().pdDistancesStats.pickupBchSearchTime += pickupSearchesTime;
-    }
-
-    void init()
-    {
-        Timer timer;
-        distances.clear();
-        distances.updateDistanceIfSmaller(0, 0, requestState.originalReqDirectDist);
-        const int64_t time = timer.elapsed<std::chrono::nanoseconds>();
-        requestState.stats().pdDistancesStats.initializationTime += time;
-    }
-
-private:
-    void runWithAllDropoffs(const std::array<int, K>& pickupHeadRanks, const int firstPickupIdInBatch)
-    {
-        std::array<int, K> dropoffTailRank = {};
-
-        for (const auto& d : requestState.dropoffs) {
-            dropoffTailRank.fill(ch.rank(inputGraph.edgeTail(d.loc)));
-            const int offset = inputGraph.travelTime(d.loc);
-
-            query.run(pickupHeadRanks, dropoffTailRank);
-            const DistanceLabel dist = query.getAllDistances() + DistanceLabel(offset);
-            distances.updateDistanceBatchIfSmaller(firstPickupIdInBatch, d.id, dist);
-        }
-    }
-
-    const InputGraphT& inputGraph;
-    const CH& ch;
-    RequestState& requestState;
-
-    PDDistances<LabelSetT>& distances;
-
-    typename CHEnvT::template FullCHQuery<LabelSetT> query;
-};
+        typename CHEnvT::template FullCHQuery<LabelSetT> query;
+    };
 
 }

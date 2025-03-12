@@ -24,66 +24,58 @@
 
 #pragma once
 
-#include "../../../DataStructures/Graph/Attributes/OsmRoadCategoryAttribute.h"
+#include "DataStructures/Graph/Attributes/OsmRoadCategoryAttribute.h"
 
 namespace karri::stats {
 
-// Statistics about the OSM road categories of edges considered for PDLocs.
-struct OsmRoadCategoryStats {
+    // Statistics about the OSM road categories of edges considered for PDLocs.
+    struct OsmRoadCategoryStats {
 
-    OsmRoadCategoryStats()
-        : counts()
-    {
-        counts.fill(0);
-    }
-
-    void incCountForCat(const OsmRoadCategory& cat)
-    {
-        ++counts[static_cast<unsigned long>(cat)];
-    }
-
-    // Write a textual representation to the specified output stream.
-    friend inline std::ostream& operator<<(std::ostream& os, const OsmRoadCategoryStats& stats)
-    {
-        uint64_t totalCount = 0;
-        for (const auto& c : stats.counts)
-            totalCount += c;
-
-        os << "\n"
-           << "Road categories of PDLocs:\nTotal count: " << totalCount << "\n";
-        for (int i = 0; i < NUM_OSM_ROAD_CATEGORIES; ++i) {
-            os << nameOfOsmRoadCategory(static_cast<OsmRoadCategory>(i)) << ": " << stats.counts[i] << "\n";
+        OsmRoadCategoryStats() : counts() {
+            counts.fill(0);
         }
 
-        return os;
-    }
+        void incCountForCat(const OsmRoadCategory& cat) {
+            ++counts[static_cast<unsigned long>(cat)];
+        }
 
-    std::string getLoggerRow() const
-    {
-        std::stringstream ss;
-        for (int i = 0; i < NUM_OSM_ROAD_CATEGORIES; ++i)
-            ss << counts[i] << ", ";
+        // Write a textual representation to the specified output stream.
+        friend inline std::ostream &operator<<(std::ostream &os, const OsmRoadCategoryStats &stats) {
+            uint64_t totalCount = 0;
+            for (const auto& c : stats.counts) totalCount += c;
 
-        uint64_t totalCount = 0;
-        for (const auto& c : counts)
-            totalCount += c;
-        ss << totalCount;
-        return ss.str();
-    }
+            os << "\n" << "Road categories of PDLocs:\nTotal count: " << totalCount << "\n";
+            for (int i = 0; i < NUM_OSM_ROAD_CATEGORIES; ++i) {
+                os << nameOfOsmRoadCategory(static_cast<OsmRoadCategory>(i)) << ": " << stats.counts[i] << "\n";
+            }
 
-private:
-    std::array<uint32_t, NUM_OSM_ROAD_CATEGORIES> counts;
+            return os;
+        }
 
-public:
-    static constexpr auto LOGGER_NAME = "road_cats_of_pdlocs.csv";
-    static std::string getLoggerCols()
-    {
-        std::stringstream header;
-        for (int i = 0; i < NUM_OSM_ROAD_CATEGORIES; ++i)
-            header << osmRoadCategoryNames[i] << ",";
-        header << "total\n";
-        return header.str();
-    }
-};
+        std::string getLoggerRow() const {
+            std::stringstream ss;
+            for (int i = 0; i < NUM_OSM_ROAD_CATEGORIES; ++i)
+                ss << counts[i] << ", ";
+
+            uint64_t totalCount = 0;
+            for (const auto& c : counts) totalCount += c;
+            ss << totalCount;
+            return ss.str();
+        }
+
+    private:
+        std::array<uint32_t, NUM_OSM_ROAD_CATEGORIES> counts;
+
+    public:
+
+        static constexpr auto LOGGER_NAME = "road_cats_of_pdlocs.csv";
+        static std::string getLoggerCols() {
+            std::stringstream header;
+            for (int i = 0; i < NUM_OSM_ROAD_CATEGORIES; ++i)
+                header << osmRoadCategoryNames[i] << ",";
+            header << "total\n";
+            return header.str();
+        }
+    };
 
 }

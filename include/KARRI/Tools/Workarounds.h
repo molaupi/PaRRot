@@ -22,6 +22,7 @@
 /// SOFTWARE.
 /// ******************************************************************************
 
+
 #pragma once
 
 // Returns its argument, doing nothing with it at all. This function helps to avoid odr-using
@@ -32,5 +33,5 @@ template <typename T>
 T use(T arg) { return arg; }
 
 // Marks its arguments as possibly unused to suppress compiler warnings.
-template <typename... Types>
-void unused(const Types&...) { }
+template <typename ...Types>
+void unused(const Types&...) {}

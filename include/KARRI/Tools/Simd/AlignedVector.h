@@ -2,6 +2,7 @@
 /// MIT License
 ///
 /// Copyright (c) 2020 Valentin Buchhold
+/// Copyright (c) 2024 Moritz Laupichler
 ///
 /// Permission is hereby granted, free of charge, to any person obtaining a copy
 /// of this software and associated documentation files (the "Software"), to deal
@@ -22,16 +23,17 @@
 /// SOFTWARE.
 /// ******************************************************************************
 
+
 #pragma once
 
 #include <vector>
 
-#include <boost/align/aligned_allocator.hpp>
+#include "Tools/Simd/AlignedAllocator.h"
 
-#include "../CompilerSpecific.h"
-#include "../MachineSpecs.h"
+#include "Tools/CompilerSpecific.h"
+#include "Tools/MachineSpecs.h"
 
 // A std::vector whose elements are properly aligned for use with SIMD instructions.
 template <typename T>
 using AlignedVector = std::vector<
-    T, boost::alignment::aligned_allocator<T, std::max(MIN_ALIGNMENT, CACHE_LINE_SIZE)>>;
+    T, AlignedAllocator<T, std::max(MIN_ALIGNMENT, CACHE_LINE_SIZE)>>;

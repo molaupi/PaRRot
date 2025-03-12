@@ -22,16 +22,17 @@
 /// SOFTWARE.
 /// ******************************************************************************
 
+
 #pragma once
 
-#include "../../Tools/Constants.h"
-#include "IteratorRange.h"
 #include <algorithm>
 #include <cassert>
 #include <cstdint>
 #include <iterator>
 #include <limits>
 #include <vector>
+#include "Tools/Constants.h"
+#include "IteratorRange.h"
 
 // This file contains various functions for manipulating dynamic ragged two-dimensional arrays. In a
 // ragged 2D array, different rows have different lengths. We store all values in a single dynamic
@@ -66,15 +67,14 @@ struct ValueBlockPosition {
 };
 
 // Returns the index in the value arrays of the newly inserted value.
-template <typename T, typename IndexArray, typename ValueArray, typename... ExtraValueArrays>
+template<typename T, typename IndexArray, typename ValueArray, typename... ExtraValueArrays>
 inline int insertion(
-    const int row, const T& value,
-    IndexArray& indexArray, ValueArray& valueArray, ExtraValueArrays&... extraValueArrays)
-{
+        const int row, const T &value,
+        IndexArray &indexArray, ValueArray &valueArray, ExtraValueArrays &... extraValueArrays) {
     assert(row >= 0);
     assert(row < indexArray.size());
-    auto& start = indexArray[row].start;
-    auto& end = indexArray[row].end;
+    auto &start = indexArray[row].start;
+    auto &end = indexArray[row].end;
     const auto hole = std::numeric_limits<typename ValueArray::value_type>::max();
     int valIdx;
 
@@ -95,20 +95,17 @@ inline int insertion(
         if (end == valueArray.size()) {
             valueArray.insert(valueArray.end(), cap - blockSize, hole);
             (extraValueArrays.insert(
-                 extraValueArrays.end(), cap - blockSize, typename ExtraValueArrays::value_type()),
-                ...);
+                    extraValueArrays.end(), cap - blockSize, typename ExtraValueArrays::value_type()), ...);
             ++end;
         } else {
             valueArray.insert(valueArray.end(), cap, hole);
             std::copy(valueArray.begin() + start, valueArray.begin() + end, valueArray.end() - cap);
             std::fill(valueArray.begin() + start, valueArray.begin() + end, hole);
             (extraValueArrays.insert(
-                 extraValueArrays.end(), cap, typename ExtraValueArrays::value_type()),
-                ...);
+                    extraValueArrays.end(), cap, typename ExtraValueArrays::value_type()), ...);
             (std::copy(
-                 extraValueArrays.begin() + start, extraValueArrays.begin() + end,
-                 extraValueArrays.end() - cap),
-                ...);
+                    extraValueArrays.begin() + start, extraValueArrays.begin() + end,
+                    extraValueArrays.end() - cap), ...);
             start = valueArray.size() - cap;
             end = start + blockSize + 1;
         }
@@ -120,17 +117,16 @@ inline int insertion(
     return valIdx;
 }
 
-template <typename IndexArray, typename ValueArray, typename... ExtraValueArrays>
+template<typename IndexArray, typename ValueArray, typename... ExtraValueArrays>
 inline void removal(
-    const int row, const int col,
-    IndexArray& indexArray, ValueArray& valueArray, ExtraValueArrays&... extraValueArrays)
-{
+        const int row, const int col,
+        IndexArray &indexArray, ValueArray &valueArray, ExtraValueArrays &... extraValueArrays) {
     assert(row >= 0);
     assert(row < indexArray.size());
     assert(col >= 0);
     assert(col < indexArray[row].end - indexArray[row].start);
-    auto& start = indexArray[row].start;
-    auto& end = indexArray[row].end;
+    auto &start = indexArray[row].start;
+    auto &end = indexArray[row].end;
     --end;
     valueArray[start + col] = valueArray[end];
     valueArray[end] = std::numeric_limits<typename ValueArray::value_type>::max();
@@ -138,11 +134,10 @@ inline void removal(
 }
 
 // Removes entries given as a range of column indices, sorted in ascending order.
-template <typename ColsRangeT, typename IndexArray, typename ValueArray, typename... ExtraValueArrays>
+template<typename ColsRangeT, typename IndexArray, typename ValueArray, typename... ExtraValueArrays>
 inline void removalOfSortedCols(
-    const int row, const ColsRangeT& cols,
-    IndexArray& indexArray, ValueArray& valueArray, ExtraValueArrays&... extraValueArrays)
-{
+        const int row, const ColsRangeT &cols,
+        IndexArray &indexArray, ValueArray &valueArray, ExtraValueArrays &... extraValueArrays) {
     assert(std::is_sorted(cols.begin(), cols.end()));
     // Iterate in reverse
     for (auto colIt = cols.rbegin(); colIt != cols.rend(); ++colIt) {
@@ -152,14 +147,13 @@ inline void removalOfSortedCols(
 
 // Removes all columns at a given row. No need to explicitly change extra value arrays since the validity of values in
 // those is defined only via indexArray.
-template <typename IndexArray, typename ValueArray>
+template<typename IndexArray, typename ValueArray>
 inline void removalOfAllCols(
-    const int row, IndexArray& indexArray, ValueArray& valueArray)
-{
+        const int row, IndexArray &indexArray, ValueArray &valueArray) {
     assert(row >= 0);
     assert(row < indexArray.size());
-    const auto& start = indexArray[row].start;
-    auto& end = indexArray[row].end;
+    const auto &start = indexArray[row].start;
+    auto &end = indexArray[row].end;
     while (end > start) {
         --end;
         valueArray[end] = std::numeric_limits<typename ValueArray::value_type>::max();
@@ -167,11 +161,10 @@ inline void removalOfAllCols(
 }
 
 // Returns the index in the value arrays of the newly inserted value.
-template <typename T, typename IndexArray, typename ValueArray, typename... ExtraValueArrays>
+template<typename T, typename IndexArray, typename ValueArray, typename... ExtraValueArrays>
 inline int stableInsertion(
-    const int row, const int col, const T& value,
-    IndexArray& indexArray, ValueArray& valueArray, ExtraValueArrays&... extraValueArrays)
-{
+        const int row, const int col, const T &value,
+        IndexArray &indexArray, ValueArray &valueArray, ExtraValueArrays &... extraValueArrays) {
     assert(row >= 0);
     assert(row < indexArray.size());
     assert(col >= 0);
@@ -181,57 +174,52 @@ inline int stableInsertion(
     const auto end = indexArray[row].end;
     if (valIdx == start) {
         std::copy(
-            valueArray.begin() + start + 1, valueArray.begin() + start + col + 1,
-            valueArray.begin() + start);
+                valueArray.begin() + start + 1, valueArray.begin() + start + col + 1,
+                valueArray.begin() + start);
         (std::copy(
-             extraValueArrays.begin() + start + 1, extraValueArrays.begin() + start + col + 1,
-             extraValueArrays.begin() + start),
-            ...);
+                extraValueArrays.begin() + start + 1, extraValueArrays.begin() + start + col + 1,
+                extraValueArrays.begin() + start), ...);
     } else {
         std::copy_backward(
-            valueArray.begin() + start + col, valueArray.begin() + end - 1, valueArray.begin() + end);
+                valueArray.begin() + start + col, valueArray.begin() + end - 1, valueArray.begin() + end);
         (std::copy_backward(
-             extraValueArrays.begin() + start + col, extraValueArrays.begin() + end - 1,
-             extraValueArrays.begin() + end),
-            ...);
+                extraValueArrays.begin() + start + col, extraValueArrays.begin() + end - 1,
+                extraValueArrays.begin() + end), ...);
     }
     valueArray[start + col] = value;
     return start + col;
 }
 
-template <typename IndexArray, typename ValueArray, typename... ExtraValueArrays>
+template<typename IndexArray, typename ValueArray, typename... ExtraValueArrays>
 inline void stableRemoval(
-    const int row, const int col,
-    IndexArray& indexArray, ValueArray& valueArray, ExtraValueArrays&... extraValueArrays)
-{
+        const int row, const int col,
+        IndexArray &indexArray, ValueArray &valueArray, ExtraValueArrays &... extraValueArrays) {
     assert(row >= 0);
     assert(row < indexArray.size());
     assert(col >= 0);
     assert(col < indexArray[row].end - indexArray[row].start);
-    auto& start = indexArray[row].start;
-    auto& end = indexArray[row].end;
+    auto &start = indexArray[row].start;
+    auto &end = indexArray[row].end;
     std::copy(
-        valueArray.begin() + start + col + 1, valueArray.begin() + end,
-        valueArray.begin() + start + col);
+            valueArray.begin() + start + col + 1, valueArray.begin() + end,
+            valueArray.begin() + start + col);
     (std::copy(
-         extraValueArrays.begin() + start + col + 1, extraValueArrays.begin() + end,
-         extraValueArrays.begin() + start + col),
-        ...);
+            extraValueArrays.begin() + start + col + 1, extraValueArrays.begin() + end,
+            extraValueArrays.begin() + start + col), ...);
     --end;
     valueArray[end] = std::numeric_limits<typename ValueArray::value_type>::max();
 }
 
 // Removes entries given as a range of column indices, sorted in ascending order.
-template <typename ColsRangeT, typename IndexArray, typename ValueArray, typename... ExtraValueArrays>
+template<typename ColsRangeT, typename IndexArray, typename ValueArray, typename... ExtraValueArrays>
 inline void stableRemovalOfSortedCols(
-    const int row, const ColsRangeT& cols,
-    IndexArray& indexArray, ValueArray& valueArray, ExtraValueArrays&... extraValueArrays)
-{
+        const int row, const ColsRangeT &cols,
+        IndexArray &indexArray, ValueArray &valueArray, ExtraValueArrays &... extraValueArrays) {
     assert(std::is_sorted(cols.begin(), cols.end()));
     assert(row >= 0);
     assert(row < indexArray.size());
-    const auto& start = indexArray[row].start;
-    auto& end = indexArray[row].end;
+    const auto &start = indexArray[row].start;
+    auto &end = indexArray[row].end;
 
     int i = 0;
     for (auto it = cols.begin(); it != cols.end();) {
@@ -243,14 +231,13 @@ inline void stableRemovalOfSortedCols(
         const auto nextCol = it == cols.end() ? end - start : *it;
 
         std::copy(valueArray.begin() + start + col + 1, valueArray.begin() + start + nextCol,
-            valueArray.begin() + start + col - i);
+                  valueArray.begin() + start + col - i);
         (std::copy(
-             extraValueArrays.begin() + start + col + 1, extraValueArrays.begin() + start + nextCol,
-             extraValueArrays.begin() + start + col - i),
-            ...);
+                extraValueArrays.begin() + start + col + 1, extraValueArrays.begin() + start + nextCol,
+                extraValueArrays.begin() + start + col - i), ...);
         ++i;
     }
     std::fill(valueArray.begin() + end - i, valueArray.begin() + end,
-        std::numeric_limits<typename ValueArray::value_type>::max());
+              std::numeric_limits<typename ValueArray::value_type>::max());
     end -= i;
 }

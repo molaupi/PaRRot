@@ -22,37 +22,35 @@
 /// SOFTWARE.
 /// ******************************************************************************
 
+
 #pragma once
 
-#include "../../DataStructures/Utilities/DynamicRagged2DArrays.h"
-#include <cassert>
 #include <vector>
+#include <cassert>
+#include "DataStructures/Utilities/DynamicRagged2DArrays.h"
 
-template <typename BucketEntryT, typename BucketEntryComparatorT>
+
+template<typename BucketEntryT, typename BucketEntryComparatorT>
 class SortedBucketContainer {
 
 public:
+
     using SortedBucket = ConstantVectorRange<BucketEntryT>;
 
     explicit SortedBucketContainer(const int numVertices)
-        : numEntriesVisited(0)
-        , comp()
-        , bucketPositions(numVertices)
-    {
-    }
+            : numEntriesVisited(0), comp(), bucketPositions(numVertices) {}
+
 
     // Returns the bucket of the specified vertex, sorted in ascending order according to BucketEntryComparatorT.
-    SortedBucket getBucketOf(const int v) const
-    {
+    SortedBucket getBucketOf(const int v) const {
         assert(v >= 0);
         assert(v < bucketPositions.size());
-        const auto& pos = bucketPositions[v];
+        const auto &pos = bucketPositions[v];
         return SortedBucket(entries.begin() + pos.start, entries.begin() + pos.end);
     }
 
     // Inserts the given entry into the bucket of the specified vertex.
-    bool insert(const int v, const BucketEntryT& entry)
-    {
+    bool insert(const int v, const BucketEntryT &entry) {
         const auto pos = findInsertionPosForEntryInBucket(v, entry);
         stableInsertion(v, pos, entry, bucketPositions, entries);
         return true;
@@ -62,15 +60,14 @@ public:
     // The transformation must be callable with a single entry of type BucketEntryT& as an argument and must return
     // bool stating whether an update was performed.
     // Returns true if any entry was updated and false otherwise.
-    template <typename TransformationT>
-    bool updateAllEntries(const int vertex, const TransformationT& transform)
-    {
+    template<typename TransformationT>
+    bool updateAllEntries(const int vertex, const TransformationT &transform) {
         assert(vertex >= 0);
         assert(vertex < bucketPositions.size());
 
-        const auto& pos = bucketPositions[vertex];
+        const auto &pos = bucketPositions[vertex];
         assert(std::is_sorted(entries.begin() + pos.start, entries.begin() + pos.end,
-            [&](const auto& e1, const auto& e2) { return comp(e1, e2); }));
+                              [&](const auto &e1, const auto &e2) { return comp(e1, e2); }));
 
         numEntriesVisited = 0;
         bool anyUpdated = false;
@@ -84,19 +81,18 @@ public:
 
         // If any entries were updated, fix sorting of bucket:
         std::sort(entries.begin() + pos.start, entries.begin() + pos.end,
-            [&](const auto& e1, const auto& e2) { return comp(e1, e2); });
+                  [&](const auto &e1, const auto &e2) { return comp(e1, e2); });
         return true;
     }
 
     // Removes the entry for targetId from the bucket of the specified vertex.
     // Linear search for the targetId in the bucket.
-    bool remove(const int v, const int targetId)
-    {
+    bool remove(const int v, const int targetId) {
         assert(v >= 0);
         assert(v < bucketPositions.size());
         numEntriesVisited = 0;
 
-        const auto& pos = bucketPositions[v];
+        const auto &pos = bucketPositions[v];
         auto i = pos.start;
         while (i < pos.end) {
             ++numEntriesVisited;
@@ -105,8 +101,7 @@ public:
             }
             ++i;
         }
-        if (i == pos.end)
-            return false;
+        if (i == pos.end) return false;
 
         stableRemoval(v, i - pos.start, bucketPositions, entries);
         return true;
@@ -114,8 +109,7 @@ public:
 
     // Removes the given entry from the bucket of the specified vertex.
     // Since buckets are sorted, binary search can be used.
-    bool remove(const int v, const BucketEntryT& entry)
-    {
+    bool remove(const int v, const BucketEntryT &entry) {
         assert(v >= 0);
         assert(v < bucketPositions.size());
         numEntriesVisited = 0;
@@ -129,26 +123,25 @@ public:
         return true;
     }
 
-    int getNumEntriesVisitedInLastUpdateOrRemove() const
-    {
+    int getNumEntriesVisitedInLastUpdateOrRemove() const {
         return numEntriesVisited;
     }
 
     // Removes all entries from all buckets.
-    void clear()
-    {
-        for (auto& bucketPos : bucketPositions)
+    void clear() {
+        for (auto &bucketPos: bucketPositions)
             bucketPos.end = bucketPos.start;
         std::fill(entries.begin(), entries.end(), BucketEntryT());
     }
 
 private:
-    int findInsertionPosForEntryInBucket(const int v, const BucketEntryT& entry)
-    {
+
+
+    int findInsertionPosForEntryInBucket(const int v, const BucketEntryT &entry) {
         assert(v >= 0);
         assert(v < bucketPositions.size());
 
-        const auto& pos = bucketPositions[v];
+        const auto &pos = bucketPositions[v];
 
         // Check if bucket is currently empty or new entry needs to become first element:
         if (pos.end == pos.start || comp(entry, entries[pos.start]))
@@ -174,18 +167,16 @@ private:
     }
 
     // Returns whether e1 and e2 are equivalent wrt comp.
-    bool equiv(const BucketEntryT& e1, const BucketEntryT& e2) const
-    {
+    bool equiv(const BucketEntryT &e1, const BucketEntryT &e2) const {
         return !comp(e1, e2) && !comp(e2, e1);
     }
 
     // Returns whether position was found. If so, position will be written to idx.
-    bool findPosOfExistingEntryInBucket(const int v, const BucketEntryT& entry, int& idx)
-    {
+    bool findPosOfExistingEntryInBucket(const int v, const BucketEntryT &entry, int &idx) {
         assert(v >= 0);
         assert(v < bucketPositions.size());
 
-        const auto& pos = bucketPositions[v];
+        const auto &pos = bucketPositions[v];
 
         // Check if bucket is currently empty or is smaller than smallest entry in bucket or larger
         // than largest entry in bucket.
@@ -196,7 +187,8 @@ private:
         // Check if entry is equal to last entry wrt to comp. If so, scan all entries that are equal backwards linearly.
         if (equiv(entry, entries[pos.end - 1])) {
             idx = pos.end - pos.start - 1;
-            while (idx >= 0 && equiv(entry, entries[pos.start + idx]) && entry.targetId != entries[pos.start + idx].targetId) {
+            while (idx >= 0 && equiv(entry, entries[pos.start + idx]) &&
+                   entry.targetId != entries[pos.start + idx].targetId) {
                 ++numEntriesVisited;
                 --idx;
             }
@@ -219,12 +211,14 @@ private:
         // r is position right of range of entries that are equivalent to entry wrt comp (range may be empty if entry
         // does not exist). Scan through this range backwards linearly:
         idx = r - 1;
-        while (idx >= 0 && equiv(entry, entries[pos.start + idx]) && entry.targetId != entries[pos.start + idx].targetId) {
+        while (idx >= 0 && equiv(entry, entries[pos.start + idx]) &&
+               entry.targetId != entries[pos.start + idx].targetId) {
             ++numEntriesVisited;
             --idx;
         }
         return idx >= 0 && entry.targetId == entries[pos.start + idx].targetId;
     }
+
 
     int numEntriesVisited;
     BucketEntryComparatorT comp;

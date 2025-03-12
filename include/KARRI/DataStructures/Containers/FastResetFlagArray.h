@@ -22,23 +22,22 @@
 /// SOFTWARE.
 /// ******************************************************************************
 
+
 #pragma once
 
-template <typename Type_ = uint16_t>
+template<typename Type_ = uint16_t>
 class FastResetFlagArray {
 
     static_assert(std::is_unsigned_v<Type_>);
 
 public:
-    explicit FastResetFlagArray(const size_t size = 0)
-        : clock(1)
-    {
+
+    explicit FastResetFlagArray(const size_t size = 0) : clock(1) {
         resize(size);
     }
 
     // Ensures that this container can hold the specified number of flags.
-    void resize(const int size)
-    {
+    void resize(const int size) {
         const auto currentSize = timestamps.size();
         if (size < currentSize) {
             timestamps.erase(timestamps.begin() + size, timestamps.end());
@@ -47,14 +46,12 @@ public:
         }
     }
 
-    size_t size() const
-    {
+    size_t size() const {
         return timestamps.size();
     }
 
     // Resets all flags to false.
-    void reset()
-    {
+    void reset() {
         ++clock;
         if (UNLIKELY(clock == 0)) {
             // Clock overflow occurred. Extremely unlikely.
@@ -64,19 +61,18 @@ public:
     }
 
     // Set flag i.
-    void set(const int i)
-    {
+    void set(const int i) {
         assert(i < timestamps.size());
         timestamps[i] = clock;
     }
 
-    bool isSet(const int i) const
-    {
+    bool isSet(const int i) const {
         assert(i < timestamps.size());
         return timestamps[i] == clock;
     }
 
 private:
+
     Type_ clock;
     std::vector<Type_> timestamps;
 };

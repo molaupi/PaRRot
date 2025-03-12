@@ -22,24 +22,23 @@
 /// SOFTWARE.
 /// ******************************************************************************
 
+
 #pragma once
 
-template <typename T, template <typename> typename UnderlyingVectorT = std::vector>
+
+template<typename T, template<typename> typename UnderlyingVectorT = std::vector>
 class TimestampedVector {
 
 public:
+
     using value_type = typename UnderlyingVectorT<T>::value_type;
 
-    TimestampedVector(const size_t size, const T& INVALID_VAL)
-        : INVALID_VAL(INVALID_VAL)
-        , clock(1)
-    {
+    TimestampedVector(const size_t size, const T &INVALID_VAL) : INVALID_VAL(INVALID_VAL), clock(1) {
         resize(size);
     }
 
-    // Ensures that this container can hold the specified number of elements.
-    void resize(const int size)
-    {
+// Ensures that this container can hold the specified number of elements.
+    void resize(const int size) {
         const auto currentSize = elements.size();
         if (size < currentSize) {
             elements.erase(elements.begin() + size, elements.end());
@@ -50,14 +49,12 @@ public:
         }
     }
 
-    size_t size() const
-    {
+    size_t size() const {
         return elements.size();
     }
 
     // Sets all elements to invalid.
-    void clear()
-    {
+    void clear() {
         ++clock;
         if (UNLIKELY(clock == 0)) {
             // Clock overflow occurred. Extremely unlikely.
@@ -67,8 +64,7 @@ public:
     }
 
     // Returns a reference to the element at i.
-    T& operator[](const int i)
-    {
+    T &operator[](const int i) {
         assert(i >= 0);
         assert(i < elements.size());
         if (timestamps[i] != clock) {
@@ -79,30 +75,28 @@ public:
         return elements[i];
     }
 
-    const T& at(const int i)
-    {
+    const T &at(const int i) {
         return (*this)[i];
     }
 
-    bool empty() const
-    {
-        for (const auto& timestamp : timestamps) {
+    bool empty() const {
+        for (const auto &timestamp: timestamps) {
             assert(timestamp <= clock);
-            if (timestamp == clock)
-                return false;
+            if (timestamp == clock) return false;
         }
         return true;
     }
 
-    bool hasValidValue(const int i) const
-    {
+    bool hasValidValue(const int i) const {
         return timestamps[i] == clock;
     }
 
 private:
+
     T INVALID_VAL;
 
     uint32_t clock;
     UnderlyingVectorT<T> elements;
     std::vector<uint32_t> timestamps;
 };
+

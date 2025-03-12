@@ -23,13 +23,14 @@
 /// SOFTWARE.
 /// ******************************************************************************
 
+
 #pragma once
 
 #include <cassert>
 #include <ostream>
 
-#include "../../../Tools/EnumParser.h"
-#include "AbstractAttribute.h"
+#include "DataStructures/Graph/Attributes/AbstractAttribute.h"
+#include "Tools/EnumParser.h"
 
 // Road categories defined by OpenStreetMap.
 enum class OsmRoadCategory {
@@ -66,7 +67,8 @@ static IsRoadAccessibleByCategory defaultIsVehicleAccessible = [](const OsmRoadC
 };
 
 static IsRoadAccessibleByCategory defaultIsPedestrianAccessible = [](const OsmRoadCategory& cat) {
-    return cat != OsmRoadCategory::ROAD && cat >= OsmRoadCategory::TERTIARY && cat != OsmRoadCategory::CYCLEWAY;
+    // We allow pedestrians to walk on cycle paths as shared paths are sometimes misdeclared.
+    return cat != OsmRoadCategory::ROAD && cat >= OsmRoadCategory::TERTIARY; // && cat != OsmRoadCategory::CYCLEWAY;
 };
 
 static IsRoadAccessibleByCategory defaultIsCyclistAccessible = [](const OsmRoadCategory& cat) {
@@ -74,68 +76,65 @@ static IsRoadAccessibleByCategory defaultIsCyclistAccessible = [](const OsmRoadC
 };
 
 // Make EnumParser usable with OsmRoadCategory.
-template <>
-void EnumParser<OsmRoadCategory>::initNameToEnumMap()
-{
+template<>
+void EnumParser<OsmRoadCategory>::initNameToEnumMap() {
     nameToEnum = {
-        { "motorway", OsmRoadCategory::MOTORWAY },
-        { "motorway_link", OsmRoadCategory::MOTORWAY_LINK },
-        { "trunk", OsmRoadCategory::TRUNK },
-        { "trunk_link", OsmRoadCategory::TRUNK_LINK },
-        { "primary", OsmRoadCategory::PRIMARY },
-        { "primary_link", OsmRoadCategory::PRIMARY_LINK },
-        { "secondary", OsmRoadCategory::SECONDARY },
-        { "secondary_link", OsmRoadCategory::SECONDARY_LINK },
-        { "tertiary", OsmRoadCategory::TERTIARY },
-        { "tertiary_link", OsmRoadCategory::TERTIARY_LINK },
-        { "unclassified", OsmRoadCategory::UNCLASSIFIED },
-        { "residential", OsmRoadCategory::RESIDENTIAL },
-        { "living_street", OsmRoadCategory::LIVING_STREET },
-        { "service", OsmRoadCategory::SERVICE },
-        { "pedestrian", OsmRoadCategory::PEDESTRIAN },
-        { "track", OsmRoadCategory::TRACK },
-        { "footway", OsmRoadCategory::FOOTWAY },
-        { "bridleway", OsmRoadCategory::BRIDLEWAY },
-        { "steps", OsmRoadCategory::STEPS },
-        { "path", OsmRoadCategory::PATH },
-        { "cycleway", OsmRoadCategory::CYCLEWAY },
-        { "road", OsmRoadCategory::ROAD }
+            {"motorway",       OsmRoadCategory::MOTORWAY},
+            {"motorway_link",  OsmRoadCategory::MOTORWAY_LINK},
+            {"trunk",          OsmRoadCategory::TRUNK},
+            {"trunk_link",     OsmRoadCategory::TRUNK_LINK},
+            {"primary",        OsmRoadCategory::PRIMARY},
+            {"primary_link",   OsmRoadCategory::PRIMARY_LINK},
+            {"secondary",      OsmRoadCategory::SECONDARY},
+            {"secondary_link", OsmRoadCategory::SECONDARY_LINK},
+            {"tertiary",       OsmRoadCategory::TERTIARY},
+            {"tertiary_link",  OsmRoadCategory::TERTIARY_LINK},
+            {"unclassified",   OsmRoadCategory::UNCLASSIFIED},
+            {"residential",    OsmRoadCategory::RESIDENTIAL},
+            {"living_street",  OsmRoadCategory::LIVING_STREET},
+            {"service",        OsmRoadCategory::SERVICE},
+            {"pedestrian",     OsmRoadCategory::PEDESTRIAN},
+            {"track",          OsmRoadCategory::TRACK},
+            {"footway",        OsmRoadCategory::FOOTWAY},
+            {"bridleway",      OsmRoadCategory::BRIDLEWAY},
+            {"steps",          OsmRoadCategory::STEPS},
+            {"path",           OsmRoadCategory::PATH},
+            {"cycleway",       OsmRoadCategory::CYCLEWAY},
+            {"road",           OsmRoadCategory::ROAD}
     };
 }
 
 static std::array<std::string, NUM_OSM_ROAD_CATEGORIES> osmRoadCategoryNames = {
-    "motorway",
-    "motorway_link",
-    "trunk",
-    "trunk_link",
-    "primary",
-    "primary_link",
-    "secondary",
-    "secondary_link",
-    "tertiary",
-    "tertiary_link",
-    "unclassified",
-    "residential",
-    "living_street",
-    "service",
-    "pedestrian",
-    "track",
-    "footway",
-    "bridleway",
-    "steps",
-    "path",
-    "cycleway",
-    "road"
+        "motorway",
+        "motorway_link",
+        "trunk",
+        "trunk_link",
+        "primary",
+        "primary_link",
+        "secondary",
+        "secondary_link",
+        "tertiary",
+        "tertiary_link",
+        "unclassified",
+        "residential",
+        "living_street",
+        "service",
+        "pedestrian",
+        "track",
+        "footway",
+        "bridleway",
+        "steps",
+        "path",
+        "cycleway",
+        "road"
 };
 
-static std::string nameOfOsmRoadCategory(const OsmRoadCategory& cat)
-{
+static std::string nameOfOsmRoadCategory(const OsmRoadCategory& cat) {
     return osmRoadCategoryNames[static_cast<unsigned long>(cat)];
 }
 
 // Writes the character representation of the specified OSM road category to the given stream.
-inline std::ostream& operator<<(std::ostream& os, const OsmRoadCategory cat)
-{
+inline std::ostream &operator<<(std::ostream &os, const OsmRoadCategory cat) {
     os << nameOfOsmRoadCategory(cat);
     return os;
 }
@@ -144,27 +143,25 @@ inline std::ostream& operator<<(std::ostream& os, const OsmRoadCategory cat)
 class OsmRoadCategoryAttribute : public AbstractAttribute<OsmRoadCategory> {
 public:
     // Returns the attribute's default value.
-    static Type defaultValue()
-    {
+    static Type defaultValue() {
         return OsmRoadCategory::ROAD;
     }
 
     // Returns the OSM road category of edge e.
-    const Type& osmRoadCategory(const int e) const
-    {
+    const Type &osmRoadCategory(const int e) const {
         assert(e >= 0);
         assert(e < values.size());
         return values[e];
     }
 
     // Returns a reference to the OSM road category of edge e.
-    Type& osmRoadCategory(const int e)
-    {
+    Type &osmRoadCategory(const int e) {
         assert(e >= 0);
         assert(e < values.size());
         return values[e];
     }
 
 protected:
-    static constexpr const char* NAME = "osm_road_category"; // The attribute's unique name.
+    static constexpr const char *NAME = "osm_road_category"; // The attribute's unique name.
 };
+

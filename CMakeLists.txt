@@ -70,7 +70,7 @@ find_library(PROJ_LIBRARY proj)
 # Dependencies from git submodules and bundled libraries
 add_subdirectory(External)
 
-set(PARROT_INCLUDE_DIR ${CMAKE_SOURCE_DIR}/include)
+set(PARROT_INCLUDE_DIR ${CMAKE_SOURCE_DIR}/include ${CMAKE_SOURCE_DIR}/External/kassert/include)
 
 # Directories containing .cc source files.
 set(SOURCE_DIRECTORIES Runners RawData)

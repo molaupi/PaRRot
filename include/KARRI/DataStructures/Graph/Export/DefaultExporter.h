@@ -22,9 +22,6 @@
 /// SOFTWARE.
 /// ******************************************************************************
 
+
 #pragma once
-class DefaultExporter {
-public:
-    DefaultExporter(bool) { }
-    void ignoreAttribute(std::string) { }
-};
+class DefaultExporter { public: DefaultExporter(bool) {} void ignoreAttribute(std::string) {} };

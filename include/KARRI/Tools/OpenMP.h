@@ -22,6 +22,7 @@
 /// SOFTWARE.
 /// ******************************************************************************
 
+
 #pragma once
 
 // On platforms supporting OpenMP, this file includes the omp.h header file. On other platforms,
@@ -35,12 +36,12 @@
 
 int omp_get_num_threads(void)
 {
-    return 1;
+  return 1;
 }
 
 int omp_get_thread_num(void)
 {
-    return 0;
+  return 0;
 }
 
 #endif

@@ -10,3 +10,6 @@
 [submodule "External/nlohmann_json"]
 	path = External/nlohmann_json
 	url = https://github.com/nlohmann/json
+[submodule "External/kassert"]
+	path = External/kassert
+	url = https://github.com/kamping-site/kassert.git

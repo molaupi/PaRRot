@@ -22,6 +22,7 @@
 /// SOFTWARE.
 /// ******************************************************************************
 
+
 #pragma once
 
 #include <cstdint>
@@ -32,19 +33,15 @@
 // one-to-many queries in mind. In many-to-one queries, targetId stores a source ID and distToTarget
 // stores the distance from the corresponding source to v.
 struct BucketEntry {
-    BucketEntry() noexcept = default;
+  BucketEntry() noexcept = default;
 
-    BucketEntry(const int targetId, const int distToTarget) noexcept
-        : targetId(targetId)
-        , distToTarget(distToTarget)
-    {
-    }
+  BucketEntry(const int targetId, const int distToTarget) noexcept
+      : targetId(targetId), distToTarget(distToTarget) {}
 
-    constexpr bool operator==(const BucketEntry& rhs) const noexcept
-    {
-        return targetId == rhs.targetId;
-    }
+  constexpr bool operator==(const BucketEntry& rhs) const noexcept {
+    return targetId == rhs.targetId;
+  }
 
-    int32_t targetId = std::numeric_limits<int32_t>::max();
-    int32_t distToTarget;
+  int32_t targetId = std::numeric_limits<int32_t>::max();
+  int32_t distToTarget;
 };

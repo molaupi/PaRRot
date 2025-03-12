@@ -22,24 +22,23 @@
 /// SOFTWARE.
 /// ******************************************************************************
 
+
 #pragma once
 
-#include "../../../Tools/Constants.h"
+#include "Tools/Constants.h"
 
 namespace karri {
 
-struct VehicleLocation {
-    int location = INVALID_EDGE;
-    int depTimeAtHead = INFTYKARRI;
+    struct VehicleLocation {
+        int location = INVALID_EDGE;
+        int depTimeAtHead = INFTY;
 
-    friend bool operator==(const VehicleLocation& l1, const VehicleLocation& l2)
-    {
-        return l1.location == l2.location && l1.depTimeAtHead == l2.depTimeAtHead;
-    }
+        friend bool operator==(const VehicleLocation &l1, const VehicleLocation &l2) {
+            return l1.location == l2.location && l1.depTimeAtHead == l2.depTimeAtHead;
+        }
 
-    friend bool operator!=(const VehicleLocation& l1, const VehicleLocation& l2)
-    {
-        return !(l1 == l2);
-    }
-};
+        friend bool operator!=(const VehicleLocation &l1, const VehicleLocation &l2) {
+            return !(l1 == l2);
+        }
+    };
 }

@@ -22,30 +22,20 @@
 /// SOFTWARE.
 /// ******************************************************************************
 
-#pragma once
 
-#include <iostream>
+#pragma once
 
 namespace karri {
 
 // Models a vehicle with an ID, a capacity, an initial location, and a service time interval.
-struct Vehicle {
-    int vehicleId;
-    int initialLocation;
-    int startOfServiceTime;
-    int endOfServiceTime;
-    int capacity;
-};
+    struct Vehicle {
+        int vehicleId;
+        int initialLocation;
+        int startOfServiceTime;
+        int endOfServiceTime;
+        int capacity;
+    };
 
-using Fleet = std::vector<Vehicle>;
+    using Fleet = std::vector<Vehicle>;
 
-std::ostream& operator<<(std::ostream& os, const Vehicle& vehicle)
-{
-    os << "Vehicle ID: " << vehicle.vehicleId << "\n"
-       << "Initial Location: " << vehicle.initialLocation << "\n"
-       << "Service Time Interval: [" << vehicle.startOfServiceTime << ", " << vehicle.endOfServiceTime << "]\n"
-       << "Capacity: " << vehicle.capacity;
-
-    return os;
-}
 }

@@ -22,17 +22,17 @@
 /// SOFTWARE.
 /// ******************************************************************************
 
+
 #pragma once
 namespace karri {
 
-struct BucketEntryWithLeeway {
-    int targetId = INVALID_ID; // stop id
-    int distToTarget = INFTYKARRI;
-    int leeway = 0;
+    struct BucketEntryWithLeeway {
+        int targetId = INVALID_ID; // stop id
+        int distToTarget = INFTY;
+        int leeway = 0;
 
-    friend bool operator==(const BucketEntryWithLeeway& e1, const BucketEntryWithLeeway& e2)
-    {
-        return e1.targetId == e2.targetId && e1.distToTarget == e2.distToTarget;
-    }
-};
+        friend bool operator==(const BucketEntryWithLeeway &e1, const BucketEntryWithLeeway &e2) {
+            return e1.targetId == e2.targetId && e1.distToTarget == e2.distToTarget;
+        }
+    };
 }

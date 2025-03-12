@@ -22,6 +22,7 @@
 /// SOFTWARE.
 /// ******************************************************************************
 
+
 #pragma once
 
 #include <algorithm>
@@ -30,12 +31,10 @@
 #include <ostream>
 #include <sstream>
 
-#include "../../Tools/Constants.h"
-#include "../../Tools/Math.h"
-#include "../../Tools/Workarounds.h"
-#include "Point.h"
-
-namespace karri {
+#include "DataStructures/Geometry/Point.h"
+#include "Tools/Constants.h"
+#include "Tools/Math.h"
+#include "Tools/Workarounds.h"
 
 // This class represents a geographic point, specified by its latitude and longitude.
 class LatLng {
@@ -48,17 +47,12 @@ public:
     static constexpr int DEG_360 = 360 * PRECISION;
 
     // Constructs an uninitialized LatLng.
-    LatLng()
-        : lat(INFTYKARRI)
-        , lng(INFTYKARRI)
-    {
-    }
+    LatLng() : lat(INFTY), lng(INFTY) {}
 
     // Constructs a LatLng. Coordinates are specified in 1/PRECISION degrees. If wrap is set to true,
     // latitude is automatically clamped to the range [-90 deg, 90 deg] and longitude is
     // automatically wrapped so that it falls within the range [-180 deg, 180 deg].
-    LatLng(const int lat, const int lng, const bool wrap = false)
-    {
+    LatLng(const int lat, const int lng, const bool wrap = false) {
         // Clamp latitude.
         this->lat = wrap ? std::min(std::max(lat, -DEG_90), use(DEG_90)) : lat;
 
@@ -77,48 +71,40 @@ public:
     // automatically clamped to the range [-90 deg, 90 deg] and longitude is automatically wrapped so
     // that it falls within the range [-180 deg, 180 deg].
     LatLng(const double lat, const double lng, const bool wrap = false)
-        : LatLng(static_cast<int>(std::round(lat * PRECISION)),
-            static_cast<int>(std::round(lng * PRECISION)), wrap)
-    {
-    }
+            : LatLng(static_cast<int>(std::round(lat * PRECISION)),
+                     static_cast<int>(std::round(lng * PRECISION)), wrap) {}
 
     // Returns true if the LatLng represents a valid geographic point, false otherwise.
-    bool isValid() const
-    {
-        return lat != INFTYKARRI;
+    bool isValid() const {
+        return lat != INFTY;
     }
 
     // Returns the latitude in 1/PRECISION degrees.
-    int latitude() const
-    {
+    int latitude() const {
         assert(isValid());
         return lat;
     }
 
     // Returns the longitude in 1/PRECISION degrees.
-    int longitude() const
-    {
+    int longitude() const {
         assert(isValid());
         return lng;
     }
 
     // Returns the latitude in degrees.
-    double latInDeg() const
-    {
+    double latInDeg() const {
         assert(isValid());
         return lat / static_cast<double>(PRECISION);
     }
 
     // Returns the longitude in degrees.
-    double lngInDeg() const
-    {
+    double lngInDeg() const {
         assert(isValid());
         return lng / static_cast<double>(PRECISION);
     }
 
     // Takes the coordinate-wise minimum of this and the specified LatLng.
-    void min(const LatLng& other)
-    {
+    void min(const LatLng &other) {
         assert(isValid());
         assert(other.isValid());
         lat = std::min(lat, other.lat);
@@ -126,8 +112,7 @@ public:
     }
 
     // Takes the coordinate-wise maximum of this and the specified LatLng.
-    void max(const LatLng& other)
-    {
+    void max(const LatLng &other) {
         assert(isValid());
         assert(other.isValid());
         lat = std::max(lat, other.lat);
@@ -136,8 +121,7 @@ public:
 
     // Returns the great-circle distance in meters to the specified LatLng using haversine formula.
     // For more details, see: www.movable-type.co.uk/scripts/latlong.html
-    double getGreatCircleDistanceTo(const LatLng& other) const
-    {
+    double getGreatCircleDistanceTo(const LatLng &other) const {
         assert(isValid());
         assert(other.isValid());
         const double lat1 = toRadians(latInDeg());
@@ -145,7 +129,8 @@ public:
         const double deltaLat = toRadians(other.latInDeg() - latInDeg());
         const double deltaLng = toRadians(other.lngInDeg() - lngInDeg());
 
-        const double a = std::sin(deltaLat / 2) * std::sin(deltaLat / 2) + std::cos(lat1) * std::cos(lat2) * std::sin(deltaLng / 2) * std::sin(deltaLng / 2);
+        const double a = std::sin(deltaLat / 2) * std::sin(deltaLat / 2) +
+                         std::cos(lat1) * std::cos(lat2) * std::sin(deltaLng / 2) * std::sin(deltaLng / 2);
         const double c = 2 * std::atan2(std::sqrt(a), std::sqrt(1 - a));
 
         return EARTH_RADIUS * c;
@@ -154,21 +139,19 @@ public:
     // Translates this LatLng to a point on a two-dimensional plane using Plate Carree projection.
     // The projection's origin is at 180 degrees longitude and -90 degrees latitude. Coordinates
     // increase in the x (y) direction towards the east (north).
-    Point plateCarreeProjection() const
-    {
-        return { lng + DEG_180, lat + DEG_90 };
+    Point plateCarreeProjection() const {
+        return {lng + DEG_180, lat + DEG_90};
     }
 
     // Translates this LatLng to a point on a two-dimensional plane using Web Mercator projection.
     // The projection's origin is at 180 degrees longitude and approximately -85 degrees latitude.
     // Coordinates increase in the x (y) direction towards the east (north).
     // For more details, see: www.math.ubc.ca/~israel/m103/mercator/mercator.html
-    Point webMercatorProjection() const
-    {
+    Point webMercatorProjection() const {
         const auto sinLat = std::sin(toRadians(latInDeg()));
         const int x = lng + DEG_180;
-        const int y = std::round(DEG_360 * (0.5 + std::log((1 + sinLat) / (1 - sinLat)) / (4 * PIKARRI)));
-        return { x, y };
+        const int y = std::round(DEG_360 * (0.5 + std::log((1 + sinLat) / (1 - sinLat)) / (4 * PI)));
+        return {x, y};
     }
 
 private:
@@ -177,44 +160,38 @@ private:
 };
 
 // Some useful arithmetic operators. Automatic wrapping takes place.
-inline LatLng operator+(const LatLng& lhs, const LatLng& rhs)
-{
+inline LatLng operator+(const LatLng &lhs, const LatLng &rhs) {
     assert(lhs.isValid());
     assert(rhs.isValid());
     return LatLng(lhs.latitude() + rhs.latitude(), lhs.longitude() + rhs.longitude(), true);
 }
 
-inline LatLng operator-(const LatLng& lhs, const LatLng& rhs)
-{
+inline LatLng operator-(const LatLng &lhs, const LatLng &rhs) {
     assert(lhs.isValid());
     assert(rhs.isValid());
     return LatLng(lhs.latitude() - rhs.latitude(), lhs.longitude() - rhs.longitude(), true);
 }
 
-inline bool operator==(const LatLng& lhs, const LatLng& rhs)
-{
+inline bool operator==(const LatLng &lhs, const LatLng& rhs) {
     assert(lhs.isValid());
     assert(rhs.isValid());
     return lhs.latitude() == rhs.latitude() && lhs.longitude() == rhs.longitude();
 }
 
-inline bool operator!=(const LatLng& lhs, const LatLng& rhs)
-{
+inline bool operator!=(const LatLng &lhs, const LatLng& rhs) {
     return !(lhs == rhs);
 }
 
+
 // Write a textual representation to the specified output stream.
-inline std::ostream& operator<<(std::ostream& os, const LatLng& latLng)
-{
+inline std::ostream &operator<<(std::ostream &os, const LatLng &latLng) {
     os << "(" << latLng.latitude() << ", " << latLng.longitude() << ")";
     return os;
 }
 
-inline std::string latLngForCsv(const LatLng& latLng)
-{
+inline std::string latLngForCsv(const LatLng &latLng) {
     std::stringstream out;
     out.precision(LatLng::LOG_10_PRECISION + 2);
     out << "(" << latLng.latInDeg() << "|" << latLng.lngInDeg() << ")";
     return out.str();
-}
 }

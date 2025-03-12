@@ -22,39 +22,37 @@
 /// SOFTWARE.
 /// ******************************************************************************
 
+
 #pragma once
 
 #include <cassert>
 #include <cstdint>
 
-#include "../../../Tools/Constants.h"
-#include "AbstractAttribute.h"
+#include "DataStructures/Graph/Attributes/AbstractAttribute.h"
+#include "Tools/Constants.h"
 
 // An attribute the OSM global ID of the OSM node associated with each vertex of a graph.
 class OsmNodeIdAttribute : public AbstractAttribute<uint64_t> {
 public:
     // Returns the attribute's default value.
-    static Type defaultValue()
-    {
+    static Type defaultValue() {
         return std::numeric_limits<uint64_t>::max();
     }
 
     // Returns the OSM global ID of the OSM node that vertex v represents.
-    const Type& osmNodeId(const int v) const
-    {
+    const Type &osmNodeId(const int v) const {
         assert(v >= 0);
         assert(v < values.size());
         return values[v];
     }
 
     // Returns a reference to the OSM global ID of the OSM node that vertex v represents.
-    Type& osmNodeId(const int v)
-    {
+    Type &osmNodeId(const int v) {
         assert(v >= 0);
         assert(v < values.size());
         return values[v];
     }
 
 protected:
-    static constexpr const char* NAME = "osm_node_id"; // The attribute's unique name.
+    static constexpr const char *NAME = "osm_node_id"; // The attribute's unique name.
 };

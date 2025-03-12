@@ -22,195 +22,157 @@
 /// SOFTWARE.
 /// ******************************************************************************
 
+
 #pragma once
 
-#include "../../../DataStructures/Labels/BasicLabelSet.h"
-#include "../../../DataStructures/Labels/ParentInfo.h"
-#include "../../../Tools/Timer.h"
-#include "../../CH/CH.h"
-#include "../../CH/CHQuery.h"
-#include "../../Dijkstra/Dijkstra.h"
+#include "Algorithms/Dijkstra/Dijkstra.h"
+#include "DataStructures/Labels/ParentInfo.h"
+#include "DataStructures/Labels/BasicLabelSet.h"
+#include "Algorithms/CH/CHQuery.h"
+#include "Algorithms/CH/CH.h"
+#include "Tools/Timer.h"
 
 namespace karri {
 
-// Given a set H of PD locs, for each vehicle veh, this search finds the closest PD loc
+
+// Given a set H of ffPDDistances locs, for each vehicle veh, this search finds the closest ffPDDistances loc
 // argmin_{h \in H} dist(lastStop(veh), h).
-template <typename InputGraphT, typename CHEnvT, typename LastStopBucketsEnvT, typename PruningCriterionT = dij::NoCriterion, typename LabelSetT = BasicLabelSet<0, ParentInfo::PARENT_VERTICES_ONLY>>
-class ClosestPDLocToLastStopBCHQuery {
+    template<typename InputGraphT, typename CHEnvT, typename LastStopBucketsT, typename PruningCriterionT = dij::NoCriterion, typename LabelSetT = BasicLabelSet<0, ParentInfo::PARENT_VERTICES_ONLY>>
+    class ClosestPDLocToLastStopBCHQuery {
 
-    static_assert(LabelSetT::KEEP_PARENT_VERTICES,
-        "ClosestPDLocToLastStopBCHQuery needs parent vertex pointers to propagate id of closest PD loc through search tree.");
+        static_assert(LabelSetT::KEEP_PARENT_VERTICES,
+                      "ClosestPDLocToLastStopBCHQuery needs parent vertex pointers to propagate id of closest PD loc through search tree.");
 
-    using LabelSet = LabelSetT;
-    using PruningCriterion = PruningCriterionT; // Criterion to prune the Dijkstra search that constitutes the BCH.
+        using LabelSet = LabelSetT;
+        using PruningCriterion = PruningCriterionT; // Criterion to prune the Dijkstra search that constitutes the BCH.
 
-public:
-    ClosestPDLocToLastStopBCHQuery(const InputGraphT& inputGraph, const int fleetSize,
-        const CHEnvT& chEnv,
-        const RouteState& routeState,
-        const LastStopBucketsEnvT& lastStopBucketsEnv,
-        PruningCriterion pruningCriterion = {})
-        : inputGraph(inputGraph)
-        , lastStopBuckets(lastStopBucketsEnv.getBuckets())
-        , ch(chEnv.getCH())
-        , routeState(routeState)
-        , search(ch.downwardGraph(), {}, pruningCriterion)
-        , idOfClosestPDLocToRank(ch.downwardGraph().numVertices())
-        , idOfClosestPDLocToVeh(fleetSize)
-        , distVehToClosestPDLoc(fleetSize)
-    {
-    }
+    public:
 
-    template <typename PDLocsT>
-    void run(const PDLocsT& pdLocs)
-    {
+        ClosestPDLocToLastStopBCHQuery(const InputGraphT &inputGraph, const int fleetSize,
+                                       const CHEnvT &chEnv,
+                                       const LastStopBucketsT &lastStopBuckets,
+                                       PruningCriterion pruningCriterion = {}) :
+                inputGraph(inputGraph),
+                lastStopBuckets(lastStopBuckets),
+                ch(chEnv.getCH()),
+                search(ch.downwardGraph(), {}, pruningCriterion),
+                idOfClosestSpotToRank(ch.downwardGraph().numVertices()),
+                idOfClosestSpotToVeh(fleetSize),
+                distVehToClosestSpot(fleetSize) {}
 
-        Timer timer;
+        template<typename PDLocsT>
+        void run(const PDLocsT &pdLocs) {
 
-        init(pdLocs);
+            Timer timer;
 
-        // todo stopping criterion and pruning for bucket scans based on max tentative distance across all vehicles
-        while (!search.queue.empty()) {
-            const auto v = search.settleNextVertex();
-            idOfClosestPDLocToRank[v] = idOfClosestPDLocToRank[search.parent.getVertex(v)];
-            scanVehicleBucketAtRank(v);
+            init(pdLocs);
+
+            // todo stopping criterion and pruning for bucket scans based on max tentative distance across all vehicles
+            while (!search.queue.empty()) {
+                const auto v = search.settleNextVertex();
+                idOfClosestSpotToRank[v] = idOfClosestSpotToRank[search.parent.getVertex(v)];
+                scanVehicleBucketAtRank(v);
+            }
+
+            runTime = timer.elapsed<std::chrono::nanoseconds>();
         }
 
-        runTime = timer.elapsed<std::chrono::nanoseconds>();
-    }
+        unsigned int getIdOfSpotClosestToVeh(const int vehId) const {
+            assert(vehId >= 0);
+            assert(vehId < idOfClosestSpotToVeh.size());
+            return idOfClosestSpotToVeh[vehId];
+        }
 
-    unsigned int getIdOfPDLocClosestToVeh(const int vehId) const
-    {
-        assert(vehId >= 0);
-        assert(vehId < idOfClosestPDLocToVeh.size());
-        return idOfClosestPDLocToVeh[vehId];
-    }
+        // Get distance from last stop of given vehicle to the closest PDLoc as calculated in the last call to run.
+        int getDistToClosestPDLocFromVeh(const int vehId) const {
+            assert(vehId >= 0);
+            assert(vehId < distVehToClosestSpot.size());
+            return distVehToClosestSpot[vehId];
+        }
 
-    // Get distance from last stop of given vehicle to the closest PDLoc as calculated in the last call to run.
-    int getDistToClosestPDLocFromVeh(const int vehId) const
-    {
-        assert(vehId >= 0);
-        assert(vehId < distVehToClosestPDLoc.size());
-        return distVehToClosestPDLoc[vehId];
-    }
+        int getNumEdgeRelaxations() const {
+            return search.getNumEdgeRelaxations();
+        }
 
-    int getNumEdgeRelaxations() const
-    {
-        return search.getNumEdgeRelaxations();
-    }
+        int getNumVerticesSettled() const {
+            return search.getNumVerticesSettled();
+        }
 
-    int getNumVerticesSettled() const
-    {
-        return search.getNumVerticesSettled();
-    }
+        int getNumEntriesScanned() const {
+            return numEntriesScanned;
+        }
 
-    int getNumEntriesScanned() const
-    {
-        return numEntriesScanned;
-    }
+        int64_t getRunTime() const {
+            return runTime;
+        }
 
-    int64_t getRunTime() const
-    {
-        return runTime;
-    }
+    private:
 
-private:
-    template <typename PDLocsT>
-    void init(const PDLocsT& pdLocs)
-    {
-        numEntriesScanned = 0;
+        template<typename PDLocsT>
+        void init(const PDLocsT &pdLocs) {
+            numEntriesScanned = 0;
 
-        search.distanceLabels.init();
-        search.queue.clear();
-        std::fill(idOfClosestPDLocToRank.begin(), idOfClosestPDLocToRank.end(), INVALID_ID);
-        std::fill(idOfClosestPDLocToVeh.begin(), idOfClosestPDLocToVeh.end(), INVALID_ID);
-        std::fill(distVehToClosestPDLoc.begin(), distVehToClosestPDLoc.end(), INFTY);
+            search.distanceLabels.init();
+            search.queue.clear();
+            std::fill(idOfClosestSpotToRank.begin(), idOfClosestSpotToRank.end(), INVALID_ID);
+            std::fill(idOfClosestSpotToVeh.begin(), idOfClosestSpotToVeh.end(), INVALID_ID);
+            std::fill(distVehToClosestSpot.begin(), distVehToClosestSpot.end(), INFTY);
 
-        for (const auto& pdLoc : pdLocs) {
-            const auto tailRank = ch.rank(inputGraph.edgeTail(pdLoc.loc));
-            const auto offset = inputGraph.travelTime(pdLoc.loc);
+            for (const auto &pdLoc: pdLocs) {
+                const auto tailRank = ch.rank(inputGraph.edgeTail(pdLoc.loc));
+                const auto offset = inputGraph.travelTime(pdLoc.loc);
 
-            if (offset < search.distanceLabels[tailRank][0]) {
-                search.distanceLabels[tailRank][0] = offset;
-                idOfClosestPDLocToRank[tailRank] = pdLoc.id;
+                if (offset < search.distanceLabels[tailRank][0]) {
+                    search.distanceLabels[tailRank][0] = offset;
+                    idOfClosestSpotToRank[tailRank] = pdLoc.id;
 
-                search.parent.setVertex(tailRank, tailRank, true);
-                if (!search.queue.contains(tailRank)) {
-                    search.queue.insert(tailRank, offset);
-                } else {
-                    search.queue.decreaseKey(tailRank, offset);
+                    search.parent.setVertex(tailRank, tailRank, true);
+                    if (!search.queue.contains(tailRank)) {
+                        search.queue.insert(tailRank, offset);
+                    } else {
+                        search.queue.decreaseKey(tailRank, offset);
+                    }
                 }
             }
         }
-    }
 
-    void scanVehicleBucketAtRank(const int v)
-    {
-        const auto idOfPDLocClosestToV = idOfClosestPDLocToRank[v];
-        const auto distVToPDLoc = search.getDistance(v);
-
-        if constexpr (LastStopBucketsEnvT::SORTING != FULL) {
-            auto bucket = lastStopBuckets.getBucketOf(v);
-            for (const auto& entry : bucket) {
+        void scanVehicleBucketAtRank(const int v) {
+            const auto idOfSpotClosestToV = idOfClosestSpotToRank[v];
+            const auto distVToSpot = search.getDistance(v);
+            auto bucket = lastStopBuckets.getUnsortedBucketOf(v);
+            for (const auto &entry: bucket) {
                 ++numEntriesScanned;
                 const auto vehId = entry.targetId;
-                const auto distToPDLocViaV = entry.distToTarget + distVToPDLoc;
-                if (distToPDLocViaV < distVehToClosestPDLoc[vehId]) {
-                    idOfClosestPDLocToVeh[vehId] = idOfPDLocClosestToV;
-                    distVehToClosestPDLoc[vehId] = distToPDLocViaV;
-                }
-            }
-        } else {
-            auto [idleBucket, nonIdleBucket] = lastStopBuckets.getIdleAndNonIdleBucketOf(v);
-            for (const auto& entry : idleBucket) {
-                ++numEntriesScanned;
-                const auto vehId = entry.targetId;
-
-                // entry.distToTarget is upward distance from last stop to v
-                const auto distToPDLocViaV = entry.distToTarget + distVToPDLoc;
-
-                if (distToPDLocViaV < distVehToClosestPDLoc[vehId]) {
-                    idOfClosestPDLocToVeh[vehId] = idOfPDLocClosestToV;
-                    distVehToClosestPDLoc[vehId] = distToPDLocViaV;
-                }
-            }
-            for (const auto& entry : nonIdleBucket) {
-                ++numEntriesScanned;
-                const auto vehId = entry.targetId;
-
-                // entry.distToTarget is arrival time at v using only upward edges from last stop
-                const int& numStops = routeState.numStopsOf(vehId);
-                const int& depTimeAtLastStop = routeState.schedDepTimesFor(vehId)[numStops - 1];
-                const int upwardDistToV = entry.distToTarget - depTimeAtLastStop;
-                const auto distToPDLocViaV = upwardDistToV + distVToPDLoc;
-
-                if (distToPDLocViaV < distVehToClosestPDLoc[vehId]) {
-                    idOfClosestPDLocToVeh[vehId] = idOfPDLocClosestToV;
-                    distVehToClosestPDLoc[vehId] = distToPDLocViaV;
+                const auto distToSpotViaV = entry.distToTarget + distVToSpot;
+                if (distToSpotViaV < distVehToClosestSpot[vehId]) {
+                    idOfClosestSpotToVeh[vehId] = idOfSpotClosestToV;
+                    distVehToClosestSpot[vehId] = distToSpotViaV;
                 }
             }
         }
-    }
 
-    const InputGraphT& inputGraph;
-    const typename LastStopBucketsEnvT::BucketContainer& lastStopBuckets;
-    const CH& ch;
-    const RouteState& routeState;
+        const InputGraphT &inputGraph;
+        const LastStopBucketsT &lastStopBuckets;
+        const CH &ch;
 
-    using Search = Dijkstra<typename CH::SearchGraph, typename CH::Weight, LabelSet, dij::NoCriterion, PruningCriterion>;
-    Search search;
+        using Search = Dijkstra<typename CH::SearchGraph, typename CH::Weight, LabelSet, dij::NoCriterion, PruningCriterion>;
+        Search search;
 
-    std::vector<unsigned int> idOfClosestPDLocToRank;
-    std::vector<unsigned int> idOfClosestPDLocToVeh;
-    std::vector<int> distVehToClosestPDLoc;
-    int numEntriesScanned;
-    int64_t runTime;
-};
+        std::vector<unsigned int> idOfClosestSpotToRank;
+        std::vector<unsigned int> idOfClosestSpotToVeh;
+        std::vector<int> distVehToClosestSpot;
 
-template <typename InputGraphT, typename CHEnvT, typename LastStopBucketsEnvT>
-using ClosestPDLocToLastStopBCHQueryWithStallOnDemand = ClosestPDLocToLastStopBCHQuery<
-    InputGraphT,
-    CHEnvT,
-    LastStopBucketsEnvT,
-    typename CHQuery<BasicLabelSet<0, ParentInfo::PARENT_VERTICES_ONLY>>::PruningCriterion>;
+        int numEntriesScanned;
+        int64_t runTime;
+
+    };
+
+    template<typename InputGraphT, typename CHEnvT, typename LastStopBucketsT>
+    using ClosestPDLocToLastStopBCHQueryWithStallOnDemand = ClosestPDLocToLastStopBCHQuery<
+            InputGraphT,
+            CHEnvT,
+            LastStopBucketsT,
+            typename CHQuery<BasicLabelSet<0, ParentInfo::PARENT_VERTICES_ONLY>>::PruningCriterion
+    >;
+
 }

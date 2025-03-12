@@ -22,449 +22,349 @@
 /// SOFTWARE.
 /// ******************************************************************************
 
-// **** changed by Patrick Steil ****
-// changes to the original:
-// - added the possibility to extra the Information about Insertion needed for the RideRAPTOR
 
 #pragma once
 
-#include "../../../Tools/Timer.h"
-#include "../../CH/CH.h"
-#include "RelevantPDLocs.h"
-
-// the type of information to insert into the ridetransfer graph
-#include "../../../../ULTRA/DataStructures/RideRAPTOR/Entities/InsertionInfo.h"
+#include "Algorithms/KaRRi/RequestState/RelevantPDLocs.h"
+#include "DataStructures/Containers/FastResetFlagArray.h"
+#include "DataStructures/Containers/LightweightSubset.h"
 
 namespace karri {
 
 // Filters information about feasible distances found by elliptic BCH searches to pickups/dropoffs that are relevant
 // for certain stops by considering the leeway and the current best known assignment cost.
-template <typename FeasibleDistancesT, typename InputGraphT, typename CHEnvT>
-class RelevantPDLocsFilter {
-    using InsertionInfo = RIDERAPTOR::StopInsertionInfo;
+    template<typename FeasibleDistancesT, typename InputGraphT, typename CHEnvT>
+    class RelevantPDLocsFilter {
 
-public:
-    RelevantPDLocsFilter(const Fleet& fleet, const InputGraphT& inputGraph, const CHEnvT& chEnv,
-        const CostCalculator& calculator,
-        RequestState& requestState, const RouteState& routeState,
-        const InputConfig& inputConfig, const FeasibleDistancesT& feasiblePickupDistances,
-        const FeasibleDistancesT& feasibleDropoffDistances,
-        RelevantPDLocs& relOrdinaryPickups, RelevantPDLocs& relOrdinaryDropoffs,
-        RelevantPDLocs& relPickupsBeforeNextStop, RelevantPDLocs& relDropoffsBeforeNextStop)
-        : fleet(fleet)
-        , inputGraph(inputGraph)
-        , ch(chEnv.getCH())
-        , chQuery(chEnv.template getFullCHQuery<>())
-        , calculator(calculator)
-        , requestState(requestState)
-        , routeState(routeState)
-        , inputConfig(inputConfig)
-        , feasiblePickupDistances(feasiblePickupDistances)
-        , feasibleDropoffDistances(feasibleDropoffDistances)
-        , relOrdinaryPickups(relOrdinaryPickups)
-        , relOrdinaryDropoffs(relOrdinaryDropoffs)
-        , relPickupsBeforeNextStop(relPickupsBeforeNextStop)
-        , relDropoffsBeforeNextStop(relDropoffsBeforeNextStop)
-        , numVehiclesInRange(0)
-    {
-    }
+    public:
 
-    void filterOrdinary()
-    {
-        Timer timer;
+        RelevantPDLocsFilter(const Fleet &fleet, const InputGraphT &inputGraph, const CHEnvT &chEnv,
+                             const RouteState &routeState)
+                : fleet(fleet),
+                  inputGraph(inputGraph),
+                  ch(chEnv.getCH()),
+                  chQuery(chEnv.template getFullCHQuery<>()),
+                  calculator(routeState),
+                  routeState(routeState),
+                  vehiclesWithFeasibleDistances(fleet.size()) {}
 
-        const int numRelStopsForPickups = filterOrdinaryPickups();
-        const int numRelStopsForDropoffs = filterOrdinaryDropoffs();
+        RelevantPDLocs
+        filterOrdinaryPickups(FeasibleDistancesT &feasiblePickupDistances, RequestState &requestState) {
+            Timer timer;
 
-        const int64_t time = timer.elapsed<std::chrono::nanoseconds>();
-        requestState.stats().ordAssignmentsStats.filterRelevantPDLocsTime += time;
-        requestState.stats().ordAssignmentsStats.numRelevantStopsForPickups += numRelStopsForPickups;
-        requestState.stats().ordAssignmentsStats.numRelevantStopsForDropoffs += numRelStopsForDropoffs;
-    }
+            int numRelStops = 0;
+            const auto rel = filter<false, false>(feasiblePickupDistances, requestState.numPickups(), numRelStops,
+                                                  requestState);
 
-    int filterOrdinaryPickups()
-    {
-        return filter<false, false>(feasiblePickupDistances, relOrdinaryPickups, requestState.numPickups());
-    }
+            const int64_t time = timer.elapsed<std::chrono::nanoseconds>();
+            requestState.stats().ordAssignmentsStats.filterRelevantPDLocsTime += time;
+            requestState.stats().ordAssignmentsStats.numRelevantStopsForPickups += numRelStops;
 
-    int filterOrdinaryDropoffs()
-    {
-        return filter<false, true>(feasibleDropoffDistances, relOrdinaryDropoffs, requestState.numDropoffs());
-    }
+            return rel;
+        }
 
-    void filterBeforeNextStop()
-    {
-        Timer timer;
 
-        const int numRelStopsForPickups = filterPickupsBeforeNextStop();
-        const int numRelStopsForDropoffs = filterDropoffsBeforeNextStop();
+        RelevantPDLocs
+        filterOrdinaryDropoffs(FeasibleDistancesT &feasibleDropoffDistances, RequestState &requestState) {
+            Timer timer;
 
-        const int64_t time = timer.elapsed<std::chrono::nanoseconds>();
-        requestState.stats().pbnsAssignmentsStats.filterRelevantPDLocsTime += time;
-        requestState.stats().pbnsAssignmentsStats.numRelevantStopsForPickups += numRelStopsForPickups;
-        requestState.stats().pbnsAssignmentsStats.numRelevantStopsForDropoffs += numRelStopsForDropoffs;
-    }
+            int numRelStops = 0;
+            const auto rel = filter<false, true>(feasibleDropoffDistances, requestState.numDropoffs(), numRelStops,
+                                                 requestState);
 
-    int filterPickupsBeforeNextStop()
-    {
-        return filter<true, false>(feasiblePickupDistances, relPickupsBeforeNextStop, requestState.numPickups());
-    }
+            const int64_t time = timer.elapsed<std::chrono::nanoseconds>();
+            requestState.stats().ordAssignmentsStats.filterRelevantPDLocsTime += time;
+            requestState.stats().ordAssignmentsStats.numRelevantStopsForDropoffs += numRelStops;
 
-    int filterDropoffsBeforeNextStop()
-    {
-        return filter<true, true>(feasibleDropoffDistances, relDropoffsBeforeNextStop, requestState.numDropoffs());
-    }
+            return rel;
+        }
 
-    // same methods as above, but with insertion infos
-    void filterOrdinaryForStation(std::vector<InsertionInfo>& intersectionOfVehicles)
-    {
-        filterOrdinaryPickupsForStation(intersectionOfVehicles);
-        filterOrdinaryDropoffsForStation(intersectionOfVehicles);
-    }
+        RelevantPDLocs
+        filterPickupsBeforeNextStop(FeasibleDistancesT &feasiblePickupDistances, RequestState &requestState) {
+            Timer timer;
 
-    void filterOrdinaryPickupsForStation(std::vector<InsertionInfo>& intersectionOfVehicles)
-    {
-        filterForStation<false, false>(feasiblePickupDistances, intersectionOfVehicles, 1);
-    }
+            int numRelStops = 0;
+            const auto rel = filter<true, false>(feasiblePickupDistances, requestState.numPickups(), numRelStops,
+                                                 requestState);
 
-    void filterOrdinaryDropoffsForStation(std::vector<InsertionInfo>& intersectionOfVehicles)
-    {
-        filterForStation<false, true>(feasibleDropoffDistances, intersectionOfVehicles, 1);
-    }
+            const int64_t time = timer.elapsed<std::chrono::nanoseconds>();
+            requestState.stats().pbnsAssignmentsStats.filterRelevantPDLocsTime += time;
+            requestState.stats().pbnsAssignmentsStats.numRelevantStopsForPickups += numRelStops;
+            return rel;
+        }
 
-    void filterBeforeNextStopForStation(std::vector<InsertionInfo>& intersectionOfVehicles)
-    {
-        filterPickupsBeforeNextStop(intersectionOfVehicles);
-        filterDropoffsBeforeNextStop(intersectionOfVehicles);
-    }
+        RelevantPDLocs filterDropoffsBeforeNextStop(FeasibleDistancesT &feasibleDropoffDistances,
+                                                    RequestState &requestState) {
+            Timer timer;
 
-    void filterPickupsBeforeNextStopForStation(std::vector<InsertionInfo>& intersectionOfVehicles)
-    {
-        filterForStation<true, false>(feasiblePickupDistances, intersectionOfVehicles, 1);
-    }
+            int numRelStops = 0;
+            const auto rel = filter<true, true>(feasibleDropoffDistances, requestState.numDropoffs(), numRelStops,
+                                                requestState);
 
-    void filterDropoffsBeforeNextStopForStation(std::vector<InsertionInfo>& intersectionOfVehicles)
-    {
-        filterForStation<true, true>(feasibleDropoffDistances, intersectionOfVehicles, 1);
-    }
+            const int64_t time = timer.elapsed<std::chrono::nanoseconds>();
+            requestState.stats().pbnsAssignmentsStats.filterRelevantPDLocsTime += time;
+            requestState.stats().pbnsAssignmentsStats.numRelevantStopsForDropoffs += numRelStops;
 
-private:
-    template <bool beforeNextStop, bool isDropoff>
-    int filter(const FeasibleDistancesT& feasible, RelevantPDLocs& rel, const int numPDLocs)
-    {
+            return rel;
+        }
 
-        // For each stop s, prune the pickups and dropoffs deemed relevant for an ordinary assignment after s by
-        // checking them against constraints and lower bounds.
-        using namespace time_utils;
+    private:
 
-        int numStopsRelevant = 0;
 
-        rel.relevantSpots.clear();
-        rel.vehiclesWithRelevantSpots.clear();
+        template<bool beforeNextStop, bool isDropoff>
+        RelevantPDLocs filter(FeasibleDistancesT &feasible, const int numPDLocs, int &numStopsRelevant,
+                              const RequestState &requestState) {
 
-        const auto& vehiclesWithFeasibleDistances = feasible.getVehiclesWithRelevantPDLocs();
+            // For each stop s, prune the pickups and dropoffs deemed relevant for an ordinary assignment after s by
+            // checking them against constraints and lower bounds.
+            using namespace time_utils;
 
-        for (int vehId = 0; vehId < fleet.size(); ++vehId) {
-            const auto& veh = fleet[vehId];
-            rel.startOfRelevantPDLocs[vehId] = rel.relevantSpots.size();
-            rel.startOfRelevantPDLocs[vehId] = rel.relevantSpots.size();
+            numStopsRelevant = 0;
 
-            if (!vehiclesWithFeasibleDistances.contains(vehId))
-                continue;
+            RelevantPDLocs rel(fleet.size());
 
-            const auto& numStops = routeState.numStopsOf(vehId);
-            const auto& stopIds = routeState.stopIdsFor(vehId);
-            const auto& occupancies = routeState.occupanciesFor(vehId);
-
-            if (numStops <= 1)
-                continue;
-
-            // Track relevant PD locs for each stop in the relevant PD locs data structure.
-            // Entries are ordered by vehicle and by stop.
-            const int beginStopIdx = beforeNextStop ? 0 : 1;
-            const int endStopIdx = beforeNextStop ? 1 : (isDropoff ? numStops : numStops - 1);
-            for (int i = beginStopIdx; i < endStopIdx; ++i) {
-
-                if ((!isDropoff || beforeNextStop) && occupancies[i] + requestState.originalRequest.numRiders > veh.capacity)
+            vehiclesWithFeasibleDistances.clear();
+            for (const auto &stopId: feasible.getStopIdsWithRelevantPDLocs()) {
+                const auto vehId = routeState.vehicleIdOf(stopId);
+                if (vehiclesWithFeasibleDistances.contains(vehId))
                     continue;
+                const auto stopPos = routeState.stopPositionOf(stopId);
+                if ((!beforeNextStop && stopPos == 0) || (beforeNextStop && stopPos > 0) ||
+                    (!isDropoff && stopPos == routeState.numStopsOf(vehId) - 1))
+                    continue;
+                vehiclesWithFeasibleDistances.insert(vehId);
+            }
 
-                const auto& stopId = stopIds[i];
+            for (const auto &vehId: vehiclesWithFeasibleDistances) {
+                const auto &veh = fleet[vehId];
+                const auto &numStops = routeState.numStopsOf(vehId);
+                const auto &stopIds = routeState.stopIdsFor(vehId);
+                const auto &occupancies = routeState.occupanciesFor(vehId);
+                KASSERT(numStops > 1);
 
-                // Insert entries at this stop
-                if (feasible.hasPotentiallyRelevantPDLocs(stopId)) {
-                    assert(vehiclesWithFeasibleDistances.contains(vehId));
+                const int totalNumRelPdLocsBefore = static_cast<int>(rel.relevantSpots.size());
 
-                    // Check with lower bounds on dist to and from PD loc whether this stop needs to be regarded
-                    const int minDistToPDLoc = feasible.minDistToRelevantPDLocsFor(stopId);
-                    const int minDistFromPDLoc = feasible.minDistFromPDLocToNextStopOf(stopId);
 
-                    // Compute lower bound cost based on whether we are dealing with pickups or dropoffs
-                    int minCost;
-                    if constexpr (isDropoff) {
-                        minCost = getMinCostForDropoff(fleet[vehId], i, minDistToPDLoc, minDistFromPDLoc);
-                    } else {
-                        minCost = getMinCostForPickup(fleet[vehId], i, minDistToPDLoc, minDistFromPDLoc);
+
+                // Track relevant PD locs for each stop in the relevant PD locs data structure.
+                // Entries are ordered by vehicle and by stop.
+                constexpr int beginStopIdx = beforeNextStop ? 0 : 1;
+                const int endStopIdx = beforeNextStop ? 1 : (isDropoff ? numStops : numStops - 1);
+                for (int i = beginStopIdx; i < endStopIdx; ++i) {
+
+                    if ((!isDropoff || beforeNextStop) &&
+                        occupancies[i] + requestState.originalRequest.numRiders > veh.capacity)
+                        continue;
+
+                    const auto &stopId = stopIds[i];
+
+                    // If we consider only the stop before the next stop, the stop is guaranteed to have relevant pd
+                    // locs by construction of vehiclesWithFeasibleDistances (s.a.).
+                    // If we consider the stops at and after the next stop, there may be stops without relevant PD
+                    // locs. Skip them.
+                    KASSERT(!beforeNextStop || feasible.hasPotentiallyRelevantPDLocs(stopId));
+                    if constexpr (!beforeNextStop)
+                        if (!feasible.hasPotentiallyRelevantPDLocs(stopId))
+                            continue;
+
+                    // Insert entries at this stop.
+
+                    // If there is more than one PD loc, check with lower bounds on dist to and from PD locs whether
+                    // this stop needs to be regarded before looking at every PD loc.
+                    if (numPDLocs > 1) {
+                        const int minDistToPDLoc = feasible.minDistToRelevantPDLocsFor(stopId);
+                        const int minDistFromPDLoc = feasible.minDistFromPDLocToNextStopOf(stopId);
+
+                        // Compute lower bound cost based on whether we are dealing with pickups or dropoffs
+                        int minCost;
+                        if constexpr (isDropoff) {
+                            minCost = getMinCostForDropoff(veh, i, minDistToPDLoc, minDistFromPDLoc,
+                                                           requestState);
+                        } else {
+                            minCost = getMinCostForPickup(veh, i, minDistToPDLoc, minDistFromPDLoc,
+                                                          requestState);
+                        }
+
+                        if (minCost > requestState.getBestCost())
+                            continue;
                     }
 
-                    if (minCost <= requestState.getBestCost()) {
-                        ++numStopsRelevant;
-                        // Check each PD loc
-                        const auto& distsToPDLocs = feasible.distancesToRelevantPDLocsFor(stopId);
-                        const auto& distsFromPDLocs = feasible.distancesFromRelevantPDLocsToNextStopOf(stopId);
-                        for (unsigned int id = 0; id < numPDLocs; ++id) {
-                            const auto& distToPDLoc = distsToPDLocs[id];
-                            const auto& distFromPDLoc = distsFromPDLocs[id];
 
-                            int detour = 0;
+                    ++numStopsRelevant;
+                    // Check each PD loc
+                    const auto &distsToPDLocs = feasible.distancesToRelevantPDLocsFor(stopId);
+                    const auto &distsFromPDLocs = feasible.distancesFromRelevantPDLocsToNextStopOf(stopId);
+                    for (unsigned int id = 0; id < numPDLocs; ++id) {
+                        const auto &distToPDLoc = distsToPDLocs[id];
+                        const auto &distFromPDLoc = distsFromPDLocs[id];
+                        bool isRelevant;
+                        if constexpr (isDropoff) {
+                            isRelevant = isDropoffRelevant(veh, i, id, distToPDLoc, distFromPDLoc,
+                                                           requestState);
+                        } else {
+                            isRelevant = isPickupRelevant(veh, i, id, distToPDLoc, distFromPDLoc,
+                                                          requestState);
+                        }
 
-                            bool isRelevant;
-                            if constexpr (isDropoff) {
-                                isRelevant = isDropoffRelevant(fleet[vehId], i, id, distToPDLoc, distFromPDLoc, detour);
-                            } else {
-                                isRelevant = isPickupRelevant(fleet[vehId], i, id, distToPDLoc, distFromPDLoc, detour);
-                            }
-
-                            if (isRelevant) {
-                                rel.relevantSpots.push_back({ i, id, distToPDLoc, distFromPDLoc });
-                            }
+                        if (isRelevant) {
+                            rel.relevantSpots.push_back({i, id, distToPDLoc, distFromPDLoc});
                         }
                     }
+
+
+                }
+
+                // If vehicle has at least one stop with relevant PD loc, add the vehicle
+                if (rel.relevantSpots.size() > totalNumRelPdLocsBefore) {
+                    rel.vehiclesWithRelevantSpots.push_back(vehId);
+                    rel.vehicleToPdLocs[vehId] = {totalNumRelPdLocsBefore, static_cast<int>(rel.relevantSpots.size())};
                 }
             }
 
-            // If vehicle has at least one stop with relevant PD loc, add the vehicle
-            if (rel.relevantSpots.size() > rel.startOfRelevantPDLocs[vehId])
-                rel.vehiclesWithRelevantSpots.insert(vehId);
+            KASSERT(std::all_of(rel.relevantSpots.begin(), rel.relevantSpots.end(),
+                                [&](const auto &h) {
+                                    return h.distToPDLoc < INFTY && h.distFromPDLocToNextStop < INFTY;
+                                }));
+
+            return rel;
         }
 
-        rel.startOfRelevantPDLocs[fleet.size()] = rel.relevantSpots.size();
+        inline bool isPickupRelevant(const Vehicle &veh, const int stopIndex, const unsigned int pickupId,
+                                     const int distFromStopToPickup,
+                                     const int distFromPickupToNextStop,
+                                     const RequestState &requestState) const {
+            using namespace time_utils;
 
-        assert(std::all_of(rel.relevantSpots.begin(), rel.relevantSpots.end(),
-            [&](const auto& h) {
-                return h.distToPDLoc < INFTYKARRI && h.distFromPDLocToNextStop < INFTYKARRI;
-            }));
+            const int &vehId = veh.vehicleId;
 
-        return numStopsRelevant;
-    }
+            assert(routeState.occupanciesFor(vehId)[stopIndex] + requestState.originalRequest.numRiders <=
+                   veh.capacity);
+            if (distFromStopToPickup >= INFTY || distFromPickupToNextStop >= INFTY)
+                return false;
 
-    // changed method, idea is to collect all the relevant data for the StopInsertionInfo here
-    template <bool beforeNextStop, bool isDropoff>
-    void filterForStation(const FeasibleDistancesT& feasible, std::vector<InsertionInfo>& intersectionOfVehicles,
-        const int numPDLocs)
-    {
-        // For each stop s, prune the pickups and dropoffs deemed relevant for an
-        // ordinary assignment after s by checking them against constraints and
-        // lower bounds.
-        using namespace time_utils;
+            assert(distFromStopToPickup + distFromPickupToNextStop >=
+                   calcLengthOfLegStartingAt(stopIndex, vehId, routeState));
 
-        for (const auto& vehId : feasible.getVehiclesWithRelevantPDLocs()) {
-            const auto& veh = fleet[vehId];
-            const auto& numStops = routeState.numStopsOf(vehId);
-            const auto& stopIds = routeState.stopIdsFor(vehId);
-            const auto& occupancies = routeState.occupanciesFor(vehId);
+            const auto &p = requestState.pickups[pickupId];
 
-            if (numStops <= 1)
-                continue;
+            const auto depTimeAtPickup = getActualDepTimeAtPickup(vehId, stopIndex, distFromStopToPickup, p,
+                                                                  requestState, routeState);
+            const auto initialPickupDetour = calcInitialPickupDetour(vehId, stopIndex, INVALID_INDEX, depTimeAtPickup,
+                                                                     distFromPickupToNextStop, requestState,
+                                                                     routeState);
 
-            // Track relevant PD locs for each stop in the relevant PD locs data
-            // structure. Entries are ordered by vehicle and by stop.
-            const int beginStopIdx = beforeNextStop ? 0 : 1;
-            const int endStopIdx = beforeNextStop ? 1 : numStops - 1;
-            /* const int endStopIdx = beforeNextStop ? 1 : (isDropoff ? numStops : numStops - 1); */
-            for (int i = beginStopIdx; i < endStopIdx; ++i) {
-                if ((!isDropoff || beforeNextStop) && occupancies[i] + requestState.originalRequest.numRiders > veh.capacity)
-                    continue;
+            if (doesPickupDetourViolateHardConstraints(veh, requestState, stopIndex, initialPickupDetour, routeState))
+                return false;
 
-                const auto& stopId = stopIds[i];
 
-                // Insert entries at this stop
-                if (feasible.hasPotentiallyRelevantPDLocs(stopId)) {
-                    const auto& distsToPDLocs = feasible.distancesToRelevantPDLocsFor(stopId);
-                    const auto& distsFromPDLocs = feasible.distancesFromRelevantPDLocsToNextStopOf(stopId);
-                    for (unsigned int id = 0; id < numPDLocs; ++id) {
-                        const auto& distToPDLoc = distsToPDLocs[id];
-                        const auto& distFromPDLoc = distsFromPDLocs[id];
+            const int curKnownCost = calculator.calcMinKnownPickupSideCost(veh, stopIndex, initialPickupDetour,
+                                                                           p.walkingDist, depTimeAtPickup,
+                                                                           requestState);
 
-                        if (distToPDLoc >= INFTYKARRI || distFromPDLoc >= INFTYKARRI)
-                            continue;
+            // If cost for only pickup side is already worse than best known cost for a whole assignment, then
+            // this pickup is not relevant at this stop.
+            if (curKnownCost > requestState.getBestCost())
+                return false;
 
-                        assert(distToPDLoc + distFromPDLoc >= calcLengthOfLegStartingAt(i, vehId, routeState));
-                        const int detour = distToPDLoc + distFromPDLoc - calcLengthOfLegStartingAt(i, vehId, routeState);
-                        if (doesPickupDetourViolateHardConstraints(veh, requestState, i, detour, routeState))
-                            continue;
-
-                        // TODO
-                        /* assert(0 < routeState.schedArrTimesFor(vehId)[i] && routeState.schedArrTimesFor(vehId)[i] < INFTYKARRI); */
-                        /* assert(0 <= routeState.schedDepTimesFor(vehId)[i] && routeState.schedDepTimesFor(vehId)[i] < INFTYKARRI); */
-                        /* assert(0 <= routeState.maxArrTimesFor(vehId)[i] - distFromPDLoc && routeState.maxArrTimesFor(vehId)[i] < INFTYKARRI); */
-
-                        // is reverse dist to stopId in distsToPDLocs bzw. in distsFromPDLocs?
-                        intersectionOfVehicles.push_back({
-                            vehId, // vehicleId
-                            i, // insertionPosition
-                            distToPDLoc, // distTo
-                            distFromPDLoc, // distFrom
-                            detour, // detour
-                            routeState.leewayOfLegStartingAt(stopId), // leeway
-                            routeState.schedDepTimesFor(vehId)[i], // minDepTime
-                            routeState.maxArrTimesFor(vehId)[i + 1] - distFromPDLoc, // maxDepTime
-                            routeState.schedDepTimesFor(vehId)[i] + distToPDLoc, // minArrTime
-                            0, // reverseDistTo
-                            0 // reverseDistFrom
-                        });
-                    }
-                }
-            }
+            return true;
         }
-    }
 
-    inline bool isPickupRelevant(const Vehicle& veh, const int stopIndex, const unsigned int pickupId,
-        const int distFromStopToPickup,
-        const int distFromPickupToNextStop, int& initialPickupDetour)
-    {
-        using namespace time_utils;
+        inline bool isDropoffRelevant(const Vehicle &veh, const int stopIndex, const unsigned int dropoffId,
+                                      const int distFromStopToDropoff,
+                                      const int distFromDropoffToNextStop,
+                                      const RequestState &requestState) {
+            using namespace time_utils;
 
-        const int& vehId = veh.vehicleId;
+            const int &vehId = veh.vehicleId;
+            const auto &d = requestState.dropoffs[dropoffId];
 
-        assert(routeState.occupanciesFor(vehId)[stopIndex] + requestState.originalRequest.numRiders <= veh.capacity);
-        if (distFromStopToPickup >= INFTYKARRI || distFromPickupToNextStop >= INFTYKARRI)
-            return false;
+            // If this is the last stop in the route, we only consider this dropoff for ordinary assignments if it is at the
+            // last stop. Similarly, if the vehicle is full after this stop, we can't perform the dropoff here unless the
+            // dropoff coincides with the stop. A dropoff at an existing stop causes no detour, so it is always relevant.
+            const auto &numStops = routeState.numStopsOf(vehId);
+            const auto &occupancy = routeState.occupanciesFor(vehId)[stopIndex];
+            const auto &stopLocations = routeState.stopLocationsFor(vehId);
+            assert(d.loc != stopLocations[stopIndex] || distFromStopToDropoff == 0);
+            if (stopIndex == numStops - 1 || occupancy + requestState.originalRequest.numRiders > veh.capacity)
+                return d.loc == stopLocations[stopIndex];
 
-        assert(distFromStopToPickup + distFromPickupToNextStop >= calcLengthOfLegStartingAt(stopIndex, vehId, routeState));
-        const auto& p = requestState.pickups[pickupId];
+            if (stopLocations[stopIndex + 1] == d.loc)
+                return false;
 
-        const auto depTimeAtPickup = getActualDepTimeAtPickup(vehId, stopIndex, distFromStopToPickup, p,
-            requestState, routeState, inputConfig);
+            if (distFromStopToDropoff >= INFTY || distFromDropoffToNextStop >= INFTY)
+                return false;
 
-        initialPickupDetour = calcInitialPickupDetour(vehId, stopIndex, INVALID_INDEX, depTimeAtPickup,
-            distFromPickupToNextStop, requestState,
-            routeState);
+            const bool isDropoffAtExistingStop = d.loc == stopLocations[stopIndex];
+            const int initialDropoffDetour = calcInitialDropoffDetour(vehId, stopIndex, distFromStopToDropoff,
+                                                                      distFromDropoffToNextStop,
+                                                                      isDropoffAtExistingStop,
+                                                                      routeState);
+            assert(initialDropoffDetour >= 0);
+            if (doesDropoffDetourViolateHardConstraints(veh, requestState, stopIndex, initialDropoffDetour,
+                                                        routeState))
+                return false;
 
-        if (doesPickupDetourViolateHardConstraints(veh, requestState, stopIndex, initialPickupDetour, routeState))
-            return false;
+            const int curMinCost = calculator.calcMinKnownDropoffSideCost(veh, stopIndex, initialDropoffDetour,
+                                                                          d.walkingDist, requestState);
 
-        const int curKnownCost = calculator.calcMinKnownPickupSideCost(veh, stopIndex, initialPickupDetour,
-            p.walkingDist, depTimeAtPickup,
-            requestState);
+            // If cost for only dropoff side is already worse than best known cost for a whole assignment, then
+            // this dropoff is not relevant at this stop.
+            if (curMinCost > requestState.getBestCost())
+                return false;
 
-        // If cost for only pickup side is already worse than best known cost for a whole assignment, then
-        // this pickup is not relevant at this stop.
-        if (curKnownCost > requestState.getBestCost())
-            return false;
+            return true;
+        }
 
-        return true;
-    }
+        inline int getMinCostForPickup(const Vehicle &veh, const int stopIndex, const int minDistToPickup,
+                                       const int minDistFromPickup, const RequestState &requestState) const {
+            using namespace time_utils;
+            const int minVehDepTimeAtPickup =
+                    getVehDepTimeAtStopForRequest(veh.vehicleId, stopIndex, requestState, routeState)
+                    + minDistToPickup;
+            const int minDepTimeAtPickup = std::max(requestState.originalRequest.requestTime, minVehDepTimeAtPickup);
+            int minInitialPickupDetour = calcInitialPickupDetour(veh.vehicleId, stopIndex, INVALID_INDEX,
+                                                                 minDepTimeAtPickup, minDistFromPickup, requestState,
+                                                                 routeState);
+            minInitialPickupDetour = std::max(minInitialPickupDetour, 0);
+            return calculator.calcMinKnownPickupSideCost(veh, stopIndex, minInitialPickupDetour, 0, minDepTimeAtPickup,
+                                                         requestState);
+        }
 
-    inline bool isDropoffRelevant(const Vehicle& veh, const int stopIndex, const unsigned int dropoffId,
-        const int distFromStopToDropoff,
-        const int distFromDropoffToNextStop, int& initialDropoffDetour)
-    {
-        using namespace time_utils;
+        inline int getMinCostForDropoff(const Vehicle &veh, const int stopIndex, const int minDistToDropoff,
+                                        const int minDistFromDropoff, const RequestState &requestState) const {
+            using namespace time_utils;
+            int minInitialDropoffDetour = calcInitialDropoffDetour(veh.vehicleId, stopIndex, minDistToDropoff,
+                                                                   minDistFromDropoff, false, routeState);
+            minInitialDropoffDetour = std::max(minInitialDropoffDetour, 0);
+            return calculator.calcMinKnownDropoffSideCost(veh, stopIndex, minInitialDropoffDetour, 0, requestState);
+        }
 
-        const int& vehId = veh.vehicleId;
-        const auto& d = requestState.dropoffs[dropoffId];
+        int recomputeDistToPDLocDirectly(const int vehId, const int stopIdxBefore, const int pdLocLocation) {
+            auto src = ch.rank(inputGraph.edgeHead(routeState.stopLocationsFor(vehId)[stopIdxBefore]));
+            auto tar = ch.rank(inputGraph.edgeTail(pdLocLocation));
+            auto offset = inputGraph.travelTime(pdLocLocation);
 
-        // If this is the last stop in the route, we only consider this dropoff for ordinary assignments if it is at the
-        // last stop. Similarly, if the vehicle is full after this stop, we can't perform the dropoff here unless the
-        // dropoff coincides with the stop. A dropoff at an existing stop causes no detour, so it is always relevant.
-        const auto numStops = routeState.numStopsOf(vehId);
-        const auto occupancy = routeState.occupanciesFor(vehId)[stopIndex];
-        const auto stopLocations = routeState.stopLocationsFor(vehId);
-        assert(d.loc != stopLocations[stopIndex] || distFromStopToDropoff == 0);
-        if (stopIndex == numStops - 1 || occupancy + requestState.originalRequest.numRiders > veh.capacity)
-            return d.loc == stopLocations[stopIndex];
+            chQuery.run(src, tar);
+            return chQuery.getDistance() + offset;
+        }
 
-        if (stopLocations[stopIndex + 1] == d.loc)
-            return false;
+        int recomputeDistFromPDLocDirectly(const int vehId, const int stopIdxAfter, const int pdLocLocation) {
+            auto src = ch.rank(inputGraph.edgeHead(pdLocLocation));
+            auto tar = ch.rank(inputGraph.edgeTail(routeState.stopLocationsFor(vehId)[stopIdxAfter]));
+            auto offset = inputGraph.travelTime(routeState.stopLocationsFor(vehId)[stopIdxAfter]);
 
-        if (distFromStopToDropoff >= INFTYKARRI || distFromDropoffToNextStop >= INFTYKARRI)
-            return false;
+            chQuery.run(src, tar);
+            return chQuery.getDistance() + offset;
+        }
 
-        const bool isDropoffAtExistingStop = d.loc == stopLocations[stopIndex];
-        initialDropoffDetour = calcInitialDropoffDetour(vehId, stopIndex, distFromStopToDropoff,
-            distFromDropoffToNextStop,
-            isDropoffAtExistingStop,
-            routeState, inputConfig);
-        assert(initialDropoffDetour >= 0);
-        if (doesDropoffDetourViolateHardConstraints(veh, requestState, stopIndex, initialDropoffDetour,
-                routeState))
-            return false;
 
-        const int curMinCost = calculator.calcMinKnownDropoffSideCost(veh, stopIndex, initialDropoffDetour,
-            d.walkingDist, requestState);
+        const Fleet &fleet;
+        const InputGraphT &inputGraph;
+        const CH &ch;
+        typename CHEnvT::template FullCHQuery<> chQuery;
+        CostCalculator calculator;
+        const RouteState &routeState;
 
-        // If cost for only dropoff side is already worse than best known cost for a whole assignment, then
-        // this dropoff is not relevant at this stop.
-        if (curMinCost > requestState.getBestCost())
-            return false;
-
-        return true;
-    }
-
-    inline int getMinCostForPickup(const Vehicle& veh, const int stopIndex, const int minDistToPickup,
-        const int minDistFromPickup) const
-    {
-        using namespace time_utils;
-        const int minVehDepTimeAtPickup = getVehDepTimeAtStopForRequest(veh.vehicleId, stopIndex, requestState, routeState)
-            + minDistToPickup;
-        const int minDepTimeAtPickup = std::max(requestState.originalRequest.requestTime, minVehDepTimeAtPickup);
-        int minInitialPickupDetour = calcInitialPickupDetour(veh.vehicleId, stopIndex, INVALID_INDEX,
-            minDepTimeAtPickup, minDistFromPickup, requestState,
-            routeState);
-        minInitialPickupDetour = std::max(minInitialPickupDetour, 0);
-        return calculator.calcMinKnownPickupSideCost(veh, stopIndex, minInitialPickupDetour, 0, minDepTimeAtPickup,
-            requestState);
-    }
-
-    inline int getMinCostForDropoff(const Vehicle& veh, const int stopIndex, const int minDistToDropoff,
-        const int minDistFromDropoff) const
-    {
-        using namespace time_utils;
-        int minInitialDropoffDetour = calcInitialDropoffDetour(veh.vehicleId, stopIndex, minDistToDropoff,
-            minDistFromDropoff, false, routeState, inputConfig);
-        minInitialDropoffDetour = std::max(minInitialDropoffDetour, 0);
-        return calculator.calcMinKnownDropoffSideCost(veh, stopIndex, minInitialDropoffDetour, 0, requestState);
-    }
-
-    int recomputeDistToPDLocDirectly(const int vehId, const int stopIdxBefore, const int pdLocLocation)
-    {
-        auto src = ch.rank(inputGraph.edgeHead(routeState.stopLocationsFor(vehId)[stopIdxBefore]));
-        auto tar = ch.rank(inputGraph.edgeTail(pdLocLocation));
-        auto offset = inputGraph.travelTime(pdLocLocation);
-
-        chQuery.run(src, tar);
-        return chQuery.getDistance() + offset;
-    }
-
-    int recomputeDistFromPDLocDirectly(const int vehId, const int stopIdxAfter, const int pdLocLocation)
-    {
-        auto src = ch.rank(inputGraph.edgeHead(pdLocLocation));
-        auto tar = ch.rank(inputGraph.edgeTail(routeState.stopLocationsFor(vehId)[stopIdxAfter]));
-        auto offset = inputGraph.travelTime(routeState.stopLocationsFor(vehId)[stopIdxAfter]);
-
-        chQuery.run(src, tar);
-        return chQuery.getDistance() + offset;
-    }
-
-    const Fleet& fleet;
-    const InputGraphT& inputGraph;
-    const CH& ch;
-    typename CHEnvT::template FullCHQuery<> chQuery;
-    const CostCalculator& calculator;
-    RequestState& requestState;
-    const RouteState& routeState;
-    const InputConfig& inputConfig;
-
-    const FeasibleDistancesT& feasiblePickupDistances;
-    const FeasibleDistancesT& feasibleDropoffDistances;
-
-    RelevantPDLocs& relOrdinaryPickups;
-    RelevantPDLocs& relOrdinaryDropoffs;
-    RelevantPDLocs& relPickupsBeforeNextStop;
-    RelevantPDLocs& relDropoffsBeforeNextStop;
-
-public:
-    // Stats by Patrick
-    size_t numVehiclesInRange;
-};
+        LightweightSubset vehiclesWithFeasibleDistances;
+    };
 }

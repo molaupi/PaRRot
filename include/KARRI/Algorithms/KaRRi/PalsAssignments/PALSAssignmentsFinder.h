@@ -22,103 +22,97 @@
 /// SOFTWARE.
 /// ******************************************************************************
 
+
 #pragma once
 
-#include "../../../Tools/Timer.h"
-#include "../BaseObjects/Assignment.h"
-#include "../LastStopSearches/LastStopsAtVertices.h"
-#include "../RequestState/RequestState.h"
+#include "Tools/Timer.h"
+#include "Algorithms/KaRRi/BaseObjects/Assignment.h"
+#include "Algorithms/KaRRi/RequestState/RequestState.h"
+#include "Algorithms/KaRRi/LastStopSearches/OnlyLastStopsAtVerticesBucketSubstitute.h"
 
 namespace karri {
 
 // Finds pickup-after-last-stop (PALS) insertions using the encapsulated strategy.
-template <typename InputGraphT, typename PDDistancesT, typename StrategyT>
-class PALSAssignmentsFinder {
+    template<typename InputGraphT, typename PDDistancesT, typename StrategyT, typename LastStopsAtVerticesT>
+    class PALSAssignmentsFinder {
 
-public:
-    PALSAssignmentsFinder(StrategyT& strategy, const InputGraphT& inputGraph, const Fleet& fleet,
-        const CostCalculator& calculator, const LastStopsAtVertices& lastStopsAtVertices,
-        const RouteState& routeState, const PDDistancesT& pdDistances, RequestState& requestState)
-        : strategy(strategy)
-        , inputGraph(inputGraph)
-        , fleet(fleet)
-        , calculator(calculator)
-        , lastStopsAtVertices(lastStopsAtVertices)
-        , routeState(routeState)
-        , pdDistances(pdDistances)
-        , requestState(requestState)
-    {
-    }
+    public:
 
-    void findAssignments()
-    {
-        findAssignmentsWherePickupCoincidesWithLastStop();
-        strategy.tryPickupAfterLastStop();
-    }
+        PALSAssignmentsFinder(StrategyT &strategy, const InputGraphT &inputGraph, const Fleet &fleet,
+                              const CostCalculator &calculator, const LastStopsAtVerticesT &lastStopsAtVertices,
+                              const RouteState &routeState, RequestState &requestState)
+                : strategy(strategy),
+                  inputGraph(inputGraph),
+                  fleet(fleet),
+                  calculator(calculator),
+                  lastStopsAtVertices(lastStopsAtVertices),
+                  routeState(routeState),
+                  requestState(requestState) {}
 
-    void init()
-    {
-        // no op
-    }
-
-private:
-    // Simple case for pickups that coincide with last stops of vehicles is the same regardless of strategy, so it
-    // is treated here.
-    void findAssignmentsWherePickupCoincidesWithLastStop()
-    {
-        int numInsertionsForCoinciding = 0;
-        int numCandidateVehiclesForCoinciding = 0;
-        Timer timer;
-
-        Assignment asgn;
-        asgn.distToPickup = 0;
-        for (const auto& p : requestState.pickups) {
-            asgn.pickup = &p;
-
-            const int head = inputGraph.edgeHead(asgn.pickup->loc);
-            if (!lastStopsAtVertices.isAnyLastStopAtVertex(head))
-                continue;
-
-            for (const auto& vehId : lastStopsAtVertices.vehiclesWithLastStopAt(head)) {
-                ++numCandidateVehiclesForCoinciding;
-                const auto numStops = routeState.numStopsOf(vehId);
-                if (routeState.stopLocationsFor(vehId)[numStops - 1] != asgn.pickup->loc)
-                    continue;
-
-                // Calculate lower bound on insertion cost with this pickup and vehicle
-                const auto lowerBoundCost = calculator.calcCostLowerBoundForPickupAfterLastStop(
-                    fleet[vehId], *asgn.pickup, 0, requestState.minDirectPDDist, requestState);
-                if (lowerBoundCost > requestState.getBestCost())
-                    continue;
-
-                // If necessary, check paired insertion with each dropoff
-                asgn.vehicle = &fleet[vehId];
-                asgn.pickupStopIdx = numStops - 1;
-                asgn.dropoffStopIdx = numStops - 1;
-
-                for (const auto& d : requestState.dropoffs) {
-                    asgn.dropoff = &d;
-                    asgn.distToDropoff = pdDistances.getDirectDistance(*asgn.pickup, *asgn.dropoff);
-                    ++numInsertionsForCoinciding;
-                    requestState.tryAssignment(asgn);
-                }
-            }
+        void findAssignments(const PDDistancesT& pdDistances) {
+            findAssignmentsWherePickupCoincidesWithLastStop(pdDistances);
+            strategy.tryPickupAfterLastStop(pdDistances);
         }
 
-        const auto time = timer.elapsed<std::chrono::nanoseconds>();
-        requestState.stats().palsAssignmentsStats.pickupAtLastStop_tryAssignmentsTime += time;
-        requestState.stats().palsAssignmentsStats.pickupAtLastStop_numCandidateVehicles += numCandidateVehiclesForCoinciding;
-        requestState.stats().palsAssignmentsStats.pickupAtLastStop_numAssignmentsTried += numInsertionsForCoinciding;
-    }
+        void init() {
+            // no op
+        }
 
-    StrategyT& strategy;
+    private:
 
-    const InputGraphT& inputGraph;
-    const Fleet& fleet;
-    const CostCalculator& calculator;
-    const LastStopsAtVertices& lastStopsAtVertices;
-    const RouteState& routeState;
-    const PDDistancesT& pdDistances;
-    RequestState& requestState;
-};
+        // Simple case for pickups that coincide with last stops of vehicles is the same regardless of strategy, so it
+        // is treated here.
+        void findAssignmentsWherePickupCoincidesWithLastStop(const PDDistancesT& pdDistances) {
+            int numInsertionsForCoinciding = 0;
+            int numCandidateVehiclesForCoinciding = 0;
+            Timer timer;
+
+            Assignment asgn;
+            asgn.distToPickup = 0;
+            for (const auto &p: requestState.pickups) {
+                asgn.pickup = &p;
+
+                const int head = inputGraph.edgeHead(asgn.pickup->loc);
+                for (const auto &vehId: lastStopsAtVertices.vehiclesWithLastStopAt(head)) {
+                    ++numCandidateVehiclesForCoinciding;
+                    const auto numStops = routeState.numStopsOf(vehId);
+                    if (routeState.stopLocationsFor(vehId)[numStops - 1] != asgn.pickup->loc)
+                        continue;
+
+                    // Calculate lower bound on insertion cost with this pickup and vehicle
+                    const auto lowerBoundCost = calculator.calcCostLowerBoundForPickupAfterLastStop(
+                            fleet[vehId], *asgn.pickup, 0, requestState.minDirectPDDist, requestState);
+                    if (lowerBoundCost > requestState.getBestCost())
+                        continue;
+
+                    // If necessary, check paired insertion with each dropoff
+                    asgn.vehicle = &fleet[vehId];
+                    asgn.pickupStopIdx = numStops - 1;
+                    asgn.dropoffStopIdx = numStops - 1;
+
+                    for (const auto &d: requestState.dropoffs) {
+                        asgn.dropoff = &d;
+                        asgn.distToDropoff = pdDistances.getDirectDistance(*asgn.pickup, *asgn.dropoff);
+                        ++numInsertionsForCoinciding;
+                        requestState.tryAssignment(asgn);
+                    }
+                }
+            }
+
+            const auto time = timer.elapsed<std::chrono::nanoseconds>();
+            requestState.stats().palsAssignmentsStats.pickupAtLastStop_tryAssignmentsTime += time;
+            requestState.stats().palsAssignmentsStats.pickupAtLastStop_numCandidateVehicles += numCandidateVehiclesForCoinciding;
+            requestState.stats().palsAssignmentsStats.pickupAtLastStop_numAssignmentsTried += numInsertionsForCoinciding;
+        }
+
+        StrategyT &strategy;
+
+        const InputGraphT &inputGraph;
+        const Fleet &fleet;
+        const CostCalculator &calculator;
+        const LastStopsAtVerticesT &lastStopsAtVertices;
+        const RouteState &routeState;
+        RequestState &requestState;
+
+    };
 }

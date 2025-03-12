@@ -22,61 +22,41 @@
 /// SOFTWARE.
 /// ******************************************************************************
 
+
 #pragma once
 
-#include "../../../Tools/Constants.h"
-#include <iostream>
+#include "Tools/Constants.h"
 
 namespace karri {
 
-// Models a request with an ID, an origin location, a destination location and the earliest possible departure time.
-struct Request {
-    int requestId = INVALID_ID;
-    int origin = INVALID_EDGE;
-    int destination = INVALID_EDGE;
-    int requestTime = INFTYKARRI;
-    int numRiders = INFTYKARRI;
-};
+    // Models a request with an ID, an origin location, a destination location and the earliest possible departure time.
+    struct Request {
+        int requestId = INVALID_ID;
+        int origin = INVALID_EDGE;
+        int destination = INVALID_EDGE;
+        int requestTime = INFTY;
+        int numRiders = INFTY;
+    };
 
-// Models a location used for a pickup or dropoff with an ID (should be counted separately for pickups and dropoffs), a
-// location, a walking distance, and optional driving distances to and from the associated origin or destination
-// location.
-struct PDLoc {
-    int id = INVALID_ID; // Should be counted separately for pickups and dropoffs
-    int loc = INVALID_EDGE; // Location in road network
-    int psgLoc = INVALID_EDGE; // Location in passenger road network
-    int walkingDist = INFTYKARRI; // Walking time from origin to this pickup or from this dropoff to destination.
+    // Models a location used for a pickup or dropoff with an ID (should be counted separately for pickups and dropoffs), a
+    // location, a walking distance, and optional driving distances to and from the associated origin or destination
+    // location.
+    struct PDLoc {
 
-    int vehDistToCenter = INFTYKARRI; // Vehicle driving time from this pickup/dropoff to the origin/destination.
-    int vehDistFromCenter = INFTYKARRI; // Vehicle driving time from origin/destination to this pickup/dropoff.
-};
+        int id = INVALID_ID; // Should be counted separately for pickups and dropoffs
+        int loc = INVALID_EDGE; // Location in road network
+        int psgLoc = INVALID_EDGE; // Location in passenger road network
+        int walkingDist = INFTY; // Walking time from origin to this pickup or from this dropoff to destination.
 
-enum PDLocType : std::int8_t {
-    PICKUP,
-    DROPOFF,
-    INVALID_PD_LOC_TYPE
-};
+        int vehDistToCenter = INFTY; // Vehicle driving time from this pickup/dropoff to the origin/destination.
+        int vehDistFromCenter = INFTY; // Vehicle driving time from origin/destination to this pickup/dropoff.
+    };
 
-std::ostream& operator<<(std::ostream& os, const Request& request)
-{
-    os << "Request ID: " << request.requestId << "\n"
-       << "Origin: " << request.origin << "\n"
-       << "Destination: " << request.destination << "\n"
-       << "Request Time: " << request.requestTime << "\n"
-       << "Number of Riders: " << request.numRiders;
 
-    return os;
-}
+    enum PDLocType : std::int8_t {
+        PICKUP,
+        DROPOFF,
+        INVALID_PD_LOC_TYPE
+    };
 
-std::ostream& operator<<(std::ostream& os, const PDLoc& pdLoc)
-{
-    os << "ID: " << pdLoc.id << "\n"
-       << "Location: " << pdLoc.loc << "\n"
-       << "Passenger Location: " << pdLoc.psgLoc << "\n"
-       << "Walking Distance: " << pdLoc.walkingDist << "\n"
-       << "Vehicle Distance to Center: " << pdLoc.vehDistToCenter << "\n"
-       << "Vehicle Distance from Center: " << pdLoc.vehDistFromCenter;
-
-    return os;
-}
 }

@@ -22,30 +22,30 @@
 /// SOFTWARE.
 /// ******************************************************************************
 
+
 #pragma once
 namespace karri {
 
 // Wrapper around DALS strategy.
-template <typename StrategyT>
-class DALSAssignmentsFinder {
+    template<typename StrategyT>
+    class DALSAssignmentsFinder {
 
-public:
-    DALSAssignmentsFinder(StrategyT& strategy)
-        : strategy(strategy)
-    {
-    }
+    public:
 
-    void findAssignments()
-    {
-        strategy.tryDropoffAfterLastStop();
-    }
+        DALSAssignmentsFinder(StrategyT &strategy) : strategy(strategy) {}
 
-    void init()
-    {
-        // no op
-    }
+        void findAssignments(const RelevantPDLocs &relevantOrdinaryPickups,
+                             const RelevantPDLocs &relevantPickupsBeforeNextStop) {
+            strategy.tryDropoffAfterLastStop(relevantOrdinaryPickups, relevantPickupsBeforeNextStop);
+        }
 
-private:
-    StrategyT& strategy;
-};
+        void init() {
+            // no op
+        }
+
+    private:
+
+        StrategyT &strategy;
+
+    };
 }
