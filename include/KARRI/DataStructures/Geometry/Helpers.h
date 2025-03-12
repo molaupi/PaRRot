@@ -25,9 +25,9 @@
 
 #pragma once
 
-#include "DataStructures/Geometry/Point.h"
-#include "DataStructures/Geometry/Rectangle.h"
-#include "Tools/Math.h"
+#include "Point.h"
+#include "Rectangle.h"
+#include "../Math.h"
 
 // Returns the normal vector for the line l through p and q, oriented towards the left of l.
 inline Point normal(const Point& p, const Point& q) {

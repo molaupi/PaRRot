@@ -27,8 +27,8 @@
 
 #include <cassert>
 
-#include "DataStructures/Graph/Attributes/AbstractAttribute.h"
-#include "Tools/Constants.h"
+#include "AbstractAttribute.h"
+#include "../../../Tools/Constants.h"
 
 // An attribute associating a travel time with each edge of a graph.
 class TravelTimeAttribute : public AbstractAttribute<int> {

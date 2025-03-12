@@ -31,8 +31,8 @@
 #include <ostream>
 #include <vector>
 
-#include "DataStructures/Geometry/Helpers.h"
-#include "DataStructures/Geometry/Point.h"
+#include "Helpers.h"
+#include "Point.h"
 
 // A polygon defines a two-dimensional region enclosed by a single closed polygonal chain.
 class Polygon {

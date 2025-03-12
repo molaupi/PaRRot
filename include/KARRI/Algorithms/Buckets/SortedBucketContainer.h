@@ -27,7 +27,7 @@
 
 #include <vector>
 #include <cassert>
-#include "DataStructures/Utilities/DynamicRagged2DArrays.h"
+#include "../../DataStructures/Utilities/DynamicRagged2DArrays.h"
 
 
 template<typename BucketEntryT, typename BucketEntryComparatorT>

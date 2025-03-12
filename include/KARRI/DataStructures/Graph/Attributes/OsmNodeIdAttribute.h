@@ -28,8 +28,8 @@
 #include <cassert>
 #include <cstdint>
 
-#include "DataStructures/Graph/Attributes/AbstractAttribute.h"
-#include "Tools/Constants.h"
+#include "AbstractAttribute.h"
+#include "../../../Tools/Constants.h"
 
 // An attribute the OSM global ID of the OSM node associated with each vertex of a graph.
 class OsmNodeIdAttribute : public AbstractAttribute<uint64_t> {

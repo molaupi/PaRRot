@@ -27,11 +27,11 @@
 
 #include <cassert>
 #include <vector>
-#include "Tools/Workarounds.h"
-#include "DataStructures/Utilities/DynamicRagged2DArrays.h"
-#include "DataStructures/Utilities/IteratorRange.h"
-#include "Algorithms/KaRRi/BaseObjects/Vehicle.h"
-#include "Algorithms/KaRRi/RouteState.h"
+#include "../../../Tools/Workarounds.h"
+#include "../../../DataStructures/Utilities/DynamicRagged2DArrays.h"
+#include "../../../DataStructures/Utilities/IteratorRange.h"
+#include "../BaseObjects/Vehicle.h"
+#include "../RouteState.h"
 
 namespace karri {
 

@@ -27,8 +27,8 @@
 
 #include <cassert>
 
-#include "DataStructures/Graph/Attributes/AbstractAttribute.h"
-#include "Tools/Constants.h"
+#include "AbstractAttribute.h"
+#include "../../../Tools/Constants.h"
 
 // An attribute storing explicitly the tail vertex with each edge of a graph.
 class EdgeTailAttribute : public AbstractAttribute<int> {

@@ -25,10 +25,10 @@
 
 #pragma once
 
-#include "Tools/Timer.h"
-#include "Algorithms/KaRRi/BaseObjects/Assignment.h"
-#include "Algorithms/KaRRi/RequestState/RequestState.h"
-#include "Algorithms/KaRRi/LastStopSearches/OnlyLastStopsAtVerticesBucketSubstitute.h"
+#include "../../../Tools/Timer.h"
+#include "../BaseObjects/Assignment.h"
+#include "../RequestState/RequestState.h"
+#include "../LastStopSearches/OnlyLastStopsAtVerticesBucketSubstitute.h"
 
 namespace karri {
 

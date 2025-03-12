@@ -25,10 +25,10 @@
 
 #pragma once
 
-#include "DataStructures/Labels/BasicLabelSet.h"
-#include "DataStructures/Containers/Subset.h"
-#include "Algorithms/CH/CH.h"
-#include "Tools/Constants.h"
+#include "../../../DataStructures/Labels/BasicLabelSet.h"
+#include "../../../DataStructures/Containers/Subset.h"
+#include "../../CH/CH.h"
+#include "../../../Tools/Constants.h"
 #include "TentativeLastStopDistances.h"
 
 namespace karri {

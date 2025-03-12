@@ -27,8 +27,8 @@
 
 #include <cassert>
 
-#include "DataStructures/Graph/Attributes/AbstractAttribute.h"
-#include "Tools/Constants.h"
+#include "AbstractAttribute.h"
+#include "../../../Tools/Constants.h"
 
 // An attribute associating a sequential original ID with each vertex of a graph. The attribute can
 // be used to store, for each vertex of a subgraph, the corresponding vertex in the supergraph.

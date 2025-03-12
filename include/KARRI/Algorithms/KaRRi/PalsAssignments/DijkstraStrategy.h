@@ -25,12 +25,12 @@
 
 #pragma once
 
-#include "Tools/Timer.h"
-#include "DataStructures/Graph/Attributes/TravelTimeAttribute.h"
-#include "Algorithms/Dijkstra/Dijkstra.h"
-#include "Algorithms/KaRRi/LastStopSearches/TentativeLastStopDistances.h"
-#include "Algorithms/KaRRi/RequestState/RequestState.h"
-#include "Algorithms/KaRRi/LastStopSearches/OnlyLastStopsAtVerticesBucketSubstitute.h"
+#include "../../../Tools/Timer.h"
+#include "../../../DataStructures/Graph/Attributes/TravelTimeAttribute.h"
+#include "../../Dijkstra/Dijkstra.h"
+#include "../LastStopSearches/TentativeLastStopDistances.h"
+#include "../RequestState/RequestState.h"
+#include "../LastStopSearches/OnlyLastStopsAtVerticesBucketSubstitute.h"
 
 namespace karri::PickupAfterLastStopStrategies {
 

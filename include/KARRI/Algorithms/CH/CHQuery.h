@@ -30,14 +30,14 @@
 #include <type_traits>
 #include <vector>
 
-#include "Algorithms/CH/CH.h"
-#include "Algorithms/Dijkstra/BiDijkstra.h"
-#include "Algorithms/Dijkstra/Dijkstra.h"
-#include "DataStructures/Graph/Attributes/TraversalCostAttribute.h"
-#include "DataStructures/Graph/Graph.h"
-#include "DataStructures/Labels/Containers/StampedDistanceLabelContainer.h"
-#include "DataStructures/Queues/AddressableKHeap.h"
-#include "Tools/Constants.h"
+#include "CH.h"
+#include "../Dijkstra/BiDijkstra.h"
+#include "../Dijkstra/Dijkstra.h"
+#include "../../DataStructures/Graph/Attributes/TraversalCostAttribute.h"
+#include "../../DataStructures/Graph/Graph.h"
+#include "../../DataStructures/Labels/Containers/StampedDistanceLabelContainer.h"
+#include "../../DataStructures/Queues/AddressableKHeap.h"
+#include "../../Tools/Constants.h"
 
 // Implementation of a CH query. Depending on the used label set, it keeps parent vertices and/or
 // edges, and computes multiple shortest paths simultaneously, optionally using SSE or AVX

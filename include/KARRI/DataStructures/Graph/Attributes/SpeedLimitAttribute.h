@@ -27,7 +27,7 @@
 
 #include <cassert>
 
-#include "DataStructures/Graph/Attributes/AbstractAttribute.h"
+#include "AbstractAttribute.h"
 
 // An attribute associating a speed limit with each edge of a graph.
 class SpeedLimitAttribute : public AbstractAttribute<int> {

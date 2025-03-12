@@ -28,8 +28,8 @@
 #include <cassert>
 #include <ostream>
 
-#include "DataStructures/Geometry/Point.h"
-#include "Tools/Constants.h"
+#include "Point.h"
+#include "../Constants.h"
 
 // A rectangle on a two-dimensional plane with sides parallel to the x- and y-axis.
 class Rectangle {

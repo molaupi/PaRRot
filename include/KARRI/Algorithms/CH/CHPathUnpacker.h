@@ -30,8 +30,8 @@
 #include <cstdint>
 #include <vector>
 
-#include "Algorithms/CH/CH.h"
-#include "Tools/Constants.h"
+#include "CH.h"
+#include "../../Tools/Constants.h"
 
 // This class unpacks an up-down path in a contraction hierarchy (which generally contains
 // shortcuts) into the corresponding path in the original graph (which contains only original

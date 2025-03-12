@@ -31,10 +31,10 @@
 #include <ostream>
 #include <sstream>
 
-#include "DataStructures/Geometry/Point.h"
-#include "Tools/Constants.h"
-#include "Tools/Math.h"
-#include "Tools/Workarounds.h"
+#include "../Geometry/Point.h"
+#include "../../Tools/Constants.h"
+#include "../../Tools/Math.h"
+#include "../../Tools/Workarounds.h"
 
 // This class represents a geographic point, specified by its latitude and longitude.
 class LatLng {

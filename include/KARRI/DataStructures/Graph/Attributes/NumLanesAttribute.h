@@ -27,7 +27,7 @@
 
 #include <cassert>
 
-#include "DataStructures/Graph/Attributes/AbstractAttribute.h"
+#include "AbstractAttribute.h"
 
 // An attribute associating a number of lanes with each edge of a graph.
 class NumLanesAttribute : public AbstractAttribute<double> {

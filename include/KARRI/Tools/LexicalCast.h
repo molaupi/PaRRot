@@ -31,7 +31,7 @@
 
 #include <csv.h>
 
-#include "Tools/StringHelpers.h"
+#include "StringHelpers.h"
 
 // Converts the specified string to type T.
 template <typename T, typename StringT, typename = std::enable_if_t<!std::is_enum<T>::value>>

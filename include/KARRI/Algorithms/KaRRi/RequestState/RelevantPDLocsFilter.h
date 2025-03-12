@@ -25,9 +25,9 @@
 
 #pragma once
 
-#include "Algorithms/KaRRi/RequestState/RelevantPDLocs.h"
-#include "DataStructures/Containers/FastResetFlagArray.h"
-#include "DataStructures/Containers/LightweightSubset.h"
+#include "RelevantPDLocs.h"
+#include "../../../DataStructures/Containers/FastResetFlagArray.h"
+#include "../../../DataStructures/Containers/LightweightSubset.h"
 
 namespace karri {
 

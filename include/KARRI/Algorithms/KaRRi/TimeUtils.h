@@ -25,9 +25,9 @@
 
 #pragma once
 
-#include "Algorithms/KaRRi/RouteState.h"
-#include "Algorithms/KaRRi/InputConfig.h"
-#include "Algorithms/KaRRi/BaseObjects/Request.h"
+#include "RouteState.h"
+#include "InputConfig.h"
+#include "BaseObjects/Request.h"
 
 #define DO_INLINE true
 #if DO_INLINE

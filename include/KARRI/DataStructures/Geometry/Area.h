@@ -33,12 +33,12 @@
 #include <string>
 #include <vector>
 
-#include "DataStructures/Geometry/LatLng.h"
-#include "DataStructures/Geometry/Point.h"
-#include "DataStructures/Geometry/Polygon.h"
-#include "DataStructures/Geometry/Rectangle.h"
-#include "Tools/LexicalCast.h"
-#include "Tools/StringHelpers.h"
+#include "LatLng.h"
+#include "Point.h"
+#include "Polygon.h"
+#include "Rectangle.h"
+#include "../LexicalCast.h"
+#include "../StringHelpers.h"
 
 // An area can consist of a number of polygonal regions, some with holes. It stores a list of simple
 // polygons. Counterclockwise polygons add to the area, clockwise polygons subtract from it. The

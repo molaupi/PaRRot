@@ -28,8 +28,8 @@
 #include <cassert>
 #include <vector>
 
-#include "DataStructures/Geometry/LatLng.h"
-#include "DataStructures/Graph/Attributes/AbstractAttribute.h"
+#include "../../Geometry/LatLng.h"
+#include "AbstractAttribute.h"
 
 // An attribute associating road geometry data with each edge of a graph.
 class RoadGeometryAttribute : public AbstractAttribute<std::vector<LatLng>> {

@@ -25,10 +25,10 @@
 
 #pragma once
 
-#include "Tools/Timer.h"
-#include "Algorithms/KaRRi/BaseObjects/Assignment.h"
-#include "Algorithms/KaRRi/RequestState/RelevantPDLocs.h"
-#include "Algorithms/KaRRi/PDDistanceQueries/PDDistances.h"
+#include "../../../Tools/Timer.h"
+#include "../BaseObjects/Assignment.h"
+#include "../RequestState/RelevantPDLocs.h"
+#include "../PDDistanceQueries/PDDistances.h"
 
 namespace karri {
 

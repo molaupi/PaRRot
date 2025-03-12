@@ -26,8 +26,8 @@
 #pragma once
 
 #include "MinCostDropoffAfterLastStopQuery.h"
-#include "Algorithms/KaRRi/LastStopSearches/LabelBucketContainer.h"
-#include "Algorithms/KaRRi/LastStopSearches/ClosestPDLocToLastStopBCHQuery.h"
+#include "../LastStopSearches/LabelBucketContainer.h"
+#include "../LastStopSearches/ClosestPDLocToLastStopBCHQuery.h"
 
 namespace karri::DropoffAfterLastStopStrategies {
 

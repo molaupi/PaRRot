@@ -30,8 +30,8 @@
 #include <type_traits>
 #include <vector>
 
-#include "Tools/Simd/AlignedVector.h"
-#include "Tools/Constants.h"
+#include "../../../Tools/Simd/AlignedVector.h"
+#include "../../../Tools/Constants.h"
 
 // A container that maintains parent information during a shortest-path search. Depending on the
 // used label set, the parent information consists of parent vertices and/or edges.

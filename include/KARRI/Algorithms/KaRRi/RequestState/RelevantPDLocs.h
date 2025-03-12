@@ -25,10 +25,10 @@
 
 #pragma once
 
-#include "Tools/Simd/AlignedVector.h"
-#include "Algorithms/KaRRi/BaseObjects/Vehicle.h"
-#include "Algorithms/KaRRi/RouteState.h"
-#include "Algorithms/KaRRi/RequestState/RequestState.h"
+#include "../../../Tools/Simd/AlignedVector.h"
+#include "../BaseObjects/Vehicle.h"
+#include "../RouteState.h"
+#include "RequestState.h"
 
 #include <map>
 

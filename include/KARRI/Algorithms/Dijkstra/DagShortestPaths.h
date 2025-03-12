@@ -29,12 +29,12 @@
 #include <cstdint>
 #include <vector>
 
-#include "Algorithms/Dijkstra/Dijkstra.h"
-#include "DataStructures/Graph/Graph.h"
-#include "DataStructures/Labels/Containers/ParentLabelContainer.h"
-#include "DataStructures/Labels/Containers/StampedDistanceLabelContainer.h"
-#include "DataStructures/Queues/AddressableKHeap.h"
-#include "Tools/Constants.h"
+#include "Dijkstra.h"
+#include "../../DataStructures/Graph/Graph.h"
+#include "../../DataStructures/Labels/Containers/ParentLabelContainer.h"
+#include "../../DataStructures/Labels/Containers/StampedDistanceLabelContainer.h"
+#include "../../DataStructures/Queues/AddressableKHeap.h"
+#include "../../Tools/Constants.h"
 
 
 // Forward declarations for friend

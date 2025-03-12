@@ -28,10 +28,10 @@
 
 #include <vector>
 
-#include "Tools/Simd/AlignedAllocator.h"
+#include "AlignedAllocator.h"
 
-#include "Tools/CompilerSpecific.h"
-#include "Tools/MachineSpecs.h"
+#include "../CompilerSpecific.h"
+#include "../MachineSpecs.h"
 
 // A std::vector whose elements are properly aligned for use with SIMD instructions.
 template <typename T>

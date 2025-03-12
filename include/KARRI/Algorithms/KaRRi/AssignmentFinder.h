@@ -25,10 +25,10 @@
 
 #pragma once
 
-#include "Algorithms/KaRRi/BaseObjects/Assignment.h"
-#include "Algorithms/KaRRi/BaseObjects/Request.h"
-#include "Algorithms/KaRRi/RequestState/RequestState.h"
-#include "Tools/Timer.h"
+#include "BaseObjects/Assignment.h"
+#include "BaseObjects/Request.h"
+#include "RequestState/RequestState.h"
+#include "../../Tools/Timer.h"
 
 namespace karri {
 

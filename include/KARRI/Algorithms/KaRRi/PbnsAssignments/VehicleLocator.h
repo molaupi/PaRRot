@@ -25,11 +25,11 @@
 
 #pragma once
 
-#include "Algorithms/CH/CH.h"
-#include "Algorithms/CH/CHPathUnpacker.h"
-#include "Algorithms/KaRRi/BaseObjects/Vehicle.h"
-#include "Algorithms/KaRRi/BaseObjects/VehicleLocation.h"
-#include "Algorithms/KaRRi/RouteState.h"
+#include "../../CH/CH.h"
+#include "../../CH/CHPathUnpacker.h"
+#include "../BaseObjects/Vehicle.h"
+#include "..//BaseObjects/VehicleLocation.h"
+#include "../RouteState.h"
 
 namespace karri {
 

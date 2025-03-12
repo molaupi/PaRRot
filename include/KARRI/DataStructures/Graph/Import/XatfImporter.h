@@ -36,14 +36,14 @@
 #include <utility>
 #include <vector>
 
-#include "DataStructures/Geometry/LatLng.h"
-#include "DataStructures/Graph/Attributes/CapacityAttribute.h"
-#include "DataStructures/Graph/Attributes/LatLngAttribute.h"
-#include "DataStructures/Graph/Attributes/LengthAttribute.h"
-#include "DataStructures/Graph/Attributes/NumLanesAttribute.h"
-#include "DataStructures/Graph/Attributes/TravelTimeAttribute.h"
-#include "DataStructures/Graph/Attributes/XatfRoadCategoryAttribute.h"
-#include "Tools/LexicalCast.h"
+#include "../../Geometry/LatLng.h"
+#include "../Attributes/CapacityAttribute.h"
+#include "../Attributes/LatLngAttribute.h"
+#include "../Attributes/LengthAttribute.h"
+#include "../Attributes/NumLanesAttribute.h"
+#include "../Attributes/TravelTimeAttribute.h"
+#include "../Attributes/XatfRoadCategoryAttribute.h"
+#include "../../../Tools/LexicalCast.h"
 
 // An importer for reading graphs in XATF file format. First, the Graph class repeatedly calls
 // nextVertex to read the next vertex from disk and fetches various vertex attributes. Then it

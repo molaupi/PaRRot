@@ -30,7 +30,7 @@
 #include <cassert>
 #include <vector>
 
-#include "DataStructures/Utilities/DynamicRagged2DArrays.h"
+#include "../../DataStructures/Utilities/DynamicRagged2DArrays.h"
 
 // This class maintains a dynamic bucket for each vertex for bucket-based CH searches. We store all
 // bucket entries in a single dynamic value array. The entries in the same bucket are stored

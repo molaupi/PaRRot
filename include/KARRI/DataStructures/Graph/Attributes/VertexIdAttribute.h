@@ -27,8 +27,8 @@
 
 #include <cassert>
 
-#include "DataStructures/Graph/Attributes/AbstractAttribute.h"
-#include "Tools/Constants.h"
+#include "AbstractAttribute.h"
+#include "../../../Tools/Constants.h"
 
 // An attribute associating an ID with each vertex of a graph.
 class VertexIdAttribute : public AbstractAttribute<int> {

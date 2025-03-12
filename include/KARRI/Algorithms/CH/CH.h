@@ -32,11 +32,11 @@
 
 #include <routingkit/contraction_hierarchy.h>
 
-#include "DataStructures/Graph/Attributes/TraversalCostAttribute.h"
-#include "DataStructures/Graph/Attributes/UnpackingInfoAttribute.h"
-#include "DataStructures/Graph/Graph.h"
-#include "DataStructures/Utilities/Permutation.h"
-#include "Tools/Constants.h"
+#include "../../DataStructures/Graph/Attributes/TraversalCostAttribute.h"
+#include "../../DataStructures/Graph/Attributes/UnpackingInfoAttribute.h"
+#include "../../DataStructures/Graph/Graph.h"
+#include "../../DataStructures/Utilities/Permutation.h"
+#include "../../Tools/Constants.h"
 
 // A weighted contraction hierarchy. The contraction order is determined online and bottom-up.
 class CH {

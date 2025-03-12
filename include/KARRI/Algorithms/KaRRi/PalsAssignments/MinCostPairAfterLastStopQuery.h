@@ -25,12 +25,12 @@
 
 #pragma once
 
-#include "DataStructures/Graph/Graph.h"
-#include "DataStructures/Containers/FastResetFlagArray.h"
-#include "Tools/Logging/LogManager.h"
-#include "DataStructures/Queues/AddressableKHeap.h"
-#include "Algorithms/CH/CH.h"
-#include "Algorithms/KaRRi/LastStopSearches/LabelBucketContainer.h"
+#include "../../../DataStructures/Graph/Graph.h"
+#include "../../../DataStructures/Containers/FastResetFlagArray.h"
+#include "../../../Tools/Logging/LogManager.h"
+#include "../../../DataStructures/Queues/AddressableKHeap.h"
+#include "../../CH/CH.h"
+#include "../LastStopSearches/LabelBucketContainer.h"
 
 namespace karri::PickupAfterLastStopStrategies {
 

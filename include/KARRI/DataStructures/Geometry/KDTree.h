@@ -32,9 +32,9 @@
 #include <limits>
 #include <vector>
 
-#include "DataStructures/Geometry/Point.h"
-#include "DataStructures/Geometry/Rectangle.h"
-#include "Tools/Constants.h"
+#include "Point.h"
+#include "Rectangle.h"
+#include "../Constants.h"
 
 // A kd-tree for the problem of finding nearest neighbors.
 class KDTree {

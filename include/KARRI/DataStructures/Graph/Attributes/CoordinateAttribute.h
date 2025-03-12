@@ -27,8 +27,8 @@
 
 #include <cassert>
 
-#include "DataStructures/Geometry/Point.h"
-#include "DataStructures/Graph/Attributes/AbstractAttribute.h"
+#include "../../Geometry/Point.h"
+#include "AbstractAttribute.h"
 
 // An attribute associating a coordinate with each vertex of a graph.
 class CoordinateAttribute : public AbstractAttribute<Point> {

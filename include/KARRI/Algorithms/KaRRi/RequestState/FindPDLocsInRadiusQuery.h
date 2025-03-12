@@ -27,10 +27,10 @@
 
 #include <vector>
 #include <cstdint>
-#include <Algorithms/KaRRi/BaseObjects//Request.h>
 #include <random>
-#include "DataStructures/Graph/Attributes/PsgEdgeToCarEdgeAttribute.h"
-#include "Algorithms/Dijkstra/Dijkstra.h"
+#include "../BaseObjects/Request.h"
+#include "../../../DataStructures/Graph/Attributes/PsgEdgeToCarEdgeAttribute.h"
+#include "../../Dijkstra/Dijkstra.h"
 
 namespace karri {
 

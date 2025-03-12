@@ -27,13 +27,13 @@
 
 
 #include <vector>
-#include "Algorithms/KaRRi/BaseObjects/Request.h"
-#include "DataStructures/Utilities/DynamicRagged2DArrays.h"
-#include "Algorithms/KaRRi/RequestState/RequestState.h"
-#include "Tools/Logging/NullLogger.h"
-#include "Tools/Logging/LogManager.h"
-#include "Algorithms/CH/CH.h"
-#include "Algorithms/CH/CHPathUnpacker.h"
+#include "BaseObjects/Request.h"
+#include "RequestState/RequestState.h"
+#include "../../DataStructures/Utilities/DynamicRagged2DArrays.h"
+#include "../../Tools/Logging/NullLogger.h"
+#include "../../Tools/Logging/LogManager.h"
+#include "../CH/CH.h"
+#include "../CH/CHPathUnpacker.h"
 
 namespace karri {
 

@@ -26,17 +26,17 @@
 #pragma once
 
 #include <vector>
-#include <Tools/Logging/NullLogger.h>
-#include <DataStructures/Labels/ParentInfo.h>
-#include <DataStructures/Labels/BasicLabelSet.h>
-#include <DataStructures/Labels/SimdLabelSet.h>
+#include "../../../Tools/Logging/NullLogger.h"
+#include "../../../DataStructures/Labels/ParentInfo.h"
+#include "../../../DataStructures/Labels/BasicLabelSet.h"
+#include "../../../DataStructures/Labels/SimdLabelSet.h"
 
-#include "Algorithms/KaRRi/BaseObjects/Request.h"
-#include <Algorithms/KaRRi/RouteState.h>
+#include "../BaseObjects/Request.h"
+#include "../RouteState.h"
 #include "BucketEntryWithLeeway.h"
-#include "Algorithms/KaRRi/RequestState/RequestState.h"
-#include "Tools/Timer.h"
-#include "Algorithms/KaRRi/LastStopSearches/OnlyLastStopsAtVerticesBucketSubstitute.h"
+#include "../RequestState/RequestState.h"
+#include "../LastStopSearches/OnlyLastStopsAtVerticesBucketSubstitute.h"
+#include "../../../Tools/Timer.h"
 
 namespace karri {
 

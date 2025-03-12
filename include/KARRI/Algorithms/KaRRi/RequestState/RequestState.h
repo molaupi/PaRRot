@@ -26,15 +26,15 @@
 #pragma once
 
 
-#include "Algorithms/KaRRi/BaseObjects/Request.h"
-#include "Algorithms/KaRRi/Stats/PerformanceStats.h"
-#include "Algorithms/KaRRi/Stats/OsmRoadCategoryStats.h"
-#include "Algorithms/KaRRi/BaseObjects/Assignment.h"
-#include "Algorithms/KaRRi/InputConfig.h"
-#include "Tools/Simd/AlignedVector.h"
-#include "DataStructures/Containers/Subset.h"
-#include "Algorithms/KaRRi/CostCalculator.h"
-#include "Algorithms/KaRRi/RequestState/FindPDLocsInRadiusQuery.h"
+#include "../BaseObjects/Request.h"
+#include "../Stats/PerformanceStats.h"
+#include "../Stats/OsmRoadCategoryStats.h"
+#include "../BaseObjects/Assignment.h"
+#include "../InputConfig.h"
+#include "../../../Tools/Simd/AlignedVector.h"
+#include "../../../DataStructures/Containers/Subset.h"
+#include "../CostCalculator.h"
+#include "FindPDLocsInRadiusQuery.h"
 
 namespace karri {
 

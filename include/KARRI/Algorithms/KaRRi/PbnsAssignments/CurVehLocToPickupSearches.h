@@ -26,14 +26,14 @@
 #pragma once
 
 #include <type_traits>
-#include "Tools/Timer.h"
-#include "DataStructures/Labels/BasicLabelSet.h"
-#include "DataStructures/Labels/SimdLabelSet.h"
-#include "DataStructures/Containers/TimestampedVector.h"
-#include "Algorithms/CH/CH.h"
-#include "Algorithms/KaRRi/BaseObjects/VehicleLocation.h"
-#include "Algorithms/KaRRi/RouteState.h"
-#include "Algorithms/KaRRi/RequestState/RequestState.h"
+#include "../../../Tools/Timer.h"
+#include "../../../DataStructures/Labels/BasicLabelSet.h"
+#include "../../../DataStructures/Labels/SimdLabelSet.h"
+#include "../../../DataStructures/Containers/TimestampedVector.h"
+#include "../../CH/CH.h"
+#include "../BaseObjects/VehicleLocation.h"
+#include "../RouteState.h"
+#include "../RequestState/RequestState.h"
 
 namespace karri {
 

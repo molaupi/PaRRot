@@ -29,8 +29,8 @@
 #include <cassert>
 #include <vector>
 
-#include "DataStructures/Utilities/DynamicRagged2DArrays.h"
-#include "DataStructures/Containers/TimestampedVector.h"
+#include "../../DataStructures/Utilities/DynamicRagged2DArrays.h"
+#include "../../DataStructures/Containers/TimestampedVector.h"
 
 
 // A bucket container that is meant to be used when the set of sources of labels is known in advance and their search

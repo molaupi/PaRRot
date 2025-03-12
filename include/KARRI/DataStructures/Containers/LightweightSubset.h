@@ -29,7 +29,7 @@
 #include <cstdint>
 #include <vector>
 
-#include "Tools/Constants.h"
+#include "../../Tools/Constants.h"
 #include "BitVector.h"
 
 // This class offers similar functionality to Subset with two differences:

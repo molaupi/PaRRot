@@ -29,13 +29,13 @@
 #include <cassert>
 #include <cmath>
 
-#include "Algorithms/KaRRi/BaseObjects/Assignment.h"
-#include "Algorithms/KaRRi/RouteState.h"
-#include "Algorithms/KaRRi/InputConfig.h"
-#include "Algorithms/KaRRi/TimeUtils.h"
-#include "Tools/Constants.h"
-#include "Tools/Workarounds.h"
-#include "Algorithms/KaRRi/AssignmentCostFunctions/TimeIsMoneyCostFunction.h"
+#include "BaseObjects/Assignment.h"
+#include "RouteState.h"
+#include "InputConfig.h"
+#include "TimeUtils.h"
+#include "../../Tools/Constants.h"
+#include "../../Tools/Workarounds.h"
+#include "AssignmentCostFunctions/TimeIsMoneyCostFunction.h"
 
 namespace karri {
 

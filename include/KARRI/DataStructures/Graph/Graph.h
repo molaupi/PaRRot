@@ -35,15 +35,15 @@
 #include <utility>
 #include <vector>
 
-#include "DataStructures/Graph/Export/DefaultExporter.h"
-#include "DataStructures/Graph/Import/XatfImporter.h"
-#include "DataStructures/Utilities/Permutation.h"
-#include "Tools/Simd/AlignedVector.h"
-#include "Tools/BinaryIO.h"
-#include "Tools/Constants.h"
-#include "Tools/ContainerHelpers.h"
-#include "Tools/TemplateProgramming.h"
-#include "Tools/Workarounds.h"
+#include "Export/DefaultExporter.h"
+#include "Import/XatfImporter.h"
+#include "../Utilities/Permutation.h"
+#include "../../Tools/Simd/AlignedVector.h"
+#include "../../Tools/BinaryIO.h"
+#include "../../Tools/Constants.h"
+#include "../../Tools/ContainerHelpers.h"
+#include "../../Tools/TemplateProgramming.h"
+#include "../../Tools/Workarounds.h"
 
 namespace impl {
 

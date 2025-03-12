@@ -25,8 +25,8 @@
 
 #pragma once
 
-#include "Algorithms/KaRRi/RouteState.h"
-#include "Algorithms/KaRRi/LastStopSearches/OnlyLastStopsAtVerticesBucketSubstitute.h"
+#include "RouteState.h"
+#include "LastStopSearches/OnlyLastStopsAtVerticesBucketSubstitute.h"
 #include "PathTracker.h"
 
 namespace karri {

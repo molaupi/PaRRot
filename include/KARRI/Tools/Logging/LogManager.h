@@ -29,7 +29,7 @@
 #include <string>
 #include <unordered_map>
 
-#include "Tools/Logging/NullLogger.h"
+#include "NullLogger.h"
 
 // This class manages a set of named loggers. The logger type should be std::basic_ofstream or
 // NullLogger. In the former case, each logger writes to a file whose name is the concatenation of a

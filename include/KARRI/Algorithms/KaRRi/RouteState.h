@@ -27,12 +27,12 @@
 
 #include <stack>
 
-#include "Tools/Constants.h"
-#include "DataStructures/Utilities/DynamicRagged2DArrays.h"
-#include "DataStructures/Containers/BitVector.h"
+#include "../../Tools/Constants.h"
+#include "../../DataStructures/Utilities/DynamicRagged2DArrays.h"
+#include "../../DataStructures/Containers/BitVector.h"
 
-#include "Algorithms/KaRRi/BaseObjects/Vehicle.h"
-#include "Algorithms/KaRRi/BaseObjects/Assignment.h"
+#include "BaseObjects/Vehicle.h"
+#include "BaseObjects/Assignment.h"
 
 namespace karri {
 

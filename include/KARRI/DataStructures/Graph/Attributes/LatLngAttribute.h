@@ -27,8 +27,8 @@
 
 #include <cassert>
 
-#include "DataStructures/Geometry/LatLng.h"
-#include "DataStructures/Graph/Attributes/AbstractAttribute.h"
+#include "../../Geometry/LatLng.h"
+#include "AbstractAttribute.h"
 
 // An attribute associating a LatLng with each vertex of a graph.
 class LatLngAttribute : public AbstractAttribute<LatLng> {

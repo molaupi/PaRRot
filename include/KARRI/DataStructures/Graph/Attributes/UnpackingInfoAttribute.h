@@ -27,8 +27,8 @@
 
 #include <cassert>
 
-#include "DataStructures/Graph/Attributes/AbstractAttribute.h"
-#include "Tools/Constants.h"
+#include "AbstractAttribute.h"
+#include "../../../Tools/Constants.h"
 
 // An attribute associating unpacking information with each edge of a CH search graph. The unpacking
 // information is a pair of 32-bit integers. In the case of shortcut edges, the first integer is the

@@ -29,7 +29,7 @@
 #include <cassert>
 #include <utility>
 
-#include "Tools/Math.h"
+#include "../../Tools/Math.h"
 
 // A tournament tree, also known as selection tree or loser tree. Suppose we have k sorted sequences
 // that are to be merged into a single output sequence. We repeatedly have to find the smallest from

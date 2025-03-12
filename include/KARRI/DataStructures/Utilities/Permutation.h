@@ -32,8 +32,8 @@
 #include <numeric>
 #include <vector>
 
-#include "DataStructures/Containers/BitVector.h"
-#include "Tools/BinaryIO.h"
+#include "../Containers/BitVector.h"
+#include "../../Tools/BinaryIO.h"
 
 // A permutation is a rearrangement of members of a sequence into a new sequence.
 class Permutation {

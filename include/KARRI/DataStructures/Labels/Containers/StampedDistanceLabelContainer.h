@@ -29,9 +29,9 @@
 #include <cassert>
 #include <vector>
 
-#include "Tools/Simd/AlignedVector.h"
-#include "Tools/CompilerSpecific.h"
-#include "Tools/Constants.h"
+#include "../../../Tools/Simd/AlignedVector.h"
+#include "../../../Tools/CompilerSpecific.h"
+#include "../../../Tools/Constants.h"
 
 // A container maintaining distance labels. It stores a global clock and a timestamp for each
 // distance label. The timestamp indicates whether a distance label has a valid value or not.

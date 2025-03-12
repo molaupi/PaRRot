@@ -26,15 +26,15 @@
 #pragma once
 
 #include <type_traits>
-#include "DataStructures/Labels/BasicLabelSet.h"
-#include "DataStructures/Labels/SimdLabelSet.h"
-#include "Tools/Simd/AlignedVector.h"
-#include "DataStructures/Containers/Subset.h"
+#include "../../../DataStructures/Labels/BasicLabelSet.h"
+#include "../../../DataStructures/Labels/SimdLabelSet.h"
+#include "../../../Tools/Simd/AlignedVector.h"
+#include "../../../DataStructures/Containers/Subset.h"
 
-#include "Algorithms/KaRRi/RouteState.h"
-#include "Algorithms/KaRRi/TimeUtils.h"
-#include "Algorithms/KaRRi/RequestState/RequestState.h"
-#include "Tools/Timer.h"
+#include "../RouteState.h"
+#include "../TimeUtils.h"
+#include "../RequestState/RequestState.h"
+#include "../../../Tools/Timer.h"
 
 namespace karri {
 

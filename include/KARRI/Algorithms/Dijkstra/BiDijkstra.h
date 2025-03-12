@@ -32,7 +32,7 @@
 #include <utility>
 #include <vector>
 
-#include "Tools/Constants.h"
+#include "../../Tools/Constants.h"
 
 namespace bidij {
 

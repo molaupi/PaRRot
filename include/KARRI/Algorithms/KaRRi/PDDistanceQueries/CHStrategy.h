@@ -25,9 +25,9 @@
 
 #pragma once
 
-#include "Tools/Timer.h"
-#include "Algorithms/CH/CH.h"
-#include "Algorithms/KaRRi/RequestState/RequestState.h"
+#include "../../../Tools/Timer.h"
+#include "../../CH/CH.h"
+#include "../RequestState/RequestState.h"
 #include "PDDistances.h"
 
 namespace karri::PDDistanceQueryStrategies {

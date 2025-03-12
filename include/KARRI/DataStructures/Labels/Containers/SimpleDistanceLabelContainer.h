@@ -29,8 +29,8 @@
 #include <cassert>
 #include <vector>
 
-#include "Tools/Simd/AlignedVector.h"
-#include "Tools/Constants.h"
+#include "../../../Tools/Simd/AlignedVector.h"
+#include "../../../Tools/Constants.h"
 
 // The simplest implementation of a container maintaining distance labels during a shortest-path
 // search. The distance labels are explicitly initialized with a linear sweep over all labels.

@@ -29,7 +29,7 @@
 #include <cassert>
 #include <vector>
 
-#include "Tools/Constants.h"
+#include "../../Tools/Constants.h"
 
 // Implementation of an addressable k-heap. It maintains a set of elements, each with an associated
 // ID and key, under the standard priority queue operations. The elements are addressed by the IDs.

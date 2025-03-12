@@ -29,9 +29,9 @@
 #include <limits>
 #include <vector>
 
-#include "Tools/Simd/AlignedVector.h"
-#include "Tools/Bitwise.h"
-#include "Tools/custom_assertion_levels.h"
+#include "../../Tools/Simd/AlignedVector.h"
+#include "../../Tools/Bitwise.h"
+#include "../../Tools/custom_assertion_levels.h"
 
 // This class implements a vector of bits. The bits are divided into 64-bit blocks. Different bits
 // can be modified concurrently when they are in different blocks. The first block is aligned on a

@@ -26,16 +26,16 @@
 #pragma once
 
 #include <type_traits>
-#include "DataStructures/Containers/Subset.h"
-#include "Algorithms/Dijkstra/Dijkstra.h"
-#include "Algorithms/CH/CH.h"
-#include "Algorithms/Buckets/DynamicBucketContainer.h"
-#include "Algorithms/Buckets/SortedBucketContainer.h"
+#include "../../../DataStructures/Containers/Subset.h"
+#include "../..//Dijkstra/Dijkstra.h"
+#include "../..//CH/CH.h"
+#include "../..//Buckets/DynamicBucketContainer.h"
+#include "../..//Buckets/SortedBucketContainer.h"
 #include "BucketEntryWithLeeway.h"
-#include "Algorithms/KaRRi/RouteState.h"
-#include "Algorithms/KaRRi/InputConfig.h"
-#include "Tools/Timer.h"
-#include "Algorithms/KaRRi/Stats/PerformanceStats.h"
+#include "../RouteState.h"
+#include "../InputConfig.h"
+#include "../Stats/PerformanceStats.h"
+#include "../../../Tools/Timer.h"
 
 namespace karri {
 

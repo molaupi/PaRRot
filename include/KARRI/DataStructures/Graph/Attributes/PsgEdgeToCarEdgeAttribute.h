@@ -27,8 +27,8 @@
 
 #include <cassert>
 
-#include "DataStructures/Graph/Attributes/AbstractAttribute.h"
-#include "Tools/Constants.h"
+#include "AbstractAttribute.h"
+#include "../../../Tools/Constants.h"
 
 // An edge attribute mapping an edge in a passenger graph to an edge in a car graph.
 class PsgEdgeToCarEdgeAttribute : public AbstractAttribute<int> {

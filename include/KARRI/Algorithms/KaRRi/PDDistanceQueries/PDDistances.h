@@ -25,8 +25,8 @@
 
 #pragma once
 
-#include "Tools/Simd/AlignedVector.h"
-#include "Algorithms/KaRRi/RequestState/RequestState.h"
+#include "../../../Tools/Simd/AlignedVector.h"
+#include "../RequestState/RequestState.h"
 
 namespace karri {
 

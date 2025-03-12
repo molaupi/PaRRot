@@ -25,12 +25,12 @@
 
 #pragma once
 
-#include "Algorithms/Dijkstra/Dijkstra.h"
-#include "DataStructures/Labels/ParentInfo.h"
-#include "DataStructures/Labels/BasicLabelSet.h"
-#include "Algorithms/CH/CHQuery.h"
-#include "Algorithms/CH/CH.h"
-#include "Tools/Timer.h"
+#include "../../Dijkstra/Dijkstra.h"
+#include "../../../DataStructures/Labels/ParentInfo.h"
+#include "../../../DataStructures/Labels/BasicLabelSet.h"
+#include "../../CH/CHQuery.h"
+#include "../../CH/CH.h"
+#include "../../../Tools/Timer.h"
 
 namespace karri {
 

@@ -25,8 +25,8 @@
 
 #pragma once
 
-#include "Algorithms/KaRRi/LastStopSearches/LastStopBCHQuery.h"
-#include "Algorithms/KaRRi/LastStopSearches/TentativeLastStopDistances.h"
+#include "../LastStopSearches/LastStopBCHQuery.h"
+#include "../LastStopSearches/TentativeLastStopDistances.h"
 
 namespace karri::DropoffAfterLastStopStrategies {
 

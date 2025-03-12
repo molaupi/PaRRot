@@ -27,7 +27,7 @@
 
 #include <cassert>
 
-#include "DataStructures/Graph/Attributes/AbstractAttribute.h"
+#include "AbstractAttribute.h"
 
 // An attribute associating a free-flow speed (the speed at zero flow) with each edge of a graph.
 class FreeFlowSpeedAttribute : public AbstractAttribute<int> {

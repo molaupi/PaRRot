@@ -29,8 +29,8 @@
 #include <cassert>
 #include <ostream>
 
-#include "DataStructures/Graph/Attributes/AbstractAttribute.h"
-#include "Tools/EnumParser.h"
+#include "AbstractAttribute.h"
+#include "../../../Tools/EnumParser.h"
 
 // Road categories defined by OpenStreetMap.
 enum class OsmRoadCategory {

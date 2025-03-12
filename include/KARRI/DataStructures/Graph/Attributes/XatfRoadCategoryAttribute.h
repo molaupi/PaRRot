@@ -27,7 +27,7 @@
 
 #include <cassert>
 
-#include "DataStructures/Graph/Attributes/AbstractAttribute.h"
+#include "AbstractAttribute.h"
 
 // Road categories defined by the XATF file format.
 enum class XatfRoadCategory {

@@ -24,13 +24,13 @@
 
 #pragma once
 
-#include "DataStructures/Queues/AddressableKHeap.h"
-#include "Tools/CommandLine/ProgressBar.h"
-#include "Algorithms/KaRRi/BaseObjects/Request.h"
-#include "Algorithms/KaRRi/BaseObjects/Vehicle.h"
-#include "Tools/Workarounds.h"
-#include "Tools/Logging/LogManager.h"
-#include "Tools/Timer.h"
+#include "../../DataStructures/Queues/AddressableKHeap.h"
+#include "../../Tools/CommandLine/ProgressBar.h"
+#include "BaseObjects/Request.h"
+#include "BaseObjects/Vehicle.h"
+#include "../../Tools/Workarounds.h"
+#include "../../Tools/Logging/LogManager.h"
+#include "../../Tools/Timer.h"
 
 namespace karri {
 
