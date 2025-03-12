@@ -50,3 +50,6 @@ target_include_directories(vectorclass SYSTEM INTERFACE vectorclass)
 # Add nlohmann_json
 add_subdirectory(nlohmann_json)
 
+# Add kassert
+add_subdirectory(kassert)
+
