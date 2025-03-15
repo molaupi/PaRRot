@@ -28,13 +28,13 @@
 #include <type_traits>
 #include "../../../DataStructures/Labels/BasicLabelSet.h"
 #include "../../../DataStructures/Labels/SimdLabelSet.h"
-#include "../../../Tools/Simd/AlignedVector.h"
 #include "../../../DataStructures/Containers/Subset.h"
+#include "../../../Tools/Simd/AlignedVector.h"
+#include "../../../Tools/Timer.h"
 
+#include "../RequestState/RequestState.h"
 #include "../RouteState.h"
 #include "../TimeUtils.h"
-#include "../RequestState/RequestState.h"
-#include "../../../Tools/Timer.h"
 
 namespace karri {
 

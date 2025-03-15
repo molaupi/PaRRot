@@ -26,13 +26,13 @@
 #pragma once
 
 #include <type_traits>
+#include "../../../Tools/Timer.h"
 #include "../../Buckets/DynamicBucketContainer.h"
 #include "../../Buckets/SortedBucketContainer.h"
 #include "../../Buckets/BucketEntry.h"
-#include "../../KaRRi/RouteState.h"
-#include "../../CH/CH.h"
-#include "../../../Tools/Timer.h"
 #include "../../Buckets/LastStopBucketContainer.h"
+#include "../../CH/CH.h"
+#include "../RouteState.h"
 
 namespace karri {
 

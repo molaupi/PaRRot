@@ -33,11 +33,11 @@
 #include <limits>
 #include <string>
 
-#include "DataStructures/Geometry/LatLng.h"
-#include "DataStructures/Graph/Attributes/LatLngAttribute.h"
-#include "DataStructures/Graph/Attributes/LengthAttribute.h"
-#include "DataStructures/Graph/Attributes/TravelTimeAttribute.h"
-#include "Tools/Constants.h"
+#include "../../Geometry/LatLng.h"
+#include "../Attributes/LatLngAttribute.h"
+#include "../Attributes/LengthAttribute.h"
+#include "../Attributes/TravelTimeAttribute.h"
+#include "../../../Tools/Constants.h"
 
 // An importer for reading graphs in DIMACS file format. First, the Graph class repeatedly calls
 // nextVertex to read the next vertex from disk and fetches various vertex attributes. Then it

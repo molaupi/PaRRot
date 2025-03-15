@@ -33,13 +33,13 @@
 #include <routingkit/constants.h>
 #include <routingkit/customizable_contraction_hierarchy.h>
 
-#include "DataStructures/Graph/Attributes/EdgeIdAttribute.h"
-#include "DataStructures/Graph/Attributes/EdgeTailAttribute.h"
-#include "DataStructures/Graph/Graph.h"
-#include "DataStructures/Partitioning/SeparatorDecomposition.h"
-#include "DataStructures/Utilities/Permutation.h"
-#include "Tools/Constants.h"
-#include "Tools/Workarounds.h"
+#include "../../DataStructures/Graph/Attributes/EdgeIdAttribute.h"
+#include "../../DataStructures/Graph/Attributes/EdgeTailAttribute.h"
+#include "../../DataStructures/Graph/Graph.h"
+#include "../../DataStructures/Partitioning/SeparatorDecomposition.h"
+#include "../../DataStructures/Utilities/Permutation.h"
+#include "../../Tools/Constants.h"
+#include "../../Tools/Workarounds.h"
 
 // A metric-independent customizable contraction hierarchy. It uses a nested dissection order
 // associated with a separator decomposition to order the vertices by importance.

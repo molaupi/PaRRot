@@ -34,7 +34,7 @@
 
 #include "Point.h"
 #include "Rectangle.h"
-#include "../Constants.h"
+#include "../../Tools/Constants.h"
 
 // A kd-tree for the problem of finding nearest neighbors.
 class KDTree {

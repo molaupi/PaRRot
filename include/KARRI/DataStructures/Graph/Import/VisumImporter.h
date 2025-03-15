@@ -35,20 +35,20 @@
 
 #include <csv.h>
 
-#include "DataStructures/Geometry/CoordinateTransformation.h"
-#include "DataStructures/Geometry/LatLng.h"
-#include "DataStructures/Geometry/Point.h"
-#include "DataStructures/Graph/Attributes/CapacityAttribute.h"
-#include "DataStructures/Graph/Attributes/CoordinateAttribute.h"
-#include "DataStructures/Graph/Attributes/FreeFlowSpeedAttribute.h"
-#include "DataStructures/Graph/Attributes/LatLngAttribute.h"
-#include "DataStructures/Graph/Attributes/LengthAttribute.h"
-#include "DataStructures/Graph/Attributes/NumLanesAttribute.h"
-#include "DataStructures/Graph/Attributes/TravelTimeAttribute.h"
-#include "DataStructures/Graph/Attributes/VertexIdAttribute.h"
-#include "Tools/Constants.h"
-#include "Tools/LexicalCast.h"
-#include "Tools/StringHelpers.h"
+#include "../../Geometry/CoordinateTransformation.h"
+#include "../../Geometry/LatLng.h"
+#include "../../Geometry/Point.h"
+#include "../Attributes/CapacityAttribute.h"
+#include "../Attributes/CoordinateAttribute.h"
+#include "../Attributes/FreeFlowSpeedAttribute.h"
+#include "../Attributes/LatLngAttribute.h"
+#include "../Attributes/LengthAttribute.h"
+#include "../Attributes/NumLanesAttribute.h"
+#include "../Attributes/TravelTimeAttribute.h"
+#include "../Attributes/VertexIdAttribute.h"
+#include "../../../Tools/Constants.h"
+#include "../../../Tools/LexicalCast.h"
+#include "../../../Tools/StringHelpers.h"
 
 // An importer to read graphs in Visum network file format. The transport system (e.g. pedestrian,
 // car, bicycle) whose network is to be imported must be supplied in the constructor. First, the

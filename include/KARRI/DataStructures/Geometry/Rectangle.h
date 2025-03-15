@@ -29,7 +29,7 @@
 #include <ostream>
 
 #include "Point.h"
-#include "../Constants.h"
+#include "../../Tools/Constants.h"
 
 // A rectangle on a two-dimensional plane with sides parallel to the x- and y-axis.
 class Rectangle {

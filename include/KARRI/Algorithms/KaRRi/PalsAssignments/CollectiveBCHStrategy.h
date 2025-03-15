@@ -26,11 +26,11 @@
 #pragma once
 
 
-#include "MinCostPairAfterLastStopQuery.h"
 #include "../../../DataStructures/Labels/BasicLabelSet.h"
 #include "../BaseObjects/Vehicle.h"
 #include "../RouteState.h"
 #include "../RequestState/RequestState.h"
+#include "MinCostPairAfterLastStopQuery.h"
 #include "IndividualBCHStrategy.h"
 
 

@@ -5,8 +5,8 @@
 #include <fstream>
 #include <vector>
 
-#include "DataStructures/Utilities/Permutation.h"
-#include "Tools/BinaryIO.h"
+#include "../Utilities/Permutation.h"
+#include "../../Tools/BinaryIO.h"
 
 // A separator decomposition of an undirected n-vertex graph G = (V, E) is a rooted tree T whose
 // nodes are disjoint subsets of V and that is recursively defined as follows. If n = 1, then T

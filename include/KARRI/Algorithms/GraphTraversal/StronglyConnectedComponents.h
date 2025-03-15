@@ -29,8 +29,8 @@
 #include <stack>
 #include <vector>
 
-#include "Algorithms/GraphTraversal/DepthFirstSearch.h"
-#include "Tools/Workarounds.h"
+#include "DepthFirstSearch.h"
+#include "../../Tools/Workarounds.h"
 
 // An algorithm that computes the strongly connected components of a graph. It implements the
 // Cheriyan-Mehlhorn algorithm, also known as Gabow's algorithm, using optimization techniques from

@@ -31,10 +31,10 @@
 #include <utility>
 #include <vector>
 
-#include "Algorithms/CH/CH.h"
-#include "Algorithms/CCH/UpwardEliminationTreeSearch.h"
-#include "Algorithms/Dijkstra/Dijkstra.h"
-#include "Tools/Constants.h"
+#include "UpwardEliminationTreeSearch.h"
+#include "../CH/CH.h"
+#include "../Dijkstra/Dijkstra.h"
+#include "../../Tools/Constants.h"
 
 // Implementation of an elimination tree query, which computes shortest paths in CCH without using
 // priority queues. Depending on the used label set, it keeps parent vertices and/or edges, and

@@ -26,11 +26,11 @@
 
 #include "../../DataStructures/Queues/AddressableKHeap.h"
 #include "../../Tools/CommandLine/ProgressBar.h"
-#include "BaseObjects/Request.h"
-#include "BaseObjects/Vehicle.h"
 #include "../../Tools/Workarounds.h"
 #include "../../Tools/Logging/LogManager.h"
 #include "../../Tools/Timer.h"
+#include "BaseObjects/Request.h"
+#include "BaseObjects/Vehicle.h"
 
 namespace karri {
 

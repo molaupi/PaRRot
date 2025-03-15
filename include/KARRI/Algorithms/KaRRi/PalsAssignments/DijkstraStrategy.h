@@ -29,8 +29,8 @@
 #include "../../../DataStructures/Graph/Attributes/TravelTimeAttribute.h"
 #include "../../Dijkstra/Dijkstra.h"
 #include "../LastStopSearches/TentativeLastStopDistances.h"
-#include "../RequestState/RequestState.h"
 #include "../LastStopSearches/OnlyLastStopsAtVerticesBucketSubstitute.h"
+#include "../RequestState/RequestState.h"
 
 namespace karri::PickupAfterLastStopStrategies {
 

@@ -27,8 +27,8 @@
 
 #include "../../../DataStructures/Graph/Graph.h"
 #include "../../../DataStructures/Containers/FastResetFlagArray.h"
-#include "../../../Tools/Logging/LogManager.h"
 #include "../../../DataStructures/Queues/AddressableKHeap.h"
+#include "../../../Tools/Logging/LogManager.h"
 #include "../../CH/CH.h"
 #include "../LastStopSearches/LabelBucketContainer.h"
 

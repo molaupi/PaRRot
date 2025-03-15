@@ -26,10 +26,10 @@
 #pragma once
 
 #include "../../../Tools/Timer.h"
-#include "../../CH/CH.h"
-#include "../../Buckets/SharedSearchSpaceBucketContainer.h"
 #include "../../../DataStructures/Labels/BasicLabelSet.h"
 #include "../../../DataStructures/Labels/SimdLabelSet.h"
+#include "../../CH/CH.h"
+#include "../../Buckets/SharedSearchSpaceBucketContainer.h"
 #include "../RequestState/RequestState.h"
 #include "PDDistances.h"
 

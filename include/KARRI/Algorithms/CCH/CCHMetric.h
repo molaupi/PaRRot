@@ -31,16 +31,16 @@
 #include <utility>
 #include <vector>
 
-#include "Algorithms/CCH/CCH.h"
-#include "Algorithms/CH/CH.h"
-#include "DataStructures/Containers/ConcurrentLocalIdMap.h"
-#include "DataStructures/Graph/Attributes/TraversalCostAttribute.h"
-#include "DataStructures/Graph/Attributes/UnpackingInfoAttribute.h"
-#include "DataStructures/Graph/Graph.h"
-#include "Tools/Simd/AlignedVector.h"
-#include "Tools/ConcurrentHelpers.h"
-#include "Tools/Constants.h"
-#include "Tools/Workarounds.h"
+#include "CCH.h"
+#include "../CH/CH.h"
+#include "../../DataStructures/Containers/ConcurrentLocalIdMap.h"
+#include "../../DataStructures/Graph/Attributes/TraversalCostAttribute.h"
+#include "../../DataStructures/Graph/Attributes/UnpackingInfoAttribute.h"
+#include "../../DataStructures/Graph/Graph.h"
+#include "../../Tools/Simd/AlignedVector.h"
+#include "../../Tools/ConcurrentHelpers.h"
+#include "../../Tools/Constants.h"
+#include "../../Tools/Workarounds.h"
 
 // This class encodes the actual cost of the edges in a customizable contraction hierarchy. It
 // stores the edge weights and contains several sequential and parallel customization algorithms.

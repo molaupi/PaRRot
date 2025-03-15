@@ -27,15 +27,16 @@
 
 #include <type_traits>
 #include "../../../DataStructures/Containers/Subset.h"
-#include "../..//Dijkstra/Dijkstra.h"
-#include "../..//CH/CH.h"
-#include "../..//Buckets/DynamicBucketContainer.h"
-#include "../..//Buckets/SortedBucketContainer.h"
-#include "BucketEntryWithLeeway.h"
+#include "../../../Tools/Timer.h"
+
+#include "../../Dijkstra/Dijkstra.h"
+#include "../../CH/CH.h"
+#include "../../Buckets/DynamicBucketContainer.h"
+#include "../../Buckets/SortedBucketContainer.h"
+#include "../Stats/PerformanceStats.h"
 #include "../RouteState.h"
 #include "../InputConfig.h"
-#include "../Stats/PerformanceStats.h"
-#include "../../../Tools/Timer.h"
+#include "BucketEntryWithLeeway.h"
 
 namespace karri {
 

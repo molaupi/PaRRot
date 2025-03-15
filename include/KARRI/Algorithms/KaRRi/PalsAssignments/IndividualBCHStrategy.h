@@ -25,10 +25,10 @@
 
 #pragma once
 
-#include "../CostCalculator.h"
+#include "../../../Tools/Timer.h"
 #include "../RequestState/RequestState.h"
 #include "../LastStopSearches/LastStopBCHQuery.h"
-#include "../../../Tools/Timer.h"
+#include "../CostCalculator.h"
 
 namespace karri::PickupAfterLastStopStrategies {
 

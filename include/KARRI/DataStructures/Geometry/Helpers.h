@@ -27,7 +27,7 @@
 
 #include "Point.h"
 #include "Rectangle.h"
-#include "../Math.h"
+#include "../../Tools/Math.h"
 
 // Returns the normal vector for the line l through p and q, oriented towards the left of l.
 inline Point normal(const Point& p, const Point& q) {

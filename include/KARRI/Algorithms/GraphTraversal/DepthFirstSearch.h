@@ -29,7 +29,7 @@
 #include <stack>
 #include <vector>
 
-#include "DataStructures/Graph/Graph.h"
+#include "../../DataStructures/Graph/Graph.h"
 
 // Non-recursive implementation of depth-first search. This class is an algorithm template.
 // Concrete DFS-based algorithms (like computing a DFS numbering or strongly connected components)

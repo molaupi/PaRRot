@@ -26,15 +26,15 @@
 #pragma once
 
 
+#include "FindPDLocsInRadiusQuery.h"
 #include "../BaseObjects/Request.h"
 #include "../Stats/PerformanceStats.h"
 #include "../Stats/OsmRoadCategoryStats.h"
 #include "../BaseObjects/Assignment.h"
 #include "../InputConfig.h"
+#include "../CostCalculator.h"
 #include "../../../Tools/Simd/AlignedVector.h"
 #include "../../../DataStructures/Containers/Subset.h"
-#include "../CostCalculator.h"
-#include "FindPDLocsInRadiusQuery.h"
 
 namespace karri {
 

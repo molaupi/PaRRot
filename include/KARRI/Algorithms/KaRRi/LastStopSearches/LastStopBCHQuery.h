@@ -27,8 +27,8 @@
 
 #include "../../../DataStructures/Labels/BasicLabelSet.h"
 #include "../../../DataStructures/Containers/Subset.h"
-#include "../../CH/CH.h"
 #include "../../../Tools/Constants.h"
+#include "../../CH/CH.h"
 #include "TentativeLastStopDistances.h"
 
 namespace karri {

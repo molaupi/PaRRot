@@ -29,8 +29,8 @@
 #include <stdexcept>
 #include <string>
 
-#include "Tools/LexicalCast.h"
-#include "Tools/StringHelpers.h"
+#include "LexicalCast.h"
+#include "StringHelpers.h"
 
 // A day-of-week, such as 'Tuesday'.
 enum class DayOfWeek {

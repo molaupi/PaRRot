@@ -27,16 +27,16 @@
 
 #include <vector>
 #include "../../../Tools/Logging/NullLogger.h"
+#include "../../../Tools/Timer.h"
 #include "../../../DataStructures/Labels/ParentInfo.h"
 #include "../../../DataStructures/Labels/BasicLabelSet.h"
 #include "../../../DataStructures/Labels/SimdLabelSet.h"
 
 #include "../BaseObjects/Request.h"
 #include "../RouteState.h"
-#include "BucketEntryWithLeeway.h"
 #include "../RequestState/RequestState.h"
 #include "../LastStopSearches/OnlyLastStopsAtVerticesBucketSubstitute.h"
-#include "../../../Tools/Timer.h"
+#include "BucketEntryWithLeeway.h"
 
 namespace karri {
 
