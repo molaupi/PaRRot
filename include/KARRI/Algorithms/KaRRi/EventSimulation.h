@@ -36,6 +36,7 @@ namespace karri {
 
 
     template<typename AssignmentFinderT,
+            typename PTAndTaxiTripFinderT,
             typename SystemStateUpdaterT,
             typename ScheduledStopsT>
     class EventSimulation {
@@ -68,12 +69,15 @@ namespace karri {
 
         EventSimulation(
                 const Fleet &fleet, const std::vector<Request> &requests,
-                AssignmentFinderT &assignmentFinder, SystemStateUpdaterT &systemStateUpdater,
+                AssignmentFinderT &assignmentFinder, 
+                PTAndTaxiTripFinderT &ptAndTaxiTripFinder,
+                SystemStateUpdaterT &systemStateUpdater,
                 const ScheduledStopsT &scheduledStops,
                 const bool verbose = false)
                 : fleet(fleet),
                   requests(requests),
                   assignmentFinder(assignmentFinder),
+                  ptAndTaxiTripFinder(ptAndTaxiTripFinder),
                   systemStateUpdater(systemStateUpdater),
                   scheduledStops(scheduledStops),
                   vehicleEvents(fleet.size()),
@@ -282,13 +286,16 @@ namespace karri {
             Timer timer;
 
             const auto &request = requests[reqId];
-            const auto &asgnFinderResponse = assignmentFinder.findBestAssignment(request);
-            systemStateUpdater.writeBestAssignmentToLogger();
-
-            applyAssignment(asgnFinderResponse, reqId, occTime);
-
-            const auto time = timer.elapsed<std::chrono::nanoseconds>();
-            eventSimulationStatsLogger << occTime << ",RequestReceipt," << time << '\n';
+            // Find best assignment 
+            // TODO: Add case for PT only trips
+            const auto &ptAndTaxiTripFinderResponse = ptAndTaxiTripFinder.findBestAssignment(request);
+            if (ptAndTaxiTripFinder.isValidTaxiOnlyTrip()) {
+                const auto &taxiTrip = ptAndTaxiTripFinder.getTaxiOnlyTrip();
+                systemStateUpdater.writeBestAssignmentToLogger();
+                applyAssignment(taxiTrip, reqId, occTime);
+                const auto time = timer.elapsed<std::chrono::nanoseconds>();
+                eventSimulationStatsLogger << occTime << ",RequestReceipt," << time << '\n';
+            }
         }
 
         template<typename AssignmentFinderResponseT>
@@ -375,6 +382,7 @@ namespace karri {
         const Fleet &fleet;
         const std::vector<Request> &requests;
         AssignmentFinderT &assignmentFinder;
+        PTAndTaxiTripFinderT &ptAndTaxiTripFinder;
         SystemStateUpdaterT &systemStateUpdater;
         const ScheduledStopsT &scheduledStops;
 

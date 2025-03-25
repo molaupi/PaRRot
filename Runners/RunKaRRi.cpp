@@ -31,6 +31,8 @@
 #include <csv.h>
 #include <functional>
 
+#include "../PTaxi/PTAndTaxiTripFinder.h"
+
 #include <KARRI/Algorithms/CH/CH.h>
 #include <KARRI/Tools/custom_assertion_levels.h>
 #include <KARRI/Tools/CommandLine/CommandLineParser.h>
@@ -573,6 +575,10 @@ int runKaRRi(int argc, char *argv[]) {
                                             ordinaryInsertionsFinder, pbnsInsertionsFinder, palsInsertionsFinder,
                                             dalsInsertionsFinder, relevantPdLocsFilter);
 
+        using PTAndTaxiTripFinderImpl = PTAndTaxiTripFinder<InsertionFinderImpl>;
+        RequestState emptyReqState(calc);
+        PTAndTaxiTripFinderImpl ptAndTaxiTripFinder(insertionFinder, emptyReqState);
+
 
 #if KARRI_OUTPUT_VEHICLE_PATHS
         using VehPathTracker = PathTracker<VehicleInputGraph, VehCHEnv, std::ofstream>;
@@ -595,8 +601,8 @@ int runKaRRi(int argc, char *argv[]) {
         }
 
         // Run simulation:
-        using EventSimulationImpl = EventSimulation<InsertionFinderImpl, SystemStateUpdaterImpl, RouteState>;
-        EventSimulationImpl eventSimulation(fleet, requests, insertionFinder, systemStateUpdater,
+        using EventSimulationImpl = EventSimulation<InsertionFinderImpl, PTAndTaxiTripFinderImpl, SystemStateUpdaterImpl, RouteState>;
+        EventSimulationImpl eventSimulation(fleet, requests, insertionFinder, ptAndTaxiTripFinder, systemStateUpdater,
                                             routeState, true);
         eventSimulation.run();
 
