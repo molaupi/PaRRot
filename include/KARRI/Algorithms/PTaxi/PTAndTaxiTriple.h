@@ -63,10 +63,6 @@ public:
         return !hasValidFirstTaxiLeg() && hasValidPTLeg() && !hasValidSecondTaxiLeg();
     }
 
-    RequestState& getFirstTaxiLeg() { return firstTaxiLeg; }
-    PTResult& getPTLeg() { return ptLeg; }
-    RequestState& getSecondTaxiLeg() { return secondTaxiLeg; }
-
 private:
     RequestState firstTaxiLeg;  // First taxi leg result
     PTResult ptLeg;             // Public transit leg result
