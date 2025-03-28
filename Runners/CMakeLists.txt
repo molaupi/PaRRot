@@ -36,11 +36,8 @@ if(OpenMP_FOUND)
 endif()
 
 # Single Queries
-set(RUN_SINGLE_QUERIES_SRC
-    RunSingleQueries.cpp
-    RunKaRRi.cpp
-)
-add_executable(PTaxi ${RUN_SINGLE_QUERIES_SRC})
+
+add_executable(PTaxi RunSingleQueries.cpp)
 target_compile_definitions(PTaxi PRIVATE CSV_IO_NO_THREAD)
 target_link_libraries(PTaxi routingkit vectorclass fast_cpp_csv_parser kassert)
 target_include_directories(PTaxi PUBLIC ${PARROT_INCLUDE_DIR})

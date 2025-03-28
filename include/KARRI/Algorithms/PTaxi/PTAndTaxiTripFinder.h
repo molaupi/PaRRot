@@ -14,14 +14,14 @@ namespace karri {
     public:
     
         PTAndTaxiTripFinder(AssignmentFinderT &assignmentFinder, RequestState &requestState)
-                : assignmentFinder(assignmentFinder) {}
+                : assignmentFinder(assignmentFinder), requestState(requestState){}
 
         PTAndTaxiTriple findBestAssignment(const Request &req) {
             // First taxi leg
             const RequestState &taxiOnlyResult = assignmentFinder.findBestAssignment(req);
             
             // Return the combined results
-            return PTAndTaxiTriple(taxiOnlyResult, PTResult(false), reqState);
+            return PTAndTaxiTriple(taxiOnlyResult, PTResult(false), requestState);
         }
 
     private:
@@ -31,7 +31,7 @@ namespace karri {
         }
 
         AssignmentFinderT &assignmentFinder;
-        RequestState &reqState;
+        const RequestState &requestState;
 
     };
 }
