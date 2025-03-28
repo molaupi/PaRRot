@@ -575,9 +575,9 @@ int runKaRRi(int argc, char *argv[]) {
                                             ordinaryInsertionsFinder, pbnsInsertionsFinder, palsInsertionsFinder,
                                             dalsInsertionsFinder, relevantPdLocsFilter);
 
-        using PTAndTaxiTripFinderImpl = PTAndTaxiTripFinder<InsertionFinderImpl>;
+        using PTAndTaxiTripFinderImpl = PTAndTaxiTripFinder<InsertionFinderImpl, VehicleInputGraph, PsgInputGraph, PsgCHEnv>;
         RequestState emptyReqState(calc);
-        PTAndTaxiTripFinderImpl ptAndTaxiTripFinder(insertionFinder, emptyReqState);
+        PTAndTaxiTripFinderImpl ptAndTaxiTripFinder(insertionFinder, emptyReqState, vehicleInputGraph, psgInputGraph, *psgChEnv);
 
 
 #if KARRI_OUTPUT_VEHICLE_PATHS
