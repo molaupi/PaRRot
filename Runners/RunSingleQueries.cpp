@@ -575,6 +575,12 @@ int runKaRRi(int argc, char *argv[]) {
                                             ordinaryInsertionsFinder, pbnsInsertionsFinder, palsInsertionsFinder,
                                             dalsInsertionsFinder, relevantPdLocsFilter);
 
+
+        // Convert CH
+        // Use ULTRA CH to build ULTRA algorithm instance
+        // -> pass to PTAndTaxiTripFinder
+
+
         using PTAndTaxiTripFinderImpl = PTAndTaxiTripFinder<InsertionFinderImpl, VehicleInputGraph, PsgInputGraph, PsgCHEnv>;
         RequestState emptyReqState(calc);
         PTAndTaxiTripFinderImpl ptAndTaxiTripFinder(insertionFinder, emptyReqState, vehicleInputGraph, psgInputGraph, *psgChEnv);

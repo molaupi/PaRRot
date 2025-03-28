@@ -35,6 +35,7 @@
 #include "../CostCalculator.h"
 #include "../../../Tools/Simd/AlignedVector.h"
 #include "../../../DataStructures/Containers/Subset.h"
+#include "KARRI/Tools/Logging/LogManager.h"
 
 namespace karri {
 

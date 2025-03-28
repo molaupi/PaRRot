@@ -31,6 +31,9 @@
 #include "../BaseObjects/Request.h"
 #include "../../Dijkstra/Dijkstra.h"
 #include "../../../DataStructures/Graph/Attributes/PsgEdgeToCarEdgeAttribute.h"
+#include "KARRI/DataStructures/Labels/ParentInfo.h"
+#include "KARRI/DataStructures/Labels/BasicLabelSet.h"
+#include "KARRI/Algorithms/KaRRi/InputConfig.h"
 
 namespace karri {
 

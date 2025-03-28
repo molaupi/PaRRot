@@ -32,10 +32,11 @@ namespace karri {
 
         PTAndTaxiTriple findBestAssignment(const Request &req) {
             // First taxi leg
-            const auto &taxiOnlyResult = assignmentFinder.findBestAssignment(req);
+            // TODO: make sure request state is trivially copyable by using changes in mt_karri_batch
+            const auto taxiOnlyResult = assignmentFinder.findBestAssignment(req);
             
             // Return the combined results
-            return PTAndTaxiTriple(taxiOnlyResult, PTResult(false), requestState);
+            return PTAndTaxiTriple(taxiOnlyResult, PTResult(false), {});
         }
 
     private:
