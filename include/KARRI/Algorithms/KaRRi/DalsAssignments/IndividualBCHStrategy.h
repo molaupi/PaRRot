@@ -261,7 +261,7 @@ namespace karri::DropoffAfterLastStopStrategies {
                         asgn.pickupStopIdx = entry.stopIndex;
                         asgn.distToPickup = entry.distToPDLoc;
                         asgn.distFromPickup = entry.distFromPDLocToNextStop;
-                        requestState.tryAssignment(asgn);
+                        requestState.tryAssignmentWithKnownCost(asgn, calculator.calc(asgn, requestState));
                     }
 
                     if (pickupIt == relevantPickupsInRevOrder.end()) {
@@ -312,7 +312,7 @@ namespace karri::DropoffAfterLastStopStrategies {
 
                         if (curVehLocToPickupSearches.knowsDistance(vehId, asgn.pickup.id)) {
                             asgn.distToPickup = curVehLocToPickupSearches.getDistance(vehId, asgn.pickup.id);
-                            requestState.tryAssignment(asgn);
+                            requestState.tryAssignmentWithKnownCost(asgn, calculator.calc(asgn, requestState));
                             ++numAssignmentsTried;
                         } else {
                             asgn.distToPickup = entry.distToPDLoc;
@@ -357,7 +357,7 @@ namespace karri::DropoffAfterLastStopStrategies {
 
                         ++numAssignmentsTried;
                         asgn.dropoffStopIdx = numStops - 1;
-                        requestState.tryAssignment(asgn);
+                        requestState.tryAssignmentWithKnownCost(asgn, calculator.calc(asgn, requestState));
                     }
                 }
             }

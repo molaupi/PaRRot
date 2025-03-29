@@ -220,7 +220,7 @@ namespace karri::DropoffAfterLastStopStrategies {
                             asgn.distToPickup = entry.distToPDLoc;
                             asgn.distFromPickup = entry.distFromPDLocToNextStop;
 
-                            requestState.tryAssignment(asgn);
+                            requestState.tryAssignmentWithKnownCost(asgn, calculator.calc(asgn, requestState));
                             ++numAssignmentsTried;
                         }
                     }
@@ -255,7 +255,7 @@ namespace karri::DropoffAfterLastStopStrategies {
                                 if (asgn.distToPickup >= INFTY)
                                     continue;
 
-                                requestState.tryAssignment(asgn);
+                                requestState.tryAssignmentWithKnownCost(asgn, calculator.calc(asgn, requestState));
                                 ++numAssignmentsTried;
                             } else {
                                 // If we don't know that distance, we set dist to pickup to a lower bound not taking into
@@ -286,7 +286,7 @@ namespace karri::DropoffAfterLastStopStrategies {
                                 continue;
 
                             asgn.distFromPickup = pair.second;
-                            requestState.tryAssignment(asgn);
+                            requestState.tryAssignmentWithKnownCost(asgn, calculator.calc(asgn, requestState));
                             ++numAssignmentsTried;
                         }
                     }

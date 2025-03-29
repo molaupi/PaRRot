@@ -156,7 +156,7 @@ namespace karri {
                 asgn.dropoffStopIdx = dropoffEntry.stopIndex;
                 asgn.distToDropoff = dropoffEntry.distToPDLoc;
                 asgn.distFromDropoff = dropoffEntry.distFromPDLocToNextStop;
-                requestState.tryAssignment(asgn);
+                requestState.tryAssignmentWithKnownCost(asgn, calculator.calc(asgn, requestState));
                 ++numAssignmentsTriedWithOrdinaryDropoff;
             }
 
@@ -273,7 +273,7 @@ namespace karri {
 
                                 assert(asgn.distToPickup < INFTY && asgn.distFromDropoff < INFTY);
                                 asgn.distToDropoff = pdDistances.getDirectDistance(asgn.pickup, asgn.dropoff);
-                                requestState.tryAssignment(asgn);
+                                requestState.tryAssignmentWithKnownCost(asgn, calculator.calc(asgn, requestState));
                                 ++numAssignmentsTried;
                             }
                         }

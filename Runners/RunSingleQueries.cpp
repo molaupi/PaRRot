@@ -146,7 +146,7 @@ inline void printUsage() {
               "  -help                  show usage help text.\n";
 }
 
-int runKaRRi(int argc, char *argv[]) {
+int main(int argc, char *argv[]) {
     using namespace karri;
     try {
         CommandLineParser clp(argc, argv);
@@ -417,7 +417,7 @@ int runKaRRi(int argc, char *argv[]) {
         VehicleLocatorImpl locator(vehicleInputGraph, *vehChEnv, routeState);
 
         CostCalculator calc(routeState);
-        RequestState reqState(calc);
+        RequestState reqState;
 
         // Construct Elliptic BCH bucket environment:
         static constexpr bool ELLIPTIC_SORTED_BUCKETS = KARRI_ELLIPTIC_BCH_SORTED_BUCKETS;
@@ -582,7 +582,7 @@ int runKaRRi(int argc, char *argv[]) {
 
 
         using PTAndTaxiTripFinderImpl = PTAndTaxiTripFinder<InsertionFinderImpl, VehicleInputGraph, PsgInputGraph, PsgCHEnv>;
-        RequestState emptyReqState(calc);
+        RequestState emptyReqState;
         PTAndTaxiTripFinderImpl ptAndTaxiTripFinder(insertionFinder, emptyReqState, vehicleInputGraph, psgInputGraph, *psgChEnv);
 
 

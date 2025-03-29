@@ -94,7 +94,7 @@ namespace karri {
                         asgn.dropoff = d;
                         asgn.distToDropoff = pdDistances.getDirectDistance(asgn.pickup, asgn.dropoff);
                         ++numInsertionsForCoinciding;
-                        requestState.tryAssignment(asgn);
+                        requestState.tryAssignmentWithKnownCost(asgn, calculator.calc(asgn, requestState));
                     }
                 }
             }

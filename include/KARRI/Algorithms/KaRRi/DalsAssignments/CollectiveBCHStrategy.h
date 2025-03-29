@@ -242,7 +242,7 @@ namespace karri::DropoffAfterLastStopStrategies {
                         if (!isServiceTimeConstraintViolated(fleet[vehId], requestState, residualDetourAtEnd,
                                                              routeState)) {
                             ++numAssignmentsTried;
-                            requestState.tryAssignment(asgn);
+                            requestState.tryAssignmentWithKnownCost(asgn, calculator.calc(asgn, requestState));
                         } else {
                             // In the unlikely case that the assignment breaks the service time constraint of this
                             // vehicle, mark this combination of pareto best dropoff label and ordinary pickup label as
@@ -389,7 +389,7 @@ namespace karri::DropoffAfterLastStopStrategies {
                     if (!isServiceTimeConstraintViolated(fleet[vehId], requestState, residualDetourAtEnd,
                                                          routeState)) {
                         ++numAssignmentsTried;
-                        requestState.tryAssignment(asgn);
+                        requestState.tryAssignmentWithKnownCost(asgn, calculator.calc(asgn, requestState));
                     } else {
                         constraintBreakers.push_back(asgn);
                     }
@@ -510,7 +510,7 @@ namespace karri::DropoffAfterLastStopStrategies {
 
                             asgn.distToDropoff = distsFromLastStopToDropoffs[asgn.dropoff.id];
                             ++numAssignmentsTried;
-                            requestState.tryAssignment(asgn);
+                            requestState.tryAssignmentWithKnownCost(asgn, calculator.calc(asgn, requestState));
                         }
                     }
 

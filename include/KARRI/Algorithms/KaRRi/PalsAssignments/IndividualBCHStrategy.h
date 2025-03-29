@@ -242,7 +242,7 @@ namespace karri::PickupAfterLastStopStrategies {
                         // Try inserting pair with pickup after last stop:
                         ++numAssignmentsTried;
                         asgn.distToDropoff = pdDistances.getDirectDistance(asgn.pickup, asgn.dropoff);
-                        requestState.tryAssignment(asgn);
+                        requestState.tryAssignmentWithKnownCost(asgn, calculator.calc(asgn, requestState));
                     }
                 }
             }

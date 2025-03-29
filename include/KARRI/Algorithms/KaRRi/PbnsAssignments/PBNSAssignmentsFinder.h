@@ -280,7 +280,7 @@ namespace karri {
                     asgn.dropoffStopIdx = dropoffEntry.stopIndex;
                     asgn.distToDropoff = dropoffEntry.distToPDLoc;
                     asgn.distFromDropoff = dropoffEntry.distFromPDLocToNextStop;
-                    requestState.tryAssignment(asgn);
+                    requestState.tryAssignmentWithKnownCost(asgn, calculator.calc(asgn, requestState));
 
                     if (dropoffIt > continuation.continueIt) { // Do not count assignment at continuation twice
                         ++numAssignmentsTriedWithPickupBeforeNextStop;
@@ -318,7 +318,7 @@ namespace karri {
                         continue;
 
                     asgn.distToDropoff = pdDistances.getDirectDistance(pId, asgn.dropoff.id);
-                    requestState.tryAssignment(asgn);
+                    requestState.tryAssignmentWithKnownCost(asgn, calculator.calc(asgn, requestState));
                 }
             }
         }
