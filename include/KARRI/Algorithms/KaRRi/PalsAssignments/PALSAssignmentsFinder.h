@@ -70,18 +70,18 @@ namespace karri {
             Assignment asgn;
             asgn.distToPickup = 0;
             for (const auto &p: requestState.pickups) {
-                asgn.pickup = &p;
+                asgn.pickup = p;
 
-                const int head = inputGraph.edgeHead(asgn.pickup->loc);
+                const int head = inputGraph.edgeHead(asgn.pickup.loc);
                 for (const auto &vehId: lastStopsAtVertices.vehiclesWithLastStopAt(head)) {
                     ++numCandidateVehiclesForCoinciding;
                     const auto numStops = routeState.numStopsOf(vehId);
-                    if (routeState.stopLocationsFor(vehId)[numStops - 1] != asgn.pickup->loc)
+                    if (routeState.stopLocationsFor(vehId)[numStops - 1] != asgn.pickup.loc)
                         continue;
 
                     // Calculate lower bound on insertion cost with this pickup and vehicle
                     const auto lowerBoundCost = calculator.calcCostLowerBoundForPickupAfterLastStop(
-                            fleet[vehId], *asgn.pickup, 0, requestState.minDirectPDDist, requestState);
+                            fleet[vehId], asgn.pickup, 0, requestState.minDirectPDDist, requestState);
                     if (lowerBoundCost > requestState.getBestCost())
                         continue;
 
@@ -91,8 +91,8 @@ namespace karri {
                     asgn.dropoffStopIdx = numStops - 1;
 
                     for (const auto &d: requestState.dropoffs) {
-                        asgn.dropoff = &d;
-                        asgn.distToDropoff = pdDistances.getDirectDistance(*asgn.pickup, *asgn.dropoff);
+                        asgn.dropoff = d;
+                        asgn.distToDropoff = pdDistances.getDirectDistance(asgn.pickup, asgn.dropoff);
                         ++numInsertionsForCoinciding;
                         requestState.tryAssignment(asgn);
                     }

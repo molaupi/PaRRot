@@ -214,8 +214,8 @@ namespace karri::PickupAfterLastStopStrategies {
                 asgn.dropoffStopIdx = numStops - 1;
 
                 for (auto &p: requestState.pickups) {
-                    asgn.pickup = &p;
-                    asgn.distToPickup = getDistanceToPickup(vehId, asgn.pickup->id);
+                    asgn.pickup = p;
+                    asgn.distToPickup = getDistanceToPickup(vehId, asgn.pickup.id);
                     if (asgn.distToPickup >= INFTY)
                         continue;
 
@@ -226,22 +226,22 @@ namespace karri::PickupAfterLastStopStrategies {
                                                                                           requestState, routeState);
                     const auto psgTimeTillDepAtThisPickup =
                             depTimeAtThisPickup - requestState.originalRequest.requestTime;
-                    const auto minDirectDistForThisPickup = pdDistances.getMinDirectDistanceForPickup(asgn.pickup->id);
+                    const auto minDirectDistForThisPickup = pdDistances.getMinDirectDistanceForPickup(asgn.pickup.id);
                     const auto minCost = calculator.calcCostForPairedAssignmentAfterLastStop(vehTimeTillDepAtThisPickup,
                                                                                              psgTimeTillDepAtThisPickup,
                                                                                              minDirectDistForThisPickup,
-                                                                                             asgn.pickup->walkingDist,
+                                                                                             asgn.pickup.walkingDist,
                                                                                              0,
                                                                                              requestState);
                     if (minCost > requestState.getBestCost())
                         continue;
 
                     for (auto &d: requestState.dropoffs) {
-                        asgn.dropoff = &d;
+                        asgn.dropoff = d;
 
                         // Try inserting pair with pickup after last stop:
                         ++numAssignmentsTried;
-                        asgn.distToDropoff = pdDistances.getDirectDistance(*asgn.pickup, *asgn.dropoff);
+                        asgn.distToDropoff = pdDistances.getDirectDistance(asgn.pickup, asgn.dropoff);
                         requestState.tryAssignment(asgn);
                     }
                 }

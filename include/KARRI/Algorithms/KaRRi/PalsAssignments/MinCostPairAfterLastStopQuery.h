@@ -541,8 +541,8 @@ namespace karri::PickupAfterLastStopStrategies {
             Assignment asgn;
             asgn.distFromPickup = 0;
             asgn.distFromDropoff = 0;
-            asgn.pickup = &pickup;
-            asgn.dropoff = &dropoff;
+            asgn.pickup = pickup;
+            asgn.dropoff = dropoff;
             asgn.distToDropoff = directDist;
 
             int numEntriesScannedInBucket = 0;

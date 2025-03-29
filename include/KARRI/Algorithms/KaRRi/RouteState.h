@@ -216,8 +216,8 @@ namespace karri {
         std::pair<int, int>
         insert(const Assignment &asgn, const RequestStateT &requestState) {
             const auto vehId = asgn.vehicle->vehicleId;
-            const auto &pickup = *asgn.pickup;
-            const auto &dropoff = *asgn.dropoff;
+            const auto pickup = asgn.pickup;
+            const auto dropoff = asgn.dropoff;
             const int now = requestState.originalRequest.requestTime;
             const int numRiders = requestState.originalRequest.numRiders;
             const auto &start = pos[vehId].start;

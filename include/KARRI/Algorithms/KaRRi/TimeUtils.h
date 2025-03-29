@@ -28,6 +28,7 @@
 #include "RouteState.h"
 #include "InputConfig.h"
 #include "BaseObjects/Request.h"
+#include "BaseObjects/PDLocs.h"
 
 #define DO_INLINE true
 #if DO_INLINE
@@ -94,7 +95,7 @@ namespace karri::time_utils {
     template<typename RequestContext>
     static INLINE int
     getActualDepTimeAtPickup(const Assignment &asgn, const RequestContext &context, const RouteState &routeState) {
-        return getActualDepTimeAtPickup(asgn.vehicle->vehicleId, asgn.pickupStopIdx, asgn.distToPickup, *asgn.pickup,
+        return getActualDepTimeAtPickup(asgn.vehicle->vehicleId, asgn.pickupStopIdx, asgn.distToPickup, asgn.pickup,
                                         context, routeState);
     }
 
@@ -132,7 +133,7 @@ namespace karri::time_utils {
 
     static INLINE bool isDropoffAtExistingStop(const Assignment &asgn, const RouteState &routeState) {
         return asgn.pickupStopIdx != asgn.dropoffStopIdx &&
-               asgn.dropoff->loc == routeState.stopLocationsFor(asgn.vehicle->vehicleId)[asgn.dropoffStopIdx];
+               asgn.dropoff.loc == routeState.stopLocationsFor(asgn.vehicle->vehicleId)[asgn.dropoffStopIdx];
     }
 
     static INLINE int

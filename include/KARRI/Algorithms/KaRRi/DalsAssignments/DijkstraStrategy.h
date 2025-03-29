@@ -201,7 +201,7 @@ namespace karri::DropoffAfterLastStopStrategies {
                         if (minCosts[searchIdx] > requestState.getBestCost())
                             continue;
 
-                        asgn.dropoff = &requestState.dropoffs[curDropoffIds[searchIdx]];
+                        asgn.dropoff = requestState.dropoffs[curDropoffIds[searchIdx]];
                         asgn.distToDropoff = distFromV[searchIdx];
 
                         for (auto pickupIt = relevantPickupsInRevOrder.begin();
@@ -212,8 +212,8 @@ namespace karri::DropoffAfterLastStopStrategies {
                                 asgn.vehicle->capacity)
                                 break;
 
-                            asgn.pickup = &requestState.pickups[entry.pdId];
-                            if (asgn.pickup->loc == asgn.dropoff->loc)
+                            asgn.pickup = requestState.pickups[entry.pdId];
+                            if (asgn.pickup.loc == asgn.dropoff.loc)
                                 continue;
 
                             asgn.pickupStopIdx = entry.stopIndex;
@@ -235,23 +235,23 @@ namespace karri::DropoffAfterLastStopStrategies {
                         if (minCosts[searchIdx] > requestState.getBestCost())
                             continue;
 
-                        asgn.dropoff = &requestState.dropoffs[curDropoffIds[searchIdx]];
+                        asgn.dropoff = requestState.dropoffs[curDropoffIds[searchIdx]];
                         asgn.distToDropoff = distFromV[searchIdx];
 
                         pickupsToTryBeforeNextStop.clear();
 
 
                         for (const auto &entry: curRelPickupsBns->relevantSpotsFor(vehId)) {
-                            asgn.pickup = &requestState.pickups[entry.pdId];
-                            if (asgn.pickup->loc == asgn.dropoff->loc)
+                            asgn.pickup = requestState.pickups[entry.pdId];
+                            if (asgn.pickup.loc == asgn.dropoff.loc)
                                 continue;
 
                             asgn.distFromPickup = entry.distFromPDLocToNextStop;
 
-                            if (curVehLocToPickupSearches.knowsDistance(vehId, asgn.pickup->id)) {
+                            if (curVehLocToPickupSearches.knowsDistance(vehId, asgn.pickup.id)) {
                                 // If we know the exact distance to the pickup via the vehicles current location, we try
                                 // the precise assignment.
-                                asgn.distToPickup = curVehLocToPickupSearches.getDistance(vehId, asgn.pickup->id);
+                                asgn.distToPickup = curVehLocToPickupSearches.getDistance(vehId, asgn.pickup.id);
                                 if (asgn.distToPickup >= INFTY)
                                     continue;
 
@@ -270,8 +270,8 @@ namespace karri::DropoffAfterLastStopStrategies {
                                     // vehicle. We postpone computation of that distance to be able to bundle it with the
                                     // computation of distances to other pickups via the vehicle location. Then all remaining
                                     // assignments with this pickup can be tried with the exact distance later.
-                                    pickupsToTryBeforeNextStop.push_back({asgn.pickup->id, asgn.distFromPickup});
-                                    curVehLocToPickupSearches.addPickupForProcessing(asgn.pickup->id,
+                                    pickupsToTryBeforeNextStop.push_back({asgn.pickup.id, asgn.distFromPickup});
+                                    curVehLocToPickupSearches.addPickupForProcessing(asgn.pickup.id,
                                                                                      asgn.distToPickup);
                                 }
                             }
@@ -280,8 +280,8 @@ namespace karri::DropoffAfterLastStopStrategies {
 
                         curVehLocToPickupSearches.computeExactDistancesVia(fleet[vehId]);
                         for (const auto &pair: pickupsToTryBeforeNextStop) {
-                            asgn.pickup = &requestState.pickups[pair.first];
-                            asgn.distToPickup = curVehLocToPickupSearches.getDistance(vehId, asgn.pickup->id);
+                            asgn.pickup = requestState.pickups[pair.first];
+                            asgn.distToPickup = curVehLocToPickupSearches.getDistance(vehId, asgn.pickup.id);
                             if (asgn.distToPickup >= INFTY)
                                 continue;
 

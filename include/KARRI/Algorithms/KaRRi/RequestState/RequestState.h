@@ -28,6 +28,7 @@
 
 #include "FindPDLocsInRadiusQuery.h"
 #include "../BaseObjects/Request.h"
+#include "../BaseObjects/PDLocs.h"
 #include "../Stats/PerformanceStats.h"
 #include "../Stats/OsmRoadCategoryStats.h"
 #include "../BaseObjects/Assignment.h"
