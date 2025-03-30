@@ -40,14 +40,13 @@ namespace karri {
 
         PALSAssignmentsFinder(StrategyT &strategy, const InputGraphT &inputGraph, const Fleet &fleet,
                               const CostCalculator &calculator, const LastStopsAtVerticesT &lastStopsAtVertices,
-                              const RouteState &routeState, RequestState &requestState)
+                              const RouteState &routeState)
                 : strategy(strategy),
                   inputGraph(inputGraph),
                   fleet(fleet),
                   calculator(calculator),
                   lastStopsAtVertices(lastStopsAtVertices),
-                  routeState(routeState),
-                  requestState(requestState) {}
+                  routeState(routeState){}
 
         void findAssignments(RequestState& requestState, const PDDistancesT& pdDistances, const PDLocs& pdLocs, stats::PalsAssignmentsPerformanceStats& stats) {
             findAssignmentsWherePickupCoincidesWithLastStop(requestState, pdDistances, pdLocs, stats);
@@ -112,7 +111,6 @@ namespace karri {
         const CostCalculator &calculator;
         const LastStopsAtVerticesT &lastStopsAtVertices;
         const RouteState &routeState;
-        RequestState &requestState;
 
     };
 }

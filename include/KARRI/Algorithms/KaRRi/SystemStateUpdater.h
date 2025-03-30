@@ -43,13 +43,12 @@ namespace karri {
 
     public:
 
-        SystemStateUpdater(const InputGraphT &inputGraph, RequestState &requestState,
+        SystemStateUpdater(const InputGraphT &inputGraph, 
                            const CurVehLocsT &curVehLocs,
                            PathTrackerT &pathTracker,
                            RouteState &routeState, EllipticBucketsEnvT &ellipticBucketsEnv,
                            LastStopBucketsEnvT &lastStopBucketsEnv)
                 : inputGraph(inputGraph),
-                  requestState(requestState),
                   curVehLocs(curVehLocs),
                   pathTracker(pathTracker),
                   routeState(routeState),
@@ -118,12 +117,10 @@ namespace karri {
                                                                           stats::UpdatePerformanceStats::LOGGER_COLS))) {}
 
 
-        void insertBestAssignment(int &pickupStopId, int &dropoffStopId) {
+        void insertBestAssignment(RequestState &requestState) {
             Timer timer;
 
             if (requestState.isNotUsingVehicleBest()) {
-                pickupStopId = -1;
-                dropoffStopId = -1;
                 return;
             }
 
@@ -141,23 +138,22 @@ namespace karri {
             const auto routeUpdateTime = timer.elapsed<std::chrono::nanoseconds>();
             requestState.stats().updateStats.updateRoutesTime += routeUpdateTime;
 
-            updateBucketState(asgn, pickupIndex, dropoffIndex, depTimeAtLastStopBefore);
+            updateBucketState(asgn, pickupIndex, dropoffIndex, depTimeAtLastStopBefore, requestState.stats().updateStats);
 
             // If the vehicle has to be rerouted at its current location for a PBNS assignment, we introduce an
             // intermediate stop at its current location representing the rerouting.
             if (asgn.pickupStopIdx == 0 && numStopsBefore > 1 && routeState.schedDepTimesFor(vehId)[0] <
                                                                  requestState.originalRequest.requestTime) {
                 createIntermediateStopStopAtCurrentLocationForReroute(*asgn.vehicle,
-                                                                      requestState.originalRequest.requestTime);
+                                                                      requestState.originalRequest.requestTime,
+                                                                      requestState.stats().updateStats
+                                                                    );
                 ++pickupIndex;
                 ++dropoffIndex;
             }
-
-            pickupStopId = routeState.stopIdsFor(vehId)[pickupIndex];
-            dropoffStopId = routeState.stopIdsFor(vehId)[dropoffIndex];
-
+            
             // Register the inserted pickup and dropoff with the path data
-            pathTracker.registerPdEventsForBestAssignment(pickupStopId, dropoffStopId);
+            pathTracker.registerPdEventsForBestAssignment(routeState.stopIdsFor(vehId)[pickupIndex], routeState.stopIdsFor(vehId)[dropoffIndex]);
         }
 
         void notifyStopStarted(const Vehicle &veh) {
@@ -169,7 +165,8 @@ namespace karri {
 
             // If vehicle has become idle, update last stop bucket entries
             if (routeState.numStopsOf(veh.vehicleId) == 1) {
-                lastStopBucketsEnv.updateBucketEntries(veh, 0);
+                int64_t updateTimePlaceholder = 0;
+                lastStopBucketsEnv.updateBucketEntries(veh, 0, updateTimePlaceholder);
             }
         }
 
@@ -181,14 +178,15 @@ namespace karri {
         void notifyVehicleReachedEndOfServiceTime(const Vehicle &veh) {
             const auto vehId = veh.vehicleId;
             assert(routeState.numStopsOf(vehId) == 1);
-
-            lastStopBucketsEnv.removeIdleBucketEntries(veh, 0);
+            
+            stats::UpdatePerformanceStats finalRemovalStatsPlaceholder;
+            lastStopBucketsEnv.removeIdleBucketEntries(veh, 0, finalRemovalStatsPlaceholder);
 
             routeState.removeStartOfCurrentLeg(vehId);
         }
 
 
-        void writeBestAssignmentToLogger() {
+        void writeBestAssignmentToLogger(const RequestState &requestState) {
             bestAssignmentsLogger
                     << requestState.originalRequest.requestId << ", "
                     << requestState.originalRequest.requestTime << ", "
@@ -233,7 +231,7 @@ namespace karri {
                     << requestState.getBestCost() << "\n";
         }
 
-        void writePerformanceLogs() {
+        void writePerformanceLogs(const RequestState &requestState) {
             overallPerfLogger << requestState.originalRequest.requestId << ", "
                               << requestState.stats().getLoggerRow() << "\n";
             initializationPerfLogger << requestState.originalRequest.requestId << ", "
@@ -261,12 +259,12 @@ namespace karri {
         // first stop, i.e. dist(s[i], s[i+1]) = schedArrTime(s[i+1]) - schedDepTime(s[i]).
         // Intermediate stop gets an arrival time equal to the request time so the stop is reached immediately,
         // making it the new stop 0. Thus, we do not need to compute target bucket entries for the stop.
-        void createIntermediateStopStopAtCurrentLocationForReroute(const Vehicle &veh, const int now) {
+        void createIntermediateStopStopAtCurrentLocationForReroute(const Vehicle &veh, const int now, karri::stats::UpdatePerformanceStats &stats) {
             assert(curVehLocs.knowsCurrentLocationOf(veh.vehicleId));
             auto loc = curVehLocs.getCurrentLocationOf(veh.vehicleId);
             LIGHT_KASSERT(loc.depTimeAtHead >= now);
             routeState.createIntermediateStopForReroute(veh.vehicleId, loc.location, now, loc.depTimeAtHead);
-            ellipticBucketsEnv.generateSourceBucketEntries(veh, 1);
+            ellipticBucketsEnv.generateSourceBucketEntries(veh, 1, stats);
         }
 
 
@@ -275,15 +273,15 @@ namespace karri {
         // dropoff after the insertion.
         void updateBucketState(const Assignment &asgn,
                                const int pickupIndex, const int dropoffIndex,
-                               const int depTimeAtLastStopBefore) {
+                               const int depTimeAtLastStopBefore, karri::stats::UpdatePerformanceStats &stats) {
 
-            generateBucketStateForNewStops(asgn, pickupIndex, dropoffIndex);
+            generateBucketStateForNewStops(asgn, pickupIndex, dropoffIndex, stats);
 
             // If we use buckets sorted by remaining leeway, we have to update the leeway of all
             // entries for stops of this vehicle.
             if constexpr (EllipticBucketsEnvT::SORTED_BY_REM_LEEWAY) {
-                ellipticBucketsEnv.updateLeewayInSourceBucketsForAllStopsOf(*asgn.vehicle);
-                ellipticBucketsEnv.updateLeewayInTargetBucketsForAllStopsOf(*asgn.vehicle);
+                ellipticBucketsEnv.updateLeewayInSourceBucketsForAllStopsOf(*asgn.vehicle, stats);
+                ellipticBucketsEnv.updateLeewayInTargetBucketsForAllStopsOf(*asgn.vehicle, stats);
             }
 
             // If last stop does not change but departure time at last stop does change, update last stop bucket entries
@@ -296,30 +294,30 @@ namespace karri {
             const bool depTimeAtLastChanged = depTimeAtLastStopAfter != depTimeAtLastStopBefore;
 
             if ((dropoffAtExistingStop || dropoffIndex < numStopsAfter - 1) && depTimeAtLastChanged) {
-                lastStopBucketsEnv.updateBucketEntries(*asgn.vehicle, numStopsAfter - 1);
+                lastStopBucketsEnv.updateBucketEntries(*asgn.vehicle, numStopsAfter - 1, stats.lastStopBucketsUpdateEntriesTime);
             }
         }
 
-        void generateBucketStateForNewStops(const Assignment &asgn, const int pickupIndex, const int dropoffIndex) {
+        void generateBucketStateForNewStops(const Assignment &asgn, const int pickupIndex, const int dropoffIndex, karri::stats::UpdatePerformanceStats &stats) {
             const auto vehId = asgn.vehicle->vehicleId;
             const auto &numStops = routeState.numStopsOf(vehId);
             const bool pickupAtExistingStop = pickupIndex == asgn.pickupStopIdx;
             const bool dropoffAtExistingStop = dropoffIndex == asgn.dropoffStopIdx + !pickupAtExistingStop;
 
             if (!pickupAtExistingStop) {
-                ellipticBucketsEnv.generateTargetBucketEntries(*asgn.vehicle, pickupIndex);
-                ellipticBucketsEnv.generateSourceBucketEntries(*asgn.vehicle, pickupIndex);
+                ellipticBucketsEnv.generateTargetBucketEntries(*asgn.vehicle, pickupIndex, stats);
+                ellipticBucketsEnv.generateSourceBucketEntries(*asgn.vehicle, pickupIndex, stats);
             }
 
             // If no new stop was inserted for the pickup, we do not need to generate any new entries for it.
             if (dropoffAtExistingStop)
                 return;
 
-            ellipticBucketsEnv.generateTargetBucketEntries(*asgn.vehicle, dropoffIndex);
+            ellipticBucketsEnv.generateTargetBucketEntries(*asgn.vehicle, dropoffIndex, stats);
 
             // If dropoff is not the new last stop, we generate elliptic source buckets for it.
             if (dropoffIndex < numStops - 1) {
-                ellipticBucketsEnv.generateSourceBucketEntries(*asgn.vehicle, dropoffIndex);
+                ellipticBucketsEnv.generateSourceBucketEntries(*asgn.vehicle, dropoffIndex, stats);
                 return;
             }
 
@@ -327,19 +325,18 @@ namespace karri {
             // Generate elliptic source bucket entries for former last stop
             const auto pickupAtEnd = pickupIndex + 1 == dropoffIndex && pickupIndex > asgn.pickupStopIdx;
             const int formerLastStopIdx = dropoffIndex - pickupAtEnd - 1;
-            ellipticBucketsEnv.generateSourceBucketEntries(*asgn.vehicle, formerLastStopIdx);
+            ellipticBucketsEnv.generateSourceBucketEntries(*asgn.vehicle, formerLastStopIdx, stats);
 
             // Remove last stop bucket entries for former last stop and generate them for dropoff
             if (formerLastStopIdx == 0) {
-                lastStopBucketsEnv.removeIdleBucketEntries(*asgn.vehicle, formerLastStopIdx);
+                lastStopBucketsEnv.removeIdleBucketEntries(*asgn.vehicle, formerLastStopIdx, stats);
             } else {
-                lastStopBucketsEnv.removeNonIdleBucketEntries(*asgn.vehicle, formerLastStopIdx);
+                lastStopBucketsEnv.removeNonIdleBucketEntries(*asgn.vehicle, formerLastStopIdx, stats);
             }
-            lastStopBucketsEnv.generateNonIdleBucketEntries(*asgn.vehicle);
+            lastStopBucketsEnv.generateNonIdleBucketEntries(*asgn.vehicle, stats);
         }
 
         const InputGraphT &inputGraph;
-        RequestState &requestState;
         const CurVehLocsT &curVehLocs;
         PathTrackerT &pathTracker;
 

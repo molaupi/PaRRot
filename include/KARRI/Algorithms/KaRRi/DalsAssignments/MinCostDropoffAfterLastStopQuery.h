@@ -57,8 +57,7 @@ namespace karri::DropoffAfterLastStopStrategies {
                                          const CostCalculator &calculator,
                                          const LastStopBucketsEnvT &lastStopBucketsEnv,
                                          const IsVehEligibleForDropoffAfterLastStop &isVehEligibleForDropoffAfterLastStop,
-                                         const RouteState &routeState,
-                                         const RequestState &requestState)
+                                         const RouteState &routeState)
                 : inputGraph(inputGraph),
                   fleet(fleet),
                   ch(chEnv.getCH()),
@@ -68,7 +67,6 @@ namespace karri::DropoffAfterLastStopStrategies {
                   lastStopBuckets(lastStopBucketsEnv.getBuckets()),
                   isVehEligibleForDropoffAfterLastStop(isVehEligibleForDropoffAfterLastStop),
                   routeState(routeState),
-                  requestState(requestState),
                   vertexLabelBuckets(searchGraph.numVertices()),
                   reverseQueue(searchGraph.numVertices()),
                   vehicleLabelBuckets(fleet.size()),
@@ -464,7 +462,6 @@ namespace karri::DropoffAfterLastStopStrategies {
         const typename LastStopBucketsEnvT::BucketContainer &lastStopBuckets;
         const IsVehEligibleForDropoffAfterLastStop &isVehEligibleForDropoffAfterLastStop;
         const RouteState &routeState;
-        const RequestState &requestState;
 
         VertexBucketContainer vertexLabelBuckets;
         QueueT reverseQueue;

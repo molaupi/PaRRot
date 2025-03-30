@@ -73,17 +73,15 @@ namespace karri::DropoffAfterLastStopStrategies {
                          const CostCalculator &calculator,
                          CurVehLocToPickupSearchesT &curVehLocToPickupSearches,
                          const RouteState &routeState,
-                         const LastStopsAtVerticesT &lastStopsAtVertices,
-                         RequestState &requestState)
+                         const LastStopsAtVerticesT &lastStopsAtVertices)
                 : inputGraph(inputGraph),
-                  requestState(requestState),
                   fleet(fleet),
                   routeState(routeState),
                   lastStopsAtVertices(lastStopsAtVertices),
                   calculator(calculator),
                   curVehLocToPickupSearches(curVehLocToPickupSearches),
                   pickupsToTryBeforeNextStop(),
-                  dijSearchToDropoff(reverseGraph, {*this, calculator, requestState}),
+                  dijSearchToDropoff(reverseGraph, {*this, calculator}),
                   vehiclesSeen(fleet.size()) {}
 
         void tryDropoffAfterLastStop(const RelevantPDLocs &relevantOrdinaryPickups,
@@ -302,7 +300,6 @@ namespace karri::DropoffAfterLastStopStrategies {
 
 
         const InputGraphT &inputGraph;
-        RequestState &requestState;
 
         const Fleet &fleet;
         const RouteState &routeState;

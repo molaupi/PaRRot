@@ -289,7 +289,7 @@ namespace karri {
             // Find best assignment 
             // TODO: Add case for PT only trips
             auto asgnFinderResponse = assignmentFinder.findBestAssignment(request);
-            systemStateUpdater.writeBestAssignmentToLogger();
+            systemStateUpdater.writeBestAssignmentToLogger(asgnFinderResponse);
 
             applyAssignment(asgnFinderResponse, reqId, occTime);
 
@@ -299,7 +299,7 @@ namespace karri {
         }
 
         template<typename AssignmentFinderResponseT>
-        void applyAssignment(const AssignmentFinderResponseT &asgnFinderResponse, const int reqId, const int occTime) {
+        void applyAssignment(AssignmentFinderResponseT &asgnFinderResponse, const int reqId, const int occTime) {
             if (asgnFinderResponse.isNotUsingVehicleBest()) {
                 requestState[reqId] = WALKING_TO_DEST;
                 requestData[reqId].assignmentCost = asgnFinderResponse.getBestCost();
@@ -307,7 +307,7 @@ namespace karri {
                 requestData[reqId].walkingTimeToPickup = 0;
                 requestData[reqId].walkingTimeFromDropoff = asgnFinderResponse.getNotUsingVehicleDist();
                 requestEvents.increaseKey(reqId, occTime + asgnFinderResponse.getNotUsingVehicleDist());
-                systemStateUpdater.writePerformanceLogs();
+                systemStateUpdater.writePerformanceLogs(asgnFinderResponse);
                 return;
             }
 
@@ -319,7 +319,7 @@ namespace karri {
             // || !bestAsgn.pickup || !bestAsgn.dropoff
             if (!bestAsgn.vehicle) {
                 requestState[reqId] = FINISHED;
-                systemStateUpdater.writePerformanceLogs();
+                systemStateUpdater.writePerformanceLogs(asgnFinderResponse);
                 return;
             }
 
@@ -328,10 +328,8 @@ namespace karri {
             requestData[reqId].walkingTimeFromDropoff = bestAsgn.dropoff.walkingDist;
             requestData[reqId].assignmentCost = asgnFinderResponse.getBestCost();
 
-            int pickupStopId, dropoffStopId;
-            systemStateUpdater.insertBestAssignment(pickupStopId, dropoffStopId);
-            systemStateUpdater.writePerformanceLogs();
-            assert(pickupStopId >= 0 && dropoffStopId >= 0);
+            systemStateUpdater.insertBestAssignment(asgnFinderResponse);
+            systemStateUpdater.writePerformanceLogs(asgnFinderResponse);
 
             const auto vehId = bestAsgn.vehicle->vehicleId;
             switch (vehicleState[vehId]) {

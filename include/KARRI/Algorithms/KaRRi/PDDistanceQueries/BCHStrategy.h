@@ -134,11 +134,9 @@ namespace karri::PDDistanceQueryStrategies {
 
     public:
 
-        BCHStrategy(const InputGraphT &inputGraph, const CHEnvT &chEnv,
-                    RequestState &requestState)
+        BCHStrategy(const InputGraphT &inputGraph, const CHEnvT &chEnv)
                 : inputGraph(inputGraph),
                   ch(chEnv.getCH()),
-                  requestState(requestState),
                   dropoffBuckets(inputGraph.numVertices()),
                   fillBucketsSearch(
                           chEnv.template getReverseSearch<WriteBucketEntry, StopWhenMaxDistExceeded, LabelSetT>(
@@ -281,7 +279,6 @@ namespace karri::PDDistanceQueryStrategies {
 
         const InputGraphT &inputGraph;
         const CH &ch;
-        RequestState &requestState;
 
         BucketContainer dropoffBuckets;
         FillBucketsSearch fillBucketsSearch;

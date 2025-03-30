@@ -34,7 +34,6 @@
 
 #include "../BaseObjects/Request.h"
 #include "../RouteState.h"
-#include "../RequestState/RequestState.h"
 #include "../LastStopSearches/OnlyLastStopsAtVerticesBucketSubstitute.h"
 #include "BucketEntryWithLeeway.h"
 
@@ -192,14 +191,11 @@ namespace karri {
                             const EllipticBucketsEnvT &ellipticBucketsEnv,
                             const LastStopsAtVerticesT &lastStopsAtVertices,
                             const CHEnvT &chEnv,
-                            const RouteState &routeState,
-
-                            RequestState &requestState)
+                            const RouteState &routeState)
                 : inputGraph(inputGraph),
                   fleet(fleet),
                   ch(chEnv.getCH()),
                   routeState(routeState),
-                  requestState(requestState),
                   sourceBuckets(ellipticBucketsEnv.getSourceBuckets()),
                   lastStopsAtVertices(lastStopsAtVertices),
                   distUpperBound(INFTY),
@@ -338,7 +334,6 @@ namespace karri {
         const Fleet &fleet;
         const CH &ch;
         const RouteState &routeState;
-        RequestState &requestState;
 
         const typename EllipticBucketsEnvT::BucketContainer &sourceBuckets;
         const LastStopsAtVerticesT &lastStopsAtVertices;

@@ -67,8 +67,7 @@ namespace karri::DropoffAfterLastStopStrategies {
                               const CHEnvT &chEnv,
                               const LastStopBucketsEnvT &lastStopBucketsEnv,
                               const CostCalculator &calculator,
-                              CurVehLocToPickupSearchesT &curVehLocToPickupSearches,
-                              RequestState &requestState)
+                              CurVehLocToPickupSearchesT &curVehLocToPickupSearches)
                 : inputGraph(inputGraph),
                   fleet(fleet),
                   routeState(routeState),
@@ -77,10 +76,9 @@ namespace karri::DropoffAfterLastStopStrategies {
                   closestDropoffSearch(inputGraph, fleet.size(), chEnv, lastStopBucketsEnv.getBuckets(),
                                        {chEnv.getCH().upwardGraph()}),
                   ch(chEnv.getCH()),
-                  requestState(requestState),
                   isVehEligibleForDropoffAfterLastStop(*this),
                   minCostSearch(inputGraph, fleet, chEnv, calculator, lastStopBucketsEnv,
-                                isVehEligibleForDropoffAfterLastStop, routeState, requestState),
+                                isVehEligibleForDropoffAfterLastStop, routeState),
                   distsFromLastStopToDropoffs(0, INFTY),
                   checkPBNSForVehicle(fleet.size()),
                   fullCHQuery(chEnv.template getFullCHQuery<FallBackCHLabelSet>()) {}
@@ -592,7 +590,6 @@ namespace karri::DropoffAfterLastStopStrategies {
         CurVehLocToPickupSearchesT &curVehLocToPickupSearches;
         ClosestDropoffToLastStopQuery closestDropoffSearch;
         const CH &ch;
-        RequestState &requestState;
 
         // Pointers to relevant PD locs so Dijkstra search callback has access to them
         RelevantPDLocs const *curRelOrdinaryPickups;

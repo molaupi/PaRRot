@@ -43,12 +43,10 @@ namespace karri {
 
     public:
 
-        OrdinaryAssignmentsFinder(const Fleet &fleet, const CostCalculator &calculator, const RouteState &routeState,
-                                  RequestState &requestState)
+        OrdinaryAssignmentsFinder(const Fleet &fleet, const CostCalculator &calculator, const RouteState &routeState)
                 : fleet(fleet),
                   calculator(calculator),
-                  routeState(routeState),
-                  requestState(requestState) {}
+                  routeState(routeState) {}
 
         void findAssignments(const RelevantPDLocs& relPickups, const RelevantPDLocs& relDropoffs,
                              RequestState& requestState,
@@ -297,6 +295,5 @@ namespace karri {
         const Fleet &fleet;
         const CostCalculator &calculator;
         const RouteState &routeState;
-        RequestState &requestState;
     };
 }

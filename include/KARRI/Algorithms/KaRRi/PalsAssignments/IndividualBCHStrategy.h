@@ -158,13 +158,11 @@ namespace karri::PickupAfterLastStopStrategies {
                               const CHEnvT &chEnv,
                               const CostCalculator &calculator,
                               const LastStopBucketsEnvT &lastStopBucketsEnv,
-                              const RouteState &routeState,
-                              RequestState &requestState)
+                              const RouteState &routeState)
                 : inputGraph(inputGraph),
                   fleet(fleet),
                   calculator(calculator),
                   routeState(routeState),
-                  requestState(requestState),
                   externalUpperBoundCost(INFTY),
                   distances(fleet.size()),
                   search(lastStopBucketsEnv, distances, chEnv, routeState, vehiclesSeenForPickups,
@@ -307,7 +305,6 @@ namespace karri::PickupAfterLastStopStrategies {
         const Fleet &fleet;
         const CostCalculator &calculator;
         const RouteState &routeState;
-        RequestState &requestState;
 
         int externalUpperBoundCost;
         int upperBoundCost;

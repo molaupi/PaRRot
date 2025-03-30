@@ -113,13 +113,11 @@ namespace karri {
                                   VehicleLocatorT &locator,
                                   const CHEnvT &chEnv,
                                   const RouteState &routeState,
-                                  RequestState &requestState,
                                   const int fleetSize)
                 : inputGraph(graph),
                   vehicleLocator(locator),
                   ch(chEnv.getCH()),
                   routeState(routeState),
-                  requestState(requestState),
                   fleetSize(fleetSize),
                   distances(),
                   currentVehicleLocations(fleetSize, INVALID_LOC),
@@ -332,7 +330,6 @@ namespace karri {
         VehicleLocatorT &vehicleLocator;
         const CH &ch;
         const RouteState &routeState;
-        RequestState &requestState;
         const int fleetSize;
 
 

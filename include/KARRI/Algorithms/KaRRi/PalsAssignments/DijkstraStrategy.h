@@ -75,16 +75,14 @@ namespace karri::PickupAfterLastStopStrategies {
                          const Fleet &fleet,
                          const RouteState &routeState,
                          const LastStopsAtVerticesT &lastStopsAtVertices,
-                         const CostCalculator &calculator,
-                         RequestState &requestState)
+                         const CostCalculator &calculator)
                 : inputGraph(inputGraph),
                   reverseGraph(reverseGraph),
-                  requestState(requestState),
                   calculator(calculator),
                   fleet(fleet),
                   routeState(routeState),
                   lastStopsAtVertices(lastStopsAtVertices),
-                  dijSearchToPickup(reverseGraph, {*this, calculator, requestState}),
+                  dijSearchToPickup(reverseGraph, {*this, calculator}),
                   lastStopDistances(fleet.size()),
                   vehiclesSeen(fleet.size()) {}
 
@@ -242,7 +240,6 @@ namespace karri::PickupAfterLastStopStrategies {
 
         const InputGraphT &inputGraph;
         const InputGraphT &reverseGraph;
-        RequestState &requestState;
 
         RequestState const * curReqState;
 

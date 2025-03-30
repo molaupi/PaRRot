@@ -133,14 +133,12 @@ namespace karri::DropoffAfterLastStopStrategies {
                               const CostCalculator &calculator,
                               const LastStopBucketsEnvT &lastStopBucketsEnv,
                               CurVehLocToPickupSearchesT &curVehLocToPickupSearchesT,
-                              const RouteState &routeState,
-                              RequestState &requestState)
+                              const RouteState &routeState)
                 : inputGraph(inputGraph),
                   fleet(fleet),
                   calculator(calculator),
                   curVehLocToPickupSearches(curVehLocToPickupSearchesT),
                   routeState(routeState),
-                  requestState(requestState),
                   checkPBNSForVehicle(fleet.size()),
                   vehiclesSeenForDropoffs(fleet.size()),
                   search(lastStopBucketsEnv, lastStopDistances, chEnv, routeState,
@@ -420,7 +418,6 @@ namespace karri::DropoffAfterLastStopStrategies {
         const CostCalculator &calculator;
         CurVehLocToPickupSearchesT &curVehLocToPickupSearches;
         const RouteState &routeState;
-        RequestState &requestState;
 
         // Flag per vehicle that tells us if we still have to consider a pickup before the next stop of the vehicle.
         FastResetFlagArray<> checkPBNSForVehicle;

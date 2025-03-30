@@ -43,11 +43,9 @@ namespace karri::PDDistanceQueryStrategies {
         using DistanceLabel = typename LabelSetT::DistanceLabel;
         using PDDistancesT = PDDistances<LabelSetT>;
 
-        CHStrategy(const InputGraphT &inputGraph, const CHEnvT &chEnv,
-                    RequestState &requestState)
+        CHStrategy(const InputGraphT &inputGraph, const CHEnvT &chEnv)
                 : inputGraph(inputGraph),
                   ch(chEnv.getCH()),
-                  requestState(requestState),
                   query(chEnv.template getFullCHQuery<LabelSetT>()) {}
 
 
@@ -120,7 +118,6 @@ namespace karri::PDDistanceQueryStrategies {
 
         const InputGraphT &inputGraph;
         const CH &ch;
-        RequestState &requestState;
 
         typename CHEnvT::template FullCHQuery<LabelSetT> query;
     };

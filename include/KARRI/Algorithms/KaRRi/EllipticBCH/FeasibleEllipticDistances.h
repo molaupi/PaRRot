@@ -52,17 +52,15 @@ namespace karri {
 
     public:
 
-        explicit FeasibleEllipticDistances(const int fleetSize, const RouteState &routeState,
-                                           stats::EllipticBCHPerformanceStats& stats)
+        explicit FeasibleEllipticDistances(const int fleetSize, const RouteState &routeState)
                 : routeState(routeState),
                   fleetSize(fleetSize),
                   maxStopId(routeState.getMaxStopId()),
                   startOfRangeInValueArray(fleetSize, INVALID_INDEX),
                   minDistToPDLoc(fleetSize),
-                  minDistFromPDLocToNextStop(fleetSize),
-                  stats(stats) {}
+                  minDistFromPDLocToNextStop(fleetSize) {}
 
-        void init(const int newNumPDLocs) {
+        void init(const int newNumPDLocs, stats::EllipticBCHPerformanceStats& stats) {
             Timer timer;
             numLabelsPerStop = newNumPDLocs / K + (newNumPDLocs % K != 0);
 
@@ -317,8 +315,6 @@ namespace karri {
 
         std::vector<DistanceLabel> minDistToPDLoc;
         std::vector<DistanceLabel> minDistFromPDLocToNextStop;
-
-        stats::EllipticBCHPerformanceStats& stats;
 
     };
 
