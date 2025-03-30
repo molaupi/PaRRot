@@ -72,6 +72,7 @@
 #include <KARRI/Algorithms/KaRRi/AssignmentFinder.h>
 #include <KARRI/Algorithms/KaRRi/SystemStateUpdater.h>
 #include <KARRI/Algorithms/KaRRi/EventSimulation.h>
+#include <KARRI/Algorithms/KaRRi/RequestState/PDLocsFinder.h>
 
 #ifdef KARRI_USE_CCHS
 #include <KARRI/Algorithms/KaRRi/CCHEnvironment.h>
@@ -465,6 +466,9 @@ int main(int argc, char *argv[]) {
 
 
         const auto revVehicleGraph = vehicleInputGraph.getReverseGraph();
+        const auto revPsgGraph = psgInputGraph.getReverseGraph();
+
+
         using VehicleToPDLocQueryImpl = VehicleToPDLocQuery<VehicleInputGraph>;
         VehicleToPDLocQueryImpl vehicleToPdLocQuery(vehicleInputGraph, revVehicleGraph);
 
@@ -553,15 +557,20 @@ int main(int argc, char *argv[]) {
         using DALSInsertionsFinderImpl = DALSAssignmentsFinder<DALSStrategy>;
         DALSInsertionsFinderImpl dalsInsertionsFinder(dalsStrategy);
 
-        using RequestStateInitializerImpl = RequestStateInitializer<VehicleInputGraph, PsgInputGraph, VehCHEnv, PsgCHEnv, VehicleToPDLocQueryImpl>;
-        RequestStateInitializerImpl requestStateInitializer(vehicleInputGraph, psgInputGraph, *vehChEnv, *psgChEnv,
-                                                            reqState, vehicleToPdLocQuery);
+        using RequestStateInitializerImpl = RequestStateInitializer<VehicleInputGraph, PsgInputGraph, VehCHEnv, PsgCHEnv>;
+        RequestStateInitializerImpl requestStateInitializer(vehicleInputGraph, psgInputGraph, *vehChEnv, *psgChEnv);
+        
+        using PDLocsFinderImpl = PDLocsFinder<VehicleInputGraph, PsgInputGraph, VehicleToPDLocQueryImpl>;
+        PDLocsFinderImpl pdLocsFinder(vehicleInputGraph, psgInputGraph, revPsgGraph, vehicleToPdLocQuery);
 
+        FeasibleEllipticDistancesImpl feasibleEllipticPickups(fleet.size(), routeState, reqState.stats().ellipticBchStats);
+        FeasibleEllipticDistancesImpl feasibleEllipticDropoffs(fleet.size(), routeState, reqState.stats().ellipticBchStats);
 
         using InsertionFinderImpl = AssignmentFinder<
                 VehicleInputGraph,
                 FeasibleEllipticDistancesImpl,
                 RequestStateInitializerImpl,
+                PDLocsFinderImpl,
                 PDLocsAtExistingStopsFinderImpl,
                 EllipticBCHSearchesImpl,
                 FFPDDistanceQueryImpl,
@@ -570,11 +579,10 @@ int main(int argc, char *argv[]) {
                 PALSInsertionsFinderImpl,
                 DALSInsertionsFinderImpl,
                 RelevantPDLocsFilterImpl>;
-        InsertionFinderImpl insertionFinder(reqState, vehicleInputGraph, fleet, routeState,
-                                            requestStateInitializer, pdLocsAtExistingStops, ellipticSearches, ffPDDistanceQuery,
-                                            ordinaryInsertionsFinder, pbnsInsertionsFinder, palsInsertionsFinder,
-                                            dalsInsertionsFinder, relevantPdLocsFilter);
-
+        InsertionFinderImpl insertionFinder(vehicleInputGraph, requestStateInitializer, pdLocsFinder, pdLocsAtExistingStops, 
+            feasibleEllipticPickups, feasibleEllipticDropoffs,
+            ellipticSearches, ffPDDistanceQuery, ordinaryInsertionsFinder, pbnsInsertionsFinder, palsInsertionsFinder,
+            dalsInsertionsFinder, relevantPdLocsFilter);
 
         // Convert CH
         // Use ULTRA CH to build ULTRA algorithm instance
@@ -582,8 +590,7 @@ int main(int argc, char *argv[]) {
 
 
         using PTAndTaxiTripFinderImpl = PTAndTaxiTripFinder<InsertionFinderImpl, VehicleInputGraph, PsgInputGraph, PsgCHEnv>;
-        RequestState emptyReqState;
-        PTAndTaxiTripFinderImpl ptAndTaxiTripFinder(insertionFinder, emptyReqState, vehicleInputGraph, psgInputGraph, *psgChEnv);
+        PTAndTaxiTripFinderImpl ptAndTaxiTripFinder(insertionFinder, vehicleInputGraph, psgInputGraph, *psgChEnv);
 
 
 #if KARRI_OUTPUT_VEHICLE_PATHS

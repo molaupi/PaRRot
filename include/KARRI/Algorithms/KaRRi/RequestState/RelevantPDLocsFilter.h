@@ -49,61 +49,68 @@ namespace karri {
                   vehiclesWithFeasibleDistances(fleet.size()) {}
 
         RelevantPDLocs
-        filterOrdinaryPickups(FeasibleDistancesT &feasiblePickupDistances, RequestState &requestState) {
+        filterOrdinaryPickups(FeasibleDistancesT &feasiblePickupDistances, const RequestState &requestState,
+                              const PDLocs &pdLocs,
+                              stats::OrdAssignmentsPerformanceStats &stats) {
             Timer timer;
 
             int numRelStops = 0;
-            const auto rel = filter<false, false>(feasiblePickupDistances, requestState.numPickups(), numRelStops,
-                                                  requestState);
+            const auto rel = filter<false, false>(feasiblePickupDistances, pdLocs.numPickups(), numRelStops,
+                                                  requestState, pdLocs);
 
             const int64_t time = timer.elapsed<std::chrono::nanoseconds>();
-            requestState.stats().ordAssignmentsStats.filterRelevantPDLocsTime += time;
-            requestState.stats().ordAssignmentsStats.numRelevantStopsForPickups += numRelStops;
+            stats.filterRelevantPDLocsTime += time;
+            stats.numRelevantStopsForPickups += numRelStops;
 
             return rel;
         }
 
 
         RelevantPDLocs
-        filterOrdinaryDropoffs(FeasibleDistancesT &feasibleDropoffDistances, RequestState &requestState) {
+        filterOrdinaryDropoffs(FeasibleDistancesT &feasibleDropoffDistances, const RequestState &requestState,
+                               const PDLocs &pdLocs,
+                               stats::OrdAssignmentsPerformanceStats &stats) {
             Timer timer;
 
             int numRelStops = 0;
-            const auto rel = filter<false, true>(feasibleDropoffDistances, requestState.numDropoffs(), numRelStops,
-                                                 requestState);
+            const auto rel = filter<false, true>(feasibleDropoffDistances, pdLocs.numDropoffs(), numRelStops,
+                                                 requestState, pdLocs);
 
             const int64_t time = timer.elapsed<std::chrono::nanoseconds>();
-            requestState.stats().ordAssignmentsStats.filterRelevantPDLocsTime += time;
-            requestState.stats().ordAssignmentsStats.numRelevantStopsForDropoffs += numRelStops;
+            stats.filterRelevantPDLocsTime += time;
+            stats.numRelevantStopsForDropoffs += numRelStops;
 
             return rel;
         }
 
         RelevantPDLocs
-        filterPickupsBeforeNextStop(FeasibleDistancesT &feasiblePickupDistances, RequestState &requestState) {
+        filterPickupsBeforeNextStop(FeasibleDistancesT &feasiblePickupDistances, const RequestState &requestState,
+                                    const PDLocs &pdLocs,
+                                    stats::PbnsAssignmentsPerformanceStats &stats) {
             Timer timer;
 
             int numRelStops = 0;
-            const auto rel = filter<true, false>(feasiblePickupDistances, requestState.numPickups(), numRelStops,
-                                                 requestState);
+            const auto rel = filter<true, false>(feasiblePickupDistances, pdLocs.numPickups(), numRelStops,
+                                                 requestState, pdLocs);
 
             const int64_t time = timer.elapsed<std::chrono::nanoseconds>();
-            requestState.stats().pbnsAssignmentsStats.filterRelevantPDLocsTime += time;
-            requestState.stats().pbnsAssignmentsStats.numRelevantStopsForPickups += numRelStops;
+            stats.filterRelevantPDLocsTime += time;
+            stats.numRelevantStopsForPickups += numRelStops;
             return rel;
         }
 
         RelevantPDLocs filterDropoffsBeforeNextStop(FeasibleDistancesT &feasibleDropoffDistances,
-                                                    RequestState &requestState) {
+                                                    const RequestState &requestState, const PDLocs &pdLocs,
+                                                    stats::PbnsAssignmentsPerformanceStats &stats) {
             Timer timer;
 
             int numRelStops = 0;
-            const auto rel = filter<true, true>(feasibleDropoffDistances, requestState.numDropoffs(), numRelStops,
-                                                requestState);
+            const auto rel = filter<true, true>(feasibleDropoffDistances, pdLocs.numDropoffs(), numRelStops,
+                                                requestState, pdLocs);
 
             const int64_t time = timer.elapsed<std::chrono::nanoseconds>();
-            requestState.stats().pbnsAssignmentsStats.filterRelevantPDLocsTime += time;
-            requestState.stats().pbnsAssignmentsStats.numRelevantStopsForDropoffs += numRelStops;
+            stats.filterRelevantPDLocsTime += time;
+            stats.numRelevantStopsForDropoffs += numRelStops;
 
             return rel;
         }
@@ -113,7 +120,7 @@ namespace karri {
 
         template<bool beforeNextStop, bool isDropoff>
         RelevantPDLocs filter(FeasibleDistancesT &feasible, const int numPDLocs, int &numStopsRelevant,
-                              const RequestState &requestState) {
+                              const RequestState &requestState, const PDLocs &pdLocs) {
 
             // For each stop s, prune the pickups and dropoffs deemed relevant for an ordinary assignment after s by
             // checking them against constraints and lower bounds.
@@ -197,13 +204,14 @@ namespace karri {
                     for (unsigned int id = 0; id < numPDLocs; ++id) {
                         const auto &distToPDLoc = distsToPDLocs[id];
                         const auto &distFromPDLoc = distsFromPDLocs[id];
+
                         bool isRelevant;
                         if constexpr (isDropoff) {
                             isRelevant = isDropoffRelevant(veh, i, id, distToPDLoc, distFromPDLoc,
-                                                           requestState);
+                                                           requestState, pdLocs);
                         } else {
                             isRelevant = isPickupRelevant(veh, i, id, distToPDLoc, distFromPDLoc,
-                                                          requestState);
+                                                          requestState, pdLocs);
                         }
 
                         if (isRelevant) {
@@ -232,7 +240,8 @@ namespace karri {
         inline bool isPickupRelevant(const Vehicle &veh, const int stopIndex, const unsigned int pickupId,
                                      const int distFromStopToPickup,
                                      const int distFromPickupToNextStop,
-                                     const RequestState &requestState) const {
+                                     const RequestState &requestState,
+                                     const PDLocs &pdLocs) const {
             using namespace time_utils;
 
             const int &vehId = veh.vehicleId;
@@ -245,7 +254,7 @@ namespace karri {
             assert(distFromStopToPickup + distFromPickupToNextStop >=
                    calcLengthOfLegStartingAt(stopIndex, vehId, routeState));
 
-            const auto &p = requestState.pickups[pickupId];
+            const auto &p = pdLocs.pickups[pickupId];
 
             const auto depTimeAtPickup = getActualDepTimeAtPickup(vehId, stopIndex, distFromStopToPickup, p,
                                                                   requestState, routeState);
@@ -272,11 +281,12 @@ namespace karri {
         inline bool isDropoffRelevant(const Vehicle &veh, const int stopIndex, const unsigned int dropoffId,
                                       const int distFromStopToDropoff,
                                       const int distFromDropoffToNextStop,
-                                      const RequestState &requestState) {
+                                      const RequestState &requestState,
+                                      const PDLocs &pdLocs) {
             using namespace time_utils;
 
             const int &vehId = veh.vehicleId;
-            const auto &d = requestState.dropoffs[dropoffId];
+            const auto &d = pdLocs.dropoffs[dropoffId];
 
             // If this is the last stop in the route, we only consider this dropoff for ordinary assignments if it is at the
             // last stop. Similarly, if the vehicle is full after this stop, we can't perform the dropoff here unless the

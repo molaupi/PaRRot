@@ -49,12 +49,12 @@ namespace karri {
                   routeState(routeState),
                   requestState(requestState) {}
 
-        void findAssignments(const PDDistancesT& pdDistances) {
-            findAssignmentsWherePickupCoincidesWithLastStop(pdDistances);
-            strategy.tryPickupAfterLastStop(pdDistances);
+        void findAssignments(RequestState& requestState, const PDDistancesT& pdDistances, const PDLocs& pdLocs, stats::PalsAssignmentsPerformanceStats& stats) {
+            findAssignmentsWherePickupCoincidesWithLastStop(requestState, pdDistances, pdLocs, stats);
+            strategy.tryPickupAfterLastStop(requestState, pdDistances, pdLocs, stats);
         }
 
-        void init() {
+        void init(const RequestState&, const PDLocs&, stats::PalsAssignmentsPerformanceStats&) {
             // no op
         }
 
@@ -62,14 +62,14 @@ namespace karri {
 
         // Simple case for pickups that coincide with last stops of vehicles is the same regardless of strategy, so it
         // is treated here.
-        void findAssignmentsWherePickupCoincidesWithLastStop(const PDDistancesT& pdDistances) {
+        void findAssignmentsWherePickupCoincidesWithLastStop(RequestState& requestState, const PDDistancesT& pdDistances, const PDLocs& pdLocs, stats::PalsAssignmentsPerformanceStats& stats) {
             int numInsertionsForCoinciding = 0;
             int numCandidateVehiclesForCoinciding = 0;
             Timer timer;
 
             Assignment asgn;
             asgn.distToPickup = 0;
-            for (const auto &p: requestState.pickups) {
+            for (const auto &p: pdLocs.pickups) {
                 asgn.pickup = p;
 
                 const int head = inputGraph.edgeHead(asgn.pickup.loc);
@@ -90,7 +90,7 @@ namespace karri {
                     asgn.pickupStopIdx = numStops - 1;
                     asgn.dropoffStopIdx = numStops - 1;
 
-                    for (const auto &d: requestState.dropoffs) {
+                    for (const auto &d: pdLocs.dropoffs) {
                         asgn.dropoff = d;
                         asgn.distToDropoff = pdDistances.getDirectDistance(asgn.pickup, asgn.dropoff);
                         ++numInsertionsForCoinciding;
@@ -100,9 +100,9 @@ namespace karri {
             }
 
             const auto time = timer.elapsed<std::chrono::nanoseconds>();
-            requestState.stats().palsAssignmentsStats.pickupAtLastStop_tryAssignmentsTime += time;
-            requestState.stats().palsAssignmentsStats.pickupAtLastStop_numCandidateVehicles += numCandidateVehiclesForCoinciding;
-            requestState.stats().palsAssignmentsStats.pickupAtLastStop_numAssignmentsTried += numInsertionsForCoinciding;
+            stats.pickupAtLastStop_tryAssignmentsTime += time;
+            stats.pickupAtLastStop_numCandidateVehicles += numCandidateVehiclesForCoinciding;
+            stats.pickupAtLastStop_numAssignmentsTried += numInsertionsForCoinciding;
         }
 
         StrategyT &strategy;

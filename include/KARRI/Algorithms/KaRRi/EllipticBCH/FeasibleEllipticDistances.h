@@ -91,7 +91,8 @@ namespace karri {
 
         template<typename PDLocsAtExistingStopsT, typename InputGraphT>
         void initializeDistancesForPdLocsAtExistingStops(PDLocsAtExistingStopsT &&pdLocsAtExistingStops,
-                                                          const InputGraphT &inputGraph) {
+                                                          const InputGraphT &inputGraph,
+                                                          stats::EllipticBCHPerformanceStats& stats) {
             Timer timer;
 
             // Pre-allocate entries for PD locs at existing stops. The distance 0 may otherwise not be found by the

@@ -19,13 +19,11 @@ namespace karri {
 
     public:
     
-        PTAndTaxiTripFinder(AssignmentFinderT &assignmentFinder, 
-                            const RequestState &requestState,
+        PTAndTaxiTripFinder(AssignmentFinderT &assignmentFinder,
                             const VehicleInputGraphT &vehInputGraph,
                             const PsgInputGraphT &psgInputGraph,
                             const PsgCHEnvT &psgChEnv)
                 : assignmentFinder(assignmentFinder), 
-                  requestState(requestState),
                   vehInputGraph(vehInputGraph),
                   psgInputGraph(psgInputGraph),
                   psgCh(psgChEnv.getCH()) {}
@@ -33,10 +31,11 @@ namespace karri {
         PTAndTaxiTriple findBestAssignment(const Request &req) {
             // First taxi leg
             // TODO: make sure request state is trivially copyable by using changes in mt_karri_batch
-            const auto taxiOnlyResult = assignmentFinder.findBestAssignment(req);
+            auto taxiOnlyResult = assignmentFinder.findBestAssignment(req);
+            RequestState invalidTaxiResponse;
             
             // Return the combined results
-            return PTAndTaxiTriple(taxiOnlyResult, PTResult(false), {});
+            return PTAndTaxiTriple(taxiOnlyResult, PTResult(false), invalidTaxiResponse);
         }
 
     private:
@@ -106,7 +105,6 @@ namespace karri {
         }
 
         AssignmentFinderT &assignmentFinder;
-        const RequestState &requestState;
         const VehicleInputGraphT &vehInputGraph;
         const PsgInputGraphT &psgInputGraph;
         const CH &psgCh;

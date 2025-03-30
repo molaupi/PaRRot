@@ -67,7 +67,7 @@ namespace karri::DropoffAfterLastStopStrategies {
 
                 const DistanceLabel walkingDists = considerWalkingDists ? strat.currentDropoffWalkingDists : 0;
                 const DistanceLabel costLowerBound = calc.template calcKVehicleIndependentCostLowerBoundsForDALSWithKnownMinDistToDropoff<LabelSet>(
-                        walkingDists, distancesToDropoffs, 0, strat.requestState);
+                        walkingDists, distancesToDropoffs, 0, *strat.curReqState);
 
                 return strat.upperBoundCost < costLowerBound;
             }
@@ -87,7 +87,7 @@ namespace karri::DropoffAfterLastStopStrategies {
                 }
 
                 const DistanceLabel costLowerBound = calc.template calcKVehicleIndependentCostLowerBoundsForDALSWithKnownMinArrTime<LabelSet>(
-                        strat.currentDropoffWalkingDists, minDistancesToDropoffs, arrTimesAtDropoffs, strat.requestState);
+                        strat.currentDropoffWalkingDists, minDistancesToDropoffs, arrTimesAtDropoffs, *strat.curReqState);
 
                 return strat.upperBoundCost < costLowerBound;
             }
@@ -101,7 +101,7 @@ namespace karri::DropoffAfterLastStopStrategies {
                 }
 
                 const DistanceLabel costLowerBound = calc.template calcKVehicleDependentCostLowerBoundsForDALSWithKnownDistToDropoff<LabelSet>(
-                        vehId, strat.currentDropoffWalkingDists, distancesToDropoffs, 0, strat.requestState);
+                        vehId, strat.currentDropoffWalkingDists, distancesToDropoffs, 0, *strat.curReqState);
                 return strat.upperBoundCost < costLowerBound;
             }
 
@@ -149,42 +149,47 @@ namespace karri::DropoffAfterLastStopStrategies {
                   lastStopDistances(fleet.size()) {}
 
         void tryDropoffAfterLastStop(const RelevantPDLocs &relevantOrdinaryPickups,
-                                     const RelevantPDLocs &relevantPickupsBeforeNextStop) {
+                                     const RelevantPDLocs &relevantPickupsBeforeNextStop,
+                                     RequestState& requestState,
+                                     const PDLocs& pdLocs, stats::DalsAssignmentsPerformanceStats& stats) {
+            curReqState = &requestState;
             curRelOrdinaryPickups = &relevantOrdinaryPickups;
             curRelPickupsBns = &relevantPickupsBeforeNextStop;
 
-            runBchQueries();
-            enumerateAssignments(relevantOrdinaryPickups, relevantPickupsBeforeNextStop);
+            runBchQueries(requestState, pdLocs, stats);
+            enumerateAssignments(relevantOrdinaryPickups, relevantPickupsBeforeNextStop, requestState, pdLocs, stats);
         }
 
     private:
 
         // Run BCH queries that obtain distances from last stops to dropoffs
-        void runBchQueries() {
+        void runBchQueries(RequestState& requestState, const PDLocs& pdLocs, stats::DalsAssignmentsPerformanceStats& stats) {
             Timer timer;
 
-            initDropoffSearches();
-            for (unsigned int i = 0; i < requestState.numDropoffs(); i += K)
-                runSearchesForDropoffBatch(i);
+            initDropoffSearches(requestState, pdLocs);
+            for (unsigned int i = 0; i < pdLocs.numDropoffs(); i += K)
+                runSearchesForDropoffBatch(i, pdLocs);
 
             const auto searchTime = timer.elapsed<std::chrono::nanoseconds>();
-            requestState.stats().dalsAssignmentsStats.searchTime += searchTime;
-            requestState.stats().dalsAssignmentsStats.numEdgeRelaxationsInSearchGraph += totalNumEdgeRelaxations;
-            requestState.stats().dalsAssignmentsStats.numVerticesOrLabelsSettled += totalNumVerticesSettled;
-            requestState.stats().dalsAssignmentsStats.numEntriesOrLastStopsScanned += totalNumEntriesScanned;
-            requestState.stats().dalsAssignmentsStats.numCandidateVehicles += vehiclesSeenForDropoffs.size();
+            stats.searchTime += searchTime;
+            stats.numEdgeRelaxationsInSearchGraph += totalNumEdgeRelaxations;
+            stats.numVerticesOrLabelsSettled += totalNumVerticesSettled;
+            stats.numEntriesOrLastStopsScanned += totalNumEntriesScanned;
+            stats.numCandidateVehicles += vehiclesSeenForDropoffs.size();
         }
 
         // Enumerate DALS assignments
         void enumerateAssignments(const RelevantPDLocs &relevantOrdinaryPickups,
-                                  const RelevantPDLocs &relevantPickupsBeforeNextStop) {
+                                  const RelevantPDLocs &relevantPickupsBeforeNextStop,
+                                  RequestState& requestState,
+                                  const PDLocs& pdLocs, stats::DalsAssignmentsPerformanceStats& stats) {
             int numAssignmentsTried = 0;
             const int64_t pbnsTimeBefore = curVehLocToPickupSearches.getTotalLocatingVehiclesTimeForRequest() +
                                            curVehLocToPickupSearches.getTotalVehicleToPickupSearchTimeForRequest();
             Timer timer;
 
-            enumerateAssignmentsWithOrdinaryPickup(numAssignmentsTried, relevantOrdinaryPickups);
-            enumerateAssignmentsWithPBNS(numAssignmentsTried, relevantPickupsBeforeNextStop);
+            enumerateAssignmentsWithOrdinaryPickup(numAssignmentsTried, relevantOrdinaryPickups, requestState, pdLocs);
+            enumerateAssignmentsWithPBNS(numAssignmentsTried, relevantPickupsBeforeNextStop, requestState, pdLocs);
 
             // Time spent to locate vehicles and compute distances from current vehicle locations to pickups is counted
             // into PBNS time so subtract it here.
@@ -193,20 +198,22 @@ namespace karri::DropoffAfterLastStopStrategies {
                                      pbnsTimeBefore;
 
             const int64_t tryAssignmentsTime = timer.elapsed<std::chrono::nanoseconds>() - pbnsTime;
-            requestState.stats().dalsAssignmentsStats.tryAssignmentsTime += tryAssignmentsTime;
-            requestState.stats().dalsAssignmentsStats.numAssignmentsTried += numAssignmentsTried;
+            stats.tryAssignmentsTime += tryAssignmentsTime;
+            stats.numAssignmentsTried += numAssignmentsTried;
 
             // Find total number of candidate dropoffs for statistics
             int totalNumberOfCandidateDropoffs = 0;
             for (const auto &vehId: vehiclesSeenForDropoffs)
-                for (const auto &dropoff: requestState.dropoffs)
+                for (const auto &dropoff: pdLocs.dropoffs)
                     totalNumberOfCandidateDropoffs += (getDistanceToDropoff(vehId, dropoff.id) < INFTY);
-            requestState.stats().dalsAssignmentsStats.numCandidateDropoffsAcrossAllVehicles += totalNumberOfCandidateDropoffs;
+            stats.numCandidateDropoffsAcrossAllVehicles += totalNumberOfCandidateDropoffs;
         }
 
         // Enumerate assignments where pickup is after next stop (ordinary pickup):
         void enumerateAssignmentsWithOrdinaryPickup(int &numAssignmentsTried,
-                                                    const RelevantPDLocs &relevantOrdinaryPickups) {
+                                                    const RelevantPDLocs &relevantOrdinaryPickups,
+                                                    RequestState& requestState,
+                                                    const PDLocs& pdLocs) {
             Assignment asgn;
 
             checkPBNSForVehicle.reset();
@@ -223,7 +230,7 @@ namespace karri::DropoffAfterLastStopStrategies {
                 asgn.vehicle = &fleet[vehId];
                 asgn.dropoffStopIdx = numStops - 1;
 
-                for (const auto &dropoff: requestState.dropoffs) {
+                for (const auto &dropoff: pdLocs.dropoffs) {
                     asgn.dropoff = dropoff;
 
                     asgn.distToDropoff = getDistanceToDropoff(vehId, asgn.dropoff.id);
@@ -254,7 +261,7 @@ namespace karri::DropoffAfterLastStopStrategies {
                             curPickupIndex = entry.stopIndex;
                         }
 
-                        asgn.pickup = requestState.pickups[entry.pdId];
+                        asgn.pickup = pdLocs.pickups[entry.pdId];
                         if (asgn.pickup.loc == asgn.dropoff.loc)
                             continue;
                         ++numAssignmentsTried;
@@ -275,7 +282,9 @@ namespace karri::DropoffAfterLastStopStrategies {
 
         // Enumerate assignments where the pickup is before the next stop (PBNS + DALS):
         void enumerateAssignmentsWithPBNS(int &numAssignmentsTried,
-                                          const RelevantPDLocs &relevantPickupsBeforeNextStop) {
+                                          const RelevantPDLocs &relevantPickupsBeforeNextStop,
+                                          RequestState& requestState,
+                                          const PDLocs& pdLocs) {
             Assignment asgn;
             asgn.pickupStopIdx = 0;
 
@@ -299,9 +308,9 @@ namespace karri::DropoffAfterLastStopStrategies {
 
 
                 for (auto &entry: relevantPickupsBeforeNextStop.relevantSpotsFor(vehId)) {
-                    asgn.pickup = requestState.pickups[entry.pdId];
+                    asgn.pickup = pdLocs.pickups[entry.pdId];
                     asgn.distFromPickup = entry.distFromPDLocToNextStop;
-                    for (const auto &dropoff: requestState.dropoffs) {
+                    for (const auto &dropoff: pdLocs.dropoffs) {
                         asgn.dropoff = dropoff;
                         if (asgn.pickup.loc == asgn.dropoff.loc)
                             continue;
@@ -333,11 +342,11 @@ namespace karri::DropoffAfterLastStopStrategies {
                 }
 
                 // Continue with assignments for pickups where exact distance via vehicle location is needed
-                curVehLocToPickupSearches.computeExactDistancesVia(fleet[vehId]);
+                curVehLocToPickupSearches.computeExactDistancesVia(fleet[vehId], pdLocs);
                 for (const auto &continuation: pbnsContinuations) {
-                    assert(continuation.pickupID >= 0 && continuation.pickupID < requestState.numPickups());
-                    assert(continuation.fromDropoffID >= 0 && continuation.fromDropoffID < requestState.numDropoffs());
-                    asgn.pickup = requestState.pickups[continuation.pickupID];
+                    assert(continuation.pickupID >= 0 && continuation.pickupID < pdLocs.numPickups());
+                    assert(continuation.fromDropoffID >= 0 && continuation.fromDropoffID < pdLocs.numDropoffs());
+                    asgn.pickup = pdLocs.pickups[continuation.pickupID];
 
                     asgn.distToPickup = curVehLocToPickupSearches.getDistance(vehId,
                                                                               continuation.pickupID);
@@ -346,8 +355,8 @@ namespace karri::DropoffAfterLastStopStrategies {
 
                     asgn.distFromPickup = continuation.distFromPickup;
                     for (int dropoffID = continuation.fromDropoffID;
-                         dropoffID < requestState.numDropoffs(); ++dropoffID) {
-                        asgn.dropoff = requestState.dropoffs[dropoffID];
+                         dropoffID < pdLocs.numDropoffs(); ++dropoffID) {
+                        asgn.dropoff = pdLocs.dropoffs[dropoffID];
                         if (asgn.pickup.loc == asgn.dropoff.loc)
                             continue;
 
@@ -367,7 +376,7 @@ namespace karri::DropoffAfterLastStopStrategies {
             return lastStopDistances.getDistance(vehId, dropoffId);
         }
 
-        void initDropoffSearches() {
+        void initDropoffSearches(const RequestState& requestState, const PDLocs& pdLocs) {
             totalNumEdgeRelaxations = 0;
             totalNumVerticesSettled = 0;
             totalNumEntriesScanned = 0;
@@ -377,21 +386,21 @@ namespace karri::DropoffAfterLastStopStrategies {
 
             // Construct more space for dropoff labels if needed.
             const int numDropoffBatches =
-                    requestState.numDropoffs() / K + (requestState.numDropoffs() % K != 0);
+                    pdLocs.numDropoffs() / K + (pdLocs.numDropoffs() % K != 0);
             lastStopDistances.init(numDropoffBatches);
 
         }
 
-        void runSearchesForDropoffBatch(const unsigned int firstDropoffId) {
-            assert(firstDropoffId % K == 0 && firstDropoffId < requestState.numDropoffs());
+        void runSearchesForDropoffBatch(const unsigned int firstDropoffId, const PDLocs& pdLocs) {
+            assert(firstDropoffId % K == 0 && firstDropoffId < pdLocs.numDropoffs());
             const int batchIdx = firstDropoffId / K;
 
             std::array<int, K> dropoffTails;
             std::array<int, K> travelTimes;
             for (int i = 0; i < K; ++i) {
                 const auto &dropoff =
-                        firstDropoffId + i < requestState.numDropoffs() ? requestState.dropoffs[firstDropoffId + i]
-                                                                        : requestState.dropoffs[firstDropoffId];
+                        firstDropoffId + i < pdLocs.numDropoffs() ? pdLocs.dropoffs[firstDropoffId + i]
+                                                                        : pdLocs.dropoffs[firstDropoffId];
                 dropoffTails[i] = inputGraph.edgeTail(dropoff.loc);
                 travelTimes[i] = inputGraph.travelTime(dropoff.loc);
                 currentDropoffWalkingDists[i] = dropoff.walkingDist;
@@ -433,7 +442,8 @@ namespace karri::DropoffAfterLastStopStrategies {
         DistanceLabel currentDropoffWalkingDists;
         TentativeLastStopDistances<LabelSet> lastStopDistances;
 
-        // Pointers to relevant PD locs so Dijkstra search callback has access to them
+        // Pointers to request state and relevant PD locs so Dijkstra search callback has access to them
+        RequestState const *curReqState;
         RelevantPDLocs const *curRelOrdinaryPickups;
         RelevantPDLocs const *curRelPickupsBns;
 

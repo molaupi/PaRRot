@@ -26,7 +26,7 @@
 #pragma once
 
 
-#include "FindPDLocsInRadiusQuery.h"
+#include "PDLocsFinder.h"
 #include "../BaseObjects/Request.h"
 #include "../BaseObjects/PDLocs.h"
 #include "../Stats/PerformanceStats.h"
@@ -46,9 +46,7 @@ namespace karri {
         RequestState()
                 : originalRequest(),
                   originalReqDirectDist(-1),
-                  minDirectPDDist(-1),
-                  pickups(),
-                  dropoffs() {}
+                  minDirectPDDist(-1) {}
 
 
         ~RequestState() {
@@ -65,41 +63,17 @@ namespace karri {
         int originalReqDirectDist;
         int minDirectPDDist;
 
-        std::vector<PDLoc> pickups;
-        std::vector<PDLoc> dropoffs;
-
-        int numPickups() const {
-            return pickups.size();
-        }
-
-        int numDropoffs() const {
-            return dropoffs.size();
-        }
-
-        // Shorthand for requestTime
-        int now() const {
-            return originalRequest.requestTime;
-        }
-
         int getOriginalReqMaxTripTime() const {
             assert(originalReqDirectDist >= 0);
             return static_cast<int>(InputConfig::getInstance().alpha * static_cast<double>(originalReqDirectDist)) + InputConfig::getInstance().beta;
         }
 
-        int getPassengerArrAtPickup(const int pickupId) const {
-            assert(pickupId < numPickups());
-            return originalRequest.requestTime + pickups[pickupId].walkingDist;
+        int getPassengerArrAtPickup(const PDLoc& pickup) const {
+            return originalRequest.requestTime + pickup.walkingDist;
         }
 
-        int getMaxPDTripTime(const int pickupId, const int dropoffId) const {
-            assert(pickupId < numPickups() && dropoffId < numDropoffs());
-            assert(originalReqDirectDist >= 0);
-            return getOriginalReqMaxTripTime() - (pickups[pickupId].walkingDist + dropoffs[dropoffId].walkingDist);
-        }
-
-        int getMaxArrTimeAtDropoff(const int pickupId, const int dropoffId) const {
-            assert(pickupId < numPickups() && dropoffId < numDropoffs());
-            return getPassengerArrAtPickup(pickupId) + getMaxPDTripTime(pickupId, dropoffId);
+        int getMaxArrTimeAtDropoff(const PDLoc& dropoff) const {
+            return originalRequest.requestTime + getOriginalReqMaxTripTime() - dropoff.walkingDist;
         }
 
         int getMaxDepTimeAtPickup() const {
@@ -169,8 +143,6 @@ namespace karri {
             originalRequest = {};
             originalReqDirectDist = INFTY;
             minDirectPDDist = INFTY;
-            pickups.clear();
-            dropoffs.clear();
 
             bestAssignment = Assignment();
             bestCost = INFTY;
