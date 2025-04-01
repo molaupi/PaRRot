@@ -63,6 +63,11 @@ namespace karri {
         int originalReqDirectDist;
         int minDirectPDDist;
 
+        // Shorthand for requestTime
+        int now() const {
+            return originalRequest.requestTime;
+        }
+
         int getOriginalReqMaxTripTime() const {
             assert(originalReqDirectDist >= 0);
             return static_cast<int>(InputConfig::getInstance().alpha * static_cast<double>(originalReqDirectDist)) + InputConfig::getInstance().beta;

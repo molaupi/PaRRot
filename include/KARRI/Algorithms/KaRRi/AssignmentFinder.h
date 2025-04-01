@@ -84,41 +84,44 @@ namespace karri {
 
             // Initialize finder for this request, find PD locations:
             RequestState rs = requestStateInitializer.initializeRequestState(req);
-            PDLocs pdLocs = pdLocsFinder.findPDLocs(req.origin, req.destination, rs.stats().initializationStats);
-            rs.stats().numPickups = pdLocs.numPickups();
-            rs.stats().numDropoffs = pdLocs.numDropoffs();
-            initializeComponentsForRequest(rs, pdLocs, rs.stats());
+            stats::DispatchingPerformanceStats& stats = rs.stats();
+            PDLocs pdLocs = pdLocsFinder.findPDLocs(req.origin, req.destination, stats.initializationStats);
+            stats.numPickups = pdLocs.numPickups();
+            stats.numDropoffs = pdLocs.numDropoffs();
+            initializeComponentsForRequest(rs, pdLocs, stats);
 
             // Compute PD distances:
-            const auto ffPdDistances = ffPDDistanceSearches.run(rs, pdLocs, rs.stats().pdDistancesStats);
+            const auto ffPdDistances = ffPDDistanceSearches.run(rs, pdLocs, stats.pdDistancesStats);
 
             // Try PALS assignments:
-            palsAssignments.findAssignments(rs, ffPdDistances, pdLocs, rs.stats().palsAssignmentsStats);
+            palsAssignments.findAssignments(rs, ffPdDistances, pdLocs, stats.palsAssignmentsStats);
 
             // Run elliptic BCH searches (populates feasibleEllipticPickups and feasibleEllipticDropoffs):
-            ellipticBchSearches.run(feasibleEllipticPickups, feasibleEllipticDropoffs, rs, pdLocs, rs.stats().ellipticBchStats);
+            ellipticBchSearches.run(feasibleEllipticPickups, feasibleEllipticDropoffs, rs, pdLocs, stats.ellipticBchStats);
 
             // Filter feasible PD-locations between ordinary stops:
-            const auto relOrdinaryPickups = relevantPdLocsFilter.filterOrdinaryPickups(feasibleEllipticPickups, rs, pdLocs, rs.stats().ordAssignmentsStats);
-            const auto relOrdinaryDropoffs = relevantPdLocsFilter.filterOrdinaryDropoffs(feasibleEllipticDropoffs, rs, pdLocs, rs.stats().ordAssignmentsStats);
+            const auto relOrdinaryPickups = relevantPdLocsFilter.filterOrdinaryPickups(feasibleEllipticPickups, rs, pdLocs,
+                                                                                       stats.ordAssignmentsStats);
+            const auto relOrdinaryDropoffs = relevantPdLocsFilter.filterOrdinaryDropoffs(feasibleEllipticDropoffs,
+                                                                                         rs, pdLocs, stats.ordAssignmentsStats);
 
             // Try ordinary assignments:
-            ordAssignments.findAssignments(relOrdinaryPickups, relOrdinaryDropoffs, rs, ffPdDistances, pdLocs, rs.stats().ordAssignmentsStats);
+            ordAssignments.findAssignments(relOrdinaryPickups, relOrdinaryDropoffs, rs, ffPdDistances, pdLocs, stats.ordAssignmentsStats);
 
             // Filter feasible pickups before next stops:
             const auto relPickupsBeforeNextStop = relevantPdLocsFilter.filterPickupsBeforeNextStop(
-                feasibleEllipticPickups, rs, pdLocs, rs.stats().pbnsAssignmentsStats);
+                    feasibleEllipticPickups, rs, pdLocs, stats.pbnsAssignmentsStats);
 
             // Try DALS assignments:
-            dalsAssignments.findAssignments(relOrdinaryPickups, relPickupsBeforeNextStop, rs, pdLocs, rs.stats().dalsAssignmentsStats);
+            dalsAssignments.findAssignments(relOrdinaryPickups, relPickupsBeforeNextStop, rs, pdLocs, stats.dalsAssignmentsStats);
 
             // Filter feasible dropoffs before next stop:
             const auto relDropoffsBeforeNextStop = relevantPdLocsFilter.filterDropoffsBeforeNextStop(
-                feasibleEllipticDropoffs, rs, pdLocs, rs.stats().pbnsAssignmentsStats);
+                    feasibleEllipticDropoffs, rs, pdLocs, stats.pbnsAssignmentsStats);
 
             // Try PBNS assignments:
             pbnsAssignments.findAssignments(relPickupsBeforeNextStop, relOrdinaryDropoffs, relDropoffsBeforeNextStop,
-                                            rs, ffPdDistances, pdLocs, rs.stats().pbnsAssignmentsStats);
+                                            rs, ffPdDistances, pdLocs, stats.pbnsAssignmentsStats);
 
             return rs;
         }

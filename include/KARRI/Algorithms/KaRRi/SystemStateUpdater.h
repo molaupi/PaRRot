@@ -143,9 +143,9 @@ namespace karri {
             // If the vehicle has to be rerouted at its current location for a PBNS assignment, we introduce an
             // intermediate stop at its current location representing the rerouting.
             if (asgn.pickupStopIdx == 0 && numStopsBefore > 1 && routeState.schedDepTimesFor(vehId)[0] <
-                                                                 requestState.originalRequest.requestTime) {
+                                                                 requestState.now()) {
                 createIntermediateStopStopAtCurrentLocationForReroute(*asgn.vehicle,
-                                                                      requestState.originalRequest.requestTime,
+                                                                      requestState.now(),
                                                                       requestState.stats().updateStats
                                                                     );
                 ++pickupIndex;

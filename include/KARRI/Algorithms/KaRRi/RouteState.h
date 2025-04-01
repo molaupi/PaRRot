@@ -218,7 +218,7 @@ namespace karri {
             const auto vehId = asgn.vehicle->vehicleId;
             const auto pickup = asgn.pickup;
             const auto dropoff = asgn.dropoff;
-            const int now = requestState.originalRequest.requestTime;
+            const int now = requestState.now();
             const int numRiders = requestState.originalRequest.numRiders;
             const auto &start = pos[vehId].start;
             const auto &end = pos[vehId].end;
@@ -253,7 +253,7 @@ namespace karri {
             } else {
                 // If vehicle is currently idle, the vehicle can leave its current stop at the earliest when the
                 // request is made. In that case, we update the arrival time to count the idling as one stopTime.
-                schedDepTimes[end - 1] = std::max(schedDepTimes[end - 1], requestState.originalRequest.requestTime);
+                schedDepTimes[end - 1] = std::max(schedDepTimes[end - 1], requestState.now());
                 schedArrTimes[end - 1] = schedDepTimes[end - 1] - InputConfig::getInstance().stopTime;
                 ++pickupIndex;
                 ++dropoffIndex;
