@@ -30,7 +30,7 @@ public:
           ptLeg(ptLeg), 
           secondTaxiLeg(secondTaxiLeg) {}
     
-    const RequestState& getFirstTaxiLeg() const { return firstTaxiLeg; }
+    RequestState& getFirstTaxiLeg() { return firstTaxiLeg; }
     const PTResult& getPTLeg() const { return ptLeg; }
     const RequestState& getSecondTaxiLeg() const { return secondTaxiLeg; }
     

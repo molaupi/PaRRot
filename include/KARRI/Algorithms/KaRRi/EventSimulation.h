@@ -288,10 +288,11 @@ namespace karri {
             const auto &request = requests[reqId];
             // Find best assignment 
             // TODO: Add case for PT only trips
-            auto asgnFinderResponse = assignmentFinder.findBestAssignment(request);
-            systemStateUpdater.writeBestAssignmentToLogger(asgnFinderResponse);
+            auto ptAndTaxiTripFinderResponse = ptAndTaxiTripFinder.findBestAssignment(request);
+            auto firstTaxiLeg = ptAndTaxiTripFinderResponse.getFirstTaxiLeg();
+            systemStateUpdater.writeBestAssignmentToLogger(firstTaxiLeg);
 
-            applyAssignment(asgnFinderResponse, reqId, occTime);
+            applyAssignment(firstTaxiLeg, reqId, occTime);
 
             const auto time = timer.elapsed<std::chrono::nanoseconds>();
             eventSimulationStatsLogger << occTime << ",RequestReceipt," << time << '\n';

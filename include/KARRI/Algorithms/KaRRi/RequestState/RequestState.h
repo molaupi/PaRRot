@@ -46,7 +46,11 @@ namespace karri {
         RequestState()
                 : originalRequest(),
                   originalReqDirectDist(-1),
-                  minDirectPDDist(-1) {}
+                  minDirectPDDist(-1),
+                  bestAssignment(),
+                  bestCost(INFTY),
+                  notUsingVehicleIsBest(false),
+                  notUsingVehicleDist(INFTY) {}
 
 
         ~RequestState() {
@@ -103,7 +107,7 @@ namespace karri {
             return notUsingVehicleDist;
         }
 
-        bool tryAssignmentWithKnownCost(const Assignment &asgn, const int cost) {
+        bool tryAssignmentWithKnownCost(const Assignment &asgn, const int cost) {         
             if (cost < INFTY && (cost < bestCost || (cost == bestCost &&
                                     breakCostTie(asgn, bestAssignment)))) {
 
