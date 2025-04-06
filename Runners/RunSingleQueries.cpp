@@ -417,7 +417,6 @@ int main(int argc, char *argv[]) {
         using VehicleLocatorImpl = VehicleLocator<VehicleInputGraph, VehCHEnv>;
         VehicleLocatorImpl locator(vehicleInputGraph, *vehChEnv, routeState);
 
-        CostCalculator calc(routeState);
         RequestState reqState;
 
         // Construct Elliptic BCH bucket environment:
@@ -487,7 +486,7 @@ int main(int argc, char *argv[]) {
 
         // Construct ordinary assignments finder:
         using OrdinaryAssignmentsFinderImpl = OrdinaryAssignmentsFinder<PDDistancesImpl>;
-        OrdinaryAssignmentsFinderImpl ordinaryInsertionsFinder(fleet, calc, routeState);
+        OrdinaryAssignmentsFinderImpl ordinaryInsertionsFinder(fleet, routeState);
 
         // Construct PBNS assignments finder:
         using CurVehLocToPickupLabelSet = PDDistancesLabelSet;
@@ -496,7 +495,7 @@ int main(int argc, char *argv[]) {
 
 
         using PBNSInsertionsFinderImpl = PBNSAssignmentsFinder<PDDistancesImpl, CurVehLocToPickupSearchesImpl>;
-        PBNSInsertionsFinderImpl pbnsInsertionsFinder(curVehLocToPickupSearches, fleet, calc, routeState);
+        PBNSInsertionsFinderImpl pbnsInsertionsFinder(curVehLocToPickupSearches, fleet, routeState);
 
         // Construct PALS strategy and assignment finder:
         using PALSLabelSet = std::conditional_t<KARRI_PALS_USE_SIMD,
@@ -508,20 +507,20 @@ int main(int argc, char *argv[]) {
         // Use Collective-BCH PALS Strategy
         using PALSStrategy = PickupAfterLastStopStrategies::CollectiveBCHStrategy<VehicleInputGraph, VehCHEnv, LastStopBucketsEnv, VehicleToPDLocQueryImpl, PDDistancesImpl, PALSLabelSet>;
         PALSStrategy palsStrategy(vehicleInputGraph, fleet, *vehChEnv,
-                                  vehicleToPdLocQuery, lastStopBucketsEnv, calc, routeState);
+                                  vehicleToPdLocQuery, lastStopBucketsEnv, routeState);
 #elif KARRI_PALS_STRATEGY == KARRI_IND
         // Use Individual-BCH PALS Strategy
         using PALSStrategy = PickupAfterLastStopStrategies::IndividualBCHStrategy<VehicleInputGraph, VehCHEnv, LastStopBucketsEnv, PDDistancesImpl, PALSLabelSet>;
-        PALSStrategy palsStrategy(vehicleInputGraph, fleet, *vehChEnv, calc, lastStopBucketsEnv,
+        PALSStrategy palsStrategy(vehicleInputGraph, fleet, *vehChEnv, lastStopBucketsEnv,
                                   routeState);
 #else // KARRI_PALS_STRATEGY == KARRI_DIJ
         // Use Dijkstra PALS Strategy
         using PALSStrategy = PickupAfterLastStopStrategies::DijkstraStrategy<VehicleInputGraph, LastStopBucketsEnv, PDDistancesImpl, PALSLabelSet>;
-        PALSStrategy palsStrategy(vehicleInputGraph, revVehicleGraph, fleet, routeState, lastStopBucketsEnv, calc);
+        PALSStrategy palsStrategy(vehicleInputGraph, revVehicleGraph, fleet, routeState, lastStopBucketsEnv);
 #endif
 
         using PALSInsertionsFinderImpl = PALSAssignmentsFinder<VehicleInputGraph, PDDistancesImpl, PALSStrategy, LastStopAtVerticesInfo>;
-        PALSInsertionsFinderImpl palsInsertionsFinder(palsStrategy, vehicleInputGraph, fleet, calc, lastStopBucketsEnv, routeState);
+        PALSInsertionsFinderImpl palsInsertionsFinder(palsStrategy, vehicleInputGraph, fleet, lastStopBucketsEnv, routeState);
 
 
         // Construct DALS strategy and assignment finder:
@@ -529,21 +528,21 @@ int main(int argc, char *argv[]) {
 #if KARRI_DALS_STRATEGY == KARRI_COL
         // Use Collective-BCH DALS Strategy
         using DALSStrategy = DropoffAfterLastStopStrategies::CollectiveBCHStrategy<VehicleInputGraph, VehCHEnv, LastStopBucketsEnv, CurVehLocToPickupSearchesImpl>;
-        DALSStrategy dalsStrategy(vehicleInputGraph, fleet, routeState, *vehChEnv, lastStopBucketsEnv, calc, curVehLocToPickupSearches);
+        DALSStrategy dalsStrategy(vehicleInputGraph, fleet, routeState, *vehChEnv, lastStopBucketsEnv, curVehLocToPickupSearches);
 #elif KARRI_DALS_STRATEGY == KARRI_IND
         // Use Individual-BCH DALS Strategy
         using DALSLabelSet = std::conditional_t<KARRI_DALS_USE_SIMD,
                 SimdLabelSet<KARRI_DALS_LOG_K, ParentInfo::NO_PARENT_INFO>,
                 BasicLabelSet<KARRI_DALS_LOG_K, ParentInfo::NO_PARENT_INFO>>;
         using DALSStrategy = DropoffAfterLastStopStrategies::IndividualBCHStrategy<VehicleInputGraph, VehCHEnv, LastStopBucketsEnv, CurVehLocToPickupSearchesImpl, DALSLabelSet>;
-        DALSStrategy dalsStrategy(vehicleInputGraph, fleet, *vehChEnv, calc, lastStopBucketsEnv, curVehLocToPickupSearches, routeState);
+        DALSStrategy dalsStrategy(vehicleInputGraph, fleet, *vehChEnv, lastStopBucketsEnv, curVehLocToPickupSearches, routeState);
 #else // KARRI_DALS_STRATEGY == KARRI_DIJ
         // Use Dijkstra DALS Strategy
         using DALSLabelSet = std::conditional_t<KARRI_DALS_USE_SIMD,
                 SimdLabelSet<KARRI_DALS_LOG_K, ParentInfo::NO_PARENT_INFO>,
                 BasicLabelSet<KARRI_DALS_LOG_K, ParentInfo::NO_PARENT_INFO>>;
         using DALSStrategy = DropoffAfterLastStopStrategies::DijkstraStrategy<VehicleInputGraph, LastStopBucketsEnv, CurVehLocToPickupSearchesImpl , DALSLabelSet>;
-        DALSStrategy dalsStrategy(vehicleInputGraph, revVehicleGraph, fleet, calc, curVehLocToPickupSearches, routeState, lastStopBucketsEnv);
+        DALSStrategy dalsStrategy(vehicleInputGraph, revVehicleGraph, fleet, curVehLocToPickupSearches, routeState, lastStopBucketsEnv);
 #endif
 
         using DALSInsertionsFinderImpl = DALSAssignmentsFinder<DALSStrategy>;
