@@ -155,17 +155,16 @@ namespace karri::PickupAfterLastStopStrategies {
         IndividualBCHStrategy(const InputGraphT &inputGraph,
                               const Fleet &fleet,
                               const CHEnvT &chEnv,
-                              const CostCalculator &calculator,
                               const LastStopBucketsEnvT &lastStopBucketsEnv,
                               const RouteState &routeState)
                 : inputGraph(inputGraph),
                   fleet(fleet),
-                  calculator(calculator),
+                  calculator(routeState),
                   routeState(routeState),
                   externalUpperBoundCost(INFTY),
                   distances(fleet.size()),
                   search(lastStopBucketsEnv, distances, chEnv, routeState, vehiclesSeenForPickups,
-                         PickupAfterLastStopPruner(*this, calculator)),
+                         PickupAfterLastStopPruner(*this, CostCalculator(routeState))),
                   vehiclesSeenForPickups(fleet.size()) {}
 
         void tryPickupAfterLastStop(RequestState& requestState, const PDDistancesT& pdDistances, const PDLocs& pdLocs, stats::PalsAssignmentsPerformanceStats& stats) {
@@ -302,7 +301,7 @@ namespace karri::PickupAfterLastStopStrategies {
 
         const InputGraphT &inputGraph;
         const Fleet &fleet;
-        const CostCalculator &calculator;
+        CostCalculator calculator;
         const RouteState &routeState;
 
         int externalUpperBoundCost;

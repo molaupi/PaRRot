@@ -130,20 +130,19 @@ namespace karri::DropoffAfterLastStopStrategies {
         IndividualBCHStrategy(const InputGraphT &inputGraph,
                               const Fleet &fleet,
                               const CHEnvT &chEnv,
-                              const CostCalculator &calculator,
                               const LastStopBucketsEnvT &lastStopBucketsEnv,
                               CurVehLocToPickupSearchesT &curVehLocToPickupSearchesT,
                               const RouteState &routeState)
                 : inputGraph(inputGraph),
                   fleet(fleet),
-                  calculator(calculator),
+                  calculator(routeState),
                   curVehLocToPickupSearches(curVehLocToPickupSearchesT),
                   routeState(routeState),
                   checkPBNSForVehicle(fleet.size()),
                   vehiclesSeenForDropoffs(fleet.size()),
                   search(lastStopBucketsEnv, lastStopDistances, chEnv, routeState,
                          vehiclesSeenForDropoffs,
-                         DropoffAfterLastStopPruner(*this, calculator)),
+                         DropoffAfterLastStopPruner(*this, CostCalculator(routeState))),
                   lastStopDistances(fleet.size()) {}
 
         void tryDropoffAfterLastStop(const RelevantPDLocs &relevantOrdinaryPickups,
@@ -415,7 +414,7 @@ namespace karri::DropoffAfterLastStopStrategies {
 
         const InputGraphT &inputGraph;
         const Fleet &fleet;
-        const CostCalculator &calculator;
+        CostCalculator calculator;
         CurVehLocToPickupSearchesT &curVehLocToPickupSearches;
         const RouteState &routeState;
 

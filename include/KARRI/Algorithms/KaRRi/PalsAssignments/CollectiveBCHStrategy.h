@@ -57,16 +57,15 @@ namespace karri::PickupAfterLastStopStrategies {
                               const CHEnvT &chEnv,
                               VehicleToPDLocQueryT &vehicleToPDLocQuery,
                               const LastStopBucketsEnvT &lastStopBucketsEnv,
-                              const CostCalculator &calculator,
                               const RouteState &routeState)
                 : inputGraph(inputGraph),
                   fleet(fleet),
-                  calculator(calculator),
+                  calculator(routeState),
                   ch(chEnv.getCH()),
                   routeState(routeState),
-                  minCostSearch(inputGraph, fleet, chEnv, routeState, calculator, lastStopBucketsEnv),
+                  minCostSearch(inputGraph, fleet, chEnv, routeState, lastStopBucketsEnv),
                   vehicleToPDLocQuery(vehicleToPDLocQuery),
-                  fallbackStrategy(inputGraph, fleet, chEnv, calculator, lastStopBucketsEnv, routeState) {}
+                  fallbackStrategy(inputGraph, fleet, chEnv, lastStopBucketsEnv, routeState) {}
 
         void tryPickupAfterLastStop(RequestState& requestState, const PDDistancesT& pdDistances, const PDLocs& pdLocs, stats::PalsAssignmentsPerformanceStats& stats) {
 
@@ -157,7 +156,7 @@ namespace karri::PickupAfterLastStopStrategies {
 
         const InputGraphT &inputGraph;
         const Fleet &fleet;
-        const CostCalculator &calculator;
+        CostCalculator calculator;
         const CH &ch;
         const RouteState &routeState;
 
