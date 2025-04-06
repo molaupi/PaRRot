@@ -49,7 +49,7 @@ namespace karri::DropoffAfterLastStopStrategies {
             static constexpr bool INCLUDE_IDLE_VEHICLES = false;
 
             DropoffAfterLastStopPruner(IndividualBCHStrategy &strat,
-                                       const CostCalculator &calc)
+                                       CostCalculator calc)
                     : strat(strat), calc(calc) {}
 
             // Returns whether a given distance from a vehicle's last stop to the dropoff cannot lead to a better
@@ -120,7 +120,7 @@ namespace karri::DropoffAfterLastStopStrategies {
 
         private:
             IndividualBCHStrategy &strat;
-            const CostCalculator &calc;
+            CostCalculator calc;
         };
 
         using DropoffBCHQuery = LastStopBCHQuery<CHEnvT, LastStopBucketsEnvT, DropoffAfterLastStopPruner, LabelSet>;

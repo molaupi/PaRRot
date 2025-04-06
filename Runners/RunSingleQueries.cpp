@@ -417,8 +417,6 @@ int main(int argc, char *argv[]) {
         using VehicleLocatorImpl = VehicleLocator<VehicleInputGraph, VehCHEnv>;
         VehicleLocatorImpl locator(vehicleInputGraph, *vehChEnv, routeState);
 
-        RequestState reqState;
-
         // Construct Elliptic BCH bucket environment:
         static constexpr bool ELLIPTIC_SORTED_BUCKETS = KARRI_ELLIPTIC_BCH_SORTED_BUCKETS;
         using EllipticBucketsEnv = EllipticBucketsEnvironment<VehicleInputGraph, VehCHEnv, ELLIPTIC_SORTED_BUCKETS>;
@@ -586,7 +584,7 @@ int main(int argc, char *argv[]) {
 
 #if KARRI_OUTPUT_VEHICLE_PATHS
         using VehPathTracker = PathTracker<VehicleInputGraph, VehCHEnv, std::ofstream>;
-        VehPathTracker pathTracker(vehicleInputGraph, *vehChEnv, reqState, routeState, fleet);
+        VehPathTracker pathTracker(vehicleInputGraph, *vehChEnv, routeState, fleet);
 #else
         using VehPathTracker = NoOpPathTracker;
         VehPathTracker pathTracker;

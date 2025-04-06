@@ -142,8 +142,7 @@ namespace karri {
 
             // If the vehicle has to be rerouted at its current location for a PBNS assignment, we introduce an
             // intermediate stop at its current location representing the rerouting.
-            if (asgn.pickupStopIdx == 0 && numStopsBefore > 1 && routeState.schedDepTimesFor(vehId)[0] <
-                                                                 requestState.now()) {
+            if (asgn.pickupStopIdx == 0 && numStopsBefore > 1 && routeState.schedDepTimesFor(vehId)[0] < requestState.now()) {
                 createIntermediateStopStopAtCurrentLocationForReroute(*asgn.vehicle,
                                                                       requestState.now(),
                                                                       requestState.stats().updateStats
@@ -151,9 +150,14 @@ namespace karri {
                 ++pickupIndex;
                 ++dropoffIndex;
             }
+
+            int pickupStopId = routeState.stopIdsFor(vehId)[pickupIndex];
+            int dropoffStopId = routeState.stopIdsFor(vehId)[dropoffIndex];
+
+            assert(pickupStopId >= 0 && dropoffStopId >= 0);
             
             // Register the inserted pickup and dropoff with the path data
-            pathTracker.registerPdEventsForBestAssignment(routeState.stopIdsFor(vehId)[pickupIndex], routeState.stopIdsFor(vehId)[dropoffIndex]);
+            pathTracker.registerPdEventsForBestAssignment(requestState, pickupStopId, dropoffStopId);
         }
 
         void notifyStopStarted(const Vehicle &veh) {

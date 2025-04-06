@@ -43,7 +43,7 @@ namespace karri::PickupAfterLastStopStrategies {
 
             static constexpr bool INCLUDE_IDLE_VEHICLES = true;
 
-            PickupAfterLastStopPruner(IndividualBCHStrategy &strat, const CostCalculator &calc)
+            PickupAfterLastStopPruner(IndividualBCHStrategy &strat, CostCalculator calc)
                     : strat(strat), calc(calc) {}
 
             // Returns whether a given distance from a vehicle's last stop to the pickup cannot lead to a better
@@ -93,7 +93,6 @@ namespace karri::PickupAfterLastStopStrategies {
                 const auto detourTillDepAtPickup = minDistancesToPickups + DistanceLabel(InputConfig::getInstance().stopTime);
                 auto depTimeAtPickup = arrTimesAtPickups + DistanceLabel(InputConfig::getInstance().stopTime);
                 const auto reqTime = DistanceLabel(strat.curReqState->originalRequest.requestTime);
-                depTimeAtPickup.max(reqTime + strat.currentPickupWalkingDists);
                 const auto tripTimeTillDepAtPickup = depTimeAtPickup - reqTime;
                 DistanceLabel costLowerBound = calc.template calcLowerBoundCostForKPairedAssignmentsAfterLastStop<LabelSetT>(
                         detourTillDepAtPickup, tripTimeTillDepAtPickup, directDist, strat.currentPickupWalkingDists, *strat.curReqState);
@@ -145,7 +144,7 @@ namespace karri::PickupAfterLastStopStrategies {
 
         private:
             IndividualBCHStrategy &strat;
-            const CostCalculator &calc;
+            CostCalculator calc;
         };
 
         using PickupBCHQuery = LastStopBCHQuery<CHEnvT, LastStopBucketsEnvT, PickupAfterLastStopPruner, LabelSetT>;
@@ -172,7 +171,7 @@ namespace karri::PickupAfterLastStopStrategies {
             enumerateAssignments(requestState, pdDistances, pdLocs, stats);
         }
 
-                // Sets a known upper bound on the cost of a PALS insertion. Useful if IndividualBCHStrategy is used as
+        // Sets a known upper bound on the cost of a PALS insertion. Useful if IndividualBCHStrategy is used as
         // fallback for other strategy that provides an upper bound.
         void setExternalCostUpperBound(const int c) {
             externalUpperBoundCost = c;

@@ -42,10 +42,9 @@ namespace karri {
 
     public:
 
-        explicit PathTracker(const InputGraphT &inputGraph, const CHEnvT &chEnv, const RequestState &requestState,
+        explicit PathTracker(const InputGraphT &inputGraph, const CHEnvT &chEnv, 
                              const RouteState &routeState, const Fleet &fleet) :
                 inputGraph(inputGraph),
-                requestState(requestState),
                 routeState(routeState),
                 ch(chEnv.getCH()),
                 chQuery(chEnv.template getFullCHQuery<>()),
@@ -74,7 +73,8 @@ namespace karri {
 
         // Updates paths of vehicle for best assignment of pickup and dropoff into the vehicle path.
         // Needs to be called after the insertion is performed on routeState.
-        void registerPdEventsForBestAssignment(const int pickupStopId,
+        void registerPdEventsForBestAssignment(RequestState &requestState, 
+                                               const int pickupStopId,
                                                const int dropoffStopId) {
             if (routeState.getMaxStopId() >= eventIndexRange.size()) {
                 eventIndexRange.resize(routeState.getMaxStopId() + 1, {0, 0});
@@ -206,7 +206,6 @@ namespace karri {
         }
 
         const InputGraphT &inputGraph;
-        const RequestState &requestState;
         const RouteState &routeState;
 
         const CH &ch;
@@ -230,7 +229,7 @@ namespace karri {
 
     struct NoOpPathTracker {
 
-        void registerPdEventsForBestAssignment(const int, const int) {}
+        void registerPdEventsForBestAssignment(const RequestState&, const int, const int) {}
 
         void logCompletedStop(const Vehicle &) {}
     };
