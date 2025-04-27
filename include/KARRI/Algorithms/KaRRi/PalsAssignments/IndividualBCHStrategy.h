@@ -181,7 +181,7 @@ namespace karri::PickupAfterLastStopStrategies {
 
         // Run BCH searches that find distances from last stops to pickups
         void runBchSearches(RequestState& requestState, const PDDistancesT& pdDistances, const PDLocs& pdLocs, stats::PalsAssignmentsPerformanceStats& stats) {
-            Timer timer;
+            KaRRiTimer timer;
 
             initPickupSearches(requestState, pdLocs);
             for (int i = 0; i < pdLocs.numPickups(); i += K)
@@ -201,7 +201,7 @@ namespace karri::PickupAfterLastStopStrategies {
 
 
             int numAssignmentsTried = 0;
-            Timer timer;
+            KaRRiTimer timer;
 
             Assignment asgn;
             for (const auto &vehId: vehiclesSeenForPickups) {

@@ -32,7 +32,7 @@ private:
             Order chOrder(Vector::reverse(CH::getOrder(chData)));
             if (reorder) {
                 internalToExternal = chOrder.splitAt(oldData.numberOfStops());
-                externalToInternal = Permutation(Construct::Invert, internalToExternal);
+                externalToInternal = ULTRAPermutation(Construct::Invert, internalToExternal);
                 Order stopOrder = internalToExternal;
                 stopOrder.resize(oldData.numberOfStops());
 
@@ -57,7 +57,7 @@ private:
                 data = oldData;
                 phastOrder = chOrder;
                 internalToExternal = Order(Construct::Id, chData.numVertices());
-                externalToInternal = Permutation(Construct::Id, chData.numVertices());
+                externalToInternal = ULTRAPermutation(Construct::Id, chData.numVertices());
             }
         }
 
@@ -65,7 +65,7 @@ private:
         TransferGraph transferGraph;
         CH::CH chData;
         Order internalToExternal;
-        Permutation externalToInternal;
+        ULTRAPermutation externalToInternal;
         IndexedSet<false, Vertex> targets;
         Order phastOrder;
     };

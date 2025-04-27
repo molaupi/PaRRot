@@ -543,7 +543,7 @@ private:
     TransferGraph searchGraph;
 
     const Order contractionOrder;
-    const Permutation positionInOrder;
+    const ULTRAPermutation positionInOrder;
 
     Vertex sweepStart;
     std::vector<Vertex> sweepStartOf;
@@ -560,7 +560,7 @@ private:
     std::vector<size_t> targetId;
     std::vector<std::vector<TargetLabel>> targetLabel;
 
-    Timer timer;
+    ULTRATimer timer;
 };
 
 } // namespace CH

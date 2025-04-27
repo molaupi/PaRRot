@@ -29,10 +29,10 @@
 #include <cstdint>
 
 // A timer to measure how long some code takes to execute.
-class Timer {
+class KaRRiTimer {
  public:
   // Constructs a timer and starts it.
-  Timer() : startTime(std::chrono::steady_clock::now()) {}
+  KaRRiTimer() : startTime(std::chrono::steady_clock::now()) {}
 
   // Returns the time elapsed since the timer was started.
   template <typename UnitT = std::chrono::milliseconds>

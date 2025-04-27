@@ -70,7 +70,7 @@ namespace karri::PickupAfterLastStopStrategies {
         void tryPickupAfterLastStop(RequestState& requestState, const PDDistancesT& pdDistances, const PDLocs& pdLocs, stats::PalsAssignmentsPerformanceStats& stats) {
 
 
-            Timer timer;
+            KaRRiTimer timer;
 
 
             // Find out if any pickup after any last stop can plausibly lead to a better assignment than the best known.

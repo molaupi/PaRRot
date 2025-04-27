@@ -59,7 +59,7 @@ namespace karri {
         std::vector<PDLocAtExistingStop>
         findPDLocsAtExistingStops(const PDLocsT &pdLocs,
                                   stats::EllipticBCHPerformanceStats& stats) const {
-            Timer timer;
+            KaRRiTimer timer;
             std::vector<PDLocAtExistingStop> res;
 
             for (const auto &pdLoc: pdLocs) {

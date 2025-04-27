@@ -475,7 +475,7 @@ private:
     TargetGraph targetGraph;
 
     const Order contractionOrder;
-    const Permutation positionInOrder;
+    const ULTRAPermutation positionInOrder;
 
     Vertex sweepStart;
     std::vector<Vertex> sweepStartOf;
@@ -491,7 +491,7 @@ private:
 
     IndexedSet<false, Vertex> bucketSources;
 
-    Timer timer;
+    ULTRATimer timer;
 };
 
 } // namespace CH

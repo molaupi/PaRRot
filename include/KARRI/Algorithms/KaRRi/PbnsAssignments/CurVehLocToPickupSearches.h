@@ -213,7 +213,7 @@ namespace karri {
             const auto distToCurLoc = vehLocation.depTimeAtHead - routeState.schedDepTimesFor(vehicle.vehicleId)[0];
 
             int numChSearchesRun = 0;
-            Timer timer;
+            KaRRiTimer timer;
             std::array<int, K> targets;
             std::array<int, K> targetOffsets;
 
@@ -307,7 +307,7 @@ namespace karri {
         }
 
         VehicleLocation locateVehicle(const Vehicle &vehicle) {
-            Timer timer;
+            KaRRiTimer timer;
             const auto curLoc = vehicleLocator.computeCurrentLocation(vehicle, currentTime);
             totalLocatingVehiclesTimeForRequest += timer.elapsed<std::chrono::nanoseconds>();
             return curLoc;

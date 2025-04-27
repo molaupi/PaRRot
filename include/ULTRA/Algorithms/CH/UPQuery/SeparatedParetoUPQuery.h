@@ -493,7 +493,7 @@ private:
     SweepGraph reverseTargetGraph;
 
     const Order contractionOrder;
-    const Permutation positionInOrder;
+    const ULTRAPermutation positionInOrder;
 
     Vertex sweepStart;
     IndexedSet<false, Vertex> stops;
@@ -509,7 +509,7 @@ private:
     int currentTimestamp;
     int queryStartTimestamp;
 
-    Timer timer;
+    ULTRATimer timer;
 };
 
 } // namespace CH

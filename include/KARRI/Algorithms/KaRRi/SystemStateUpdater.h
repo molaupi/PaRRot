@@ -118,7 +118,7 @@ namespace karri {
 
 
         void insertBestAssignment(RequestState &requestState) {
-            Timer timer;
+            KaRRiTimer timer;
 
             if (requestState.isNotUsingVehicleBest()) {
                 return;

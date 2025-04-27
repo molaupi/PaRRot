@@ -66,7 +66,7 @@ namespace karri {
                              const PDDistancesT& pdDistances,
                              const PDLocs& pdLocs, stats::PbnsAssignmentsPerformanceStats& stats) {
             numAssignmentsTriedWithPickupBeforeNextStop = 0;
-            Timer timer;
+            KaRRiTimer timer;
 
             int numCandidateVehicles = 0;
             for (const auto &vehId: relPickupsBns.getVehiclesWithRelevantPDLocs()) {
@@ -101,7 +101,7 @@ namespace karri {
 
         // Initialize for new request.
         void init(const RequestState& requestState, const PDLocs& pdLocs, stats::PbnsAssignmentsPerformanceStats& stats) {
-            Timer timer;
+            KaRRiTimer timer;
             curVehLocToPickupSearches.initialize(requestState.now(), pdLocs);
             const auto time = timer.elapsed<std::chrono::nanoseconds>();
             stats.initializationTime += time;

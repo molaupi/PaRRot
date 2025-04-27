@@ -152,7 +152,7 @@ private:
 
         using UPCSA = CSA::UPCSA<USE_STOP_BUCKETS, USE_TARGET_BUCKETS, true,
             CSA::AggregateProfiler>;
-        Timer timer;
+        ULTRATimer timer;
         const bool reorder = getParameter<bool>("Reorder network?");
         UPCSA algorithm(csaData, ch, targetSet, reorder,
             getParameter("Order") == "DFS");
@@ -308,7 +308,7 @@ private:
 
         using UPRAPTOR = RAPTOR::UPRAPTOR<GROUPED_ROUNDS, RAPTOR::AggregateProfiler>;
         const bool reorder = getParameter<bool>("Reorder network?");
-        Timer timer;
+        ULTRATimer timer;
         UPRAPTOR algorithm(raptorData, dijkstraGraph, ch, targetSet, reorder,
             getParameter("Order") == "DFS");
         const double buildTime = timer.elapsedMicroseconds();
@@ -394,7 +394,7 @@ private:
 
         using UPTB = TripBased::UPQuery<GROUPED_ROUNDS, TripBased::AggregateProfiler>;
         const bool reorder = getParameter<bool>("Reorder network?");
-        Timer timer;
+        ULTRATimer timer;
         UPTB algorithm(tripBasedData, dijkstraGraph, ch, targetSet, reorder);
         const double buildTime = timer.elapsedMicroseconds();
 
@@ -571,7 +571,7 @@ inline std::vector<Vertex> generateTargetSet(const TransferGraph& graph,
             ballCenter, noVertex, [&](const Vertex v) { ball.emplace_back(v); },
             [&]() { return ball.size() == ballSize; });
     } while (ball.size() != ballSize);
-    const Permutation permutation(Construct::Random, ballSize);
+    const ULTRAPermutation permutation(Construct::Random, ballSize);
     std::vector<Vertex> targets;
     for (size_t t = 0; t < numTargets; t++) {
         targets.emplace_back(ball[permutation[t]]);
@@ -640,7 +640,7 @@ public:
 
         std::vector<CHData> coreCHData;
         BenchmarkData benchmarkData;
-        Timer timer;
+        ULTRATimer timer;
         for (size_t i = 0; i < targets.size(); i++) {
             timer.restart();
             const CHData coreCHData = buildCoreCH(raptorData, targets[i], coreDegree);
@@ -721,7 +721,7 @@ public:
 
         std::vector<CHData> coreCHData;
         BenchmarkData benchmarkData;
-        Timer timer;
+        ULTRATimer timer;
         for (size_t i = 0; i < targets.size(); i++) {
             timer.restart();
             const CH::CH ch = buildULTRACH(raptorData, targets[i], stopFactor, targetFactor);
@@ -945,7 +945,7 @@ private:
             CSA::METRIC_STOPS_BY_TRANSFER });
 
         SetupBenchmarkData benchmarkData;
-        Timer timer;
+        ULTRATimer timer;
         for (size_t i = 0; i < targets.size(); i++) {
             const CH::CH ch(chFile + "_" + std::to_string(i) + ".ultra");
             IndexedSet<false, Vertex> targetSet(ch.numVertices(), targets[i]);
@@ -1070,7 +1070,7 @@ public:
                 RAPTOR::METRIC_STOPS_BY_TRANSFER });
 
         SetupBenchmarkData benchmarkData;
-        Timer timer;
+        ULTRATimer timer;
         for (size_t i = 0; i < targets.size(); i++) {
             const CHData coreCHData(coreCHFile + "_" + std::to_string(i));
             const CH::CH upCH(upCHFile + "_" + std::to_string(i) + ".ultra");

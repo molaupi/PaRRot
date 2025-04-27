@@ -89,7 +89,7 @@ public:
         return ss.str();
     }
 
-    inline void applyStopPermutation(const Permutation& permutation) noexcept
+    inline void applyStopPermutation(const ULTRAPermutation& permutation) noexcept
     {
         departureStopId = permutation.permutate(departureStopId);
         arrivalStopId = permutation.permutate(arrivalStopId);

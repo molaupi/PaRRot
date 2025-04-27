@@ -265,5 +265,5 @@ private:
     int timeStamp;
 
     int settleCount;
-    Timer timer;
+    ULTRATimer timer;
 };

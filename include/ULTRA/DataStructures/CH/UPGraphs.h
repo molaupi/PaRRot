@@ -68,7 +68,7 @@ struct SweepGraph {
         }
         const size_t numRequiredVertices = order.size();
         order += nonRequiredOrder;
-        permutation = Permutation(Construct::Invert, order);
+        permutation = ULTRAPermutation(Construct::Invert, order);
 
         CHConstructionGraph constructionGraph;
         constructionGraph.addVertices(numRequiredVertices);
@@ -105,7 +105,7 @@ struct SweepGraph {
 
     CHGraph graph;
     Order order;
-    Permutation permutation;
+    ULTRAPermutation permutation;
     std::vector<Vertex> toVertex;
 };
 

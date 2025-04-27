@@ -202,7 +202,7 @@ int main(int argc, char *argv[]) {
             outputFile << ")\n";
             outputFile << "origin,destination,dijkstra_rank\n";
 
-            karri::Timer timer;
+            karri::KaRRiTimer timer;
             karri::ProgressBar bar;
 #pragma omp parallel
             {
@@ -260,7 +260,7 @@ int main(int argc, char *argv[]) {
             outputFile << ")\n";
             outputFile << "origin,destination,distance\n";
 
-            karri::Timer timer;
+            karri::KaRRiTimer timer;
             karri::ProgressBar bar;
 #pragma omp parallel
             {
@@ -313,7 +313,7 @@ int main(int argc, char *argv[]) {
             outputFile << "random\n";
             outputFile << "origin,destination\n";
 
-            karri::Timer timer;
+            karri::KaRRiTimer timer;
             karri::ProgressBar bar;
 #pragma omp parallel
             {
@@ -352,7 +352,7 @@ int main(int argc, char *argv[]) {
             outputFile << "random with a total length of " << totalLength << "\n";
             outputFile << "origin,destination\n";
 
-            karri::Timer timer;
+            karri::KaRRiTimer timer;
             karri::ProgressBar bar;
 #pragma omp parallel
             {

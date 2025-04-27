@@ -80,7 +80,7 @@ public:
         arrivalTime = std::max(arrivalTime, other.arrivalTime);
     }
 
-    inline void applyStopPermutation(const Permutation& permutation) noexcept
+    inline void applyStopPermutation(const ULTRAPermutation& permutation) noexcept
     {
         stopId = permutation.permutate(stopId);
     }

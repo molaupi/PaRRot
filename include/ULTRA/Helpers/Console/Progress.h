@@ -111,7 +111,7 @@ protected:
 private:
     bool verbose;
     std::ostream& os;
-    Timer timer;
+    ULTRATimer timer;
     long long numSteps;
     long long stepsDone;
 

@@ -265,7 +265,7 @@ public:
             }
         }
         size_t numDeletions = 0;
-        Permutation permutation(numVertices());
+        ULTRAPermutation permutation(numVertices());
         for (const Vertex vertex : vertices()) {
             if (deleteVertex(vertex)) {
                 numDeletions++;
@@ -397,7 +397,7 @@ public:
         deleteEdges([&](Edge edge) { return edgeMap[edge] == deleteValue; });
     }
 
-    inline void applyVertexPermutation(const Permutation& permutation) noexcept
+    inline void applyVertexPermutation(const ULTRAPermutation& permutation) noexcept
     {
         AssertMsg(permutation.size() == numVertices(),
             "Permutation has the wrong size! (permutation.size(): "
@@ -418,10 +418,10 @@ public:
         AssertMsg(order.size() == numVertices(),
             "Order has the wrong size! (order.size(): "
                 << order.size() << ", numVertices: " << numVertices() << ")");
-        applyVertexPermutation(Permutation(Construct::Invert, order));
+        applyVertexPermutation(ULTRAPermutation(Construct::Invert, order));
     }
 
-    inline void applyEdgePermutation(const Permutation& permutation) noexcept
+    inline void applyEdgePermutation(const ULTRAPermutation& permutation) noexcept
     {
         AssertMsg(permutation.size() == numEdges(),
             "Permutation has the wrong size! (permutation.size(): "
@@ -439,7 +439,7 @@ public:
         AssertMsg(order.size() == numEdges(),
             "Order has the wrong size! (order.size(): "
                 << order.size() << ", numEdges: " << numEdges() << ")");
-        applyEdgePermutation(Permutation(Construct::Invert, order));
+        applyEdgePermutation(ULTRAPermutation(Construct::Invert, order));
     }
 
     inline void revert() noexcept

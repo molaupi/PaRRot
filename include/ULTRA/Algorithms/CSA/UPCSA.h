@@ -53,7 +53,7 @@ private:
             const Order chOrder = vertexOrder(chData, useDFSOrder);
             if (reorder) {
                 internalToExternal = chOrder.splitAt(data.numberOfStops());
-                externalToInternal = Permutation(Construct::Invert, internalToExternal);
+                externalToInternal = ULTRAPermutation(Construct::Invert, internalToExternal);
                 Order stopOrder = internalToExternal;
                 stopOrder.resize(data.numberOfStops());
 
@@ -73,14 +73,14 @@ private:
             } else {
                 phastOrder = chOrder;
                 internalToExternal = Order(Construct::Id, chData.numVertices());
-                externalToInternal = Permutation(Construct::Id, chData.numVertices());
+                externalToInternal = ULTRAPermutation(Construct::Id, chData.numVertices());
             }
         }
 
         Data data;
         CH::CH chData;
         Order internalToExternal;
-        Permutation externalToInternal;
+        ULTRAPermutation externalToInternal;
         Order phastOrder;
         IndexedSet<false, Vertex> targets;
     };

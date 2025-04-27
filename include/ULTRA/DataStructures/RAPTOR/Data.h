@@ -633,11 +633,11 @@ public:
 
     inline Data reverseNetwork() const noexcept
     {
-        Permutation dummy;
+        ULTRAPermutation dummy;
         return reverseNetwork(dummy);
     }
 
-    inline Data reverseNetwork(Permutation& stopEventPermutation) const noexcept
+    inline Data reverseNetwork(ULTRAPermutation& stopEventPermutation) const noexcept
     {
         stopEventPermutation.resize(stopEvents.size());
         Data result;
@@ -898,16 +898,16 @@ public:
     }
 
     inline void applyVertexPermutation(
-        const Permutation& permutation,
+        const ULTRAPermutation& permutation,
         const bool permutateStops = true) noexcept
     {
-        Permutation splitPermutation = permutation.splitAt(numberOfStops());
+        ULTRAPermutation splitPermutation = permutation.splitAt(numberOfStops());
         if (!permutateStops) {
             for (size_t i = 0; i < numberOfStops(); i++) {
                 splitPermutation[i] = i;
             }
         }
-        Permutation stopPermutation = splitPermutation;
+        ULTRAPermutation stopPermutation = splitPermutation;
         stopPermutation.resize(numberOfStops());
         permutate(splitPermutation, stopPermutation);
     }
@@ -915,18 +915,18 @@ public:
     inline void applyVertexOrder(const Order& order,
         const bool permutateStops = true) noexcept
     {
-        applyVertexPermutation(Permutation(Construct::Invert, order),
+        applyVertexPermutation(ULTRAPermutation(Construct::Invert, order),
             permutateStops);
     }
 
-    inline void applyStopPermutation(const Permutation& permutation) noexcept
+    inline void applyStopPermutation(const ULTRAPermutation& permutation) noexcept
     {
         permutate(permutation.extend(transferGraph.numVertices()), permutation);
     }
 
     inline void applyStopOrder(const Order& order) noexcept
     {
-        applyStopPermutation(Permutation(Construct::Invert, order));
+        applyStopPermutation(ULTRAPermutation(Construct::Invert, order));
     }
 
 public:
@@ -1282,8 +1282,8 @@ public:
         return false;
     }
 
-    inline void permutate(const Permutation& fullPermutation,
-        const Permutation& stopPermutation) noexcept
+    inline void permutate(const ULTRAPermutation& fullPermutation,
+        const ULTRAPermutation& stopPermutation) noexcept
     {
         AssertMsg(fullPermutation.size() == transferGraph.numVertices(),
             "Full permutation size ("

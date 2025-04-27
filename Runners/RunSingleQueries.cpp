@@ -31,6 +31,9 @@
 #include <csv.h>
 #include <functional>
 
+#include <Common/Constants.h>
+#include <ULTRA/DataStructures/RAPTOR/Data.h>
+#include <ULTRA/DataStructures/RideRAPTOR/DistanceMatrix.h>
 #include <KARRI/Algorithms/PTaxi/PTAndTaxiTripFinder.h>
 
 #include <KARRI/Algorithms/CH/CH.h>
@@ -574,8 +577,123 @@ int main(int argc, char *argv[]) {
             dalsInsertionsFinder, relevantPdLocsFilter);
 
         // Convert CH
+
+        std::cout << "Convert the karri::CH to ULTRA::CH... " << std::flush;
+        std::cout << "[Vehicle CH]... " << std::flush;
+
+        // convert from KARRI:CH to ULTRA::CH
+        auto& karriVehCH = vehChEnv->getCH();
+        auto& karriUpCHGraph = karriVehCH.upwardGraph();
+        auto& karriDownCHGraph = karriVehCH.downwardGraph();
+
+        CHConstructionGraph upCHGraph;
+        CHConstructionGraph downCHGraph;
+
+        upCHGraph.addVertices(karriUpCHGraph.numVertices());
+        upCHGraph.reserve(karriUpCHGraph.numVertices(), karriUpCHGraph.numEdges());
+
+        FORALL_VALID_EDGES(karriUpCHGraph, v, e)
+        {
+            auto edgeHandle = upCHGraph.addEdge(Vertex(v), Vertex(karriUpCHGraph.edgeHead(e)));
+            edgeHandle.set(Weight, karriUpCHGraph.traversalCost(e));
+            // since UnpackingInfoAttribute is defined a little weird (via the two edges directly, rather than the ViaVertex itself), we need to get the Vertex
+            auto& unpackingInfoOfEdge = karriUpCHGraph.unpackingInfo(e);
+            if (unpackingInfoOfEdge.second == INVALID_EDGE) {
+                // this case, the edge was an input edge => set invalid vertex as viavertex
+                edgeHandle.set(ViaVertex, noVertex);
+            } else {
+                // otherwise take the FromVertex / edgeTail from the first edge
+                edgeHandle.set(ViaVertex, Vertex(karriDownCHGraph.edgeHead(unpackingInfoOfEdge.first)));
+            }
+        }
+
+        downCHGraph.addVertices(karriDownCHGraph.numVertices());
+        downCHGraph.reserve(karriDownCHGraph.numVertices(), karriDownCHGraph.numEdges());
+
+        FORALL_VALID_EDGES(karriDownCHGraph, v, e)
+        {
+            auto edgeHandle = downCHGraph.addEdge(Vertex(v), Vertex(karriDownCHGraph.edgeHead(e)));
+            edgeHandle.set(Weight, karriDownCHGraph.traversalCost(e));
+            // since UnpackingInfoAttribute is defined a little weird (via the two edges directly, rather than the ViaVertex itself), we need to get the Vertex
+            auto& unpackingInfoOfEdge = karriDownCHGraph.unpackingInfo(e);
+            if (unpackingInfoOfEdge.second == INVALID_EDGE) {
+                // this case, the edge was an input edge => set invalid vertex as viavertex
+                edgeHandle.set(ViaVertex, noVertex);
+            } else {
+                // otherwise take the FromVertex / edgeTail from the first edge
+                edgeHandle.set(ViaVertex, Vertex(karriDownCHGraph.edgeHead(unpackingInfoOfEdge.first)));
+            }
+        }
+
+        CH::CH vehicleCh(std::move(upCHGraph), std::move(downCHGraph));
+
+        /* std::cout << "## Psg FORWARD ##" << std::endl; */
+        /* vehicleCh.getGraph(FORWARD).printAnalysis(); */
+        /* std::cout << "## Psg BACKWARD ##" << std::endl; */
+        /* vehicleCh.getGraph(BACKWARD).printAnalysis(); */
+
+        std::cout << "[Passenger CH]... " << std::flush;
+        // convert from KARRI:CH to ULTRA::CH
+        auto& karriPsgCH = psgChEnv->getCH();
+        auto& karriPsgUpCHGraph = karriPsgCH.upwardGraph();
+        auto& karriPsgDownCHGraph = karriPsgCH.downwardGraph();
+
+        assert(karriPsgUpCHGraph.numVertices() == karriPsgDownCHGraph.numVertices());
+
+        CHConstructionGraph upPsgCHGraph;
+        CHConstructionGraph downPsgCHGraph;
+
+        upPsgCHGraph.addVertices(karriPsgUpCHGraph.numVertices());
+        upPsgCHGraph.reserve(karriPsgUpCHGraph.numVertices(), karriPsgUpCHGraph.numEdges());
+
+        FORALL_VALID_EDGES(karriPsgUpCHGraph, v, e)
+        {
+            auto edgeHandle = upPsgCHGraph.addEdge(Vertex(v), Vertex(karriPsgUpCHGraph.edgeHead(e)));
+            edgeHandle.set(Weight, karriPsgUpCHGraph.traversalCost(e));
+            // since UnpackingInfoAttribute is defined a little weird (via the two edges directly, rather than the ViaVertex itself), we need to get the Vertex
+            auto& unpackingInfoOfEdge = karriPsgUpCHGraph.unpackingInfo(e);
+            if (unpackingInfoOfEdge.second == INVALID_EDGE) {
+                // this case, the edge was an input edge => set invalid vertex as viavertex
+                edgeHandle.set(ViaVertex, noVertex);
+            } else {
+                // otherwise take the FromVertex / edgeTail from the first edge
+                assert(unpackingInfoOfEdge.first < karriPsgDownCHGraph.numEdges());
+                edgeHandle.set(ViaVertex, Vertex(karriPsgDownCHGraph.edgeHead(unpackingInfoOfEdge.first)));
+            }
+        }
+
+        downPsgCHGraph.addVertices(karriPsgDownCHGraph.numVertices());
+        downPsgCHGraph.reserve(karriPsgDownCHGraph.numVertices(), karriPsgDownCHGraph.numEdges());
+
+        FORALL_VALID_EDGES(karriPsgDownCHGraph, v, e)
+        {
+            auto edgeHandle = downPsgCHGraph.addEdge(Vertex(v), Vertex(karriPsgDownCHGraph.edgeHead(e)));
+            edgeHandle.set(Weight, karriPsgDownCHGraph.traversalCost(e));
+            // TODO
+            edgeHandle.set(ViaVertex, noVertex);
+            /* // since UnpackingInfoAttribute is defined a little weird (via the two edges directly, rather than the ViaVertex itself), we need to get the Vertex */
+            /* auto& unpackingInfoOfEdge = karriPsgDownCHGraph.unpackingInfo(e); */
+            /* if (unpackingInfoOfEdge.second == INVALID_EDGE) { */
+            /*     // this case, the edge was an input edge => set invalid vertex as viavertex */
+            /*     edgeHandle.set(ViaVertex, noVertex); */
+            /* } else { */
+            /*     // otherwise take the FromVertex / edgeTail from the first edge */
+            /*     assert(unpackingInfoOfEdge.first < karriPsgUpCHGraph.numEdges()); */
+            /*     edgeHandle.set(ViaVertex, Vertex(karriPsgUpCHGraph.edgeHead(unpackingInfoOfEdge.first))); */
+            /* } */
+        }
+
+        CH::CH psgCh(std::move(upPsgCHGraph), std::move(downPsgCHGraph));
+
+        /* std::cout << "## Psg FORWARD ##" << std::endl; */
+        /* psgCh.getGraph(FORWARD).printAnalysis(); */
+        /* std::cout << "## Psg BACKWARD ##" << std::endl; */
+        /* psgCh.getGraph(BACKWARD).printAnalysis(); */
+
+        std::cout << "done.\n";
+
         // Use ULTRA CH to build ULTRA algorithm instance
-        // -> pass to PTAndTaxiTripFinder
+        // -> pass ULTRA algorithm instance to PTAndTaxiTripFinder
 
 
         using PTAndTaxiTripFinderImpl = PTAndTaxiTripFinder<InsertionFinderImpl, VehicleInputGraph, PsgInputGraph, PsgCHEnv>;

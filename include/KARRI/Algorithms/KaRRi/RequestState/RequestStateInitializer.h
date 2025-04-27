@@ -42,7 +42,7 @@ namespace karri {
 
 
         RequestState initializeRequestState(const Request &req) {
-            Timer timer;
+            KaRRiTimer timer;
 
             RequestState requestState;
             requestState.originalRequest = req;

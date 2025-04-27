@@ -61,7 +61,7 @@ namespace karri {
                   minDistFromPDLocToNextStop(fleetSize) {}
 
         void init(const int newNumPDLocs, stats::EllipticBCHPerformanceStats& stats) {
-            Timer timer;
+            KaRRiTimer timer;
             numLabelsPerStop = newNumPDLocs / K + (newNumPDLocs % K != 0);
 
             if (maxStopId >= startOfRangeInValueArray.size()) {
@@ -91,7 +91,7 @@ namespace karri {
         void initializeDistancesForPdLocsAtExistingStops(PDLocsAtExistingStopsT &&pdLocsAtExistingStops,
                                                           const InputGraphT &inputGraph,
                                                           stats::EllipticBCHPerformanceStats& stats) {
-            Timer timer;
+            KaRRiTimer timer;
 
             // Pre-allocate entries for PD locs at existing stops. The distance 0 may otherwise not be found by the
             // BCH searches. Also, this way, the distance for such a PD loc never has to be updated, and we already

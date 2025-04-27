@@ -64,7 +64,7 @@ namespace karri {
         void findAssignmentsWherePickupCoincidesWithLastStop(RequestState& requestState, const PDDistancesT& pdDistances, const PDLocs& pdLocs, stats::PalsAssignmentsPerformanceStats& stats) {
             int numInsertionsForCoinciding = 0;
             int numCandidateVehiclesForCoinciding = 0;
-            Timer timer;
+            KaRRiTimer timer;
 
             Assignment asgn;
             asgn.distToPickup = 0;

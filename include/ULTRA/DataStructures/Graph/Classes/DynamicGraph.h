@@ -506,14 +506,14 @@ public:
         }
     }
 
-    inline void applyVertexPermutation(const Permutation& permutation) noexcept
+    inline void applyVertexPermutation(const ULTRAPermutation& permutation) noexcept
     {
         changeVertexIds(permutation);
     }
 
     inline void applyVertexOrder(const Order& order) noexcept
     {
-        changeVertexIds(Permutation(Construct::Invert, order));
+        changeVertexIds(ULTRAPermutation(Construct::Invert, order));
     }
 
     inline void deleteAllOutgoingEdges(const Vertex vertex) noexcept
@@ -550,7 +550,7 @@ public:
     inline void deleteVertices(const DELETE_VERTEX& deleteVertex) noexcept
     {
         size_t numDeletions = 0;
-        Permutation permutation(numVertices());
+        ULTRAPermutation permutation(numVertices());
         for (const Vertex vertex : vertices()) {
             if (deleteVertex(vertex)) {
                 isolateVertex(vertex);
@@ -585,7 +585,7 @@ public:
     {
         Assert(satisfiesInvariants());
         size_t i = 0;
-        Permutation permutation(edgeAttributes.size());
+        ULTRAPermutation permutation(edgeAttributes.size());
         for (const Vertex vertex : vertices()) {
             for (const Edge edge : edgesFrom(vertex)) {
                 permutation[edge] = i++;
@@ -622,7 +622,7 @@ public:
             newOutDegree.emplace_back(inDegree(vertex));
             currentEdge += newOutDegree.back();
         }
-        const Permutation edgePermutation(Construct::Invert,
+        const ULTRAPermutation edgePermutation(Construct::Invert,
             Order(Construct::Sort, get(ToVertex)));
         get(ToVertex).swap(get(FromVertex));
         vertexAttributes.forEach(
@@ -666,7 +666,7 @@ public:
                 edgeOrder.begin() + get(BeginOut, vertex) + get(OutDegree, vertex),
                 less);
         }
-        Permutation edgePermutation(Construct::Invert, Order(edgeOrder));
+        ULTRAPermutation edgePermutation(Construct::Invert, Order(edgeOrder));
         edgePermutation.mapPermutation(get(IncomingEdges));
         vertexAttributes.forEach(
             [&](std::vector<Edge>& values, const AttributeNameType attribute) {
@@ -1426,7 +1426,7 @@ private:
         edgeCount--;
     }
 
-    inline void changeVertexIds(const Permutation& permutation) noexcept
+    inline void changeVertexIds(const ULTRAPermutation& permutation) noexcept
     {
         vertexAttributes.forEach([&](std::vector<Vertex>& values) {
             permutation.mapPermutation(values);

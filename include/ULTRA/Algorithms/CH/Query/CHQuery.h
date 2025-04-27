@@ -428,7 +428,7 @@ private:
 
     int settleCount;
     int stallCount;
-    Timer timer;
+    ULTRATimer timer;
 
     Vertex::ValueType endOfPOIs;
     std::vector<Vertex> reachedPOIs[2];

@@ -160,7 +160,7 @@ namespace karri {
                 // If there are more PD-locs than the maximum number, then we permute the PD-locs randomly and
                 // use only the first maxNumber ones. We make sure that the center is included and stays at the
                 // beginning of the PD-locs.
-                const auto perm = Permutation::getRandomPermutation(pdLocs.size(), rand);
+                const auto perm = KaRRiPermutation::getRandomPermutation(pdLocs.size(), rand);
                 perm.applyTo(pdLocs);
                 std::swap(pdLocs[perm[0]], pdLocs[0]);
             }
@@ -229,7 +229,7 @@ namespace karri {
 
 
         PDLocs findPDLocs(const int origin, const int destination, stats::InitializationPerformanceStats& stats) {
-            Timer timer;
+            KaRRiTimer timer;
 
             KASSERT(psgInputGraph.toCarEdge(vehInputGraph.toPsgEdge(origin)) == origin);
             const auto originInPsgGraph = vehInputGraph.toPsgEdge(origin);

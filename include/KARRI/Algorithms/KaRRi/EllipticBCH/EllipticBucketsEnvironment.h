@@ -166,7 +166,7 @@ namespace karri {
             if (numStops <= 1)
                 return;
             int64_t numVerticesVisited = 0, numEntriesScanned = 0;
-            Timer timer;
+            KaRRiTimer timer;
             auto updateSourceLeeway = [&](BucketEntryWithLeeway& e) {
                 if (routeState.vehicleIdOf(e.targetId) != veh.vehicleId)
                     return false;
@@ -202,7 +202,7 @@ namespace karri {
             if (numStops <= 1)
                 return;
             int64_t numVerticesVisited = 0, numEntriesScanned = 0;
-            Timer timer;
+            KaRRiTimer timer;
             auto updateTargetLeeway = [&](BucketEntryWithLeeway& e) {
                 if (routeState.vehicleIdOf(e.targetId) != veh.vehicleId)
                     return false;
@@ -265,7 +265,7 @@ namespace karri {
                                    BucketContainer &buckets,
                                    karri::stats::UpdatePerformanceStats &stats) {
             int64_t numEntriesGenerated = 0;
-            Timer timer;
+            KaRRiTimer timer;
 
             // Run topological search from new stop and memorize search space:
             searchSpace.clear();
@@ -319,7 +319,7 @@ namespace karri {
         void
         deleteBucketEntries(const int stopId, const int root, const CH::SearchGraph &graph, BucketContainer &buckets) {
             int64_t numVerticesVisited = 0, numEntriesScanned = 0;
-            Timer timer;
+            KaRRiTimer timer;
             deleteSearchSpace.clear();
             deleteSearchSpace.insert(root);
             for (auto it = deleteSearchSpace.begin(); it < deleteSearchSpace.end(); ++it) {

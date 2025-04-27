@@ -189,7 +189,7 @@ namespace karri {
             assert(vehicleState[vehId] == OUT_OF_SERVICE);
             assert(fleet[vehId].startOfServiceTime == occTime);
             unused(occTime);
-            Timer timer;
+            KaRRiTimer timer;
 
             // Vehicle may have already been assigned stops. In this case it will start driving right away:
             if (scheduledStops.hasNextScheduledStop(vehId)) {
@@ -209,7 +209,7 @@ namespace karri {
             assert(fleet[vehId].endOfServiceTime == occTime);
             unused(occTime);
             assert(!scheduledStops.hasNextScheduledStop(vehId));
-            Timer timer;
+            KaRRiTimer timer;
 
             vehicleState[vehId] = OUT_OF_SERVICE;
 
@@ -225,7 +225,7 @@ namespace karri {
         void handleVehicleArrivalAtStop(const int vehId, const int occTime) {
             assert(vehicleState[vehId] == DRIVING);
             assert(scheduledStops.getNextScheduledStop(vehId).arrTime == occTime);
-            Timer timer;
+            KaRRiTimer timer;
 
             const auto prevStop = scheduledStops.getCurrentOrPrevScheduledStop(vehId);
             legStatsLogger << vehId << ','
@@ -258,7 +258,7 @@ namespace karri {
         void handleVehicleDepartureFromStop(const int vehId, const int occTime) {
             assert(vehicleState[vehId] == STOPPING);
             assert(scheduledStops.getCurrentOrPrevScheduledStop(vehId).depTime == occTime);
-            Timer timer;
+            KaRRiTimer timer;
 
             if (!scheduledStops.hasNextScheduledStop(vehId)) {
                 vehicleState[vehId] = IDLING;
@@ -283,7 +283,7 @@ namespace karri {
             ++progressBar;
             assert(requestState[reqId] == NOT_RECEIVED);
             assert(requests[reqId].requestTime == occTime);
-            Timer timer;
+            KaRRiTimer timer;
 
             const auto &request = requests[reqId];
             // Find best assignment 
@@ -352,7 +352,7 @@ namespace karri {
 
         void handleWalkingArrivalAtDest(const int reqId, const int occTime) {
             assert(requestState[reqId] == WALKING_TO_DEST);
-            Timer timer;
+            KaRRiTimer timer;
 
             const auto &reqData = requestData[reqId];
             requestState[reqId] = FINISHED;

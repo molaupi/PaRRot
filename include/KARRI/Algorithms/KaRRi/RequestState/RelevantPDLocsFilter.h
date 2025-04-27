@@ -52,7 +52,7 @@ namespace karri {
         filterOrdinaryPickups(FeasibleDistancesT &feasiblePickupDistances, const RequestState &requestState,
                               const PDLocs &pdLocs,
                               stats::OrdAssignmentsPerformanceStats &stats) {
-            Timer timer;
+            KaRRiTimer timer;
 
             int numRelStops = 0;
             const auto rel = filter<false, false>(feasiblePickupDistances, pdLocs.numPickups(), numRelStops,
@@ -70,7 +70,7 @@ namespace karri {
         filterOrdinaryDropoffs(FeasibleDistancesT &feasibleDropoffDistances, const RequestState &requestState,
                                const PDLocs &pdLocs,
                                stats::OrdAssignmentsPerformanceStats &stats) {
-            Timer timer;
+            KaRRiTimer timer;
 
             int numRelStops = 0;
             const auto rel = filter<false, true>(feasibleDropoffDistances, pdLocs.numDropoffs(), numRelStops,
@@ -87,7 +87,7 @@ namespace karri {
         filterPickupsBeforeNextStop(FeasibleDistancesT &feasiblePickupDistances, const RequestState &requestState,
                                     const PDLocs &pdLocs,
                                     stats::PbnsAssignmentsPerformanceStats &stats) {
-            Timer timer;
+            KaRRiTimer timer;
 
             int numRelStops = 0;
             const auto rel = filter<true, false>(feasiblePickupDistances, pdLocs.numPickups(), numRelStops,
@@ -102,7 +102,7 @@ namespace karri {
         RelevantPDLocs filterDropoffsBeforeNextStop(FeasibleDistancesT &feasibleDropoffDistances,
                                                     const RequestState &requestState, const PDLocs &pdLocs,
                                                     stats::PbnsAssignmentsPerformanceStats &stats) {
-            Timer timer;
+            KaRRiTimer timer;
 
             int numRelStops = 0;
             const auto rel = filter<true, true>(feasibleDropoffDistances, pdLocs.numDropoffs(), numRelStops,

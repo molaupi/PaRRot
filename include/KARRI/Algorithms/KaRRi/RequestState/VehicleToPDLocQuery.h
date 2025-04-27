@@ -76,7 +76,7 @@ namespace karri {
         template<typename VectorT>
         void runForward(VectorT &pdLocs) {
 
-            Timer timer;
+            KaRRiTimer timer;
 
             const auto center = forwardGraph.edgeHead(pdLocs[0].loc);
             pdLocs[0].vehDistFromCenter = 0;
@@ -111,7 +111,7 @@ namespace karri {
         template<typename VectorT>
         void runReverse(VectorT &pdLocs) {
 
-            Timer timer;
+            KaRRiTimer timer;
 
             const auto center = forwardGraph.edgeTail(pdLocs[0].loc);
             const auto offset = forwardGraph.travelTime(pdLocs[0].loc);

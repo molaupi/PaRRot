@@ -106,7 +106,7 @@ namespace karri::DropoffAfterLastStopStrategies {
 
             const int64_t pbnsTimeBefore = curVehLocToPickupSearches.getTotalLocatingVehiclesTimeForRequest() +
                                            curVehLocToPickupSearches.getTotalVehicleToPickupSearchTimeForRequest();
-            Timer timer;
+            KaRRiTimer timer;
 
             // Runs Dijkstra searches. Possible assignments are enumerated during the searches whenever a last stop is
             // scanned.
@@ -179,7 +179,7 @@ namespace karri::DropoffAfterLastStopStrategies {
             if (vehiclesWithLastStopAtV.empty())
                 return;
 
-            Timer timer;
+            KaRRiTimer timer;
 
             Assignment asgn;
             auto &dropoffIndex = asgn.dropoffStopIdx;

@@ -124,7 +124,7 @@ private:
             dataBegin = 3;
 
         if (dataEnd == 2 * BLOCK_LENGTH) {
-            bytesRead = std::async(std::launch::async, [=]() -> int {
+            bytesRead = std::async(std::launch::async, [=, this]() -> int {
                 return std::fread(buffer + 2 * BLOCK_LENGTH, 1, BLOCK_LENGTH, file);
             });
         }
@@ -198,7 +198,7 @@ public:
                 dataEnd += bytesRead.get();
                 std::memcpy(buffer + BLOCK_LENGTH, buffer + 2 * BLOCK_LENGTH,
                     BLOCK_LENGTH);
-                bytesRead = std::async(std::launch::async, [=]() -> int {
+                bytesRead = std::async(std::launch::async, [=, this]() -> int {
                     return std::fread(buffer + 2 * BLOCK_LENGTH, 1, BLOCK_LENGTH, file);
                 });
             }
@@ -1091,7 +1091,7 @@ inline void readFile(const std::string& fileName,
         std::cout << "Reading " << contentName << " from CSV file (" << fileName
                   << ")..." << std::flush;
     if (FileSystem::isFile(fileName)) {
-        Timer timer;
+        ULTRATimer timer;
         int count = parseContent();
         if (verbose)
             std::cout << " done (Found " << String::prettyInt(count) << " "
@@ -1113,7 +1113,7 @@ inline void readFile(const std::vector<std::string>& fileNameAliases,
     if (verbose)
         std::cout << "Reading " << contentName << " from CSV file ("
                   << fileNameAliases.front() << ")..." << std::flush;
-    Timer timer;
+    ULTRATimer timer;
     int count = parseContent();
     if (verbose)
         std::cout << " done (Found " << String::prettyInt(count) << " "

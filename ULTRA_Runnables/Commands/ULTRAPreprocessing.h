@@ -29,7 +29,7 @@ inline TransferGraph getOverheadGraph(const RAPTOR::Data& raptorData,
     for (const StopId stop : raptorData.stops()) {
         temp.addVertex(temp.vertexRecord(stop));
     }
-    Permutation permutation(Construct::Id, temp.numVertices());
+    ULTRAPermutation permutation(Construct::Id, temp.numVertices());
     for (const StopId stop : raptorData.stops()) {
         const size_t newStopId = stop + raptorData.transferGraph.numVertices();
         permutation[stop] = newStopId;

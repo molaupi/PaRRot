@@ -112,7 +112,7 @@ public:
             : backward.get(attributeName, Edge(edge - forward.numEdges()));
     }
 
-    inline void applyVertexPermutation(const Permutation& permutation) noexcept
+    inline void applyVertexPermutation(const ULTRAPermutation& permutation) noexcept
     {
         forward.applyVertexPermutation(permutation);
         backward.applyVertexPermutation(permutation);

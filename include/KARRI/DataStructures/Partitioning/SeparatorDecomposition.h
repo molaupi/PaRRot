@@ -59,5 +59,5 @@ struct SeparatorDecomposition {
   }
 
   std::vector<Node> tree; // The rooted tree representing this separator decomposition.
-  Permutation order;      // The associated nested dissection order.
+  KaRRiPermutation order;      // The associated nested dissection order.
 };

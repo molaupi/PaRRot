@@ -91,7 +91,7 @@ namespace karri::PickupAfterLastStopStrategies {
 
         void run(const std::vector<int> &promisingDropoffIds, const int &bestKnownCost, const RequestState& requestState, const PDDistancesT& pdDistances, const PDLocs& pdLocs) {
 
-            Timer timer;
+            KaRRiTimer timer;
 
             initQueryForRun(promisingDropoffIds, bestKnownCost, requestState,  pdDistances, pdLocs);
 

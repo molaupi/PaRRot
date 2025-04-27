@@ -93,7 +93,7 @@ public:
 
 public:
     PermutationKey() { Assert(false); }
-    PermutationKey(const Permutation& permutation)
+    PermutationKey(const ULTRAPermutation& permutation)
         : permutation(permutation)
     {
     }
@@ -115,7 +115,7 @@ public:
     }
 
 private:
-    const Permutation permutation;
+    const ULTRAPermutation permutation;
 };
 
 template <typename WITNESS_SEARCH>
@@ -127,12 +127,12 @@ public:
         Assert(false);
     }
     OrderKey(const Order& order)
-        : PermutationKey<WITNESS_SEARCH>(Permutation(Construct::Invert, order))
+        : PermutationKey<WITNESS_SEARCH>(ULTRAPermutation(Construct::Invert, order))
     {
     }
     OrderKey(Order&& order)
         : PermutationKey<WITNESS_SEARCH>(
-            Permutation(Construct::Invert, std::move(order)))
+            ULTRAPermutation(Construct::Invert, std::move(order)))
     {
     }
 };

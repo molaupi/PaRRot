@@ -63,7 +63,7 @@ namespace karri {
         template<typename PDLocsT>
         void run(const PDLocsT &pdLocs) {
 
-            Timer timer;
+            KaRRiTimer timer;
 
             init(pdLocs);
 

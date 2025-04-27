@@ -274,7 +274,7 @@ private:
     Vertex endOfPOIs;
     std::vector<Vertex> reachedPOIs[2];
 
-    Timer timer;
+    ULTRATimer timer;
 };
 
 } // namespace CH

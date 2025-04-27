@@ -53,7 +53,7 @@ namespace karri::PDDistanceQueryStrategies {
         PDDistancesT run(RequestState& requestState, const PDLocs& pdLocs, stats::PDDistancesPerformanceStats& stats) {
            assert(pdLocs.pickups[0].loc == requestState.originalRequest.origin
                    && pdLocs.dropoffs[0].loc == requestState.originalRequest.destination);
-            Timer timer;
+            KaRRiTimer timer;
 
             PDDistancesT pdDistances(pdLocs.numPickups(), pdLocs.numDropoffs());
 

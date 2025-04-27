@@ -106,7 +106,7 @@ namespace karri::PickupAfterLastStopStrategies {
             int numEdgeRelaxations = 0;
             int numVerticesSettled = 0;
 
-            Timer timer;
+            KaRRiTimer timer;
 
             for (unsigned int i = 0; i < numBatches; ++i) {
                 runSearchesForPickupBatch(i, requestState, pdDistances, pdLocs);
@@ -128,7 +128,7 @@ namespace karri::PickupAfterLastStopStrategies {
                                   stats::PalsAssignmentsPerformanceStats &stats) {
             using namespace time_utils;
             int numAssignmentsTried = 0;
-            Timer timer;
+            KaRRiTimer timer;
 
             Assignment asgn;
             for (const auto &vehId: vehiclesSeen) {

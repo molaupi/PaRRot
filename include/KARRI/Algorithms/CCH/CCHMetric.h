@@ -200,8 +200,8 @@ class CCHMetric {
         std::move(downOutEdges), std::move(downEdgeHeads), numDownEdges,
         std::move(downEdgeWeights), std::move(downUnpackingInfo));
 
-    Permutation order;
-    Permutation ranks;
+    KaRRiPermutation order;
+    KaRRiPermutation ranks;
 
     #pragma omp parallel sections
     {

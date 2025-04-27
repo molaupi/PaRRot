@@ -2,9 +2,9 @@
 
 #include <sys/time.h>
 
-class Timer {
+class ULTRATimer {
 public:
-    Timer()
+    ULTRATimer()
         : start(timestamp())
     {
     }

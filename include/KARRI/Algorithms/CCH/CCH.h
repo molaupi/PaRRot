@@ -115,12 +115,12 @@ class CCH {
   }
 
   // Returns the order in which vertices were contracted.
-  const Permutation& getContractionOrder() const noexcept {
+  const KaRRiPermutation& getContractionOrder() const noexcept {
     return decomp.order;
   }
 
   // Returns the position of each vertex in the contraction order.
-  const Permutation& getRanks() const noexcept {
+  const KaRRiPermutation& getRanks() const noexcept {
     return ranks;
   }
 
@@ -294,7 +294,7 @@ class CCH {
   }
 
   SeparatorDecomposition decomp;   // The separator decomposition used to build this CCH.
-  Permutation ranks;               // The position of each vertex in the contraction order.
+  KaRRiPermutation ranks;               // The position of each vertex in the contraction order.
   EliminationTree eliminationTree; // The associated elimination tree.
 
   UpGraph upGraph;     // The upward graph.

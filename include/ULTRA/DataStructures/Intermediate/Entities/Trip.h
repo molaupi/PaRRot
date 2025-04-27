@@ -143,7 +143,7 @@ public:
         }
     }
 
-    inline void applyStopPermutation(const Permutation& permutation) noexcept
+    inline void applyStopPermutation(const ULTRAPermutation& permutation) noexcept
     {
         for (StopEvent& stopEvent : stopEvents) {
             stopEvent.applyStopPermutation(permutation);

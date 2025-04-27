@@ -161,7 +161,7 @@ namespace karri::DropoffAfterLastStopStrategies {
 
         // Run BCH queries that obtain distances from last stops to dropoffs
         void runBchQueries(RequestState& requestState, const PDLocs& pdLocs, stats::DalsAssignmentsPerformanceStats& stats) {
-            Timer timer;
+            KaRRiTimer timer;
 
             initDropoffSearches(requestState, pdLocs);
             for (unsigned int i = 0; i < pdLocs.numDropoffs(); i += K)
@@ -183,7 +183,7 @@ namespace karri::DropoffAfterLastStopStrategies {
             int numAssignmentsTried = 0;
             const int64_t pbnsTimeBefore = curVehLocToPickupSearches.getTotalLocatingVehiclesTimeForRequest() +
                                            curVehLocToPickupSearches.getTotalVehicleToPickupSearchTimeForRequest();
-            Timer timer;
+            KaRRiTimer timer;
 
             enumerateAssignmentsWithOrdinaryPickup(numAssignmentsTried, relevantOrdinaryPickups, requestState, pdLocs);
             enumerateAssignmentsWithPBNS(numAssignmentsTried, relevantPickupsBeforeNextStop, requestState, pdLocs);

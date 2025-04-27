@@ -58,7 +58,7 @@ public:
 
     inline size_t numContracted() const noexcept { return order.size(); }
 
-    inline void applyVertexPermutation(const Permutation& permutation) noexcept
+    inline void applyVertexPermutation(const ULTRAPermutation& permutation) noexcept
     {
         core.applyVertexPermutation(permutation);
         forwardCH.applyVertexPermutation(permutation);
@@ -69,7 +69,7 @@ public:
 
     inline void applyVertexOrder(const Order& vertexOrder) noexcept
     {
-        applyVertexPermutation(Permutation(Construct::Invert, vertexOrder));
+        applyVertexPermutation(ULTRAPermutation(Construct::Invert, vertexOrder));
     }
 
 public:

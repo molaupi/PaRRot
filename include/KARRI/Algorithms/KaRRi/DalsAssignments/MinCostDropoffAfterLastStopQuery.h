@@ -72,7 +72,7 @@ namespace karri::DropoffAfterLastStopStrategies {
                   vehiclesSeen(fleet.size()) {}
 
         void run(const RequestState& requestState, const PDLocs& pdLocs) {
-            Timer timer;
+            KaRRiTimer timer;
 
             init(requestState, pdLocs);
 

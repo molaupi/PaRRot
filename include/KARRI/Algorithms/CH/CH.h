@@ -149,6 +149,6 @@ class CH {
  private:
   SearchGraph upGraph;   // The upward graph.
   SearchGraph downGraph; // The downward graph.
-  Permutation order;     // order[i] = v indicates that v was the i-th vertex contracted.
-  Permutation ranks;     // ranks[v] = i indicates that v was the i-th vertex contracted.
+  KaRRiPermutation order;     // order[i] = v indicates that v was the i-th vertex contracted.
+  KaRRiPermutation ranks;     // ranks[v] = i indicates that v was the i-th vertex contracted.
 };

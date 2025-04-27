@@ -138,7 +138,7 @@ private:
     int currentTimestamp;
     IndexedSet<false, Vertex> reachedVertices;
 
-    Timer timer;
+    ULTRATimer timer;
 };
 
 } // namespace CH

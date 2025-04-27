@@ -486,7 +486,7 @@ public:
     void defrag() {
         if (!dynamic)
             return;
-        Permutation perm(edgeHeads.size());
+        KaRRiPermutation perm(edgeHeads.size());
         int newEdgeIdx = 0;
 
         // Push all valid edges to the front, breaking ties by tail ID.
@@ -512,7 +512,7 @@ public:
     }
 
     // Reorders the vertices according to the specified permutation.
-    void permuteVertices(const Permutation &perm) {
+    void permuteVertices(const KaRRiPermutation &perm) {
         assert(perm.size() == numVertices());
         assert(perm.validate());
         if (dynamic) {
@@ -520,8 +520,8 @@ public:
         } else {
             AlignedVector<OutEdgeRange> temp(outEdges.size());
             temp.back().first() = numEdges();
-            Permutation inversePerm = perm.getInversePermutation();
-            Permutation edgePerm(numEdges());
+            KaRRiPermutation inversePerm = perm.getInversePermutation();
+            KaRRiPermutation edgePerm(numEdges());
             int newEdgeIdx = 0;
 
             // Sort the edge arrays by new tail ID.
@@ -764,7 +764,7 @@ public:
         // Sort the edges by tail ID if they are not already sorted.
         if (!edgesSorted) {
             // Compute a permutation mapping each edge to its correct position.
-            Permutation perm(numEdges());
+            KaRRiPermutation perm(numEdges());
             for (int e = 0; e != numEdges(); ++e)
                 perm[e] = outEdges[edgeTails[e]].first()++;
             for (int v = numVertices() - 1; v != 0; --v)
@@ -980,7 +980,7 @@ private:
 
     // Reorders the edges according to the specified permutation.
     // CAUTION: IT IS THE RESPONSIBILITY OF THE USER TO GUARANTEE THAT CONSISTENCY IS MAINTAINED.
-    void permuteEdges(const Permutation &perm) {
+    void permuteEdges(const KaRRiPermutation &perm) {
         assert(perm.validate());
         perm.applyTo(edgeHeads);
         RUN_FORALL(perm.applyTo(EdgeAttributes::values));

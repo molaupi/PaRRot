@@ -867,7 +867,7 @@ public:
             }
         }
         Order order = Order(newStops + newVertices + deletions);
-        Permutation permutation(Construct::Invert, order);
+        ULTRAPermutation permutation(Construct::Invert, order);
         transferGraph.applyVertexPermutation(permutation);
         transferGraph.deleteVertices([&](Vertex vertex) {
             return vertex >= newStops.size() + newVertices.size();
@@ -887,7 +887,7 @@ public:
             std::cout << "Deleting " << deletions.size()
                       << " vertices, because they are isolated!" << std::endl;
         order = Order(newStops + oldStops);
-        permutation = Permutation(Construct::Invert, order);
+        permutation = ULTRAPermutation(Construct::Invert, order);
         permutation.permutate(stops);
         stops.resize(newStops.size());
         for (size_t i = 0; i < trips.size(); i++) {
@@ -1117,16 +1117,16 @@ public:
     }
 
     inline void applyVertexPermutation(
-        const Permutation& permutation,
+        const ULTRAPermutation& permutation,
         const bool permutateStops = true) noexcept
     {
-        Permutation splitPermutation = permutation.splitAt(numberOfStops());
+        ULTRAPermutation splitPermutation = permutation.splitAt(numberOfStops());
         if (!permutateStops) {
             for (size_t i = 0; i < numberOfStops(); i++) {
                 splitPermutation[i] = i;
             }
         }
-        Permutation stopPermutation = splitPermutation;
+        ULTRAPermutation stopPermutation = splitPermutation;
         stopPermutation.resize(numberOfStops());
         permutate(splitPermutation, stopPermutation);
     }
@@ -1134,18 +1134,18 @@ public:
     inline void applyVertexOrder(const Order& order,
         const bool permutateStops = true) noexcept
     {
-        applyVertexPermutation(Permutation(Construct::Invert, order),
+        applyVertexPermutation(ULTRAPermutation(Construct::Invert, order),
             permutateStops);
     }
 
-    inline void applyStopPermutation(const Permutation& permutation) noexcept
+    inline void applyStopPermutation(const ULTRAPermutation& permutation) noexcept
     {
         permutate(permutation.extend(transferGraph.numVertices()), permutation);
     }
 
     inline void applyStopOrder(const Order& order) noexcept
     {
-        applyStopPermutation(Permutation(Construct::Invert, order));
+        applyStopPermutation(ULTRAPermutation(Construct::Invert, order));
     }
 
     inline void printInfo() const noexcept
@@ -1448,8 +1448,8 @@ protected:
     }
 
 private:
-    inline void permutate(const Permutation& fullPermutation,
-        const Permutation& stopPermutation) noexcept
+    inline void permutate(const ULTRAPermutation& fullPermutation,
+        const ULTRAPermutation& stopPermutation) noexcept
     {
         AssertMsg(fullPermutation.size() == transferGraph.numVertices(),
             "Full permutation size ("

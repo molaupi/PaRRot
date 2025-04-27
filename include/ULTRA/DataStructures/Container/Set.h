@@ -174,7 +174,7 @@ public:
         values.clear();
     }
 
-    inline void applyPermutation(const Permutation& permutation) noexcept
+    inline void applyPermutation(const ULTRAPermutation& permutation) noexcept
     {
         permutation.permutate(indices);
         permutation.mapPermutation(values);

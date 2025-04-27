@@ -68,7 +68,7 @@ namespace karri {
         void findOrdinaryAssignments(const RelevantPDLocs& relPickups, const RelevantPDLocs& relDropoffs, RequestState& requestState, const PDLocs& pdLocs,
                                      stats::OrdAssignmentsPerformanceStats& stats) {
 
-            Timer timer;
+            KaRRiTimer timer;
             int numCandidateVehicles = 0;
             int numAssignmentsTried = 0;
 
@@ -171,7 +171,7 @@ namespace karri {
                                            RequestState& requestState, const PDLocs& pdLocs,
                                            stats::OrdAssignmentsPerformanceStats& stats) {
 
-            Timer timer;
+            KaRRiTimer timer;
             int numAssignmentsTried = 0;
 
             // Try pairs with pickup at existing stop

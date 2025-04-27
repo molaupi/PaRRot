@@ -53,7 +53,7 @@ public:
     }
 
 private:
-    Timer timer;
+    ULTRATimer timer;
 };
 
 class ProgressProfiler : public NoProfiler {
@@ -82,7 +82,7 @@ public:
     }
 
 private:
-    Timer timer;
+    ULTRATimer timer;
     Data* data;
 };
 
@@ -339,7 +339,7 @@ private:
     Data* data;
     ProgressBar* QBar;
 
-    Timer timer;
+    ULTRATimer timer;
     double printTime;
     double expectedTime;
     double QTime;
@@ -353,7 +353,7 @@ private:
     int inDegSum;
     int outDegSum;
 
-    Timer witnessSearchTimer;
+    ULTRATimer witnessSearchTimer;
     double witnessSearchTime;
     int witnessSearchCount;
     int lastWitnessSearchCount;

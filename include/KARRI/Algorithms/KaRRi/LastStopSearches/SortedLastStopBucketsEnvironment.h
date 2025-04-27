@@ -260,7 +260,7 @@ namespace karri {
         void updateBucketEntries(const Vehicle &veh, const int stopIndex,
                                  int64_t& updateTime) {
 
-            Timer timer;
+            KaRRiTimer timer;
             const auto stopLoc = routeState.stopLocationsFor(veh.vehicleId)[stopIndex];
             const auto stopVertex = inputGraph.edgeHead(stopLoc);
 
@@ -316,7 +316,7 @@ namespace karri {
         void generateBucketEntries(const Vehicle &veh, karri::stats::UpdatePerformanceStats &stats) {
             const auto &numStops = routeState.numStopsOf(veh.vehicleId);
 
-            Timer timer;
+            KaRRiTimer timer;
             const auto stopLoc = routeState.stopLocationsFor(veh.vehicleId)[numStops - 1];
             const auto stopVertex = inputGraph.edgeHead(stopLoc);
 
@@ -340,7 +340,7 @@ namespace karri {
             assert(stopIndex >= 0);
             assert(stopIndex < routeState.numStopsOf(veh.vehicleId));
 
-            Timer timer;
+            KaRRiTimer timer;
             const auto stopLoc = routeState.stopLocationsFor(veh.vehicleId)[stopIndex];
             const auto stopVertex = inputGraph.edgeHead(stopLoc);
 

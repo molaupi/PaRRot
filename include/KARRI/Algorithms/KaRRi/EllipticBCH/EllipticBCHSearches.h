@@ -219,7 +219,7 @@ namespace karri {
                  stats::EllipticBCHPerformanceStats& stats) {
 
             // Run for pickups:
-            Timer timer;
+            KaRRiTimer timer;
             updateDistancesToPdLocs.setCurFeasible(&feasibleEllipticPickups);
             updateDistancesFromPdLocs.setCurFeasible(&feasibleEllipticPickups);
             runBCHSearchesFromAndTo(requestState, pdLocs.pickups);

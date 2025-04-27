@@ -96,7 +96,7 @@ namespace karri::DropoffAfterLastStopStrategies {
     private:
 
         void runCollectiveSearch(const RequestState& requestState, const PDLocs& pdLocs, stats::DalsAssignmentsPerformanceStats& stats) {
-            Timer timer;
+            KaRRiTimer timer;
 
             minCostSearch.run(requestState, pdLocs);
 
@@ -131,7 +131,7 @@ namespace karri::DropoffAfterLastStopStrategies {
             int numFallBackChSearches = 0;
             bool ranClosestDropoffSearch = false;
 
-            Timer timer;
+            KaRRiTimer timer;
             distsFromLastStopToDropoffs.resize(pdLocs.numDropoffs());
             constraintBreakers.clear();
 

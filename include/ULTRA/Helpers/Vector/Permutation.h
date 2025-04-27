@@ -168,48 +168,48 @@ public:
 
 class Order;
 
-class Permutation : public IdMapping {
+class ULTRAPermutation : public IdMapping {
 public:
-    Permutation(const size_t n = 0)
+    ULTRAPermutation(const size_t n = 0)
         : IdMapping(n)
     {
     }
-    explicit Permutation(const std::vector<size_t>& data)
+    explicit ULTRAPermutation(const std::vector<size_t>& data)
         : IdMapping(data)
     {
     }
-    explicit Permutation(std::vector<size_t>&& data)
+    explicit ULTRAPermutation(std::vector<size_t>&& data)
         : IdMapping(std::move(data))
     {
     }
-    Permutation(const std::string& fileName) { this->deserialize(fileName); }
-    Permutation(IO::Deserialization& deserialize)
+    ULTRAPermutation(const std::string& fileName) { this->deserialize(fileName); }
+    ULTRAPermutation(IO::Deserialization& deserialize)
     {
         this->deserialize(deserialize);
     }
 
     template <typename T, typename = std::enable_if_t<!Meta::Equals<T, size_t>()>>
-    explicit Permutation(const std::vector<T>& data)
+    explicit ULTRAPermutation(const std::vector<T>& data)
         : IdMapping(data)
     {
     }
 
-    Permutation(const Construct::IdTag, const size_t n)
+    ULTRAPermutation(const Construct::IdTag, const size_t n)
         : IdMapping(Construct::Id, n)
     {
     }
 
-    Permutation(const Construct::RandomTag, const size_t n, const int seed = 42)
+    ULTRAPermutation(const Construct::RandomTag, const size_t n, const int seed = 42)
         : IdMapping(Construct::Random, n, seed)
     {
     }
 
-    Permutation(const Construct::InvertTag, const Order& order)
+    ULTRAPermutation(const Construct::InvertTag, const Order& order)
         : IdMapping(Construct::Invert, order)
     {
     }
 
-    Permutation(const Construct::InvertTag, Order&& order)
+    ULTRAPermutation(const Construct::InvertTag, Order&& order)
         : IdMapping(Construct::Invert, std::move(order))
     {
     }
@@ -248,12 +248,12 @@ public:
         mapPermutationImplementation(vector);
     }
 
-    inline Permutation splitAt(const size_t limit) const noexcept;
+    inline ULTRAPermutation splitAt(const size_t limit) const noexcept;
 
-    inline Permutation extend(const size_t newSize) const noexcept
+    inline ULTRAPermutation extend(const size_t newSize) const noexcept
     {
         AssertMsg(newSize >= size(), "newSize is smaller than size!");
-        Permutation result = *this;
+        ULTRAPermutation result = *this;
         for (size_t i = size(); i < newSize; i++) {
             result.emplace_back(i);
         }
@@ -329,12 +329,12 @@ public:
     {
     }
 
-    Order(const Construct::InvertTag, const Permutation& permutation)
+    Order(const Construct::InvertTag, const ULTRAPermutation& permutation)
         : IdMapping(Construct::Invert, permutation)
     {
     }
 
-    Order(const Construct::InvertTag, Permutation&& permutation)
+    Order(const Construct::InvertTag, ULTRAPermutation&& permutation)
         : IdMapping(Construct::Invert, std::move(permutation))
     {
     }
@@ -394,8 +394,8 @@ public:
     }
 };
 
-inline Permutation Permutation::splitAt(const size_t limit) const noexcept
+inline ULTRAPermutation ULTRAPermutation::splitAt(const size_t limit) const noexcept
 {
-    return Permutation(Construct::Invert,
+    return ULTRAPermutation(Construct::Invert,
         Order(Construct::Invert, *this).splitAt(limit));
 }

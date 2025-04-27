@@ -235,7 +235,7 @@ public:
         graph.deleteEdges(deleteEdge);
     }
 
-    inline void applyVertexPermutation(const Permutation& permutation) noexcept
+    inline void applyVertexPermutation(const ULTRAPermutation& permutation) noexcept
     {
         graph.applyVertexPermutation(permutation);
     }

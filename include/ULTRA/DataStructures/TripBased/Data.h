@@ -275,11 +275,11 @@ public:
 public:
     inline Data reverseNetwork() const noexcept
     {
-        Permutation dummy;
+        ULTRAPermutation dummy;
         return reverseNetwork(dummy);
     }
 
-    inline Data reverseNetwork(Permutation& stopEventPermutation) const noexcept
+    inline Data reverseNetwork(ULTRAPermutation& stopEventPermutation) const noexcept
     {
         const RAPTOR::Data reverseRaptorData = raptorData.reverseNetwork(stopEventPermutation);
         Data reverseData(reverseRaptorData);
