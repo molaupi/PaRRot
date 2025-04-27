@@ -91,7 +91,7 @@ using CarEdgeAttributes = karri::EdgeAttrs<
         XatfRoadCategoryAttribute,
         CarEdgeToPsgEdgeAttribute
 >;
-using CarGraphT = karri::StaticGraph<CarVertexAttributes, CarEdgeAttributes>;
+using CarGraphT = karri::KaRRiStaticGraph<CarVertexAttributes, CarEdgeAttributes>;
 
 using PsgVertexAttributes = karri::VertexAttrs<
         CoordinateAttribute,
@@ -105,7 +105,7 @@ using PsgEdgeAttributes = karri::EdgeAttrs<
         TravelTimeAttribute,
         OsmRoadCategoryAttribute
 >;
-using PsgGraphT = karri::StaticGraph<PsgVertexAttributes, PsgEdgeAttributes>;
+using PsgGraphT = karri::KaRRiStaticGraph<PsgVertexAttributes, PsgEdgeAttributes>;
 
 
 template<typename PsgOsmImporterT>

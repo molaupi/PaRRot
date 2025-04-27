@@ -85,7 +85,7 @@ int main(int argc, char *argv[]) {
                 SequentialVertexIdAttribute,
                 VertexIdAttribute
         >;
-        using InputGraph = karri::StaticGraph<VertexAttributes, EdgeAttributes>;
+        using InputGraph = karri::KaRRiStaticGraph<VertexAttributes, EdgeAttributes>;
         std::ifstream graphFile(graphFileName, std::ios::binary);
         if (!graphFile.good())
             throw std::invalid_argument("file not found -- '" + graphFileName + "'");

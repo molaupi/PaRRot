@@ -367,7 +367,7 @@ int main(int argc, char *argv[]) {
             outputFileName = outputFileName.substr(0, outputFileName.size() - 4);
         LogManager<std::ofstream>::setBaseFileName(outputFileName + ".");
 
-        using Graph = karri::StaticGraph<karri::VertexAttrs<karri::LatLngAttribute, OsmNodeIdAttribute>, karri::EdgeAttrs<EdgeIdAttribute, CarEdgeToPsgEdgeAttribute, EdgeTailAttribute, TravelTimeAttribute>>;
+        using Graph = karri::KaRRiStaticGraph<karri::VertexAttrs<karri::LatLngAttribute, OsmNodeIdAttribute>, karri::EdgeAttrs<EdgeIdAttribute, CarEdgeToPsgEdgeAttribute, EdgeTailAttribute, TravelTimeAttribute>>;
 
         // Read target network
         std::cout << "Reading target network from file... " << std::flush;

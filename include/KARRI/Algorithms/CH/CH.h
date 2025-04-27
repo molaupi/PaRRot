@@ -43,7 +43,7 @@ class CH {
  public:
   // The type of the upward and downward graph.
   using Weight = TraversalCostAttribute;
-  using SearchGraph = StaticGraph<VertexAttrs<>, EdgeAttrs<Weight, UnpackingInfoAttribute>>;
+  using SearchGraph = KaRRiStaticGraph<VertexAttrs<>, EdgeAttrs<Weight, UnpackingInfoAttribute>>;
 
   // Constructs an empty CH.
   CH() = default;

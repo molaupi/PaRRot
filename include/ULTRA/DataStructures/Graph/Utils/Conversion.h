@@ -9,7 +9,7 @@
 #include "../Classes/GraphInterface.h"
 #include "../Classes/StaticGraph.h"
 
-namespace Graph {
+namespace ULTRAGraph {
 
 template <typename GRAPH>
 inline void computeReverseEdgePointers(GRAPH& graph) noexcept
@@ -259,7 +259,7 @@ inline void move(
     DynamicGraphImplementation<VERTEX_ATTRIBUTES_TO, EDGE_ATTRIBUTES_TO>& to,
     const ATTRIBUTE_NAME_CHANGES... attributeNameChanges)
 {
-    StaticGraph<VERTEX_ATTRIBUTES_FROM, EDGE_ATTRIBUTES_FROM> tempGraph;
+    ULTRAStaticGraph<VERTEX_ATTRIBUTES_FROM, EDGE_ATTRIBUTES_FROM> tempGraph;
     move(std::move(from), tempGraph, attributeNameChanges...);
     move(std::move(tempGraph), to, attributeNameChanges...);
 }

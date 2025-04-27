@@ -121,7 +121,7 @@ public:
     {
         AssertMsg(Vector::isSorted(data.connections),
             "Connections must be sorted in ascending order!");
-        AssertMsg(!Graph::hasLoops(data.transferGraph),
+        AssertMsg(!ULTRAGraph::hasLoops(data.transferGraph),
             "Shortcut graph may not have loops!");
         profiler.registerPhases({ PHASE_CLEAR, PHASE_INITIALIZATION,
             PHASE_CONNECTION_SCAN, PHASE_UPWARD_SWEEP,

@@ -283,7 +283,7 @@ public:
     {
         const RAPTOR::Data reverseRaptorData = raptorData.reverseNetwork(stopEventPermutation);
         Data reverseData(reverseRaptorData);
-        Graph::copy(stopEventGraph, reverseData.stopEventGraph);
+        ULTRAGraph::copy(stopEventGraph, reverseData.stopEventGraph);
         reverseData.stopEventGraph.revert();
         reverseData.stopEventGraph.applyVertexPermutation(stopEventPermutation);
         reverseData.stopEventGraph.sortEdges(ToVertex);
@@ -305,7 +305,7 @@ public:
                     stopEventGraph.edgeRecord(shortcut));
             }
         }
-        Graph::move(std::move(temp), stopEventGraph);
+        ULTRAGraph::move(std::move(temp), stopEventGraph);
     }
 
     inline void printInfo() const noexcept

@@ -295,7 +295,7 @@ inline void ComputeStopEventGraph(Data& data) noexcept
         builder.reduceTransfers(trip);
         progress++;
     }
-    Graph::move(std::move(builder.getStopEventGraph()), data.stopEventGraph);
+    ULTRAGraph::move(std::move(builder.getStopEventGraph()), data.stopEventGraph);
     data.stopEventGraph.sortEdges(ToVertex);
     progress.finished();
 }
@@ -340,7 +340,7 @@ inline void ComputeStopEventGraph(Data& data, const int numberOfThreads,
         }
     }
 
-    Graph::move(std::move(stopEventGraph), data.stopEventGraph);
+    ULTRAGraph::move(std::move(stopEventGraph), data.stopEventGraph);
     data.stopEventGraph.sortEdges(ToVertex);
     progress.finished();
 }
@@ -354,7 +354,7 @@ inline void ComputeStopEventGraphRouteBased(Data& data) noexcept
         builder.reduceTransfers(route);
         progress++;
     }
-    Graph::move(std::move(builder.getStopEventGraph()), data.stopEventGraph);
+    ULTRAGraph::move(std::move(builder.getStopEventGraph()), data.stopEventGraph);
     data.stopEventGraph.sortEdges(ToVertex);
     progress.finished();
 }
@@ -400,7 +400,7 @@ inline void ComputeStopEventGraphRouteBased(
         }
     }
 
-    Graph::move(std::move(stopEventGraph), data.stopEventGraph);
+    ULTRAGraph::move(std::move(stopEventGraph), data.stopEventGraph);
     data.stopEventGraph.sortEdges(ToVertex);
     progress.finished();
 }

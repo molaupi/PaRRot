@@ -470,7 +470,7 @@ struct CHData {
                 }
             }
         }
-        Graph::move(std::move(tempCore), core);
+        ULTRAGraph::move(std::move(tempCore), core);
     }
 
     inline void writeBinary(const std::string& fileName) const noexcept
@@ -496,8 +496,8 @@ inline CHData buildCH(const TransferGraph& originalGraph,
     const STOP_CRITERION& stopCriterion) noexcept
 {
     TravelTimeGraph graph;
-    Graph::copy(originalGraph, graph);
-    Graph::printInfo(graph);
+    ULTRAGraph::copy(originalGraph, graph);
+    ULTRAGraph::printInfo(graph);
     CHBuilder<KEY_FUNCTION, STOP_CRITERION> chBuilder(
         std::move(graph), graph[TravelTime], keyFunction, stopCriterion);
     chBuilder.run();

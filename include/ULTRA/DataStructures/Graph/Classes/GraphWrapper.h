@@ -46,7 +46,7 @@ public:
 
     template <typename FROM_GRAPH_TYPE, typename TO_GRAPH_TYPE,
         typename... ATTRIBUTE_NAME_CHANGES>
-    friend inline void Graph::copy(
+    friend inline void ULTRAGraph::copy(
         const FROM_GRAPH_TYPE& from, TO_GRAPH_TYPE& to,
         const ATTRIBUTE_NAME_CHANGES... attributeNameChanges) noexcept;
 
@@ -96,7 +96,7 @@ public:
 
     GraphWrapper(TransferGraph& constructionGraph)
     {
-        Graph::move(std::move(constructionGraph), graph);
+        ULTRAGraph::move(std::move(constructionGraph), graph);
         generateNeededAttributes();
     }
 

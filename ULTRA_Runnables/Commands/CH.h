@@ -56,8 +56,8 @@ inline CH::CH buildCH(
     const STOP_CRITERION& stopCriterion = StopCriterion()) noexcept
 {
     TravelTimeGraph graph;
-    Graph::copy(originalGraph, graph);
-    Graph::printInfo(graph);
+    ULTRAGraph::copy(originalGraph, graph);
+    ULTRAGraph::printInfo(graph);
     CH::Builder<PROFILER, WITNESS_SEARCH, KEY_FUNCTION, STOP_CRITERION, false,
         false>
         chBuilder(std::move(graph), graph[TravelTime], keyFunction,
@@ -201,7 +201,7 @@ private:
                 }
             }
         }
-        Graph::move(std::move(resultGraph), data.transferGraph);
+        ULTRAGraph::move(std::move(resultGraph), data.transferGraph);
         data.serialize(getParameter("Network output file"));
     }
 };

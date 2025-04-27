@@ -27,7 +27,7 @@ public:
         const size_t tripLimit = INFTY) noexcept
     {
         DynamicTransferGraph result;
-        Graph::copy(data.stopEventGraph, result);
+        ULTRAGraph::copy(data.stopEventGraph, result);
         result.deleteEdges([&](const Edge) { return true; });
         result.reserve(data.stopEventGraph.numVertices(),
             data.stopEventGraph.numEdges() * 10);
@@ -73,13 +73,13 @@ public:
             }
         }
         progress.finished();
-        Graph::move(std::move(result), data.stopEventGraph);
+        ULTRAGraph::move(std::move(result), data.stopEventGraph);
     }
 
     inline void removeSuperfluousShortcuts(Data& data) noexcept
     {
         DynamicTransferGraph result;
-        Graph::copy(data.stopEventGraph, result);
+        ULTRAGraph::copy(data.stopEventGraph, result);
         result.deleteEdges([&](const Edge) { return true; });
         result.reserve(data.stopEventGraph.numVertices(),
             data.stopEventGraph.numEdges());
@@ -106,7 +106,7 @@ public:
             }
         }
         progress.finished();
-        Graph::move(std::move(result), data.stopEventGraph);
+        ULTRAGraph::move(std::move(result), data.stopEventGraph);
     }
 };
 

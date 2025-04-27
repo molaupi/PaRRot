@@ -194,7 +194,7 @@ int main(int argc, char *argv[]) {
         using VehicleVertexAttributes = VertexAttrs<LatLngAttribute, OsmNodeIdAttribute>;
         using VehicleEdgeAttributes = EdgeAttrs<
                 EdgeIdAttribute, EdgeTailAttribute, FreeFlowSpeedAttribute, TravelTimeAttribute, CarEdgeToPsgEdgeAttribute, OsmRoadCategoryAttribute>;
-        using VehicleInputGraph = StaticGraph<VehicleVertexAttributes, VehicleEdgeAttributes>;
+        using VehicleInputGraph = KaRRiStaticGraph<VehicleVertexAttributes, VehicleEdgeAttributes>;
         std::ifstream vehicleNetworkFile(vehicleNetworkFileName, std::ios::binary);
         if (!vehicleNetworkFile.good())
             throw std::invalid_argument("file not found -- '" + vehicleNetworkFileName + "'");
@@ -229,7 +229,7 @@ int main(int argc, char *argv[]) {
         std::cout << "Reading passenger network from file... " << std::flush;
         using PsgVertexAttributes = VertexAttrs<LatLngAttribute, OsmNodeIdAttribute>;
         using PsgEdgeAttributes = EdgeAttrs<EdgeIdAttribute, EdgeTailAttribute, PsgEdgeToCarEdgeAttribute, TravelTimeAttribute>;
-        using PsgInputGraph = StaticGraph<PsgVertexAttributes, PsgEdgeAttributes>;
+        using PsgInputGraph = KaRRiStaticGraph<PsgVertexAttributes, PsgEdgeAttributes>;
         std::ifstream psgNetworkFile(passengerNetworkFileName, std::ios::binary);
         if (!psgNetworkFile.good())
             throw std::invalid_argument("file not found -- '" + passengerNetworkFileName + "'");

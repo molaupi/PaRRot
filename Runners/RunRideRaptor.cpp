@@ -192,7 +192,7 @@ int main(int argc, char* argv[])
         using VehicleEdgeAttributes = karri::EdgeAttrs<EdgeIdAttribute, EdgeTailAttribute, FreeFlowSpeedAttribute,
             TravelTimeAttribute, CarEdgeToPsgEdgeAttribute,
             OsmRoadCategoryAttribute>;
-        using VehicleInputGraph = karri::StaticGraph<VehicleVertexAttributes, VehicleEdgeAttributes>;
+        using VehicleInputGraph = karri::KaRRiStaticGraph<VehicleVertexAttributes, VehicleEdgeAttributes>;
         std::ifstream vehicleNetworkFile(vehicleNetworkFileName, std::ios::binary);
         if (!vehicleNetworkFile.good())
             throw std::invalid_argument("file not found -- '" + vehicleNetworkFileName + "'");
@@ -230,7 +230,7 @@ int main(int argc, char* argv[])
         using PsgVertexAttributes = karri::VertexAttrs<karri::LatLngAttribute, OsmNodeIdAttribute>;
         using PsgEdgeAttributes = karri::EdgeAttrs<EdgeIdAttribute, EdgeTailAttribute, PsgEdgeToCarEdgeAttribute,
             TravelTimeAttribute>;
-        using PsgInputGraph = karri::StaticGraph<PsgVertexAttributes, PsgEdgeAttributes>;
+        using PsgInputGraph = karri::KaRRiStaticGraph<PsgVertexAttributes, PsgEdgeAttributes>;
         std::ifstream psgNetworkFile(passengerNetworkFileName, std::ios::binary);
         if (!psgNetworkFile.good())
             throw std::invalid_argument("file not found -- '" + passengerNetworkFileName + "'");

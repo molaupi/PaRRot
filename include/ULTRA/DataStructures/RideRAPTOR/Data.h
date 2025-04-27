@@ -37,15 +37,15 @@
 
 namespace RIDERAPTOR {
 
-using ConstructionGraph = DynamicGraph<List<Attribute<VehicleId, int>>, List<Attribute<Weight, int>, Attribute<InsertionInfo, StopInsertionInfo>>>;
-using RideTransferGraph = StaticGraph<List<Attribute<VehicleId, int>>, List<Attribute<Weight, int>, Attribute<InsertionInfo, StopInsertionInfo>>>;
+using ConstructionGraph = ULTRADynamicGraph<List<Attribute<VehicleId, int>>, List<Attribute<Weight, int>, Attribute<InsertionInfo, StopInsertionInfo>>>;
+using RideTransferGraph = ULTRAStaticGraph<List<Attribute<VehicleId, int>>, List<Attribute<Weight, int>, Attribute<InsertionInfo, StopInsertionInfo>>>;
 
 // Why?
 inline TransferGraph getOverheadGraph(RAPTOR::Data& raptorData,
     TransferGraph& graph) noexcept
 {
     DynamicTransferGraph temp;
-    Graph::copy(graph, temp);
+    ULTRAGraph::copy(graph, temp);
     for (const StopId stop : raptorData.stops()) {
         temp.addVertex(temp.vertexRecord(stop));
     }
@@ -62,7 +62,7 @@ inline TransferGraph getOverheadGraph(RAPTOR::Data& raptorData,
         temp.addEdge(stopVertex, stop).set(TravelTime, 0);
     }
     TransferGraph result;
-    Graph::move(std::move(temp), result);
+    ULTRAGraph::move(std::move(temp), result);
     return result;
 }
 
@@ -283,7 +283,7 @@ public:
 
         profiler.startPhase(PHASE_BUILDTRANSFERGRAPH);
         rideTransferGraph.clear();
-        Graph::move(std::move(constructionGraph), rideTransferGraph);
+        ULTRAGraph::move(std::move(constructionGraph), rideTransferGraph);
         profiler.donePhase(PHASE_BUILDTRANSFERGRAPH);
 
         calculateStatistics();

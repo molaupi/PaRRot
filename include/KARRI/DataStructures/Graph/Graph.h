@@ -1007,9 +1007,9 @@ inline std::ostream &operator<<(std::ostream &os, const Graph<VertexAttrs, EdgeA
 
 // Alias templates for static and dynamic graphs.
 template<typename VertexAttributes = VertexAttrs<>, typename EdgeAttributes = EdgeAttrs<>>
-using StaticGraph = Graph<VertexAttributes, EdgeAttributes, false>;
+using KaRRiStaticGraph = Graph<VertexAttributes, EdgeAttributes, false>;
 template<typename VertexAttributes = VertexAttrs<>, typename EdgeAttributes = EdgeAttrs<>>
-using DynamicGraph = Graph<VertexAttributes, EdgeAttributes, true>;
+using KaRRiDynamicGraph = Graph<VertexAttributes, EdgeAttributes, true>;
 
 // Iteration macros for conveniently looping through vertices or edges of a graph.
 #define FORALL_VERTICES(G, u) for (int u = 0; u < G.numVertices(); ++u)

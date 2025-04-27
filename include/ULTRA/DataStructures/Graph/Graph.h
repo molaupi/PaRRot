@@ -24,52 +24,39 @@ using WithReverseEdgesAndViaVertex = List<Attribute<ReverseEdge, Edge>, Attribut
 using WithReverseEdgesAndWeight = List<Attribute<ReverseEdge, Edge>, Attribute<Weight, int>>;
 using WithReverseEdgesAndCapacity = List<Attribute<ReverseEdge, Edge>, Attribute<Capacity, int>>;
 
-using StrasserGraph = StaticGraph<NoVertexAttributes, WithTravelTimeAndDistance>;
-using StrasserGraphWithCoordinates = StaticGraph<WithCoordinates, WithTravelTimeAndDistance>;
+using StrasserGraph = ULTRAStaticGraph<NoVertexAttributes, WithTravelTimeAndDistance>;
+using StrasserGraphWithCoordinates = ULTRAStaticGraph<WithCoordinates, WithTravelTimeAndDistance>;
 
-using TransferGraph = StaticGraph<WithCoordinates, WithTravelTime>;
-using DynamicTransferGraph = DynamicGraph<WithCoordinates, WithTravelTime>;
+using TransferGraph = ULTRAStaticGraph<WithCoordinates, WithTravelTime>;
+using DynamicTransferGraph = ULTRADynamicGraph<WithCoordinates, WithTravelTime>;
 using TransferEdgeList = EdgeList<WithCoordinates, WithTravelTime>;
-using EdgeFlagsTransferGraph = DynamicGraph<WithCoordinates, WithTravelTimeAndEdgeFlags>;
+using EdgeFlagsTransferGraph = ULTRADynamicGraph<WithCoordinates, WithTravelTimeAndEdgeFlags>;
 
-using SimpleDynamicGraph = DynamicGraph<NoVertexAttributes, NoEdgeAttributes>;
-using SimpleStaticGraph = StaticGraph<NoVertexAttributes, NoEdgeAttributes>;
+using SimpleDynamicGraph = ULTRADynamicGraph<NoVertexAttributes, NoEdgeAttributes>;
+using SimpleStaticGraph = ULTRAStaticGraph<NoVertexAttributes, NoEdgeAttributes>;
 using SimpleEdgeList = EdgeList<NoVertexAttributes, NoEdgeAttributes>;
 
-using DynamicFlowGraph = DynamicGraph<NoVertexAttributes, WithReverseEdgesAndCapacity>;
-using StaticFlowGraph = StaticGraph<NoVertexAttributes, WithReverseEdgesAndCapacity>;
+using DynamicFlowGraph = ULTRADynamicGraph<NoVertexAttributes, WithReverseEdgesAndCapacity>;
+using StaticFlowGraph = ULTRAStaticGraph<NoVertexAttributes, WithReverseEdgesAndCapacity>;
 
 using CHConstructionGraph = EdgeList<NoVertexAttributes, WithViaVertexAndWeight>;
-using CHCoreGraph = DynamicGraph<NoVertexAttributes, WithViaVertexAndWeight>;
-using CHGraph = StaticGraph<NoVertexAttributes, WithViaVertexAndWeight>;
+using CHCoreGraph = ULTRADynamicGraph<NoVertexAttributes, WithViaVertexAndWeight>;
+using CHGraph = ULTRAStaticGraph<NoVertexAttributes, WithViaVertexAndWeight>;
 
 using DimacsGraph = EdgeList<NoVertexAttributes, WithTravelTime>;
 using DimacsGraphWithCoordinates = EdgeList<WithCoordinates, WithTravelTime>;
 
-using TravelTimeGraph = StaticGraph<NoVertexAttributes, WithTravelTime>;
+using TravelTimeGraph = ULTRAStaticGraph<NoVertexAttributes, WithTravelTime>;
 
-using CondensationGraph = DynamicGraph<WithSize, WithTravelTime>;
+using CondensationGraph = ULTRADynamicGraph<WithSize, WithTravelTime>;
 
-using BundledGraph = StaticGraph<WithCoordinates, WithTravelTimeAndBundleSize>;
-using DynamicBundledGraph = DynamicGraph<WithCoordinates, WithTravelTimeAndBundleSize>;
-
-// ********************************
-// currently, we take the defs from louis
-// ********************************
-// First the Attributes for the Graph
-// using WithPositionAndDistanceLabelsForToAndFrom =
-//     List<Attribute<Position, size_t>, Attribute<DistanceLabelTo, size_t>,
-//          Attribute<DistanceLabelFrom, size_t>>;
-
-// Define the Ride Transfer Graph (for now, as dynamic graph => maybe in the
-// future change to vector<vector<>>?)
-// using RideTransferGraph = DynamicGraph<NoVertexAttributes,
-// WithPositionAndDistanceLabelsForToAndFrom>;
+using BundledGraph = ULTRAStaticGraph<WithCoordinates, WithTravelTimeAndBundleSize>;
+using DynamicBundledGraph = ULTRADynamicGraph<WithCoordinates, WithTravelTimeAndBundleSize>;
 
 // Helper for the KaRRiCHGraph
 using WithWeightAndUnpackingInfo = List<Attribute<Weight, int>, Attribute<UnpackingInfo, std::pair<int, int>>>;
-using KaRRiCHGraph = StaticGraph<NoVertexAttributes, WithWeightAndUnpackingInfo>;
-using KaRRiGraph = StaticGraph<WithCoordinates,
+using KaRRiCHGraph = ULTRAStaticGraph<NoVertexAttributes, WithWeightAndUnpackingInfo>;
+using KaRRiGraph = ULTRAStaticGraph<WithCoordinates,
     List<Attribute<FromVertex, Vertex>, Attribute<TravelTime, int>,
         Attribute<EdgeId, int>>>;
 

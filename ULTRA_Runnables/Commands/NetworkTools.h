@@ -84,9 +84,9 @@ public:
         Intermediate::Data inter = Intermediate::Data::FromBinary(intermediateFile);
         inter.printInfo();
         Intermediate::TransferGraph graph(graphFile);
-        Graph::printInfo(graph);
+        ULTRAGraph::printInfo(graph);
         graph.printAnalysis();
-        Graph::applyBoundingBox(graph, inter.boundingBox());
+        ULTRAGraph::applyBoundingBox(graph, inter.boundingBox());
         inter.addTransferGraph(graph);
         inter.printInfo();
         inter.serialize(outputFile);
@@ -147,10 +147,10 @@ private:
         const std::string outputFile = getParameter("Output file");
 
         network.printInfo();
-        Graph::printInfo(graph);
+        ULTRAGraph::printInfo(graph);
         graph.printAnalysis();
-        Graph::applyBoundingBox(graph, network.boundingBox());
-        Graph::move(std::move(graph), network.transferGraph);
+        ULTRAGraph::applyBoundingBox(graph, network.boundingBox());
+        ULTRAGraph::move(std::move(graph), network.transferGraph);
         network.printInfo();
         network.serialize(outputFile);
     }
@@ -195,7 +195,7 @@ public:
         Intermediate::Data inter(getParameter("Intermediate file"));
         inter.printInfo();
         Intermediate::TransferGraph graph = inter.minTravelTimeGraph();
-        Graph::printInfo(graph);
+        ULTRAGraph::printInfo(graph);
         graph.printAnalysis();
         StronglyConnectedComponents<Intermediate::TransferGraph, true> scc(graph);
         scc.run();
@@ -239,7 +239,7 @@ public:
         Intermediate::Data fullData(getParameter("Full intermediate file"));
         fullData.printInfo();
         Intermediate::TransferGraph graph = fullData.minTravelTimeGraph();
-        Graph::printInfo(graph);
+        ULTRAGraph::printInfo(graph);
         graph.printAnalysis();
         StronglyConnectedComponents<Intermediate::TransferGraph, true> scc(graph);
         scc.run();
@@ -468,7 +468,7 @@ public:
         Intermediate::TransferGraph graph;
         graph.readBinary(graphFile);
         graph.printAnalysis();
-        Graph::computeTravelTimes(graph, speed, obeySpeedLimits);
+        ULTRAGraph::computeTravelTimes(graph, speed, obeySpeedLimits);
         graph.printAnalysis();
         graph.writeBinary(outputFile);
     }

@@ -223,11 +223,11 @@ private:
             }
             progress++;
         }
-        ::Graph::move(std::move(temp), bucketGraph[I]);
+        ::ULTRAGraph::move(std::move(temp), bucketGraph[I]);
         bucketGraph[I].sortEdges(Weight);
         if constexpr (Debug) {
             std::cout << std::endl;
-            ::Graph::printInfo(bucketGraph[I]);
+            ::ULTRAGraph::printInfo(bucketGraph[I]);
             bucketGraph[I].printAnalysis();
         }
     }

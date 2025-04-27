@@ -347,7 +347,7 @@ public:
             b.departureTime = std::max(b.arrivalTime, b.departureTime);
         }
         auto graph = csa.transferGraph;
-        Graph::move(std::move(graph), data.transferGraph);
+        ULTRAGraph::move(std::move(graph), data.transferGraph);
         if (validate)
             data.validate();
         return data;
@@ -377,7 +377,7 @@ public:
                 }
             }
         }
-        Graph::move(std::move(raptorCopy.transferGraph), data.transferGraph);
+        ULTRAGraph::move(std::move(raptorCopy.transferGraph), data.transferGraph);
         if (validate)
             data.validate();
         return data;
@@ -436,7 +436,7 @@ public:
         const double speedInKMH = 4.5) noexcept
     {
         TransferGraph boundedGraph = graph;
-        Graph::applyBoundingBox(boundedGraph, boundingBox());
+        ULTRAGraph::applyBoundingBox(boundedGraph, boundingBox());
         addTransferGraph(boundedGraph, maxUnificationDistanceInCM,
             maxConnectingDistanceInCM, speedInKMH);
     }
@@ -646,12 +646,12 @@ public:
 
     inline void applyMaxSpeed(const double speedInKMH = 4.5) noexcept
     {
-        Graph::computeTravelTimes(transferGraph, speedInKMH, true);
+        ULTRAGraph::computeTravelTimes(transferGraph, speedInKMH, true);
     }
 
     inline void applySpeed(const double speedInKMH) noexcept
     {
-        Graph::computeTravelTimes(transferGraph, speedInKMH, false);
+        ULTRAGraph::computeTravelTimes(transferGraph, speedInKMH, false);
     }
 
     inline void applyMinTravelTime(const double minTravelTime) noexcept
@@ -723,7 +723,7 @@ public:
             progress++;
         }
         graph.packEdges();
-        Graph::move(std::move(graph), transferGraph);
+        ULTRAGraph::move(std::move(graph), transferGraph);
         validate();
         if (verbose)
             std::cout << " done." << std::endl;
@@ -750,7 +750,7 @@ public:
             progress++;
         }
         graph.packEdges();
-        Graph::move(std::move(graph), transferGraph);
+        ULTRAGraph::move(std::move(graph), transferGraph);
         validate();
         if (verbose)
             std::cout << " done." << std::endl;
@@ -786,7 +786,7 @@ public:
             progress++;
         }
         graph.packEdges();
-        Graph::move(std::move(graph), transferGraph);
+        ULTRAGraph::move(std::move(graph), transferGraph);
         validate();
         if (verbose)
             std::cout << " done." << std::endl;
@@ -1238,7 +1238,7 @@ public:
                   << String::prettyInt(maxComponentSize) << std::endl;
         std::cout << "   Number of isolated Stops: " << std::setw(12)
                   << String::prettyInt(numberOfIsolatedStops) << std::endl;
-        Graph::printInfo(transferGraph);
+        ULTRAGraph::printInfo(transferGraph);
         transferGraph.printAnalysis();
     }
 

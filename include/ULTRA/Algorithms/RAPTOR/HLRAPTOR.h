@@ -86,14 +86,14 @@ public:
         outHubs.sortEdges(TravelTime);
         inHubs.sortEdges(TravelTime);
         DynamicTransferGraph tempGraph;
-        Graph::copy(reverseInHubs, tempGraph);
+        ULTRAGraph::copy(reverseInHubs, tempGraph);
         for (const Vertex vertex : tempGraph.vertices()) {
             if (data.isStop(vertex))
                 continue;
             tempGraph.deleteAllOutgoingEdges(vertex);
         }
         tempGraph.revert();
-        Graph::move(std::move(tempGraph), reverseInHubs);
+        ULTRAGraph::move(std::move(tempGraph), reverseInHubs);
         reverseInHubs.sortEdges(TravelTime);
     }
 

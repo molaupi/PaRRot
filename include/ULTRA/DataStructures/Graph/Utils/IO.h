@@ -11,7 +11,7 @@
 #include "../Classes/StaticGraph.h"
 #include "Conversion.h"
 
-namespace Graph {
+namespace ULTRAGraph {
 
 template <typename GRAPH>
 inline void fromDimacs(const std::string& fileBaseName, GRAPH& graph) noexcept
@@ -259,7 +259,7 @@ inline void fromStrasserBinary(const std::string& fileName, GRAPH& graph,
             temp.addEdge(vertex, Vertex(head[i]));
         }
     }
-    Graph::move(std::move(temp), graph);
+    ULTRAGraph::move(std::move(temp), graph);
     for (const Vertex vertex : graph.vertices()) {
         if constexpr (GRAPH::HasVertexAttribute(Coordinates)) {
             graph.set(Coordinates, vertex,

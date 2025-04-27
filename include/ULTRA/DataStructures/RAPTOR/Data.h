@@ -103,7 +103,7 @@ public:
         data.firstStopEventOfRoute.emplace_back(data.stopEvents.size());
         data.firstRouteSegmentOfStop.emplace_back(data.routeSegments.size());
         Intermediate::TransferGraph transferGraph = inter.transferGraph;
-        Graph::move(std::move(transferGraph), data.transferGraph);
+        ULTRAGraph::move(std::move(transferGraph), data.transferGraph);
         return data;
     }
 
@@ -760,7 +760,7 @@ public:
         topology.deleteEdges(
             [&](Edge edge) { return topology.get(TravelTime, edge) >= intMax; });
         TransferGraph result;
-        Graph::move(std::move(topology), result);
+        ULTRAGraph::move(std::move(topology), result);
         return result;
     }
 
@@ -806,7 +806,7 @@ public:
         topology.deleteEdges(
             [&](Edge edge) { return topology.get(TravelTime, edge) >= intMax; });
         TransferGraph result;
-        Graph::move(std::move(topology), result);
+        ULTRAGraph::move(std::move(topology), result);
         return result;
     }
 
@@ -852,7 +852,7 @@ public:
         topology.deleteEdges(
             [&](Edge edge) { return topology.get(TravelTime, edge) >= intMax; });
         TransferGraph result;
-        Graph::move(std::move(topology), result);
+        ULTRAGraph::move(std::move(topology), result);
         return result;
     }
 
@@ -882,7 +882,7 @@ public:
         }
         graph.reduceMultiEdgesBy(TravelTime);
         TransferGraph result;
-        Graph::move(std::move(graph), result);
+        ULTRAGraph::move(std::move(graph), result);
         return result;
     }
 

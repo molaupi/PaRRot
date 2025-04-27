@@ -46,8 +46,8 @@
 class CCH {
  public:
   using EliminationTree = std::vector<int32_t>;                             // The elimination tree.
-  using UpGraph = StaticGraph<VertexAttrs<>, EdgeAttrs<EdgeTailAttribute>>; // The upward graph.
-  using DownGraph = StaticGraph<VertexAttrs<>, EdgeAttrs<EdgeIdAttribute>>; // The downward graph.
+  using UpGraph = KaRRiStaticGraph<VertexAttrs<>, EdgeAttrs<EdgeTailAttribute>>; // The upward graph.
+  using DownGraph = KaRRiStaticGraph<VertexAttrs<>, EdgeAttrs<EdgeIdAttribute>>; // The downward graph.
 
   // Constructs an empty CCH.
   CCH() = default;

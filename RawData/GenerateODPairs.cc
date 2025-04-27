@@ -139,7 +139,7 @@ int main(int argc, char *argv[]) {
         std::cout << "Reading graph from file..." << std::flush;
         using VertexAttributes = karri::VertexAttrs<karri::LatLngAttribute, SequentialVertexIdAttribute>;
         using EdgeAttributes = karri::EdgeAttrs<LengthAttribute, TravelTimeAttribute, EdgeIdAttribute, CarEdgeToPsgEdgeAttribute>;
-        using Graph = karri::StaticGraph<VertexAttributes, EdgeAttributes>;
+        using Graph = karri::KaRRiStaticGraph<VertexAttributes, EdgeAttributes>;
         std::ifstream graphFile(graphFileName, std::ios::binary);
         if (!graphFile.good())
             throw std::invalid_argument("file not found -- '" + graphFileName + "'");

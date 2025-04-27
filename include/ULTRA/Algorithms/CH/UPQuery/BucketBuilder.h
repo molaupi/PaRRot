@@ -77,11 +77,11 @@ public:
             progress++;
         }
         CHGraph result;
-        ::Graph::move(std::move(temp), result);
+        ::ULTRAGraph::move(std::move(temp), result);
         result.sortEdges(Weight);
         if constexpr (Debug) {
             std::cout << std::endl;
-            ::Graph::printInfo(result);
+            ::ULTRAGraph::printInfo(result);
             result.printAnalysis();
         }
         return result;

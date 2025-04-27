@@ -61,7 +61,7 @@ public:
         raptorData.printInfo();
         for (const size_t mode : modes) {
             std::cout << "Graph for " << TransferModeNames[mode] << ":" << std::endl;
-            Graph::printInfo(transferGraphs[mode]);
+            ULTRAGraph::printInfo(transferGraphs[mode]);
         }
     }
 
@@ -98,7 +98,7 @@ public:
             "Cannot build pruning data without transfer modes!");
         Data resultData(raptorData);
         DynamicTransferGraph temp;
-        Graph::copy(raptorData.transferGraph, temp);
+        ULTRAGraph::copy(raptorData.transferGraph, temp);
         for (const size_t mode : pruningModes) {
             const TransferGraph& graph = getTransferGraph(mode);
             for (const Vertex from : graph.vertices()) {
@@ -116,7 +116,7 @@ public:
                 }
             }
         }
-        Graph::move(std::move(temp), resultData.transferGraph);
+        ULTRAGraph::move(std::move(temp), resultData.transferGraph);
         return resultData;
     }
 

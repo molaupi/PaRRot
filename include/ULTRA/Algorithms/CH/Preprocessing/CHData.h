@@ -25,7 +25,7 @@ public:
     Data(GRAPH&& graph, std::vector<int> weight)
         : numVertices(graph.numVertices())
     {
-        Graph::move(std::move(graph), core);
+        ULTRAGraph::move(std::move(graph), core);
         core[Weight].swap(weight);
         forwardCH.addVertices(numVertices);
         backwardCH.addVertices(numVertices);
@@ -36,7 +36,7 @@ public:
     Data(GRAPH&& graph, const AttributeNameWrapper<ATTRIBUTE_NAME> weight)
         : numVertices(graph.numVertices())
     {
-        Graph::move(std::move(graph), core, Weight << weight);
+        ULTRAGraph::move(std::move(graph), core, Weight << weight);
         forwardCH.addVertices(numVertices);
         backwardCH.addVertices(numVertices);
         std::vector<uint16_t>(numVertices, 0).swap(level);

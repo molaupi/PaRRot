@@ -67,7 +67,7 @@ int main(int argc, char *argv[]) {
 
         // Read the vehicle network from file.
         std::cout << "Reading vehicle network from file... " << std::flush;
-        using InputGraph = karri::StaticGraph<karri::VertexAttrs<karri::LatLngAttribute>, karri::EdgeAttrs<>>;
+        using InputGraph = karri::KaRRiStaticGraph<karri::VertexAttrs<karri::LatLngAttribute>, karri::EdgeAttrs<>>;
         std::ifstream graphFile(graphFileName, std::ios::binary);
         if (!graphFile.good())
             throw std::invalid_argument("file not found -- '" + graphFileName + "'");

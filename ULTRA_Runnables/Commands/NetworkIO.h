@@ -125,7 +125,7 @@ public:
         inter.printInfo();
         RAPTOR::Data data = RAPTOR::Data::FromIntermediate(inter, routeType);
         data.printInfo();
-        Graph::printInfo(data.transferGraph);
+        ULTRAGraph::printInfo(data.transferGraph);
         data.transferGraph.printAnalysis();
         data.serialize(outputFile);
     }
@@ -257,11 +257,11 @@ private:
         DimacsGraphWithCoordinates dimacs;
         dimacs.fromDimacs<true>(getParameter("Input file"),
             getParameter<double>("Coordinate factor"));
-        Graph::printInfo(dimacs);
+        ULTRAGraph::printInfo(dimacs);
         dimacs.printAnalysis();
         GRAPH_TYPE graph;
-        Graph::move(std::move(dimacs), graph);
-        Graph::printInfo(graph);
+        ULTRAGraph::move(std::move(dimacs), graph);
+        ULTRAGraph::printInfo(graph);
         graph.printAnalysis();
         graph.writeBinary(getParameter("Output file"));
     }

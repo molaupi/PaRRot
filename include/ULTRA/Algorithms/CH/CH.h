@@ -31,8 +31,8 @@ public:
 
     CH(CHConstructionGraph&& forwardCH, CHConstructionGraph&& backwardCH)
     {
-        Graph::move(std::move(forwardCH), forward);
-        Graph::move(std::move(backwardCH), backward);
+        ULTRAGraph::move(std::move(forwardCH), forward);
+        ULTRAGraph::move(std::move(backwardCH), backward);
     }
 
     CH(Data&& data)

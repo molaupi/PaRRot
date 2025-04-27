@@ -122,7 +122,7 @@ int main(int argc, char *argv[]) {
 
         // Read the source network from file.
         std::cout << "Reading source network from file... " << std::flush;
-        using InputGraph = karri::StaticGraph<karri::VertexAttrs<karri::LatLngAttribute>, karri::EdgeAttrs<EdgeIdAttribute, EdgeTailAttribute>>;
+        using InputGraph = karri::KaRRiStaticGraph<karri::VertexAttrs<karri::LatLngAttribute>, karri::EdgeAttrs<EdgeIdAttribute, EdgeTailAttribute>>;
         std::ifstream inputGraphFile(inputGraphFileName, std::ios::binary);
         if (!inputGraphFile.good())
             throw std::invalid_argument("file not found -- '" + inputGraphFileName + "'");

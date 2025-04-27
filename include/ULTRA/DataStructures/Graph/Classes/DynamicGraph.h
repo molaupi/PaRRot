@@ -86,35 +86,35 @@ public:
     template <typename VERTEX_ATTRIBUTES_FROM, typename EDGE_ATTRIBUTES_FROM,
         typename VERTEX_ATTRIBUTES_TO, typename EDGE_ATTRIBUTES_TO,
         typename... ATTRIBUTE_NAME_CHANGES>
-    friend inline void Graph::move(
+    friend inline void ULTRAGraph::move(
         DynamicGraphImplementation<VERTEX_ATTRIBUTES_FROM, EDGE_ATTRIBUTES_FROM>&& from,
         StaticGraphImplementation<VERTEX_ATTRIBUTES_TO, EDGE_ATTRIBUTES_TO>& to,
         const ATTRIBUTE_NAME_CHANGES... attributeNameChanges);
     template <typename VERTEX_ATTRIBUTES_FROM, typename EDGE_ATTRIBUTES_FROM,
         typename VERTEX_ATTRIBUTES_TO, typename EDGE_ATTRIBUTES_TO,
         typename... ATTRIBUTE_NAME_CHANGES>
-    friend inline void Graph::move(
+    friend inline void ULTRAGraph::move(
         DynamicGraphImplementation<VERTEX_ATTRIBUTES_FROM, EDGE_ATTRIBUTES_FROM>&& from,
         DynamicGraphImplementation<VERTEX_ATTRIBUTES_TO, EDGE_ATTRIBUTES_TO>& to,
         const ATTRIBUTE_NAME_CHANGES... attributeNameChanges);
     template <typename VERTEX_ATTRIBUTES_FROM, typename EDGE_ATTRIBUTES_FROM,
         typename VERTEX_ATTRIBUTES_TO, typename EDGE_ATTRIBUTES_TO,
         typename... ATTRIBUTE_NAME_CHANGES>
-    friend inline void Graph::move(
+    friend inline void ULTRAGraph::move(
         DynamicGraphImplementation<VERTEX_ATTRIBUTES_FROM, EDGE_ATTRIBUTES_FROM>&& from,
         EdgeListImplementation<VERTEX_ATTRIBUTES_TO, EDGE_ATTRIBUTES_TO>& to,
         const ATTRIBUTE_NAME_CHANGES... attributeNameChanges);
     template <typename VERTEX_ATTRIBUTES_FROM, typename EDGE_ATTRIBUTES_FROM,
         typename VERTEX_ATTRIBUTES_TO, typename EDGE_ATTRIBUTES_TO,
         typename... ATTRIBUTE_NAME_CHANGES>
-    friend inline void Graph::move(
+    friend inline void ULTRAGraph::move(
         StaticGraphImplementation<VERTEX_ATTRIBUTES_FROM, EDGE_ATTRIBUTES_FROM>&& from,
         DynamicGraphImplementation<VERTEX_ATTRIBUTES_TO, EDGE_ATTRIBUTES_TO>& to,
         const ATTRIBUTE_NAME_CHANGES... attributeNameChanges);
     template <typename VERTEX_ATTRIBUTES_FROM, typename EDGE_ATTRIBUTES_FROM,
         typename VERTEX_ATTRIBUTES_TO, typename EDGE_ATTRIBUTES_TO,
         typename... ATTRIBUTE_NAME_CHANGES>
-    friend inline void Graph::move(
+    friend inline void ULTRAGraph::move(
         EdgeListImplementation<VERTEX_ATTRIBUTES_FROM, EDGE_ATTRIBUTES_FROM>&& from,
         DynamicGraphImplementation<VERTEX_ATTRIBUTES_TO, EDGE_ATTRIBUTES_TO>& to,
         const ATTRIBUTE_NAME_CHANGES... attributeNameChanges);
@@ -999,7 +999,7 @@ public:
     {
         vertexAttributes.serialize(fileName, separator);
         edgeAttributes.serialize(fileName, separator);
-        Graph::writeStatisticsFile(*this, fileName, separator);
+        ULTRAGraph::writeStatisticsFile(*this, fileName, separator);
     }
 
     inline void readBinary(const std::string& fileName,
@@ -1287,7 +1287,7 @@ public:
                 << std::right << " -> ";
             Enumeration edgeList;
             for (const Edge edge : edgesFrom(vertex)) {
-                edgeList << "(" << Graph::edgeToString(*this, edge) << ")" << sep;
+                edgeList << "(" << ULTRAGraph::edgeToString(*this, edge) << ")" << sep;
             }
             out << edgeList << std::endl;
         }

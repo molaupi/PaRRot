@@ -63,9 +63,9 @@ public:
         }
         std::sort(data.connections.begin(), data.connections.end());
         Intermediate::TransferGraph transferGraph = inter.transferGraph;
-        Graph::printInfo(transferGraph);
+        ULTRAGraph::printInfo(transferGraph);
         transferGraph.printAnalysis();
-        Graph::move(std::move(transferGraph), data.transferGraph);
+        ULTRAGraph::move(std::move(transferGraph), data.transferGraph);
         return data;
     }
 
@@ -94,12 +94,12 @@ public:
             data.connections.emplace_back(con);
         }
         Intermediate::TransferGraph graph;
-        Graph::move(std::move(transferGraph), graph);
+        ULTRAGraph::move(std::move(transferGraph), graph);
         if constexpr (MAKE_BIDIRECTIONAL)
             graph.makeBidirectional();
         graph.reduceMultiEdgesBy(TravelTime);
         graph.packEdges();
-        Graph::move(std::move(graph), data.transferGraph);
+        ULTRAGraph::move(std::move(graph), data.transferGraph);
         return data;
     }
 
@@ -299,7 +299,7 @@ public:
             }
         }
         graph.packEdges();
-        Graph::move(std::move(graph), transferGraph);
+        ULTRAGraph::move(std::move(graph), transferGraph);
         graph.clear();
         graph.addVertices(transferGraph.numVertices());
         Dijkstra<TransferGraph, false> dijkstra(transferGraph,
@@ -317,7 +317,7 @@ public:
             progress++;
         }
         graph.packEdges();
-        Graph::move(std::move(graph), transferGraph);
+        ULTRAGraph::move(std::move(graph), transferGraph);
     }
 
     inline void makeDirectedTransitiveStopGraph(
@@ -373,7 +373,7 @@ public:
         Dijkstra<TransferGraph, false> dijkstraToZones(transferGraph,
             transferGraph[TravelTime]);
         newTransferGraph.packEdges();
-        Graph::move(std::move(newTransferGraph), transferGraph);
+        ULTRAGraph::move(std::move(newTransferGraph), transferGraph);
     }
 
     inline void duplicateConnections(const int timeOffset = 24 * 60 * 60) noexcept
@@ -606,7 +606,7 @@ public:
             [&](Edge edge) { return topology.get(TravelTime, edge) >= intMax; });
         topology.packEdges();
         TransferGraph result;
-        Graph::move(std::move(topology), result);
+        ULTRAGraph::move(std::move(topology), result);
         return result;
     }
 

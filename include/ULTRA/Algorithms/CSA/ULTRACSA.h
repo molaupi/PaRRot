@@ -58,7 +58,7 @@ public:
         , parentLabel(PathRetrieval ? data.numberOfStops() + 1 : 0)
         , profiler(profilerTemplate)
     {
-        AssertMsg(!Graph::hasLoops(data.transferGraph),
+        AssertMsg(!ULTRAGraph::hasLoops(data.transferGraph),
             "Shortcut graph may not have loops!");
         AssertMsg(Vector::isSorted(data.connections),
             "Connections must be sorted in ascending order!");

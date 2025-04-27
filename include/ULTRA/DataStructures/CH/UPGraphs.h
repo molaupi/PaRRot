@@ -84,7 +84,7 @@ struct SweepGraph {
                     originalGraph.edgeRecord(edge));
             }
         }
-        Graph::move(std::move(constructionGraph), graph);
+        ULTRAGraph::move(std::move(constructionGraph), graph);
         graph.sortEdges(ToVertex);
 
         toVertex.resize(graph.numEdges());
@@ -148,7 +148,7 @@ struct CompactSweepGraph {
                     originalGraph.edgeRecord(edge));
             }
         }
-        Graph::copy(constructionGraph, graph);
+        ULTRAGraph::copy(constructionGraph, graph);
         graph.sortEdges(ToVertex);
 
         toVertex.resize(graph.numEdges());
@@ -172,7 +172,7 @@ struct BucketGraph {
 
     inline void initialize(CHGraph&& initGraph) noexcept
     {
-        ::Graph::move(std::move(initGraph), graph);
+        ::ULTRAGraph::move(std::move(initGraph), graph);
         graph.sortEdges(Weight);
     }
 

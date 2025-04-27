@@ -16,7 +16,7 @@
 #include "../../Geometry/Rectangle.h"
 #include "../Classes/GraphInterface.h"
 
-namespace Graph {
+namespace ULTRAGraph {
 
 template <typename GRAPH>
 inline bool hasLoops(const GRAPH& graph) noexcept

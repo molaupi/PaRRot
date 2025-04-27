@@ -25,7 +25,7 @@ inline TransferGraph getOverheadGraph(const RAPTOR::Data& raptorData,
     const size_t mode) noexcept
 {
     DynamicTransferGraph temp;
-    Graph::copy(raptorData.transferGraph, temp);
+    ULTRAGraph::copy(raptorData.transferGraph, temp);
     for (const StopId stop : raptorData.stops()) {
         temp.addVertex(temp.vertexRecord(stop));
     }
@@ -43,7 +43,7 @@ inline TransferGraph getOverheadGraph(const RAPTOR::Data& raptorData,
         temp.addEdge(stopVertex, stop).set(TravelTime, 0);
     }
     TransferGraph result;
-    Graph::move(std::move(temp), result);
+    ULTRAGraph::move(std::move(temp), result);
     return result;
 }
 
@@ -112,11 +112,11 @@ private:
                   << numberOfThreads << " threads)." << std::endl;
         shortcutGraphBuilder.computeShortcuts(
             ThreadPinning(numberOfThreads, pinMultiplier), witnessLimit);
-        Graph::move(std::move(shortcutGraphBuilder.getShortcutGraph()),
+        ULTRAGraph::move(std::move(shortcutGraphBuilder.getShortcutGraph()),
             data.transferGraph);
 
         data.dontUseImplicitDepartureBufferTimes();
-        Graph::printInfo(data.transferGraph);
+        ULTRAGraph::printInfo(data.transferGraph);
         data.transferGraph.printAnalysis();
         data.serialize(outputFile);
     }
@@ -190,11 +190,11 @@ private:
         shortcutGraphBuilder.computeShortcuts(
             ThreadPinning(numberOfThreads, pinMultiplier), intermediateWitnessLimit,
             finalWitnessLimit);
-        Graph::move(std::move(shortcutGraphBuilder.getShortcutGraph()),
+        ULTRAGraph::move(std::move(shortcutGraphBuilder.getShortcutGraph()),
             data.transferGraph);
 
         data.dontUseImplicitDepartureBufferTimes();
-        Graph::printInfo(data.transferGraph);
+        ULTRAGraph::printInfo(data.transferGraph);
         data.transferGraph.printAnalysis();
         data.serialize(outputFile);
     }
@@ -273,11 +273,11 @@ private:
         shortcutGraphBuilder.computeShortcuts(
             ThreadPinning(numberOfThreads, pinMultiplier), intermediateWitnessLimit,
             finalWitnessLimit);
-        Graph::move(std::move(shortcutGraphBuilder.getShortcutGraph()),
+        ULTRAGraph::move(std::move(shortcutGraphBuilder.getShortcutGraph()),
             data.transferGraph);
 
         data.dontUseImplicitDepartureBufferTimes();
-        Graph::printInfo(data.transferGraph);
+        ULTRAGraph::printInfo(data.transferGraph);
         data.transferGraph.printAnalysis();
         data.serialize(outputFile);
     }
@@ -394,7 +394,7 @@ private:
                   << numberOfThreads << " threads)." << std::endl;
         shortcutGraphBuilder.computeShortcuts(
             ThreadPinning(numberOfThreads, pinMultiplier), witnessLimit);
-        Graph::move(std::move(shortcutGraphBuilder.getStopEventGraph()),
+        ULTRAGraph::move(std::move(shortcutGraphBuilder.getStopEventGraph()),
             data.stopEventGraph);
 
         data.printInfo();
@@ -471,7 +471,7 @@ private:
         shortcutGraphBuilder.computeShortcuts(
             ThreadPinning(numberOfThreads, pinMultiplier), intermediateWitnessLimit,
             finalWitnessLimit);
-        Graph::move(std::move(shortcutGraphBuilder.getStopEventGraph()),
+        ULTRAGraph::move(std::move(shortcutGraphBuilder.getStopEventGraph()),
             data.stopEventGraph);
 
         data.printInfo();
@@ -553,7 +553,7 @@ private:
         shortcutGraphBuilder.computeShortcuts(
             ThreadPinning(numberOfThreads, pinMultiplier), intermediateWitnessLimit,
             finalWitnessLimit);
-        Graph::move(std::move(shortcutGraphBuilder.getStopEventGraph()),
+        ULTRAGraph::move(std::move(shortcutGraphBuilder.getStopEventGraph()),
             data.stopEventGraph);
 
         data.printInfo();
@@ -689,10 +689,10 @@ public:
     virtual void execute() noexcept
     {
         const TransferGraph original(getParameter("Original graph"));
-        Graph::printInfo(original);
+        ULTRAGraph::printInfo(original);
         original.printAnalysis();
         const TransferGraph shortcuts(getParameter("Shortcut graph"));
-        Graph::printInfo(shortcuts);
+        ULTRAGraph::printInfo(shortcuts);
         shortcuts.printAnalysis();
         const int maxVertexNum = getParameter<int>("Max vertex");
         const Vertex maxVertex(maxVertexNum == -1 ? shortcuts.numVertices()
@@ -715,7 +715,7 @@ public:
     virtual void execute() noexcept
     {
         const TransferGraph original(getParameter("Original graph"));
-        Graph::printInfo(original);
+        ULTRAGraph::printInfo(original);
         original.printAnalysis();
         const TripBased::Data ultraTBData(getParameter("ULTRA-TB data"));
         ultraTBData.printInfo();
@@ -757,7 +757,7 @@ public:
         }
 
         TransferGraph shortcuts;
-        Graph::move(std::move(stopShortcuts), shortcuts);
+        ULTRAGraph::move(std::move(stopShortcuts), shortcuts);
         validateShortcutGraph(original, shortcuts, Vertex(original.numVertices()));
     }
 };

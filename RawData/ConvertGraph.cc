@@ -99,7 +99,7 @@ using EdgeAttributes = karri::EdgeAttrs<
     CapacityAttribute, EdgeIdAttribute, FreeFlowSpeedAttribute, LengthAttribute,
     NumLanesAttribute, OsmRoadCategoryAttribute, RoadGeometryAttribute, SpeedLimitAttribute,
     TravelTimeAttribute, XatfRoadCategoryAttribute>;
-using GraphT = karri::StaticGraph<VertexAttributes, EdgeAttributes>;
+using GraphT = karri::KaRRiStaticGraph<VertexAttributes, EdgeAttributes>;
 
 // Imports a graph according to the input file format specified on the command line and returns it.
 inline GraphT importGraph(const CommandLineParser& clp) {

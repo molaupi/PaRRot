@@ -233,11 +233,11 @@ inline void analyze(const CH& ch, const std::vector<Vertex>& order,
     Assert(Order(order).isValid());
     out << "Forward Graph: " << std::endl
         << std::flush;
-    Graph::printInfo(ch.forward);
+    ULTRAGraph::printInfo(ch.forward);
     ch.forward.printAnalysis();
     out << "Backward Graph: " << std::endl
         << std::flush;
-    Graph::printInfo(ch.backward);
+    ULTRAGraph::printInfo(ch.backward);
     ch.backward.printAnalysis();
     out << "CH: " << std::endl
         << std::flush;

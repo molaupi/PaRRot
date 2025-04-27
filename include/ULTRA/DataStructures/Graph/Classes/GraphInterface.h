@@ -74,7 +74,7 @@ class StaticGraphImplementation;
 template <typename LIST_OF_VERTEX_ATTRIBUTES, typename LIST_OF_EDGE_ATTRIBUTES>
 class EdgeListImplementation;
 
-namespace Graph {
+namespace ULTRAGraph {
 template <typename VERTEX_ATTRIBUTES_FROM, typename EDGE_ATTRIBUTES_FROM,
     typename VERTEX_ATTRIBUTES_TO, typename EDGE_ATTRIBUTES_TO,
     typename... ATTRIBUTE_NAME_CHANGES>
@@ -143,13 +143,13 @@ inline void move(
 } // namespace Graph
 
 template <typename LIST_OF_VERTEX_ATTRIBUTES, typename LIST_OF_EDGE_ATTRIBUTES>
-using StaticGraph = StaticGraphImplementation<
+using ULTRAStaticGraph = StaticGraphImplementation<
     Meta::SortAttributes<LIST_OF_VERTEX_ATTRIBUTES>,
     Meta::InsertAttribute<Attribute<ToVertex, Vertex>,
         Meta::SortAttributes<LIST_OF_EDGE_ATTRIBUTES>>>;
 
 template <typename LIST_OF_VERTEX_ATTRIBUTES, typename LIST_OF_EDGE_ATTRIBUTES>
-using DynamicGraph = DynamicGraphImplementation<
+using ULTRADynamicGraph = DynamicGraphImplementation<
     Meta::InsertAttribute<
         Attribute<BeginOut, Edge>,
         Meta::InsertAttribute<
