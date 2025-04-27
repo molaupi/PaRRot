@@ -397,7 +397,7 @@ namespace karri {
         std::ofstream &eventSimulationStatsLogger;
         std::ofstream &assignmentQualityStats;
         std::ofstream &legStatsLogger;
-        ProgressBar progressBar;
+        KaRRiProgressBar progressBar;
 
     };
 }

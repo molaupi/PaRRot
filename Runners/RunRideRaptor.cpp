@@ -711,7 +711,7 @@ int main(int argc, char* argv[])
             }
         }
 
-        CH::CH vehicleCh(std::move(upCHGraph), std::move(downCHGraph));
+        ULTRACH::CH vehicleCh(std::move(upCHGraph), std::move(downCHGraph));
 
         /* std::cout << "## Psg FORWARD ##" << std::endl; */
         /* vehicleCh.getGraph(FORWARD).printAnalysis(); */
@@ -769,7 +769,7 @@ int main(int argc, char* argv[])
             /* } */
         }
 
-        CH::CH psgCh(std::move(upPsgCHGraph), std::move(downPsgCHGraph));
+        ULTRACH::CH psgCh(std::move(upPsgCHGraph), std::move(downPsgCHGraph));
 
         /* std::cout << "## Psg FORWARD ##" << std::endl; */
         /* psgCh.getGraph(FORWARD).printAnalysis(); */

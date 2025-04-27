@@ -61,7 +61,7 @@ namespace karri {
         };
 
         using LabelSet = BasicLabelSet<0, ParentInfo::FULL_PARENT_INFO>;
-        using Search = Dijkstra<VehGraphT, WeightT, LabelSet, StopWhenAllFound, CheckForPDLoc>;
+        using Search = KaRRiDijkstra<VehGraphT, WeightT, LabelSet, StopWhenAllFound, CheckForPDLoc>;
 
     public:
 

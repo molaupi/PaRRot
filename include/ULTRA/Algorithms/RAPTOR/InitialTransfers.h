@@ -9,16 +9,16 @@
 
 namespace RAPTOR {
 
-using DijkstraInitialTransfers = CH::Query<TransferGraph, false, false, true>;
-using CoreCHInitialTransfers = CH::Query<CHGraph, true, false, true>;
-using BucketCHInitialTransfers = CH::BucketQuery<CHGraph, true, false>;
+using DijkstraInitialTransfers = ULTRACH::Query<TransferGraph, false, false, true>;
+using CoreCHInitialTransfers = ULTRACH::Query<CHGraph, true, false, true>;
+using BucketCHInitialTransfers = ULTRACH::BucketQuery<CHGraph, true, false>;
 
 template <bool DEBUG, bool USE_STOP_BUCKETS, bool USE_TARGET_BUCKETS>
-using BasicInitialAndFinalTransfers = CH::UPQuery<USE_STOP_BUCKETS, USE_TARGET_BUCKETS, true, DEBUG>;
+using BasicInitialAndFinalTransfers = ULTRACH::UPQuery<USE_STOP_BUCKETS, USE_TARGET_BUCKETS, true, DEBUG>;
 template <bool DEBUG>
-using SeparatedParetoInitialAndFinalTransfers = CH::SeparatedParetoUPQuery<true, DEBUG>;
+using SeparatedParetoInitialAndFinalTransfers = ULTRACH::SeparatedParetoUPQuery<true, DEBUG>;
 template <bool DEBUG, size_t MAX_TRIPS>
-using GroupedParetoInitialAndFinalTransfers = CH::GroupedParetoUPQuery<true, DEBUG, MAX_TRIPS>;
+using GroupedParetoInitialAndFinalTransfers = ULTRACH::GroupedParetoUPQuery<true, DEBUG, MAX_TRIPS>;
 template <bool DEBUG, size_t GROUPED_ROUNDS>
 using ParetoInitialAndFinalTransfers = Meta::IF<GROUPED_ROUNDS != 0,
     GroupedParetoInitialAndFinalTransfers<DEBUG, GROUPED_ROUNDS>,

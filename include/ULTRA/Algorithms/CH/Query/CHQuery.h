@@ -11,7 +11,7 @@
 #include "../../../Helpers/Vector/Vector.h"
 #include "../CH.h"
 
-namespace CH {
+namespace ULTRACH {
 
 template <typename GRAPH = CHGraph, bool STALL_ON_DEMAND = true,
     bool DEBUG = false, size_t COLLECT_POIS = false>
@@ -434,4 +434,4 @@ private:
     std::vector<Vertex> reachedPOIs[2];
 };
 
-} // namespace CH
+} // namespace ULTRACH

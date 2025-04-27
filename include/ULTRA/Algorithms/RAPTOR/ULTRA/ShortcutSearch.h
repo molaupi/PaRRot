@@ -104,7 +104,7 @@ public:
     {
         AssertMsg(data.hasImplicitBufferTimes(),
             "Shortcut search requires implicit departure buffer times!");
-        Dijkstra<TransferGraph, false> dijkstra(data.transferGraph);
+        ULTRADijkstra<TransferGraph, false> dijkstra(data.transferGraph);
         for (const StopId stop : data.stops()) {
             dijkstra.run(
                 stop, noVertex,

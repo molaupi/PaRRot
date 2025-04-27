@@ -11,7 +11,7 @@
 #include "../../../Helpers/Types.h"
 #include "../../../Helpers/Vector/Vector.h"
 
-namespace CH {
+namespace ULTRACH {
 
 template <typename GRAPH, typename PROFILER, int Q_POP_LIMIT = -1,
     bool ADAPTIVE_Q_POP_LIMIT = true>
@@ -176,4 +176,4 @@ private:
     Profiler* profiler;
 };
 
-} // namespace CH
+} // namespace ULTRACH

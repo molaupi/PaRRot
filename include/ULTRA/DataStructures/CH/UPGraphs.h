@@ -8,7 +8,7 @@
 #include "../Container/Set.h"
 #include "../Graph/Graph.h"
 
-namespace CH {
+namespace ULTRACH {
 
 template <typename GRAPH_TYPE, typename EXCLUDE>
 inline std::vector<bool> targetSelection(const GRAPH_TYPE& graph,
@@ -178,4 +178,4 @@ struct BucketGraph {
 
     CHGraph graph;
 };
-} // namespace CH
+} // namespace ULTRACH

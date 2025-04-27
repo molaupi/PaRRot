@@ -63,9 +63,9 @@ private:
 };
 
 inline void fillDistanceMatrix(DistanceMatrix& matrix, RAPTOR::Data& raptorData,
-    CH::CH& networkCH)
+    ULTRACH::CH& networkCH)
 {
-    using CHQuery = CH::Query<CHGraph, true, false, true>;
+    using CHQuery = ULTRACH::Query<CHGraph, true, false, true>;
     CHQuery query(networkCH, FORWARD, raptorData.numberOfStops());
 
     std::cout << "Progress:\n";
@@ -85,9 +85,9 @@ inline void fillDistanceMatrix(DistanceMatrix& matrix, RAPTOR::Data& raptorData,
 
 inline void fillDistanceMatrixUsingBCH(DistanceMatrix& matrix,
     RAPTOR::Data& raptorData,
-    CH::CH& networkCH)
+    ULTRACH::CH& networkCH)
 {
-    using BucketCH = CH::BucketQuery<CHGraph, true, false>;
+    using BucketCH = ULTRACH::BucketQuery<CHGraph, true, false>;
     BucketCH bucketCH(networkCH, FORWARD, raptorData.numberOfStops());
 
     for (const auto fromStop : raptorData.stops()) {

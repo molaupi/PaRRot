@@ -274,7 +274,7 @@ public:
         const Data& forwardPruningData,
         const Data& backwardPruningData,
         const TransferGraph& backwardTransitiveGraph,
-        const std::vector<CH::CH>& chData,
+        const std::vector<ULTRACH::CH>& chData,
         const Profiler& profilerTemplate = Profiler())
         : MultimodalUBMRAPTOR(data, forwardPruningData, backwardPruningData,
             backwardTransitiveGraph,

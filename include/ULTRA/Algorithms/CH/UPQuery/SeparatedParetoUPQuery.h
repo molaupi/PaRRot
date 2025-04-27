@@ -17,7 +17,7 @@
 #include "../CHUtils.h"
 #include "BucketBuilder.h"
 
-namespace CH {
+namespace ULTRACH {
 
 template <bool STALL_ON_DEMAND = true, bool DEBUG = false>
 class SeparatedParetoUPQuery {
@@ -512,4 +512,4 @@ private:
     ULTRATimer timer;
 };
 
-} // namespace CH
+} // namespace ULTRACH

@@ -185,7 +185,7 @@ inline void makeTransitivelyClosed(GRAPH& graph,
     const WEIGHT_TYPE weight) noexcept
 {
     static_assert(GRAPH::HasEdgeAttribute(weight), "GRAPH has no weight!");
-    Dijkstra<GRAPH> dijkstra(graph);
+    ULTRADijkstra<GRAPH> dijkstra(graph);
     for (const Vertex v : graph.vertices()) {
         dijkstra.run(v, noVertex, [&](const Vertex u) {
             if (u == v)

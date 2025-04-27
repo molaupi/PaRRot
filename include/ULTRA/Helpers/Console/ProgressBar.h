@@ -5,9 +5,9 @@
 
 #include "../Assert.h"
 
-class ProgressBar {
+class ULTRAProgressBar {
 public:
-    ProgressBar(const long long n, const bool v = true,
+    ULTRAProgressBar(const long long n, const bool v = true,
         std::ostream& o = std::cout)
         : verbose(v)
         , os(o)

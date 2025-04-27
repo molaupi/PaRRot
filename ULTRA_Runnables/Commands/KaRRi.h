@@ -259,7 +259,7 @@ public:
         Loud::CH ch(hierarchyFileName);
         chProvider.reset(new CHProvider(inputGraph, std::move(ch)));
 
-        CH::CH walkingCH(getParameter("walking CH file"));
+        ULTRACH::CH walkingCH(getParameter("walking CH file"));
 
         std::cout << "\nLoad ridesharing data... \n"
                   << std::flush;
@@ -470,7 +470,7 @@ public:
         Loud::CH ch(hierarchyFileName);
         chProvider.reset(new CHProvider(inputGraph, std::move(ch)));
 
-        CH::CH walkingCH(getParameter("walking CH file"));
+        ULTRACH::CH walkingCH(getParameter("walking CH file"));
 
         std::cout << "\nLoad ridesharing data... \n"
                   << std::flush;
@@ -583,7 +583,7 @@ public:
         Loud::CH ch(hierarchyFileName);
         chProvider.reset(new CHProvider(inputGraph, std::move(ch)));
 
-        CH::CH walkingCH(getParameter("walking CH file"));
+        ULTRACH::CH walkingCH(getParameter("walking CH file"));
 
         std::cout << "\nLoad ridesharing data... \n"
                   << std::flush;
@@ -645,7 +645,7 @@ public:
 
         raptorData.printInfo();
 
-        CH::CH ch(hierarchyFileName);
+        ULTRACH::CH ch(hierarchyFileName);
 
         Timer totalTimer;
         totalTimer.restart();
@@ -938,7 +938,7 @@ public:
             chProvider.reset(new CHProvider(inputGraph, std::move(ch)));
         }
 
-        CH::CH walkingCH(getParameter("walking CH file"));
+        ULTRACH::CH walkingCH(getParameter("walking CH file"));
         std::cout << "done.\n";
 
         std::cout << "\nGenerating Vehicles/Requests/Queries... " << std::flush;
@@ -1074,7 +1074,7 @@ public:
         Loud::CH ch(hierarchyFileName);
         chProvider.reset(new CHProvider(inputGraph, std::move(ch)));
 
-        CH::CH walkingCH(getParameter("walking CH file"));
+        ULTRACH::CH walkingCH(getParameter("walking CH file"));
 
         std::cout << "\nLoad ridesharing data... \n"
                   << std::flush;

@@ -49,7 +49,7 @@ namespace karri {
         using FullCHQuery = CHQuery<LabelSetT>;
 
         template<typename PruningCriterionT = dij::NoCriterion, typename StoppingCriterionT = dij::NoCriterion, typename LabelSetT = DefaultLabelSet>
-        using UpwardSearch = Dijkstra<typename CH::SearchGraph, CH::Weight, LabelSetT, StoppingCriterionT, dij::CompoundCriterion<StallOnDemandCriterion<LabelSetT>, PruningCriterionT>>;
+        using UpwardSearch = KaRRiDijkstra<typename CH::SearchGraph, CH::Weight, LabelSetT, StoppingCriterionT, dij::CompoundCriterion<StallOnDemandCriterion<LabelSetT>, PruningCriterionT>>;
 
         template<typename PruningCriterionT = dij::NoCriterion, typename StoppingCriterionT = dij::NoCriterion, typename LabelSetT = DefaultLabelSet>
         using TopologicalUpwardSearch = DagShortestPaths<typename CH::SearchGraph, CH::Weight, LabelSetT, dij::CompoundCriterion<StoppingCriterionT, PruningCriterionT>>;

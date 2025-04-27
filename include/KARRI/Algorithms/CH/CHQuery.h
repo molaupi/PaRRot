@@ -140,10 +140,10 @@ class CHQuery {
     const int& maxTentativeDistance; // The largest of all k tentative distances.
   };
 
-  using UpwardSearchStall = Dijkstra<
+  using UpwardSearchStall = KaRRiDijkstra<
       CH::SearchGraph, TraversalCostAttribute, LabelSetT, dij::NoCriterion, PruningCriterion,
       DistanceLabelContainerT, QueueT>;
-  using UpwardSearchNoStall = Dijkstra<
+  using UpwardSearchNoStall = KaRRiDijkstra<
       CH::SearchGraph, TraversalCostAttribute, LabelSetT, dij::NoCriterion, dij::NoCriterion,
       DistanceLabelContainerT, QueueT>;
   using UpwardSearch = std::conditional_t<USE_STALLING, UpwardSearchStall, UpwardSearchNoStall>;

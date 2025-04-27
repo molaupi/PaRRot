@@ -203,7 +203,7 @@ int main(int argc, char *argv[]) {
             outputFile << "origin,destination,dijkstra_rank\n";
 
             karri::KaRRiTimer timer;
-            karri::ProgressBar bar;
+            karri::KaRRiProgressBar bar;
 #pragma omp parallel
             {
                 std::minstd_rand rand(seed + omp_get_thread_num() + 1);
@@ -261,7 +261,7 @@ int main(int argc, char *argv[]) {
             outputFile << "origin,destination,distance\n";
 
             karri::KaRRiTimer timer;
-            karri::ProgressBar bar;
+            karri::KaRRiProgressBar bar;
 #pragma omp parallel
             {
                 std::minstd_rand rand(seed + omp_get_thread_num() + 1);
@@ -314,7 +314,7 @@ int main(int argc, char *argv[]) {
             outputFile << "origin,destination\n";
 
             karri::KaRRiTimer timer;
-            karri::ProgressBar bar;
+            karri::KaRRiProgressBar bar;
 #pragma omp parallel
             {
                 karri::ODPairGenerator<Graph, TravelTimeAttribute> g(graph, isVertexEligible, seed);
@@ -353,11 +353,11 @@ int main(int argc, char *argv[]) {
             outputFile << "origin,destination\n";
 
             karri::KaRRiTimer timer;
-            karri::ProgressBar bar;
+            karri::KaRRiProgressBar bar;
 #pragma omp parallel
             {
                 using LabelSet = BasicLabelSet<0, ParentInfo::NO_PARENT_INFO>;
-                karri::BiDijkstra<karri::Dijkstra<Graph, TravelTimeAttribute, LabelSet>> biDijkstra(graph, reverseGraph);
+                karri::BiDijkstra<karri::KaRRiDijkstra<Graph, TravelTimeAttribute, LabelSet>> biDijkstra(graph, reverseGraph);
                 karri::ODPairGenerator<Graph, TravelTimeAttribute> g(graph, isVertexEligible, seed);
 
                 const int64_t totalLengthPerThread = std::ceil(1.0 * totalLength / omp_get_num_threads());

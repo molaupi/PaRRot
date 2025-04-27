@@ -860,7 +860,7 @@ public:
     {
         Intermediate::TransferGraph graph;
         graph.addVertices(transferGraph.numVertices());
-        Dijkstra<TransferGraph, false> dijkstra(transferGraph,
+        ULTRADijkstra<TransferGraph, false> dijkstra(transferGraph,
             transferGraph[TravelTime]);
         for (const StopId stop : stops()) {
             const int range = stopData[stop].minTransferTime / 2;

@@ -127,7 +127,7 @@ public:
     /* } */
 
     Data(RAPTOR::Data& raptorData,
-        CH::CH& psgCH,
+        ULTRACH::CH& psgCH,
         const karri::Fleet& fleet, const InputGraphT& inputGraph,
         const CHEnvT& chEnv, const karri::CostCalculator& calculator,
         karri::RequestState& requestState, const karri::RouteState& routeState,
@@ -601,7 +601,7 @@ private:
 
 public:
     RAPTOR::Data& raptorData;
-    CH::CH walkingCH;
+    ULTRACH::CH walkingCH;
     RideTransferGraph rideTransferGraph;
     const DistanceMatrix& distanceMatrix;
 

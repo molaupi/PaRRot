@@ -89,7 +89,7 @@ public:
     }
 
     template <typename T = CHGraph, typename = std::enable_if_t<Meta::Equals<T, CHGraph>() && Meta::Equals<T, InitialTransferGraph>()>>
-    OneToAllDijkstraRAPTOR(const Data& data, const CH::CH& chData,
+    OneToAllDijkstraRAPTOR(const Data& data, const ULTRACH::CH& chData,
         const Profiler& profilerTemplate = Profiler())
         : OneToAllDijkstraRAPTOR(data, chData.forward, chData.backward, Weight,
             profilerTemplate)

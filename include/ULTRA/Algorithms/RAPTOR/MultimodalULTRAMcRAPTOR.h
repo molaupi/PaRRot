@@ -216,7 +216,7 @@ private:
 
 public:
     MultimodalULTRAMcRAPTOR(const MultimodalData& data,
-        const std::vector<CH::CH>& chData,
+        const std::vector<ULTRACH::CH>& chData,
         const Profiler& profilerTemplate = Profiler())
         : data(data)
         , bestBagByRoute(data.raptorData.numberOfStops() + 1)
@@ -234,7 +234,7 @@ public:
             "Departure buffer times have to be implicit!");
         AssertMsg(data.modes.size() == NumTransferModes, "Wrong number of modes");
         AssertMsg(chData.size() == NumTransferModes, "Wrong number of modes");
-        for (const CH::CH& ch : chData) {
+        for (const ULTRACH::CH& ch : chData) {
             initialTransfers.emplace_back(ch, FORWARD,
                 data.raptorData.numberOfStops());
         }

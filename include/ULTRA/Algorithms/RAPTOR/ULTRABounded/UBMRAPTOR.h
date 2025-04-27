@@ -117,7 +117,7 @@ private:
     using RouteBagType = RouteBag<RouteLabel>;
 
 public:
-    UBMRAPTOR(const Data& data, const Data& backwardData, const CH::CH& chData,
+    UBMRAPTOR(const Data& data, const Data& backwardData, const ULTRACH::CH& chData,
         const Profiler& profilerTemplate = Profiler())
         : data(data)
         , initialTransfers(chData, FORWARD, data.numberOfStops())

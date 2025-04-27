@@ -19,19 +19,19 @@ inline constexpr int UnidirectionalPopLimit = 500;
 inline constexpr int BidirectionalPopLimit = 200;
 
 template <typename PROFILER>
-using UnidirectionalWitnessSearch = CH::WitnessSearch<CHCoreGraph, PROFILER, UnidirectionalPopLimit>;
+using UnidirectionalWitnessSearch = ULTRACH::WitnessSearch<CHCoreGraph, PROFILER, UnidirectionalPopLimit>;
 template <typename PROFILER>
-using BidirectionalWitnessSearch = CH::BidirectionalWitnessSearch<CHCoreGraph, PROFILER,
+using BidirectionalWitnessSearch = ULTRACH::BidirectionalWitnessSearch<CHCoreGraph, PROFILER,
     BidirectionalPopLimit>;
 
 template <typename WITNESS_SEARCH>
-using GreedyKey = CH::GreedyKey<WITNESS_SEARCH>;
+using GreedyKey = ULTRACH::GreedyKey<WITNESS_SEARCH>;
 template <typename WITNESS_SEARCH>
-using PartialKey = CH::PartialKey<WITNESS_SEARCH, GreedyKey<WITNESS_SEARCH>>;
-using StopCriterion = CH::NoStopCriterion;
+using PartialKey = ULTRACH::PartialKey<WITNESS_SEARCH, GreedyKey<WITNESS_SEARCH>>;
+using StopCriterion = ULTRACH::NoStopCriterion;
 
 template <typename CH_BUILDER>
-inline CH::CH finalizeCH(CH_BUILDER&& chBuilder,
+inline ULTRACH::CH finalizeCH(CH_BUILDER&& chBuilder,
     const std::string& orderOutputFile,
     const std::string& chOutputFile) noexcept
 {
@@ -42,7 +42,7 @@ inline CH::CH finalizeCH(CH_BUILDER&& chBuilder,
     }
     order.serialize(orderOutputFile);
     std::cout << "Obtaining CH" << std::endl;
-    CH::CH ch(std::move(chBuilder));
+    ULTRACH::CH ch(std::move(chBuilder));
     ch.writeBinary(chOutputFile);
     std::cout << std::endl;
     return ch;
@@ -50,7 +50,7 @@ inline CH::CH finalizeCH(CH_BUILDER&& chBuilder,
 
 template <typename PROFILER, typename WITNESS_SEARCH, typename GRAPH,
     typename KEY_FUNCTION, typename STOP_CRITERION = StopCriterion>
-inline CH::CH buildCH(
+inline ULTRACH::CH buildCH(
     GRAPH& originalGraph, const std::string& orderOutputFile,
     const std::string& chOutputFile, const KEY_FUNCTION& keyFunction,
     const STOP_CRITERION& stopCriterion = StopCriterion()) noexcept
@@ -58,7 +58,7 @@ inline CH::CH buildCH(
     TravelTimeGraph graph;
     ULTRAGraph::copy(originalGraph, graph);
     ULTRAGraph::printInfo(graph);
-    CH::Builder<PROFILER, WITNESS_SEARCH, KEY_FUNCTION, STOP_CRITERION, false,
+    ULTRACH::Builder<PROFILER, WITNESS_SEARCH, KEY_FUNCTION, STOP_CRITERION, false,
         false>
         chBuilder(std::move(graph), graph[TravelTime], keyFunction,
             stopCriterion);
@@ -85,9 +85,9 @@ public:
     virtual void execute() noexcept
     {
         if (getParameter<bool>("Use full profiler?")) {
-            chooseWitnessSearch<CH::FullProfiler>();
+            chooseWitnessSearch<ULTRACH::FullProfiler>();
         } else {
-            chooseWitnessSearch<CH::TimeProfiler>();
+            chooseWitnessSearch<ULTRACH::TimeProfiler>();
         }
     }
 
@@ -136,9 +136,9 @@ public:
     virtual void execute() noexcept
     {
         if (getParameter<bool>("Use full profiler?")) {
-            return chooseWitnessSearch<CH::FullProfiler>();
+            return chooseWitnessSearch<ULTRACH::FullProfiler>();
         } else {
-            return chooseWitnessSearch<CH::TimeProfiler>();
+            return chooseWitnessSearch<ULTRACH::TimeProfiler>();
         }
     }
 
@@ -185,8 +185,8 @@ private:
             ShortcutWeight, getParameter<int>("Level weight"), DegreeWeight);
         PartialKey<WITNESS_SEARCH> keyFunction(
             contractable, data.transferGraph.numVertices(), greedyKey);
-        CH::CoreCriterion stopCriterion(data.numberOfStops(), maxCoreDegree);
-        const CH::CH ch = buildCH<PROFILER, WITNESS_SEARCH>(
+        ULTRACH::CoreCriterion stopCriterion(data.numberOfStops(), maxCoreDegree);
+        const ULTRACH::CH ch = buildCH<PROFILER, WITNESS_SEARCH>(
             data.transferGraph, getParameter("Order output file"),
             getParameter("CH output file"), keyFunction, stopCriterion);
 

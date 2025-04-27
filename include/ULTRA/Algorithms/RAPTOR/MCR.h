@@ -156,7 +156,7 @@ public:
     using DijkstraBagType = DijkstraBag<DijkstraLabel>;
 
 public:
-    MCR(const Data& data, const CH::CH& chData,
+    MCR(const Data& data, const ULTRACH::CH& chData,
         const Profiler& profilerTemplate = Profiler())
         : data(data)
         , initialTransfers(chData, FORWARD, data.numberOfStops())

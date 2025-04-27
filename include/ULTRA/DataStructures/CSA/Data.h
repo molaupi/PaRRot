@@ -302,7 +302,7 @@ public:
         ULTRAGraph::move(std::move(graph), transferGraph);
         graph.clear();
         graph.addVertices(transferGraph.numVertices());
-        Dijkstra<TransferGraph, false> dijkstra(transferGraph,
+        ULTRADijkstra<TransferGraph, false> dijkstra(transferGraph,
             transferGraph[TravelTime]);
         Progress progress(transferGraph.numVertices(), verbose);
         for (const Vertex v : transferGraph.vertices()) {
@@ -343,7 +343,7 @@ public:
         }
         if (stopData.size() > 0) {
             toZones.packEdges();
-            Dijkstra<Intermediate::TransferGraph, false> dijkstra(
+            ULTRADijkstra<Intermediate::TransferGraph, false> dijkstra(
                 toZones, toZones[TravelTime]);
             Progress progress(stopData.size(), verbose);
             for (const StopId stop : stops()) {
@@ -357,7 +357,7 @@ public:
         }
         if (transferGraph.numVertices() > stopData.size()) {
             fromZones.packEdges();
-            Dijkstra<Intermediate::TransferGraph, false> dijkstra(
+            ULTRADijkstra<Intermediate::TransferGraph, false> dijkstra(
                 fromZones, fromZones[TravelTime]);
             Progress progress(transferGraph.numVertices() - stopData.size(), verbose);
             for (Vertex v = Vertex(stopData.size()); v < transferGraph.numVertices();
@@ -370,7 +370,7 @@ public:
                 progress++;
             }
         }
-        Dijkstra<TransferGraph, false> dijkstraToZones(transferGraph,
+        ULTRADijkstra<TransferGraph, false> dijkstraToZones(transferGraph,
             transferGraph[TravelTime]);
         newTransferGraph.packEdges();
         ULTRAGraph::move(std::move(newTransferGraph), transferGraph);

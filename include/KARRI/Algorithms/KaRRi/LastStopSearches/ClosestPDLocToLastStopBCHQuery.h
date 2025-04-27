@@ -155,7 +155,7 @@ namespace karri {
         const LastStopBucketsT &lastStopBuckets;
         const CH &ch;
 
-        using Search = Dijkstra<typename CH::SearchGraph, typename CH::Weight, LabelSet, dij::NoCriterion, PruningCriterion>;
+        using Search = KaRRiDijkstra<typename CH::SearchGraph, typename CH::Weight, LabelSet, dij::NoCriterion, PruningCriterion>;
         Search search;
 
         std::vector<unsigned int> idOfClosestSpotToRank;

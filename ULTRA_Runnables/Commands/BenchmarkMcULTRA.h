@@ -70,7 +70,7 @@ public:
         RAPTOR::Data raptorData = RAPTOR::Data::FromBinary(getParameter("RAPTOR input file"));
         raptorData.useImplicitDepartureBufferTimes();
         raptorData.printInfo();
-        CH::CH ch(getParameter("CH data"));
+        ULTRACH::CH ch(getParameter("CH data"));
         RAPTOR::MCR<true, RAPTOR::AggregateProfiler> algorithm(raptorData, ch);
 
         const size_t n = getParameter<size_t>("Number of queries");
@@ -104,7 +104,7 @@ public:
         RAPTOR::Data raptorData = RAPTOR::Data::FromBinary(getParameter("RAPTOR input file"));
         raptorData.useImplicitDepartureBufferTimes();
         raptorData.printInfo();
-        CH::CH ch(getParameter("CH data"));
+        ULTRACH::CH ch(getParameter("CH data"));
         RAPTOR::ULTRAMcRAPTOR<RAPTOR::AggregateProfiler> algorithm(raptorData, ch);
 
         const size_t n = getParameter<size_t>("Number of queries");
@@ -137,7 +137,7 @@ public:
     {
         TripBased::Data tripBasedData(getParameter("Trip-Based input file"));
         tripBasedData.printInfo();
-        CH::CH ch(getParameter("CH data"));
+        ULTRACH::CH ch(getParameter("CH data"));
         TripBased::McQuery<TripBased::AggregateProfiler> algorithm(tripBasedData,
             ch);
 
@@ -215,7 +215,7 @@ public:
         raptorData.useImplicitDepartureBufferTimes();
         raptorData.printInfo();
         const RAPTOR::Data reverseData = raptorData.reverseNetwork();
-        CH::CH ch(getParameter("CH data"));
+        ULTRACH::CH ch(getParameter("CH data"));
         RAPTOR::UBMRAPTOR<RAPTOR::AggregateProfiler> algorithm(raptorData,
             reverseData, ch);
 
@@ -263,7 +263,7 @@ public:
         TripBased::Data backwardBoundedData(
             getParameter("Bounded backward Trip-Based input file"));
         backwardBoundedData.printInfo();
-        CH::CH ch(getParameter("CH data"));
+        ULTRACH::CH ch(getParameter("CH data"));
         TripBased::BoundedMcQuery<TripBased::AggregateProfiler> algorithm(
             tripBasedData, forwardBoundedData, backwardBoundedData, ch);
 
@@ -311,7 +311,7 @@ public:
         const TripBased::Data backwardBoundedData(
             getParameter("Bounded backward Trip-Based input file"));
         backwardBoundedData.printInfo();
-        const CH::CH ch(getParameter("CH data"));
+        const ULTRACH::CH ch(getParameter("CH data"));
 
         RAPTOR::UBMHydRA<RAPTOR::AggregateProfiler> algorithm(
             tripBasedData, forwardBoundedData, backwardBoundedData, ch);
@@ -354,7 +354,7 @@ public:
         raptorData.useImplicitDepartureBufferTimes();
         raptorData.printInfo();
         const RAPTOR::Data reverseData = raptorData.reverseNetwork();
-        CH::CH ch(getParameter("CH data"));
+        ULTRACH::CH ch(getParameter("CH data"));
         RAPTOR::UBMRAPTOR<RAPTOR::AggregateProfiler> algorithm(raptorData,
             reverseData, ch);
 

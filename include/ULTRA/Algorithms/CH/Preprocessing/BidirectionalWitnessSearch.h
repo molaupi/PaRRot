@@ -10,7 +10,7 @@
 #include "../../../Helpers/Types.h"
 #include "../../../Helpers/Vector/Vector.h"
 
-namespace CH {
+namespace ULTRACH {
 
 template <typename GRAPH, typename PROFILER, int Q_POP_LIMIT = -1,
     bool ONE_HOP_HEURISTIC = true>
@@ -180,4 +180,4 @@ private:
     Profiler* profiler;
 };
 
-} // namespace CH
+} // namespace ULTRACH

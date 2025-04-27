@@ -146,7 +146,7 @@ private:
 public:
     UBMHydRA(const TripBased::Data& tripData,
         const TripBased::Data& forwardTBData,
-        const TripBased::Data& backwardTBData, const CH::CH& chData,
+        const TripBased::Data& backwardTBData, const ULTRACH::CH& chData,
         const Profiler& profilerTemplate = Profiler())
         : tripData(tripData)
         , data(tripData.raptorData)

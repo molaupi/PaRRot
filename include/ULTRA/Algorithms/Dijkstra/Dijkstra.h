@@ -15,11 +15,11 @@
 #include "../../Helpers/Vector/Vector.h"
 
 template <typename GRAPH, bool DEBUG = false>
-class Dijkstra {
+class ULTRADijkstra {
 public:
     using Graph = GRAPH;
     static constexpr bool Debug = DEBUG;
-    using Type = Dijkstra<Graph, Debug>;
+    using Type = ULTRADijkstra<Graph, Debug>;
 
 public:
     struct VertexLabel : public ExternalKHeapElement {
@@ -47,7 +47,7 @@ public:
     };
 
 public:
-    Dijkstra(const GRAPH& graph, const std::vector<int>& weight)
+    ULTRADijkstra(const GRAPH& graph, const std::vector<int>& weight)
         : graph(graph)
         , weight(weight)
         , Q(graph.numVertices())
@@ -57,24 +57,24 @@ public:
     {
     }
 
-    Dijkstra(const GRAPH& graph)
-        : Dijkstra(graph, graph[TravelTime])
+    ULTRADijkstra(const GRAPH& graph)
+        : ULTRADijkstra(graph, graph[TravelTime])
     {
     }
 
     template <AttributeNameType ATTRIBUTE_NAME>
-    Dijkstra(const GRAPH& graph,
+    ULTRADijkstra(const GRAPH& graph,
         const AttributeNameWrapper<ATTRIBUTE_NAME> weight)
-        : Dijkstra(graph, graph[weight])
+        : ULTRADijkstra(graph, graph[weight])
     {
     }
 
-    Dijkstra(const GRAPH&&, const std::vector<int>&) = delete;
-    Dijkstra(const GRAPH&, const std::vector<int>&&) = delete;
-    Dijkstra(const GRAPH&&) = delete;
+    ULTRADijkstra(const GRAPH&&, const std::vector<int>&) = delete;
+    ULTRADijkstra(const GRAPH&, const std::vector<int>&&) = delete;
+    ULTRADijkstra(const GRAPH&&) = delete;
 
     template <AttributeNameType ATTRIBUTE_NAME>
-    Dijkstra(const GRAPH&&, const AttributeNameWrapper<ATTRIBUTE_NAME>) = delete;
+    ULTRADijkstra(const GRAPH&&, const AttributeNameWrapper<ATTRIBUTE_NAME>) = delete;
 
     template <typename SETTLE = NO_OPERATION, typename STOP = NO_OPERATION,
         typename PRUNE_EDGE = NO_OPERATION>

@@ -595,8 +595,8 @@ inline void validateShortcutGraph(const TransferGraph& original,
     std::vector<int> shortcutDistance(
         std::max(original.numVertices(), shortcuts.numVertices()), 0);
     IndexedSet<false, Vertex> targets(shortcutDistance.size());
-    Dijkstra<RAPTOR::TransferGraph, false> originalDijkstra(original);
-    Dijkstra<RAPTOR::TransferGraph, false> shortcutDijkstra(shortcuts);
+    ULTRADijkstra<RAPTOR::TransferGraph, false> originalDijkstra(original);
+    ULTRADijkstra<RAPTOR::TransferGraph, false> shortcutDijkstra(shortcuts);
     size_t longCount = 0;
     size_t longPathCount = 0;
     size_t shortCount = 0;

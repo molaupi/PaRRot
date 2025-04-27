@@ -323,7 +323,7 @@ namespace karri::DropoffAfterLastStopStrategies {
         DistanceLabel curBestCostAsLabel;
         int endOfCurBatch;
 
-        Dijkstra <InputGraphT, TravelTimeAttribute, DijLabelSet, TryToInsertDropoffAfterLastStop> dijSearchToDropoff;
+        KaRRiDijkstra <InputGraphT, TravelTimeAttribute, DijLabelSet, TryToInsertDropoffAfterLastStop> dijSearchToDropoff;
         LightweightSubset vehiclesSeen;
 
     };

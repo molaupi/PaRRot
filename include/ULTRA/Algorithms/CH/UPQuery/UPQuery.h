@@ -17,7 +17,7 @@
 #include "../CHUtils.h"
 #include "BucketBuilder.h"
 
-namespace CH {
+namespace ULTRACH {
 
 template <bool USE_STOP_BUCKETS, bool USE_TARGET_BUCKETS,
     bool STALL_ON_DEMAND = true, bool DEBUG = false>
@@ -494,4 +494,4 @@ private:
     ULTRATimer timer;
 };
 
-} // namespace CH
+} // namespace ULTRACH

@@ -703,7 +703,7 @@ public:
     {
         TransferGraph graph;
         graph.addVertices(stops.size());
-        Dijkstra<TransferGraph, false> dijkstra(transferGraph,
+        ULTRADijkstra<TransferGraph, false> dijkstra(transferGraph,
             transferGraph[TravelTime]);
         Progress progress(stops.size(), verbose);
         for (const StopId stop : stopIds()) {
@@ -771,7 +771,7 @@ public:
         }
         transferGraph.deleteVertices(
             [&](const Vertex vertex) { return vertex >= stops.size(); });
-        Dijkstra<TransferGraph, false> dijkstra(transferGraph,
+        ULTRADijkstra<TransferGraph, false> dijkstra(transferGraph,
             transferGraph[TravelTime]);
         Progress progress(stops.size(), verbose);
         for (const StopId stop : stopIds()) {
@@ -1212,7 +1212,7 @@ public:
         std::vector<int> sizeOfComponent;
         int numberOfIsolatedStops = 0;
         int maxComponentSize = 0;
-        Dijkstra<TransferGraph> dijkstra(transferGraph, transferGraph[TravelTime]);
+        ULTRADijkstra<TransferGraph> dijkstra(transferGraph, transferGraph[TravelTime]);
         for (const StopId stop : stopIds()) {
             if (componentOfStop[stop] == -1) {
                 const int component = sizeOfComponent.size();

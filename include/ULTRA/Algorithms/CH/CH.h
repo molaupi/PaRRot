@@ -10,7 +10,7 @@
 #include "Preprocessing/CHBuilder.h"
 #include "Preprocessing/CHData.h"
 
-namespace CH {
+namespace ULTRACH {
 
 class CH {
 public:
@@ -156,4 +156,4 @@ public:
     CHGraph backward;
 };
 
-} // namespace CH
+} // namespace ULTRACH

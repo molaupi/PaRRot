@@ -10,7 +10,7 @@
 #include "CHData.h"
 #include "WitnessSearch.h"
 
-namespace CH {
+namespace ULTRACH {
 
 template <typename WITNESS_SEARCH>
 class GreedyKey {
@@ -296,4 +296,4 @@ private:
     KeyFunction keyFunction;
 };
 
-} // namespace CH
+} // namespace ULTRACH

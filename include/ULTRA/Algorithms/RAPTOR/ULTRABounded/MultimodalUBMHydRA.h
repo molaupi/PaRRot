@@ -304,7 +304,7 @@ public:
         const TripBased::Data& forwardPruningData,
         const TripBased::Data& backwardPruningData,
         const TransferGraph& backwardTransitiveGraph,
-        const std::vector<CH::CH>& chData,
+        const std::vector<ULTRACH::CH>& chData,
         const Profiler& profilerTemplate = Profiler())
         : data(data)
         , tripData(data.tripData)

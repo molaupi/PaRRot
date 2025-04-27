@@ -74,7 +74,7 @@ private:
     using TargetBag = RAPTOR::Bag<TargetLabel>;
 
 public:
-    McQuery(const Data& data, const CH::CH& chData)
+    McQuery(const Data& data, const ULTRACH::CH& chData)
         : data(data)
         , bucketQuery(chData.forward, chData.backward, data.numberOfStops(),
               Weight)
@@ -393,7 +393,7 @@ private:
 private:
     const Data& data;
 
-    CH::BucketQuery<CHGraph, true, false> bucketQuery;
+    ULTRACH::BucketQuery<CHGraph, true, false> bucketQuery;
     std::vector<TripLabel> queue;
     WalkingDistanceData walkingDistanceData;
 

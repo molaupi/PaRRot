@@ -9,7 +9,7 @@
 #include "../../../Helpers/Types.h"
 #include "CHData.h"
 
-namespace CH {
+namespace ULTRACH {
 
 class NoProfiler {
 public:
@@ -174,7 +174,7 @@ public:
     {
         QTime = 0;
         std::cout << "Start building Q." << std::endl;
-        QBar = new ProgressBar(data->numVertices - data->order.size());
+        QBar = new ULTRAProgressBar(data->numVertices - data->order.size());
     }
 
     inline void doneBuildingQ() noexcept
@@ -337,7 +337,7 @@ private:
 
 private:
     Data* data;
-    ProgressBar* QBar;
+    ULTRAProgressBar* QBar;
 
     ULTRATimer timer;
     double printTime;
@@ -361,4 +361,4 @@ private:
     long long lastSettledVertices;
 };
 
-} // namespace CH
+} // namespace ULTRACH

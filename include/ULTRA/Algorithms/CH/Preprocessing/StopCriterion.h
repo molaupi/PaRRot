@@ -8,7 +8,7 @@
 #include "../../../Helpers/Vector/Permutation.h"
 #include "CHData.h"
 
-namespace CH {
+namespace ULTRACH {
 
 class NoStopCriterion {
 public:
@@ -90,4 +90,4 @@ public:
     }
 };
 
-} // namespace CH
+} // namespace ULTRACH

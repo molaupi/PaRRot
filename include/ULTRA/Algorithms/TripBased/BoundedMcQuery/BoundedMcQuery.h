@@ -80,7 +80,7 @@ private:
 
 public:
     BoundedMcQuery(const Data& data, const Data& forwardBoundedData,
-        const Data& backwardBoundedData, const CH::CH& chData)
+        const Data& backwardBoundedData, const ULTRACH::CH& chData)
         : data(data)
         , bucketQuery(chData.forward, chData.backward, data.numberOfStops(),
               Weight)
@@ -456,7 +456,7 @@ private:
 
 private:
     const Data& data;
-    CH::BucketQuery<CHGraph, true, false> bucketQuery;
+    ULTRACH::BucketQuery<CHGraph, true, false> bucketQuery;
     ForwardPruningQuery<Profiler> forwardPruningQuery;
     BackwardPruningQuery<Profiler> backwardPruningQuery;
 

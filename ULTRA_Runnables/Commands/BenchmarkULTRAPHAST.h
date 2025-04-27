@@ -145,7 +145,7 @@ private:
         CSA::Data csaData(getParameter("CSA data"));
         csaData.sortConnectionsAscending();
         csaData.printInfo();
-        CH::CH ch(getParameter("CH data"));
+        ULTRACH::CH ch(getParameter("CH data"));
 
         IndexedSet<false, Vertex> targetSet = getTargetSet(
             csaData, ch.numVertices(), getParameter("Targets") == "Vertices");
@@ -242,7 +242,7 @@ public:
         RAPTOR::Data raptorData(getParameter("RAPTOR data"));
         raptorData.useImplicitDepartureBufferTimes();
         raptorData.printInfo();
-        CH::CH ch(getParameter("CH data"));
+        ULTRACH::CH ch(getParameter("CH data"));
         RAPTOR::OneToAllDijkstraRAPTOR<RAPTOR::CoreCHInitialTransfers,
             RAPTOR::AggregateProfiler>
             algorithm(raptorData, ch);
@@ -301,7 +301,7 @@ private:
         raptorData.useImplicitDepartureBufferTimes();
         raptorData.printInfo();
         TransferGraph dijkstraGraph(getParameter("Dijkstra graph"));
-        CH::CH ch(getParameter("CH data"));
+        ULTRACH::CH ch(getParameter("CH data"));
 
         IndexedSet<false, Vertex> targetSet = getTargetSet(
             raptorData, ch.numVertices(), getParameter("Targets") == "Vertices");
@@ -387,7 +387,7 @@ private:
         TripBased::Data tripBasedData(getParameter("Trip-Based data"));
         tripBasedData.printInfo();
         TransferGraph dijkstraGraph(getParameter("Dijkstra graph"));
-        CH::CH ch(getParameter("CH data"));
+        ULTRACH::CH ch(getParameter("CH data"));
 
         IndexedSet<false, Vertex> targetSet = getTargetSet(tripBasedData.raptorData, ch.numVertices(),
             getParameter("Targets") == "Vertices");
@@ -435,15 +435,15 @@ inline constexpr int ShortcutWeight = 1024;
 inline constexpr int LevelWeight = 256;
 inline constexpr int DegreeWeight = 0;
 
-using Profiler = CH::FullProfiler;
-using WitnessSearch = CH::BidirectionalWitnessSearch<CHCoreGraph, CH::FullProfiler, 200>;
-using GreedyKey = CH::GreedyKey<WitnessSearch>;
-using PartialKey = CH::PartialKey<WitnessSearch, GreedyKey>;
-using StaggeredKey = CH::StaggeredKey<WitnessSearch, GreedyKey>;
-using StopCriterion = CH::CoreCriterion;
-using NoStopCriterion = CH::NoStopCriterion;
+using Profiler = ULTRACH::FullProfiler;
+using WitnessSearch = ULTRACH::BidirectionalWitnessSearch<CHCoreGraph, ULTRACH::FullProfiler, 200>;
+using GreedyKey = ULTRACH::GreedyKey<WitnessSearch>;
+using PartialKey = ULTRACH::PartialKey<WitnessSearch, GreedyKey>;
+using StaggeredKey = ULTRACH::StaggeredKey<WitnessSearch, GreedyKey>;
+using StopCriterion = ULTRACH::CoreCriterion;
+using NoStopCriterion = ULTRACH::NoStopCriterion;
 template <typename KEY_FUNCTION, typename STOP_CRITERION>
-using CHBuilder = CH::Builder<Profiler, WitnessSearch, KEY_FUNCTION,
+using CHBuilder = ULTRACH::Builder<Profiler, WitnessSearch, KEY_FUNCTION,
     STOP_CRITERION, false, false>;
 
 inline GreedyKey getGreedyKey() noexcept
@@ -454,7 +454,7 @@ inline GreedyKey getGreedyKey() noexcept
 struct CHData {
     CHData(const std::string& fileName) { readBinary(fileName); }
 
-    CHData(const CH::CH&& ch, const TransferGraph& originalGraph)
+    CHData(const ULTRACH::CH&& ch, const TransferGraph& originalGraph)
         : ch(std::move(ch))
         , numCoreVertices(0)
     {
@@ -486,7 +486,7 @@ struct CHData {
     }
 
     TransferGraph core;
-    CH::CH ch;
+    ULTRACH::CH ch;
     size_t numCoreVertices;
 };
 
@@ -502,7 +502,7 @@ inline CHData buildCH(const TransferGraph& originalGraph,
         std::move(graph), graph[TravelTime], keyFunction, stopCriterion);
     chBuilder.run();
     chBuilder.copyCoreToCH();
-    return CHData(CH::CH(std::move(chBuilder)), originalGraph);
+    return CHData(ULTRACH::CH(std::move(chBuilder)), originalGraph);
 }
 
 inline CHData buildCoreCH(const RAPTOR::Data& data,
@@ -522,7 +522,7 @@ inline CHData buildCoreCH(const RAPTOR::Data& data,
     return buildCH(data.transferGraph, keyFunction, stopCriterion);
 }
 
-inline CH::CH buildULTRACH(const RAPTOR::Data& data,
+inline ULTRACH::CH buildULTRACH(const RAPTOR::Data& data,
     const std::vector<Vertex>& targets,
     const double stopFactor,
     const double targetFactor) noexcept
@@ -562,7 +562,7 @@ inline std::vector<Vertex> generateTargetSet(const TransferGraph& graph,
     std::mt19937 randomGenerator(42);
     std::uniform_int_distribution<> vertexDistribution(0,
         graph.numVertices() - 1);
-    Dijkstra<TransferGraph> dijkstra(graph);
+    ULTRADijkstra<TransferGraph> dijkstra(graph);
     std::vector<Vertex> ball;
     do {
         ball.clear();
@@ -724,7 +724,7 @@ public:
         ULTRATimer timer;
         for (size_t i = 0; i < targets.size(); i++) {
             timer.restart();
-            const CH::CH ch = buildULTRACH(raptorData, targets[i], stopFactor, targetFactor);
+            const ULTRACH::CH ch = buildULTRACH(raptorData, targets[i], stopFactor, targetFactor);
             benchmarkData.add(timer.elapsedMicroseconds(), ch);
             ch.writeBinary(outputFile + "_" + std::to_string(i) + ".ultra");
         }
@@ -740,7 +740,7 @@ private:
         {
         }
 
-        inline void add(const double time, const CH::CH& ch) noexcept
+        inline void add(const double time, const ULTRACH::CH& ch) noexcept
         {
             buildTime += time;
             chEdges += ch.numEdges();
@@ -924,7 +924,7 @@ private:
         IO::deserialize(getParameter("Targets file"), targets);
 
         const std::string chFile = getParameter("CH data");
-        const CH::CH dummyCH(chFile + "_0.ultra");
+        const ULTRACH::CH dummyCH(chFile + "_0.ultra");
 
         const size_t n = getParameter<size_t>("Number of queries");
         const std::vector<OneToAllQuery> queries = generateRandomOneToAllQueries(dummyCH.numVertices(), n);
@@ -947,7 +947,7 @@ private:
         SetupBenchmarkData benchmarkData;
         ULTRATimer timer;
         for (size_t i = 0; i < targets.size(); i++) {
-            const CH::CH ch(chFile + "_" + std::to_string(i) + ".ultra");
+            const ULTRACH::CH ch(chFile + "_" + std::to_string(i) + ".ultra");
             IndexedSet<false, Vertex> targetSet(ch.numVertices(), targets[i]);
             timer.restart();
             Algorithm algorithm(csaData, ch, targetSet, reorder, useDFSOrder);
@@ -1046,7 +1046,7 @@ public:
 
         const std::string coreCHFile = getParameter("Core-CH data");
         const std::string upCHFile = getParameter("UP-CH data");
-        const CH::CH dummyCH(upCHFile + "_0.ultra");
+        const ULTRACH::CH dummyCH(upCHFile + "_0.ultra");
 
         const size_t n = getParameter<size_t>("Number of queries");
         const std::vector<OneToAllQuery> queries = generateRandomOneToAllQueries(dummyCH.numVertices(), n);
@@ -1073,7 +1073,7 @@ public:
         ULTRATimer timer;
         for (size_t i = 0; i < targets.size(); i++) {
             const CHData coreCHData(coreCHFile + "_" + std::to_string(i));
-            const CH::CH upCH(upCHFile + "_" + std::to_string(i) + ".ultra");
+            const ULTRACH::CH upCH(upCHFile + "_" + std::to_string(i) + ".ultra");
             IndexedSet<false, Vertex> targetSet(upCH.numVertices(), targets[i]);
             timer.restart();
             Algorithm algorithm(raptorData, coreCHData.core, upCH, targetSet, reorder,

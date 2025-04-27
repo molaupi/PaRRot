@@ -46,7 +46,7 @@ private:
     };
 
 public:
-    ULTRACSA(const Data& data, const CH::CH& chData,
+    ULTRACSA(const Data& data, const ULTRACH::CH& chData,
         const Profiler& profilerTemplate = Profiler())
         : data(data)
         , initialTransfers(chData, FORWARD, data.numberOfStops())

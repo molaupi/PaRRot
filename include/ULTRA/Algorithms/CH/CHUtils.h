@@ -12,7 +12,7 @@
 #include "CH.h"
 #include "Preprocessing/CHData.h"
 
-namespace CH {
+namespace ULTRACH {
 
 inline std::vector<Vertex> getOrder(const CH& ch) noexcept
 {
@@ -311,4 +311,4 @@ inline void analyze(const CH& ch, std::ostream& out = std::cout) noexcept
     analyze(ch, getOrder(ch), out);
 }
 
-} // namespace CH
+} // namespace ULTRACH

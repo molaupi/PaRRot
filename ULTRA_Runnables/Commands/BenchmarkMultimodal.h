@@ -54,7 +54,7 @@ private:
     inline void run(const RAPTOR::MultimodalData& raptorData) const noexcept
     {
         const std::string chDirectory(getParameter("CH directory"));
-        std::vector<CH::CH> chData;
+        std::vector<ULTRACH::CH> chData;
         for (const size_t mode : raptorData.modes) {
             chData.emplace_back(chDirectory + RAPTOR::TransferModeNames[mode] + "CH");
         }
@@ -110,7 +110,7 @@ private:
     inline void run(const RAPTOR::MultimodalData& raptorData) const noexcept
     {
         const std::string chDirectory(getParameter("CH directory"));
-        std::vector<CH::CH> chData;
+        std::vector<ULTRACH::CH> chData;
         for (const size_t mode : raptorData.modes) {
             chData.emplace_back(chDirectory + RAPTOR::TransferModeNames[mode] + "CH");
         }
@@ -170,7 +170,7 @@ private:
         const RAPTOR::Data pruningData = raptorData.getPruningData();
         const RAPTOR::Data reversePruningData = pruningData.reverseNetwork();
         const std::string chDirectory(getParameter("CH directory"));
-        std::vector<CH::CH> chData;
+        std::vector<ULTRACH::CH> chData;
         for (const size_t mode : raptorData.modes) {
             chData.emplace_back(chDirectory + RAPTOR::TransferModeNames[mode] + "CH");
         }
@@ -250,7 +250,7 @@ private:
             "Different transfer modes!");
         const TripBased::Data backwardPruningData = backwardBoundedData.getPruningData();
         const std::string chDirectory(getParameter("CH directory"));
-        std::vector<CH::CH> chData;
+        std::vector<ULTRACH::CH> chData;
         for (const size_t mode : tripBasedData.modes) {
             chData.emplace_back(chDirectory + RAPTOR::TransferModeNames[mode] + "CH");
         }

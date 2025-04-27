@@ -676,7 +676,7 @@ public:
         AssertMsg(grIs.is_open(), "cannot open file: " << grFilename);
         size_t vertexCount = -1;
         size_t edgeCount = -1;
-        ProgressBar bar(1);
+        ULTRAProgressBar bar(1);
         std::cout << "\r                     \r" << std::flush;
         while (!grIs.eof()) {
             std::string line;

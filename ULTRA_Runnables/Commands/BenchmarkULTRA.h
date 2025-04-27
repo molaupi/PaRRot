@@ -72,7 +72,7 @@ public:
         CSA::Data csaData = CSA::Data::FromBinary(getParameter("CSA input file"));
         csaData.sortConnectionsAscending();
         csaData.printInfo();
-        CH::CH ch(getParameter("CH data"));
+        ULTRACH::CH ch(getParameter("CH data"));
         CSA::DijkstraCSA<RAPTOR::CoreCHInitialTransfers, true,
             CSA::AggregateProfiler>
             algorithm(csaData, ch);
@@ -136,7 +136,7 @@ public:
         CSA::Data csaData = CSA::Data::FromBinary(getParameter("CSA input file"));
         csaData.sortConnectionsAscending();
         csaData.printInfo();
-        CH::CH ch(getParameter("CH data"));
+        ULTRACH::CH ch(getParameter("CH data"));
         CSA::ULTRACSA<true, CSA::AggregateProfiler> algorithm(csaData, ch);
 
         const size_t n = getParameter<size_t>("Number of queries");
@@ -199,7 +199,7 @@ public:
         RAPTOR::Data raptorData = RAPTOR::Data::FromBinary(getParameter("RAPTOR input file"));
         raptorData.useImplicitDepartureBufferTimes();
         raptorData.printInfo();
-        CH::CH ch(getParameter("CH data"));
+        ULTRACH::CH ch(getParameter("CH data"));
         RAPTOR::DijkstraRAPTOR<RAPTOR::CoreCHInitialTransfers,
             RAPTOR::AggregateProfiler, true, false>
             algorithm(raptorData, ch);
@@ -272,7 +272,7 @@ public:
         RAPTOR::Data raptorData = RAPTOR::Data::FromBinary(getParameter("RAPTOR input file"));
         raptorData.useImplicitDepartureBufferTimes();
         raptorData.printInfo();
-        CH::CH ch(getParameter("CH data"));
+        ULTRACH::CH ch(getParameter("CH data"));
         RAPTOR::ULTRARAPTOR<RAPTOR::AggregateProfiler, false> algorithm(raptorData,
             ch);
 
@@ -338,7 +338,7 @@ public:
     {
         TripBased::Data tripBasedData(getParameter("Trip-Based input file"));
         tripBasedData.printInfo();
-        CH::CH ch(getParameter("CH data"));
+        ULTRACH::CH ch(getParameter("CH data"));
         TripBased::Query<TripBased::AggregateProfiler> algorithm(tripBasedData, ch);
 
         const size_t n = getParameter<size_t>("Number of queries");

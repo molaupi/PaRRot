@@ -120,7 +120,7 @@ namespace karri {
         }
 
     private:
-        using Dij = Dijkstra<GraphT, WeightT, BasicLabelSet<0, ParentInfo::NO_PARENT_INFO>>;
+        using Dij = KaRRiDijkstra<GraphT, WeightT, BasicLabelSet<0, ParentInfo::NO_PARENT_INFO>>;
 
         std::minstd_rand rand; // A Lehmer random number generator.
         std::uniform_int_distribution<> distribution; // A functor returning uniform random indices.

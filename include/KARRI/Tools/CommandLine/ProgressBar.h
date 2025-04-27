@@ -33,17 +33,17 @@
 #include <omp.h>
 
 // A textual indicator of progress towards some goal.
-class ProgressBar {
+class KaRRiProgressBar {
  public:
   // Constructs an uninitialized progress bar.
-  explicit ProgressBar(bool verbose = true, std::ostream& os = std::cout)
+  explicit KaRRiProgressBar(bool verbose = true, std::ostream& os = std::cout)
       : os(os), numSteps(0), stepsDone(0), percentageDone(0),
         percentageOutputInterval(20), dotOutputInterval(5), verbose(verbose) {}
 
   // Constructs a progress bar with the specified number of steps.
   template <typename ArithmeticT>
-  explicit ProgressBar(ArithmeticT numSteps, bool verbose = true, std::ostream& os = std::cout)
-      : ProgressBar(verbose, os) {
+  explicit KaRRiProgressBar(ArithmeticT numSteps, bool verbose = true, std::ostream& os = std::cout)
+      : KaRRiProgressBar(verbose, os) {
     init(numSteps);
   }
 

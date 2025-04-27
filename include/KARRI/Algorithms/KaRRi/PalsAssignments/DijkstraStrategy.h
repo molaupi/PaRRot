@@ -255,7 +255,7 @@ namespace karri::PickupAfterLastStopStrategies {
         const LastStopsAtVerticesT &lastStopsAtVertices;
 
 
-        Dijkstra<InputGraphT, TravelTimeAttribute, DijLabelSet, TryToInsertPickupAfterLastStop> dijSearchToPickup;
+        KaRRiDijkstra<InputGraphT, TravelTimeAttribute, DijLabelSet, TryToInsertPickupAfterLastStop> dijSearchToPickup;
 
         TentativeLastStopDistances<DijLabelSet> lastStopDistances;
         LightweightSubset vehiclesSeen;

@@ -98,7 +98,7 @@ public:
             METRIC_ENQUEUES, METRIC_ADD_JOURNEYS });
     }
 
-    Query(const Data& data, const CH::CH& chData)
+    Query(const Data& data, const ULTRACH::CH& chData)
         : Query(data,
             RAPTOR::BucketCHInitialTransfers(chData.forward, chData.backward,
                 data.numberOfStops(), Weight))

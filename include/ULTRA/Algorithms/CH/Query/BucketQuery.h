@@ -7,7 +7,7 @@
 #include "../../../Helpers/Console/Progress.h"
 #include "CHQuery.h"
 
-namespace CH {
+namespace ULTRACH {
 
 template <typename GRAPH = CHGraph, bool STALL_ON_DEMAND = true,
     bool DEBUG = false>
@@ -277,4 +277,4 @@ private:
     ULTRATimer timer;
 };
 
-} // namespace CH
+} // namespace ULTRACH

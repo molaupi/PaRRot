@@ -115,7 +115,7 @@ public:
     }
 
     template <typename T = CHGraph, typename = std::enable_if_t<Meta::Equals<T, CHGraph>() && Meta::Equals<T, InitialTransferGraph>()>>
-    DijkstraRAPTOR(const Data& data, const CH::CH& chData,
+    DijkstraRAPTOR(const Data& data, const ULTRACH::CH& chData,
         const Profiler& profilerTemplate = Profiler())
         : DijkstraRAPTOR(data, chData.forward, chData.backward, Weight,
             profilerTemplate)

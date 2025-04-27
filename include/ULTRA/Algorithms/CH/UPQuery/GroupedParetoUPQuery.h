@@ -16,7 +16,7 @@
 #include "../CH.h"
 #include "../CHUtils.h"
 
-namespace CH {
+namespace ULTRACH {
 
 template <bool STALL_ON_DEMAND = true, bool DEBUG = false,
     size_t GROUPED_ROUNDS = 6>
@@ -563,4 +563,4 @@ private:
     ULTRATimer timer;
 };
 
-} // namespace CH
+} // namespace ULTRACH

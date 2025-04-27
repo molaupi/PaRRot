@@ -16,7 +16,7 @@
 #include "StopCriterion.h"
 #include "WitnessSearch.h"
 
-namespace CH {
+namespace ULTRACH {
 
 template <
     typename PROFILER = NoProfiler,
@@ -347,4 +347,4 @@ private:
     std::vector<VertexLabel> label;
 };
 
-} // namespace CH
+} // namespace ULTRACH

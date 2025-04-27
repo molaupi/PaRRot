@@ -6,7 +6,7 @@
 
 #include "../../../DataStructures/Graph/Graph.h"
 
-namespace CH {
+namespace ULTRACH {
 
 class Data {
 public:
@@ -81,4 +81,4 @@ public:
     std::vector<uint16_t> level;
 };
 
-} // namespace CH
+} // namespace ULTRACH

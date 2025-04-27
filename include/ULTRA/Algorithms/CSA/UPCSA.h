@@ -32,18 +32,18 @@ public:
     using TripFlag = Meta::IF<PathRetrieval, ConnectionId, bool>;
 
 private:
-    inline static Order vertexOrder(const CH::CH& chData,
+    inline static Order vertexOrder(const ULTRACH::CH& chData,
         const bool useDFSOrder) noexcept
     {
         if (useDFSOrder) {
-            return Order(Vector::reverse(CH::getOrder(chData)));
+            return Order(Vector::reverse(ULTRACH::getOrder(chData)));
         } else {
-            return Order(CH::getLevelOrderTopDown(chData));
+            return Order(ULTRACH::getLevelOrderTopDown(chData));
         }
     }
 
     struct QueryData {
-        QueryData(const Data& oldData, const CH::CH& oldCHData,
+        QueryData(const Data& oldData, const ULTRACH::CH& oldCHData,
             const IndexedSet<false, Vertex>& oldTargets, const bool reorder,
             const bool useDFSOrder)
             : data(oldData)
@@ -78,7 +78,7 @@ private:
         }
 
         Data data;
-        CH::CH chData;
+        ULTRACH::CH chData;
         Order internalToExternal;
         ULTRAPermutation externalToInternal;
         Order phastOrder;
@@ -104,7 +104,7 @@ private:
     };
 
 public:
-    UPCSA(const Data& oldData, const CH::CH& oldCHData,
+    UPCSA(const Data& oldData, const ULTRACH::CH& oldCHData,
         const IndexedSet<false, Vertex>& oldTargets, const bool reorder,
         const bool useDFSOrder, const Profiler& profilerTemplate = Profiler())
         : queryData(oldData, oldCHData, oldTargets, reorder, useDFSOrder)

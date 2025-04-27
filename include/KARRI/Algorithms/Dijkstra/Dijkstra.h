@@ -93,7 +93,7 @@ template<
         typename StoppingCriterionT = dij::NoCriterion, typename PruningCriterionT = dij::NoCriterion,
         template<typename> class DistanceLabelContainerT = StampedDistanceLabelContainer,
         typename QueueT = AddressableQuadHeap>
-class Dijkstra {
+class KaRRiDijkstra {
     // Some classes are allowed to execute a Dijkstra search step by step.
     template<typename>
     friend
@@ -135,7 +135,7 @@ private:
 
 public:
     // Constructs a Dijkstra instance.
-    explicit Dijkstra(
+    explicit KaRRiDijkstra(
             const Graph &graph, StoppingCriterionT stopSearch = {}, PruningCriterionT pruneSearch = {})
             : graph(graph),
               distanceLabels(graph.numVertices()),

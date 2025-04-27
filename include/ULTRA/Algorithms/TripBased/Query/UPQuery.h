@@ -23,13 +23,13 @@ public:
 private:
     struct QueryData {
         QueryData(const Data& oldData, const TransferGraph& oldTransferGraph,
-            const CH::CH& oldCHData,
+            const ULTRACH::CH& oldCHData,
             const IndexedSet<false, Vertex>& oldTargets, const bool reorder)
             : transferGraph(oldTransferGraph)
             , chData(oldCHData)
             , targets(oldTargets)
         {
-            Order chOrder(Vector::reverse(CH::getOrder(chData)));
+            Order chOrder(Vector::reverse(ULTRACH::getOrder(chData)));
             if (reorder) {
                 internalToExternal = chOrder.splitAt(oldData.numberOfStops());
                 externalToInternal = ULTRAPermutation(Construct::Invert, internalToExternal);
@@ -63,7 +63,7 @@ private:
 
         Data data;
         TransferGraph transferGraph;
-        CH::CH chData;
+        ULTRACH::CH chData;
         Order internalToExternal;
         ULTRAPermutation externalToInternal;
         IndexedSet<false, Vertex> targets;
@@ -121,7 +121,7 @@ private:
 
 public:
     UPQuery(const Data& oldData, const TransferGraph& oldTransferGraph,
-        const CH::CH& oldCHData, const IndexedSet<false, Vertex>& oldTargets,
+        const ULTRACH::CH& oldCHData, const IndexedSet<false, Vertex>& oldTargets,
         const bool reorder)
         : queryData(oldData, oldTransferGraph, oldCHData, oldTargets, reorder)
         , data(queryData.data)
