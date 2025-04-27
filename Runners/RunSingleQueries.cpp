@@ -32,8 +32,7 @@
 #include <functional>
 
 #include <Common/Constants.h>
-#include <ULTRA/DataStructures/RAPTOR/Data.h>
-#include <ULTRA/DataStructures/RideRAPTOR/DistanceMatrix.h>
+#include <ULTRA/Algorithms/RAPTOR/ULTRARAPTOR.h>
 #include <KARRI/Algorithms/PTaxi/PTAndTaxiTripFinder.h>
 
 #include <KARRI/Algorithms/CH/CH.h>
@@ -182,6 +181,9 @@ int main(int argc, char *argv[]) {
         const auto vehSepDecompFileName = clp.getValue<std::string>("veh-d");
         const auto psgSepDecompFileName = clp.getValue<std::string>("psg-d");
         const bool csvFilesInLoudFormat = clp.isSet("csv-in-LOUD-format");
+        // new
+        const auto raptorFileName = clp.getValue<std::string>("raptor-data");
+
         auto outputFileName = clp.getValue<std::string>("o");
         if (endsWith(outputFileName, ".csv"))
             outputFileName = outputFileName.substr(0, outputFileName.size() - 4);
@@ -576,6 +578,15 @@ int main(int argc, char *argv[]) {
             ellipticSearches, ffPDDistanceQuery, ordinaryInsertionsFinder, pbnsInsertionsFinder, palsInsertionsFinder,
             dalsInsertionsFinder, relevantPdLocsFilter);
 
+
+        // Read the RAPTOR data
+        std::cout << "Reading RAPTOR data from file... " << std::flush;
+        RAPTOR::Data raptor(raptorFileName);
+        raptor.useImplicitDepartureBufferTimes();
+        std::cout << "done.\n";
+
+        raptor.printInfo();
+
         // Convert CH
 
         std::cout << "Convert the karri::CH to ULTRA::CH... " << std::flush;
@@ -693,11 +704,14 @@ int main(int argc, char *argv[]) {
         std::cout << "done.\n";
 
         // Use ULTRA CH to build ULTRA algorithm instance
+        using PTAlgorithm = RAPTOR::ULTRARAPTOR<RAPTOR::AggregateProfiler, false>;
+
+        PTAlgorithm ptAlgorithm(raptor, psgCh);
+        
         // -> pass ULTRA algorithm instance to PTAndTaxiTripFinder
 
-
-        using PTAndTaxiTripFinderImpl = PTAndTaxiTripFinder<InsertionFinderImpl, VehicleInputGraph, PsgInputGraph, PsgCHEnv>;
-        PTAndTaxiTripFinderImpl ptAndTaxiTripFinder(insertionFinder, vehicleInputGraph, psgInputGraph, *psgChEnv);
+        using PTAndTaxiTripFinderImpl = PTAndTaxiTripFinder<InsertionFinderImpl, VehicleInputGraph, PsgInputGraph, PsgCHEnv, PTAlgorithm>;
+        PTAndTaxiTripFinderImpl ptAndTaxiTripFinder(insertionFinder, vehicleInputGraph, psgInputGraph, *psgChEnv, ptAlgorithm);
 
 
 #if KARRI_OUTPUT_VEHICLE_PATHS
@@ -726,6 +740,8 @@ int main(int argc, char *argv[]) {
         EventSimulationImpl eventSimulation(fleet, requests, insertionFinder, ptAndTaxiTripFinder, systemStateUpdater,
                                             routeState, true);
         eventSimulation.run();
+
+        ptAlgorithm.getProfiler().printStatistics();
 
     } catch (std::exception &e) {
         std::cerr << "KaRRi error: " << e.what() << '\n';

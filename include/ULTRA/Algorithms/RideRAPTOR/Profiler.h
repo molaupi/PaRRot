@@ -202,11 +202,11 @@ private:
     std::vector<long long> metricValue;
     size_t roundCount;
 
-    Timer initialTimer;
+    ULTRATimer initialTimer;
     double initialTime;
     bool measureInitialTime;
 
-    Timer totalTimer;
+    ULTRATimer totalTimer;
     double totalTime;
 };
 
@@ -493,10 +493,10 @@ private:
         std::cout << "Total time: " << String::musToString(totalTime) << std::endl;
     }
 
-    Timer totalTimer;
+    ULTRATimer totalTimer;
     double totalTime;
-    Timer roundTimer;
-    Timer phaseTimer;
+    ULTRATimer roundTimer;
+    ULTRATimer phaseTimer;
     std::vector<Phase> phases;
     std::vector<Metric> metrics;
     std::vector<RoundData> roundData;
@@ -687,10 +687,10 @@ public:
         return *this;
     }
 
-    Timer totalTimer;
+    ULTRATimer totalTimer;
     double totalTime;
-    Timer roundTimer;
-    Timer phaseTimer;
+    ULTRATimer roundTimer;
+    ULTRATimer phaseTimer;
     std::vector<Phase> phases;
     std::vector<Metric> metrics;
     std::vector<RoundData> roundData;
@@ -881,11 +881,11 @@ private:
                   << std::endl;
     }
 
-    Timer totalTimer;
+    ULTRATimer totalTimer;
     double totalTime;
-    Timer roundTimer;
-    Timer phaseTimer;
-    Timer extraTimer;
+    ULTRATimer roundTimer;
+    ULTRATimer phaseTimer;
+    ULTRATimer extraTimer;
     double extraTime;
     std::vector<Phase> phases;
     std::vector<Metric> metrics;
@@ -1166,11 +1166,11 @@ public:
         return *this;
     }
 
-    Timer totalTimer;
+    ULTRATimer totalTimer;
     double totalTime;
-    Timer roundTimer;
-    Timer phaseTimer;
-    Timer extraTimer;
+    ULTRATimer roundTimer;
+    ULTRATimer phaseTimer;
+    ULTRATimer extraTimer;
     double extraTime;
     std::vector<Phase> phases;
     std::vector<Metric> metrics;

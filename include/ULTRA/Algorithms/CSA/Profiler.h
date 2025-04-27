@@ -159,9 +159,9 @@ private:
     }
 
 private:
-    Timer totalTimer;
+    ULTRATimer totalTimer;
     double totalTime;
-    Timer phaseTimer;
+    ULTRATimer phaseTimer;
     std::vector<Phase> phases;
     std::vector<double> phaseTime;
     std::vector<Metric> metrics;
@@ -265,9 +265,9 @@ public:
     }
 
 private:
-    Timer totalTimer;
+    ULTRATimer totalTimer;
     double totalTime;
-    Timer phaseTimer;
+    ULTRATimer phaseTimer;
     std::vector<Phase> phases;
     std::vector<double> phaseTime;
     std::vector<Metric> metrics;

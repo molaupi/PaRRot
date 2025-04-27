@@ -320,10 +320,10 @@ public:
     }
 
 private:
-    Timer totalTimer;
+    ULTRATimer totalTimer;
     double totalTime;
-    Timer phaseTimer;
-    std::vector<Timer> timer;
+    ULTRATimer phaseTimer;
+    std::vector<ULTRATimer> timer;
     std::vector<Phase> phases;
     std::vector<Metric> metrics;
 

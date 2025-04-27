@@ -647,7 +647,7 @@ public:
 
         ULTRACH::CH ch(hierarchyFileName);
 
-        Timer totalTimer;
+        ULTRATimer totalTimer;
         totalTimer.restart();
         RIDERAPTOR::DistanceMatrix matrix(raptorData.numberOfStops());
         RIDERAPTOR::fillDistanceMatrix(matrix, raptorData, ch);

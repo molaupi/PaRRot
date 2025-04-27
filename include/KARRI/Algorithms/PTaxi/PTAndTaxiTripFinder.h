@@ -13,7 +13,8 @@ namespace karri {
             typename AssignmentFinderT,
             typename VehicleInputGraphT,
             typename PsgInputGraphT,
-            typename PsgCHEnvT
+            typename PsgCHEnvT,
+            typename PTAlgorithmT
     >
     class PTAndTaxiTripFinder {
 
@@ -22,17 +23,24 @@ namespace karri {
         PTAndTaxiTripFinder(AssignmentFinderT &assignmentFinder,
                             const VehicleInputGraphT &vehInputGraph,
                             const PsgInputGraphT &psgInputGraph,
-                            const PsgCHEnvT &psgChEnv)
+                            const PsgCHEnvT &psgChEnv,
+                            PTAlgorithmT &ptAlgorithm)
                 : assignmentFinder(assignmentFinder), 
                   vehInputGraph(vehInputGraph),
                   psgInputGraph(psgInputGraph),
-                  psgCh(psgChEnv.getCH()) {}
+                  psgCh(psgChEnv.getCH()),
+                  ptAlgorithm(ptAlgorithm) {}
 
         PTAndTaxiTriple findBestAssignment(const Request &req) {
             // First taxi leg
-            // TODO: make sure request state is trivially copyable by using changes in mt_karri_batch
             auto taxiOnlyResult = assignmentFinder.findBestAssignment(req);
             RequestState invalidTaxiResponse;
+            
+            // PT leg
+            VertexQuery query = convertKARRIRequestToULTRAQuery(req);
+            ptAlgorithm.run(query.source, query.departureTime, query.target);
+
+            // TODO: return found PT result with ULTRARAPTOR algorithm
             PTResult invalidPTResponse(false);
             
             // Return the combined results
@@ -45,7 +53,9 @@ namespace karri {
             const auto origin = psgCh.rank(psgInputGraph.edgeHead(vehInputGraph.toPsgEdge(req.origin)));
             const auto destination = psgCh.rank(psgInputGraph.edgeHead(vehInputGraph.toPsgEdge(req.destination)));
             const auto requestTime = req.requestTime;
-            return VertexQuery(origin, destination, requestTime);
+            const Vertex originVertex = Vertex(origin);
+            const Vertex destinationVertex = Vertex(destination);
+            return VertexQuery(originVertex, destinationVertex, requestTime);
         }
 
         AssignmentFinderT &assignmentFinder;
@@ -53,5 +63,6 @@ namespace karri {
         const PsgInputGraphT &psgInputGraph;
         const CH &psgCh;
 
+        PTAlgorithmT &ptAlgorithm;
     };
 }

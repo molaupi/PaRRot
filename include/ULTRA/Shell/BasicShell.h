@@ -249,7 +249,7 @@ public:
         if (command != nullptr) {
             if (autosaveCache)
                 saveCache();
-            Timer commandTimer;
+            ULTRATimer commandTimer;
             command->execute(tokens[1]);
             if (reportCommandTimes)
                 shell << grey("[Finished in ",

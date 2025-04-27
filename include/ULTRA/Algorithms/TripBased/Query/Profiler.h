@@ -141,11 +141,11 @@ public:
     }
 
 private:
-    Timer totalTimer;
+    ULTRATimer totalTimer;
     double totalTime;
     std::vector<Phase> phases;
     std::vector<Metric> metrics;
-    Timer phaseTimer;
+    ULTRATimer phaseTimer;
     std::vector<double> phaseTime;
     std::vector<long long> metricValue;
     size_t numQueries;
