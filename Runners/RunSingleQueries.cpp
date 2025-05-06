@@ -183,6 +183,7 @@ int main(int argc, char *argv[]) {
         const bool csvFilesInLoudFormat = clp.isSet("csv-in-LOUD-format");
         // new
         const auto raptorFileName = clp.getValue<std::string>("raptor-data");
+        const auto stationMappingFileName = clp.getValue<std::string>("station-mapping");
 
         auto outputFileName = clp.getValue<std::string>("o");
         if (endsWith(outputFileName, ".csv"))
@@ -553,7 +554,7 @@ int main(int argc, char *argv[]) {
 
         using RequestStateInitializerImpl = RequestStateInitializer<VehicleInputGraph, PsgInputGraph, VehCHEnv, PsgCHEnv>;
         RequestStateInitializerImpl requestStateInitializer(vehicleInputGraph, psgInputGraph, *vehChEnv, *psgChEnv);
-        
+
         using PDLocsFinderImpl = PDLocsFinder<VehicleInputGraph, PsgInputGraph, VehicleToPDLocQueryImpl>;
         PDLocsFinderImpl pdLocsFinder(vehicleInputGraph, psgInputGraph, revPsgGraph, vehicleToPdLocQuery);
 
@@ -573,7 +574,7 @@ int main(int argc, char *argv[]) {
                 PALSInsertionsFinderImpl,
                 DALSInsertionsFinderImpl,
                 RelevantPDLocsFilterImpl>;
-        InsertionFinderImpl insertionFinder(vehicleInputGraph, requestStateInitializer, pdLocsFinder, pdLocsAtExistingStops, 
+        InsertionFinderImpl insertionFinder(vehicleInputGraph, requestStateInitializer, pdLocsFinder, pdLocsAtExistingStops,
             feasibleEllipticPickups, feasibleEllipticDropoffs,
             ellipticSearches, ffPDDistanceQuery, ordinaryInsertionsFinder, pbnsInsertionsFinder, palsInsertionsFinder,
             dalsInsertionsFinder, relevantPdLocsFilter);
@@ -586,6 +587,25 @@ int main(int argc, char *argv[]) {
         std::cout << "done.\n";
 
         raptor.printInfo();
+
+        // Read the station mapping file
+        std::cout << "Reading station mapping from file... " << std::flush;
+        std::vector<size_t> vertexIdOfStation;
+        int edgeId;
+        io::CSVReader<1> stationMappingFileReader(stationMappingFileName);
+
+        stationMappingFileReader.read_header(io::ignore_no_column, "initial_location");
+
+        while (stationMappingFileReader.read_row(edgeId)) {
+            if (edgeId < 0) {
+                throw std::invalid_argument("invalid edge id for a station-- '" + std::to_string(edgeId) + "'");
+            }
+
+            // edge id in the station mapping file is the edge id in the passenger graph
+            size_t vertexId = psgInputGraph.edgeHead(edgeId);
+            vertexIdOfStation.push_back(vertexId);
+        }
+        std::cout << "done.\n";
 
         // Convert CH
 
@@ -695,11 +715,28 @@ int main(int argc, char *argv[]) {
         }
 
         ULTRACH::CH psgCh(std::move(upPsgCHGraph), std::move(downPsgCHGraph));
+        
+        // Reorder the vertices in the passenger CH
+        Order order(Construct::Id, psgCh.numVertices());
+        std::vector<bool> swapped(psgCh.numVertices(), false);
+        for (const StopId stop : raptor.stops()) {
+            const auto newStopId = vertexIdOfStation[stop];
+            assert(newStopId < order.size());
 
-        /* std::cout << "## Psg FORWARD ##" << std::endl; */
-        /* psgCh.getGraph(FORWARD).printAnalysis(); */
-        /* std::cout << "## Psg BACKWARD ##" << std::endl; */
-        /* psgCh.getGraph(BACKWARD).printAnalysis(); */
+            if (swapped[stop] || swapped[newStopId]) {
+                continue;
+            }
+            order[stop] = newStopId;
+            order[newStopId] = stop;
+            swapped[stop] = true;
+            swapped[newStopId] = true;
+        }
+        psgCh.applyVertexOrder(order);
+
+        // std::cout << "## Psg FORWARD ##" << std::endl;
+        // psgCh.getGraph(FORWARD).printAnalysis();
+        // std::cout << "## Psg BACKWARD ##" << std::endl;
+        // psgCh.getGraph(BACKWARD).printAnalysis();
 
         std::cout << "done.\n";
 
