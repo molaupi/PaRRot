@@ -32,8 +32,11 @@
 #include <functional>
 
 #include <Common/Constants.h>
+
+#include "../PTaxi/PTAndTaxiTripFinder.h"
+#include "../PTaxi/FirstTaxiSharingLeg.h"
+
 #include <ULTRA/Algorithms/RAPTOR/ULTRARAPTOR.h>
-#include <KARRI/Algorithms/PTaxi/PTAndTaxiTripFinder.h>
 
 #include <KARRI/Algorithms/CH/CH.h>
 #include <KARRI/Tools/custom_assertion_levels.h>
@@ -48,8 +51,6 @@
 #include <KARRI/DataStructures/Graph/Attributes/TravelTimeAttribute.h>
 #include <KARRI/DataStructures/Graph/Attributes/PsgEdgeToCarEdgeAttribute.h>
 #include <KARRI/DataStructures/Graph/Attributes/CarEdgeToPsgEdgeAttribute.h>
-
-
 #include <KARRI/Algorithms/KaRRi/InputConfig.h>
 #include <KARRI/Algorithms/KaRRi/BaseObjects/Vehicle.h>
 #include <KARRI/Algorithms/KaRRi/BaseObjects/Request.h>
@@ -749,6 +750,8 @@ int main(int argc, char *argv[]) {
 
         using PTAndTaxiTripFinderImpl = PTAndTaxiTripFinder<InsertionFinderImpl, VehicleInputGraph, PsgInputGraph, PsgCHEnv, PTAlgorithm>;
         PTAndTaxiTripFinderImpl ptAndTaxiTripFinder(insertionFinder, vehicleInputGraph, psgInputGraph, *psgChEnv, ptAlgorithm);
+
+        // Build buckets for PT stations
 
 
 #if KARRI_OUTPUT_VEHICLE_PATHS

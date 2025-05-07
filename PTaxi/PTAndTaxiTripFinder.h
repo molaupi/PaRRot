@@ -1,7 +1,7 @@
 #pragma once
 
 #include "PTAndTaxiTriple.h"
-#include "../CH/CH.h"
+#include <KARRI/Algorithms/CH/CH.h>
 #include <ULTRA/DataStructures/Queries/Queries.h>
 
 namespace karri {

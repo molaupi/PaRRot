@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../KaRRi/RequestState/RequestState.h"
+#include <KARRI/Algorithms/KaRRi/RequestState/RequestState.h>
 #include <utility>
 #include <limits>
 
