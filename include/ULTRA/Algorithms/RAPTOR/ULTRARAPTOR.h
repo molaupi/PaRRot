@@ -79,19 +79,19 @@ public:
     template <typename ATTRIBUTE>
     ULTRARAPTOR(const Data& data, const InitialTransferGraph& forwardGraph,
         const InitialTransferGraph& backwardGraph, const ATTRIBUTE weight,
-        const Profiler& profilerTemplate = Profiler())
+        const std::string& fileName = "", const Profiler& profilerTemplate = Profiler())
         : ULTRARAPTOR(data,
             InitialTransferType(forwardGraph, backwardGraph,
-                data.numberOfStops(), weight),
+                data.numberOfStops(), weight, fileName),
             profilerTemplate)
     {
     }
 
     template <typename T = CHGraph, typename = std::enable_if_t<Meta::Equals<T, CHGraph>() && Meta::Equals<T, InitialTransferGraph>()>>
     ULTRARAPTOR(const Data& data, const ULTRACH::CH& chData,
-        const Profiler& profilerTemplate = Profiler())
+        const std::string& fileName = "", const Profiler& profilerTemplate = Profiler())
         : ULTRARAPTOR(data, chData.forward, chData.backward, Weight,
-            profilerTemplate)
+            fileName, profilerTemplate)
     {
     }
 

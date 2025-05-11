@@ -87,3 +87,7 @@ target_compile_options(GenerateGeoJsonForRequests PRIVATE ${FULL_WARNINGS})
 target_link_libraries(GenerateGeoJsonForRequests PRIVATE nlohmann_json fast_cpp_csv_parser)
 target_include_directories(GenerateGeoJsonForRequests PUBLIC ${PARROT_INCLUDE_DIR})
 
+add_executable(BuildStaticBuckets BuildStaticBuckets.cc)
+target_compile_definitions(BuildStaticBuckets PRIVATE CSV_IO_NO_THREAD)
+target_link_libraries(BuildStaticBuckets routingkit vectorclass fast_cpp_csv_parser kassert)
+target_include_directories(BuildStaticBuckets PUBLIC ${PARROT_INCLUDE_DIR})

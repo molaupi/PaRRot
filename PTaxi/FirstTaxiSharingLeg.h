@@ -21,15 +21,20 @@ class FirstTaxiSharingLeg {
 
     private:
 
+        // Representation: Assignment + Stations
+
         void runPALS(Request &request) {
             // BCH orig -> all stations
-            // Individual BCH
+            // Individual BCH pruning ausschalten? 
+            // Dropofss -> Stations
+            // PDDistances überall raus -> Distances zu den stations
         }
         
         void runOrdinary(Request &request) {
-            // Find relevant stations for pickup
+            // Find relevant stations for pickup -> filterOrdinaryPickups & filterPickupsBeforeNextStop
             // Build buckets for stops of relevant vehicles
             // BCH stops of relevant vehicles -> all stations
+            // DALS kann auch vorkommen
         }
 
         std::vector<int> &vertexIdOfStations; // Vertex IDs of the stations

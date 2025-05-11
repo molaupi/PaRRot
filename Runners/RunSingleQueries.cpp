@@ -185,6 +185,7 @@ int main(int argc, char *argv[]) {
         // new
         const auto raptorFileName = clp.getValue<std::string>("raptor-data");
         const auto stationMappingFileName = clp.getValue<std::string>("station-mapping");
+        const auto bucketGraphFileName = clp.getValue<std::string>("bucket-graph");
 
         auto outputFileName = clp.getValue<std::string>("o");
         if (endsWith(outputFileName, ".csv"))
@@ -608,6 +609,15 @@ int main(int argc, char *argv[]) {
         }
         std::cout << "done.\n";
 
+        // Buckets for stations bauen
+        // UnsortedLastStopBucketsEnvironment -> BucketsEnvironment: only generate 
+        // Reverse Downward Graph: anstatt UpwardGraph in LastStop
+        // GenerateEntry struct
+        // benutzt DynamicBucketContainer -> (CompactLastStopBucketContainer) optimierung
+        // DynamicBucketContainer mitgeben als Referenz
+        // LastStopBCHQuery (nur if branch)
+
+
         // Convert CH
 
         std::cout << "Convert the karri::CH to ULTRA::CH... " << std::flush;
@@ -744,12 +754,12 @@ int main(int argc, char *argv[]) {
         // Use ULTRA CH to build ULTRA algorithm instance
         using PTAlgorithm = RAPTOR::ULTRARAPTOR<RAPTOR::AggregateProfiler, false>;
 
-        PTAlgorithm ptAlgorithm(raptor, psgCh);
+        PTAlgorithm ptAlgorithm(raptor, psgCh, bucketGraphFileName);
         
         // -> pass ULTRA algorithm instance to PTAndTaxiTripFinder
 
         using PTAndTaxiTripFinderImpl = PTAndTaxiTripFinder<InsertionFinderImpl, VehicleInputGraph, PsgInputGraph, PsgCHEnv, PTAlgorithm>;
-        PTAndTaxiTripFinderImpl ptAndTaxiTripFinder(insertionFinder, vehicleInputGraph, psgInputGraph, *psgChEnv, ptAlgorithm);
+        PTAndTaxiTripFinderImpl ptAndTaxiTripFinder(insertionFinder, vehicleInputGraph, psgInputGraph, *psgChEnv, ptAlgorithm, order);
 
         // Build buckets for PT stations
 

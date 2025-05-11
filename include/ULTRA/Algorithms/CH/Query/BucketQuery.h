@@ -24,7 +24,8 @@ public:
     BucketQuery(const Graph& forward, const Graph& backward,
         const std::vector<int>& forwardWeight,
         const std::vector<int>& backwardWeight,
-        const Vertex::ValueType endOfPOIs)
+        const Vertex::ValueType endOfPOIs,
+        const std::string& fileName = "")
         : baseQuery(forward, backward, forwardWeight, backwardWeight,
             forward.numVertices())
         , bucketGraph { CHGraph(), CHGraph() }
@@ -34,16 +35,21 @@ public:
         , endOfPOIs(endOfPOIs)
         , reachedPOIs { std::vector<Vertex>(), std::vector<Vertex>() }
     {
-        buildBucketGraph<FORWARD, BACKWARD>();
-        buildBucketGraph<BACKWARD, FORWARD>();
+        if (!fileName.empty()) {
+            readBinary(fileName);
+        } else {
+            buildBucketGraph<FORWARD, BACKWARD>();
+            buildBucketGraph<BACKWARD, FORWARD>();
+        }
     }
 
     template <typename ATTRIBUTE>
     BucketQuery(const Graph& forward, const Graph& backward,
         const Vertex::ValueType endOfPOIs,
-        const ATTRIBUTE attribute = Weight)
+        const ATTRIBUTE attribute = Weight,
+        const std::string& fileName = "")
         : BucketQuery(forward, backward, forward[attribute], backward[attribute],
-            endOfPOIs)
+            endOfPOIs, fileName)
     {
     }
 
@@ -200,6 +206,21 @@ public:
     inline int getStallCount() const noexcept
     {
         return baseQuery.getStallCount();
+    }
+
+    // IO:
+    inline void writeBinary(const std::string& fileName,
+        const std::string& separator = ".") const noexcept
+    {
+        bucketGraph[FORWARD].writeBinary(fileName + separator + "forward", separator);
+        bucketGraph[BACKWARD].writeBinary(fileName + separator + "backward", separator);
+    }
+
+    inline void readBinary(const std::string& fileName,
+        const std::string& separator = ".") noexcept
+    {
+        bucketGraph[FORWARD].readBinary(fileName + separator + "forward", separator);
+        bucketGraph[BACKWARD].readBinary(fileName + separator + "backward", separator);
     }
 
 private:
