@@ -23,6 +23,9 @@
 #include <ULTRA/Algorithms/CH/Query/BucketQuery.h>
 #include <ULTRA/DataStructures/RAPTOR/Data.h>
 
+#include "../PTaxi/StationBucketsEnvironment.h"
+
+
 inline void printUsage() {
     std::cout <<
               "Usage: \n"
@@ -76,13 +79,8 @@ int main(int argc, char *argv[]) {
         const auto raptorFileName = clp.getValue<std::string>("raptor-data");
         const auto stationMappingFileName = clp.getValue<std::string>("station-mapping");
         const auto bucketGraphOutputFileName = clp.getValue<std::string>("o-bucket-graph");
-
-        auto outputFileName = clp.getValue<std::string>("o");
-        if (endsWith(outputFileName, ".csv"))
-            outputFileName = outputFileName.substr(0, outputFileName.size() - 4);
-
-
-        LogManager<std::ofstream>::setBaseFileName(outputFileName + ".");
+        auto stationBucketsOutputFilename = clp.getValue<std::string>("o-station-buckets");
+        if (!endsWith(stationBucketsOutputFilename, ".bucket.bin")) stationBucketsOutputFilename += ".bucket.bin";
 
         // Read the passenger network from file.
         std::cout << "Reading passenger network from file... " << std::flush;
@@ -127,7 +125,7 @@ int main(int argc, char *argv[]) {
 
         // Read the station mapping file
         std::cout << "Reading station mapping from file... " << std::flush;
-        std::vector<size_t> vertexIdOfStation;
+        std::vector<int> vertexIdOfStation;
         int edgeId;
         io::CSVReader<1> stationMappingFileReader(stationMappingFileName);
 
@@ -139,7 +137,7 @@ int main(int argc, char *argv[]) {
             }
 
             // edge id in the station mapping file is the edge id in the passenger graph
-            size_t vertexId = psgInputGraph.edgeHead(edgeId);
+            int vertexId = psgInputGraph.edgeHead(edgeId);
             vertexIdOfStation.push_back(vertexId);
         }
         std::cout << "done.\n";
@@ -229,6 +227,24 @@ int main(int argc, char *argv[]) {
 
         std::cout << "Writing bucket graph to file... " << std::flush;
         bucketGraph.writeBinary(bucketGraphOutputFileName);
+        std::cout << "done.\n";
+
+        // Station Buckets for first taxi leg in KaRRi
+        using StationBucketsEnv = karri::StationBucketsEnvironment<PsgInputGraph, PsgCHEnv>;
+        StationBucketsEnv stationBucketsEnv(psgInputGraph, *psgChEnv);
+
+        std::cout << "Building buckets for stations... " << std::flush;
+        for (auto& vertexId : vertexIdOfStation) {
+            stationBucketsEnv.generateBucketEntries(vertexId);
+        }
+        std::cout << "done.\n";
+
+        std::cout << "Writing station buckets to file... " << std::flush;
+        std::ofstream out(stationBucketsOutputFilename, std::ios::binary);
+        stationBucketsEnv.writeTo(out);
+        std::cout << "done.\n";
+
+
 
     } catch (std::exception &e) {
         std::cerr << "Error: " << e.what() << '\n';
