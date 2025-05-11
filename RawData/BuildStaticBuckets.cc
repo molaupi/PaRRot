@@ -80,7 +80,8 @@ int main(int argc, char *argv[]) {
         const auto stationMappingFileName = clp.getValue<std::string>("station-mapping");
         const auto bucketGraphOutputFileName = clp.getValue<std::string>("o-bucket-graph");
         auto stationBucketsOutputFilename = clp.getValue<std::string>("o-station-buckets");
-        if (!endsWith(stationBucketsOutputFilename, ".bucket.bin")) stationBucketsOutputFilename += ".bucket.bin";
+        const auto stationBucketsPositionsFileName = stationBucketsOutputFilename + ".positions.bucket.bin";
+        const auto stationBucketsEntriesFileName = stationBucketsOutputFilename + ".entries.bucket.bin";
 
         // Read the passenger network from file.
         std::cout << "Reading passenger network from file... " << std::flush;
@@ -240,10 +241,18 @@ int main(int argc, char *argv[]) {
         std::cout << "done.\n";
 
         std::cout << "Writing station buckets to file... " << std::flush;
-        std::ofstream out(stationBucketsOutputFilename, std::ios::binary);
-        stationBucketsEnv.writeTo(out);
+        std::ofstream outPositions(stationBucketsPositionsFileName, std::ios::binary);
+        std::ofstream outEntries(stationBucketsEntriesFileName, std::ios::binary);
+        stationBucketsEnv.writeTo(outPositions, outEntries);
         std::cout << "done.\n";
+        
+        std::cout << "Read station buckets from file... " << std::flush;
+        std::ifstream inPositions(stationBucketsPositionsFileName, std::ios::binary);
+        std::ifstream inEntries(stationBucketsEntriesFileName, std::ios::binary);
+        StationBucketsEnv readStationBucketsEnv(psgInputGraph, *psgChEnv);
+        readStationBucketsEnv.readFrom(inPositions, inEntries);
 
+        std::cout << "done.\n";
 
 
     } catch (std::exception &e) {

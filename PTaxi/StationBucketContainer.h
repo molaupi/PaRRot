@@ -44,9 +44,9 @@ public:
         assert(numVertices >= 0);
     }
 
-    StationBucketContainer(std::vector<BucketPosition> &&bucketPositions,
-                           std::vector<BucketEntryT> &&entries)
-            : bucketPositions(std::move(bucketPositions)), entries(std::move(entries)) {
+    StationBucketContainer(std::vector<BucketPosition> bucketPositions,
+                           std::vector<BucketEntryT> entries)
+            : bucketPositions(bucketPositions), entries(entries) {
         assert(!bucketPositions.empty());
         assert(!entries.empty());
     }

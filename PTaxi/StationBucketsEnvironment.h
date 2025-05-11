@@ -100,19 +100,19 @@ namespace karri {
         }
 
         // Reads the bucket container from a binary file. 
-        void readFrom(std::ifstream &in) {
-            std::vector<BucketPosition> &&bucketPositions;
-            std::vector<BucketEntry> &&entries;
-            bio::read(in, bucketPositions);
-            bio::read(in, bucketPositions);
+        void readFrom(std::ifstream &inPositions, std::ifstream &inEntries) {
+            std::vector<BucketPosition> bucketPositions;
+            std::vector<BucketEntry> entries;
+            bio::read(inPositions, bucketPositions);
+            bio::read(inEntries, entries);
 
             bucketContainer = BucketContainer(bucketPositions, entries);
         }
 
         // Writes the bucket container to a binary file
-        void writeTo(std::ofstream &out) const {
-            bio::write(out, bucketContainer.getEntries());
-            bio::write(out, bucketContainer.getBucketPositions());
+        void writeTo(std::ofstream &outPositions, std::ofstream &outEntries) const {
+            bio::write(outPositions, bucketContainer.getBucketPositions());
+            bio::write(outEntries, bucketContainer.getEntries());
         }
 
     private:
