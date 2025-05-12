@@ -33,9 +33,9 @@
 #include <random>
 #include <stdexcept>
 #include <string>
-
 #include <csv.h>
 
+#include "Common/Constants.h"
 #include "KARRI/Algorithms/Dijkstra/BiDijkstra.h"
 #include "KARRI/Algorithms/Dijkstra/Dijkstra.h"
 #include "KARRI/DataStructures/Containers/BitVector.h"
@@ -46,17 +46,17 @@
 #include "KARRI/DataStructures/Graph/Attributes/LatLngAttribute.h"
 #include "KARRI/DataStructures/Graph/Attributes/LengthAttribute.h"
 #include "KARRI/DataStructures/Graph/Attributes/SequentialVertexIdAttribute.h"
+#include "KARRI/DataStructures/Graph/Attributes/CarEdgeToPsgEdgeAttribute.h"
 #include "KARRI/DataStructures/Graph/Attributes/TravelTimeAttribute.h"
+#include "KARRI/DataStructures/Graph/Attributes/EdgeIdAttribute.h"
 #include "KARRI/DataStructures/Graph/Graph.h"
-#include "ODPairGenerator.h"
 #include "KARRI/Tools/CommandLine/CommandLineParser.h"
 #include "KARRI/Tools/CommandLine/ProgressBar.h"
 #include "KARRI/Tools/Constants.h"
 #include "KARRI/Tools/OpenMP.h"
 #include "KARRI/Tools/StringHelpers.h"
 #include "KARRI/Tools/Timer.h"
-#include "KARRI/DataStructures/Graph/Attributes/EdgeIdAttribute.h"
-#include "KARRI/DataStructures/Graph/Attributes/CarEdgeToPsgEdgeAttribute.h"
+#include "ODPairGenerator.h"
 
 inline void printUsage() {
     std::cout <<
@@ -137,9 +137,9 @@ int main(int argc, char *argv[]) {
 
         // Read the graph from file.
         std::cout << "Reading graph from file..." << std::flush;
-        using VertexAttributes = karri::VertexAttrs<karri::LatLngAttribute, SequentialVertexIdAttribute>;
-        using EdgeAttributes = karri::EdgeAttrs<LengthAttribute, TravelTimeAttribute, EdgeIdAttribute, CarEdgeToPsgEdgeAttribute>;
-        using Graph = karri::KaRRiStaticGraph<VertexAttributes, EdgeAttributes>;
+        using VertexAttributes = VertexAttrs<LatLngAttribute, SequentialVertexIdAttribute>;
+        using EdgeAttributes = EdgeAttrs<LengthAttribute, TravelTimeAttribute, EdgeIdAttribute, CarEdgeToPsgEdgeAttribute>;
+        using Graph = KaRRiStaticGraph<VertexAttributes, EdgeAttributes>;
         std::ifstream graphFile(graphFileName, std::ios::binary);
         if (!graphFile.good())
             throw std::invalid_argument("file not found -- '" + graphFileName + "'");
@@ -202,12 +202,12 @@ int main(int argc, char *argv[]) {
             outputFile << ")\n";
             outputFile << "origin,destination,dijkstra_rank\n";
 
-            karri::KaRRiTimer timer;
-            karri::KaRRiProgressBar bar;
+            KaRRiTimer timer;
+            KaRRiProgressBar bar;
 #pragma omp parallel
             {
                 std::minstd_rand rand(seed + omp_get_thread_num() + 1);
-                karri::ODPairGenerator<Graph, TravelTimeAttribute> g(graph, isVertexEligible, seed);
+                ODPairGenerator<Graph, TravelTimeAttribute> g(graph, isVertexEligible, seed);
 
                 for (auto i = 0; i < expectedRanks.size(); ++i) {
 #pragma omp master
@@ -260,12 +260,12 @@ int main(int argc, char *argv[]) {
             outputFile << ")\n";
             outputFile << "origin,destination,distance\n";
 
-            karri::KaRRiTimer timer;
-            karri::KaRRiProgressBar bar;
+            KaRRiTimer timer;
+            KaRRiProgressBar bar;
 #pragma omp parallel
             {
                 std::minstd_rand rand(seed + omp_get_thread_num() + 1);
-                karri::ODPairGenerator<Graph, TravelTimeAttribute> g(graph, isVertexEligible, seed);
+                ODPairGenerator<Graph, TravelTimeAttribute> g(graph, isVertexEligible, seed);
 
                 for (auto i = 0; i < expectedDists.size(); ++i) {
 #pragma omp master
@@ -313,11 +313,11 @@ int main(int argc, char *argv[]) {
             outputFile << "random\n";
             outputFile << "origin,destination\n";
 
-            karri::KaRRiTimer timer;
-            karri::KaRRiProgressBar bar;
+            KaRRiTimer timer;
+            KaRRiProgressBar bar;
 #pragma omp parallel
             {
-                karri::ODPairGenerator<Graph, TravelTimeAttribute> g(graph, isVertexEligible, seed);
+                ODPairGenerator<Graph, TravelTimeAttribute> g(graph, isVertexEligible, seed);
 #pragma omp master
                 {
                     std::cout << "Generating OD pairs: ";
@@ -352,13 +352,13 @@ int main(int argc, char *argv[]) {
             outputFile << "random with a total length of " << totalLength << "\n";
             outputFile << "origin,destination\n";
 
-            karri::KaRRiTimer timer;
-            karri::KaRRiProgressBar bar;
+            KaRRiTimer timer;
+            KaRRiProgressBar bar;
 #pragma omp parallel
             {
                 using LabelSet = BasicLabelSet<0, ParentInfo::NO_PARENT_INFO>;
-                karri::BiDijkstra<karri::KaRRiDijkstra<Graph, TravelTimeAttribute, LabelSet>> biDijkstra(graph, reverseGraph);
-                karri::ODPairGenerator<Graph, TravelTimeAttribute> g(graph, isVertexEligible, seed);
+                BiDijkstra<KaRRiDijkstra<Graph, TravelTimeAttribute, LabelSet>> biDijkstra(graph, reverseGraph);
+                ODPairGenerator<Graph, TravelTimeAttribute> g(graph, isVertexEligible, seed);
 
                 const int64_t totalLengthPerThread = std::ceil(1.0 * totalLength / omp_get_num_threads());
                 int64_t totalLen = 0;

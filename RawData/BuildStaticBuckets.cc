@@ -15,6 +15,9 @@
 #include <KARRI/DataStructures/Graph/Attributes/OsmNodeIdAttribute.h>
 #include <KARRI/DataStructures/Graph/Attributes/EdgeTailAttribute.h>
 #include <KARRI/DataStructures/Graph/Attributes/PsgEdgeToCarEdgeAttribute.h>
+#include <KARRI/DataStructures/Graph/Attributes/FreeFlowSpeedAttribute.h>
+#include <KARRI/DataStructures/Graph/Attributes/CarEdgeToPsgEdgeAttribute.h>
+#include <KARRI/DataStructures/Graph/Attributes/OsmRoadCategoryAttribute.h>
 
 
 #include <KARRI/Algorithms/KaRRi/CHEnvironment.h>
@@ -74,7 +77,9 @@ int main(int argc, char *argv[]) {
 
 
         // Parse the command-line options.
+        const auto vehicleNetworkFileName = clp.getValue<std::string>("veh-g");
         const auto passengerNetworkFileName = clp.getValue<std::string>("psg-g");
+        const auto vehHierarchyFileName = clp.getValue<std::string>("veh-h");
         const auto psgHierarchyFileName = clp.getValue<std::string>("psg-h");
         const auto raptorFileName = clp.getValue<std::string>("raptor-data");
         const auto stationMappingFileName = clp.getValue<std::string>("station-mapping");
@@ -82,6 +87,42 @@ int main(int argc, char *argv[]) {
         auto stationBucketsOutputFilename = clp.getValue<std::string>("o-station-buckets");
         const auto stationBucketsPositionsFileName = stationBucketsOutputFilename + ".positions.bucket.bin";
         const auto stationBucketsEntriesFileName = stationBucketsOutputFilename + ".entries.bucket.bin";
+
+        // Read the vehicle network from file.
+        std::cout << "Reading vehicle network from file... " << std::flush;
+        using VehicleVertexAttributes = VertexAttrs<LatLngAttribute, OsmNodeIdAttribute>;
+        using VehicleEdgeAttributes = EdgeAttrs<
+                EdgeIdAttribute, EdgeTailAttribute, FreeFlowSpeedAttribute, TravelTimeAttribute, CarEdgeToPsgEdgeAttribute, OsmRoadCategoryAttribute>;
+        using VehicleInputGraph = KaRRiStaticGraph<VehicleVertexAttributes, VehicleEdgeAttributes>;
+        std::ifstream vehicleNetworkFile(vehicleNetworkFileName, std::ios::binary);
+        if (!vehicleNetworkFile.good())
+            throw std::invalid_argument("file not found -- '" + vehicleNetworkFileName + "'");
+        VehicleInputGraph vehicleInputGraph(vehicleNetworkFile);
+        vehicleNetworkFile.close();
+        std::vector<int32_t> vehGraphOrigIdToSeqId;
+        if (vehicleInputGraph.numEdges() > 0 && vehicleInputGraph.edgeId(0) == INVALID_ID) {
+            vehGraphOrigIdToSeqId.assign(vehicleInputGraph.numEdges(), INVALID_ID);
+            std::iota(vehGraphOrigIdToSeqId.begin(), vehGraphOrigIdToSeqId.end(), 0);
+            FORALL_VALID_EDGES(vehicleInputGraph, v, e) {
+                    assert(vehicleInputGraph.edgeId(e) == INVALID_ID);
+                    vehicleInputGraph.edgeTail(e) = v;
+                    vehicleInputGraph.edgeId(e) = e;
+                }
+        } else {
+            FORALL_VALID_EDGES(vehicleInputGraph, v, e) {
+                    assert(vehicleInputGraph.edgeId(e) != INVALID_ID);
+                    if (vehicleInputGraph.edgeId(e) >= vehGraphOrigIdToSeqId.size()) {
+                        const auto numElementsToBeInserted =
+                                vehicleInputGraph.edgeId(e) + 1 - vehGraphOrigIdToSeqId.size();
+                        vehGraphOrigIdToSeqId.insert(vehGraphOrigIdToSeqId.end(), numElementsToBeInserted, INVALID_ID);
+                    }
+                    assert(vehGraphOrigIdToSeqId[vehicleInputGraph.edgeId(e)] == INVALID_ID);
+                    vehGraphOrigIdToSeqId[vehicleInputGraph.edgeId(e)] = e;
+                    vehicleInputGraph.edgeTail(e) = v;
+                    vehicleInputGraph.edgeId(e) = e;
+                }
+        }
+        std::cout << "done.\n";
 
         // Read the passenger network from file.
         std::cout << "Reading passenger network from file... " << std::flush;
@@ -95,7 +136,47 @@ int main(int argc, char *argv[]) {
         psgNetworkFile.close();
         assert(psgInputGraph.numEdges() > 0 && psgInputGraph.edgeId(0) == INVALID_ID);
         int numEdgesWithMappingToCar = 0;
+        FORALL_VALID_EDGES(psgInputGraph, v, e) {
+                assert(psgInputGraph.edgeId(e) == INVALID_ID);
+                psgInputGraph.edgeTail(e) = v;
+                psgInputGraph.edgeId(e) = e;
+
+                const int eInVehGraph = psgInputGraph.toCarEdge(e);
+                if (eInVehGraph != PsgEdgeToCarEdgeAttribute::defaultValue()) {
+                    ++numEdgesWithMappingToCar;
+                    assert(eInVehGraph < vehGraphOrigIdToSeqId.size());
+                    psgInputGraph.toCarEdge(e) = vehGraphOrigIdToSeqId[eInVehGraph];
+                    assert(psgInputGraph.toCarEdge(e) < vehicleInputGraph.numEdges());
+                    vehicleInputGraph.toPsgEdge(psgInputGraph.toCarEdge(e)) = e;
+
+                    assert(psgInputGraph.latLng(psgInputGraph.edgeHead(e)).latitude() ==
+                           vehicleInputGraph.latLng(vehicleInputGraph.edgeHead(psgInputGraph.toCarEdge(e))).latitude());
+                    assert(psgInputGraph.latLng(psgInputGraph.edgeHead(e)).longitude() == vehicleInputGraph.latLng(
+                            vehicleInputGraph.edgeHead(psgInputGraph.toCarEdge(e))).longitude());
+                }
+            }
+        unused(numEdgesWithMappingToCar);
+        assert(numEdgesWithMappingToCar > 0);
         std::cout << "done.\n";
+
+        // Prepare vehicle CH environment
+        using VehCHEnv = karri::CHEnvironment<VehicleInputGraph, TravelTimeAttribute>;
+        std::unique_ptr<VehCHEnv> vehChEnv;
+        if (vehHierarchyFileName.empty()) {
+            std::cout << "Building CH... " << std::flush;
+            vehChEnv = std::make_unique<VehCHEnv>(vehicleInputGraph);
+            std::cout << "done.\n";
+        } else {
+            // Read the CH from file.
+            std::cout << "Reading CH from file... " << std::flush;
+            std::ifstream vehHierarchyFile(vehHierarchyFileName, std::ios::binary);
+            if (!vehHierarchyFile.good())
+                throw std::invalid_argument("file not found -- '" + vehHierarchyFileName + "'");
+            CH vehCh(vehHierarchyFile);
+            vehHierarchyFile.close();
+            std::cout << "done.\n";
+            vehChEnv = std::make_unique<VehCHEnv>(std::move(vehCh));
+        }
 
         // Prepare passenger CH environment
         using PsgCHEnv = karri::CHEnvironment<PsgInputGraph, TravelTimeAttribute>;

@@ -1,3 +1,0 @@
-# Required packages for python scripts
-argparse
-pandas

@@ -24,6 +24,9 @@
 
 #include <iostream>
 #include <utility>
+
+#include "Common/Constants.h"
+#include "KARRI/Algorithms/GraphTraversal/StronglyConnectedComponents.h"
 #include "KARRI/DataStructures/Graph/Graph.h"
 #include "KARRI/DataStructures/Graph/Import/PedestrianOsmImporter.h"
 #include "KARRI/DataStructures/Graph/Import/CyclistOsmImporter.h"
@@ -42,11 +45,10 @@
 #include "KARRI/DataStructures/Graph/Attributes/SpeedLimitAttribute.h"
 #include "KARRI/DataStructures/Graph/Attributes/TravelTimeAttribute.h"
 #include "KARRI/DataStructures/Graph/Attributes/XatfRoadCategoryAttribute.h"
-#include "KARRI/Tools/CommandLine/CommandLineParser.h"
-#include "KARRI/Algorithms/GraphTraversal/StronglyConnectedComponents.h"
 #include "KARRI/DataStructures/Graph/Attributes/PsgEdgeToCarEdgeAttribute.h"
 #include "KARRI/DataStructures/Graph/Attributes/CarEdgeToPsgEdgeAttribute.h"
 #include "KARRI/DataStructures/Graph/Attributes/OsmNodeIdAttribute.h"
+#include "KARRI/Tools/CommandLine/CommandLineParser.h"
 
 // Graph converter specifically for generating two matching graphs, one for cars and one for pedestrians or cyclists.
 
@@ -75,10 +77,10 @@ inline void printUsage() {
 }
 
 // A graph data structure encompassing all vertex and edge attributes available for output.
-using CarVertexAttributes = karri::VertexAttrs<
-        CoordinateAttribute, karri::LatLngAttribute, SequentialVertexIdAttribute, VertexIdAttribute, OsmNodeIdAttribute
+using CarVertexAttributes = VertexAttrs<
+        CoordinateAttribute, LatLngAttribute, SequentialVertexIdAttribute, VertexIdAttribute, OsmNodeIdAttribute
 >;
-using CarEdgeAttributes = karri::EdgeAttrs<
+using CarEdgeAttributes = EdgeAttrs<
         CapacityAttribute,
         EdgeIdAttribute,
         FreeFlowSpeedAttribute,
@@ -91,21 +93,21 @@ using CarEdgeAttributes = karri::EdgeAttrs<
         XatfRoadCategoryAttribute,
         CarEdgeToPsgEdgeAttribute
 >;
-using CarGraphT = karri::KaRRiStaticGraph<CarVertexAttributes, CarEdgeAttributes>;
+using CarGraphT = KaRRiStaticGraph<CarVertexAttributes, CarEdgeAttributes>;
 
-using PsgVertexAttributes = karri::VertexAttrs<
+using PsgVertexAttributes = VertexAttrs<
         CoordinateAttribute,
-        karri::LatLngAttribute,
+        LatLngAttribute,
         SequentialVertexIdAttribute,
         VertexIdAttribute,
         OsmNodeIdAttribute
 >;
-using PsgEdgeAttributes = karri::EdgeAttrs<
+using PsgEdgeAttributes = EdgeAttrs<
         PsgEdgeToCarEdgeAttribute,
         TravelTimeAttribute,
         OsmRoadCategoryAttribute
 >;
-using PsgGraphT = karri::KaRRiStaticGraph<PsgVertexAttributes, PsgEdgeAttributes>;
+using PsgGraphT = KaRRiStaticGraph<PsgVertexAttributes, PsgEdgeAttributes>;
 
 
 template<typename PsgOsmImporterT>

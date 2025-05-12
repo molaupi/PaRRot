@@ -28,81 +28,72 @@
 
 namespace input_location_to_lat_lng {
 
-// Transforms a given vertex to its latitude/longitude coordinates.
-template <typename GraphT>
-struct VertexToLatLngMapper {
+    // Transforms a given vertex to its latitude/longitude coordinates.
+    template<typename GraphT>
+    struct VertexToLatLngMapper {
 
-    static_assert(GraphT::template has<karri::LatLngAttribute>() && "Graph needs to contain information about LatLng attribute.");
 
-    // Input is a vertex ID
-    using InputType = int;
+        static_assert(GraphT::template has<LatLngAttribute>() &&
+                      "Graph needs to contain information about LatLng attribute.");
 
-    VertexToLatLngMapper(const GraphT& graph)
-        : graph(graph)
-    {
-    }
+        // Input is a vertex ID
+        using InputType = int;
 
-    karri::LatLng operator()(const InputType vertexId)
-    {
-        return graph.latLng(vertexId);
-    }
+        VertexToLatLngMapper(const GraphT& graph) : graph(graph) {}
 
-private:
-    const GraphT& graph;
-};
+        LatLng operator()(const InputType vertexId) {
+            return graph.latLng(vertexId);
+        }
 
-// Transforms a given edge to the latitude/longitude coordinates of its head vertex.
-template <typename GraphT>
-struct EdgeToLatLngMapper {
-    static_assert(GraphT::template has<karri::LatLngAttribute>() && "Graph needs to contain information about LatLng attribute.");
+    private:
+        const GraphT &graph;
+    };
 
-    // Input is an edge ID
-    using InputType = int;
+    // Transforms a given edge to the latitude/longitude coordinates of its head vertex.
+    template<typename GraphT>
+    struct EdgeToLatLngMapper {
+        static_assert(GraphT::template has<LatLngAttribute>() &&
+                "Graph needs to contain information about LatLng attribute.");
 
-    EdgeToLatLngMapper(const GraphT& graph)
-        : graph(graph)
-    {
-    }
+        // Input is an edge ID
+        using InputType = int;
 
-    karri::LatLng operator()(const InputType& edgeId)
-    {
-        return graph.latLng(graph.edgeHead(edgeId));
-    }
 
-private:
-    const GraphT& graph;
-};
+        EdgeToLatLngMapper(const GraphT& graph) : graph(graph) {}
 
-// Identity Mapper
-struct LatLngToLatLngMapper {
-    using InputType = karri::LatLng;
-    karri::LatLng operator()(const karri::LatLng& latLng)
-    {
-        return latLng;
-    }
-};
+        LatLng operator()(const InputType& edgeId) {
+            return graph.latLng(graph.edgeHead(edgeId));
+        }
 
-// Transforms EPSG-31467 coordinates to latitude/longitude coordinates
-struct Epsg31467ToLatLngMapper {
+    private:
+        const GraphT &graph;
+    };
 
-    static constexpr int EPSG_CODE = 31467;
-    // Input is point of X = easting and Y = northing coordinates in EPSG-31467
-    using InputType = std::pair<double, double>;
+    // Identity Mapper
+    struct LatLngToLatLngMapper {
+        using InputType = LatLng;
+        LatLng operator()(const LatLng &latLng) {
+            return latLng;
+        }
+    };
 
-    Epsg31467ToLatLngMapper()
-        : trans(EPSG_CODE, CoordinateTransformation::WGS_84)
-    {
-    }
+    // Transforms EPSG-31467 coordinates to latitude/longitude coordinates
+    struct Epsg31467ToLatLngMapper {
 
-    karri::LatLng operator()(const InputType& coordinates)
-    {
-        double lng, lat;
-        trans.forward(coordinates.first, coordinates.second, lng, lat);
-        return { lat, lng };
-    }
+        static constexpr int EPSG_CODE = 31467;
+        // Input is point of X = easting and Y = northing coordinates in EPSG-31467
+        using InputType = std::pair<double, double>;
 
-private:
-    CoordinateTransformation trans;
-};
+        Epsg31467ToLatLngMapper() : trans(EPSG_CODE, CoordinateTransformation::WGS_84) {}
+
+        LatLng operator()(const InputType &coordinates) {
+            double lng, lat;
+            trans.forward(coordinates.first, coordinates.second, lng, lat);
+            return {lat, lng};
+        }
+
+    private:
+        CoordinateTransformation trans;
+    };
 
 }

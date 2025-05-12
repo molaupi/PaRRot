@@ -31,34 +31,33 @@
 #include <string>
 #include <vector>
 
-#include <boost/dynamic_bitset.hpp>
-
-#include <KARRI/Algorithms/GraphTraversal/StronglyConnectedComponents.h>
-#include <KARRI/DataStructures/Geometry/Area.h>
-#include <KARRI/DataStructures/Geometry/Point.h>
-#include <KARRI/DataStructures/Graph/Attributes/CapacityAttribute.h>
-#include <KARRI/DataStructures/Graph/Attributes/CoordinateAttribute.h>
-#include <KARRI/DataStructures/Graph/Attributes/EdgeIdAttribute.h>
-#include <KARRI/DataStructures/Graph/Attributes/FreeFlowSpeedAttribute.h>
-#include <KARRI/DataStructures/Graph/Attributes/LatLngAttribute.h>
-#include <KARRI/DataStructures/Graph/Attributes/LengthAttribute.h>
-#include <KARRI/DataStructures/Graph/Attributes/NumLanesAttribute.h>
-#include <KARRI/DataStructures/Graph/Attributes/OsmRoadCategoryAttribute.h>
-#include <KARRI/DataStructures/Graph/Attributes/RoadGeometryAttribute.h>
-#include <KARRI/DataStructures/Graph/Attributes/SequentialVertexIdAttribute.h>
-#include <KARRI/DataStructures/Graph/Attributes/SpeedLimitAttribute.h>
-#include <KARRI/DataStructures/Graph/Attributes/TravelTimeAttribute.h>
-#include <KARRI/DataStructures/Graph/Attributes/VertexIdAttribute.h>
-#include <KARRI/DataStructures/Graph/Attributes/XatfRoadCategoryAttribute.h>
-#include <KARRI/DataStructures/Graph/Export/DefaultExporter.h>
-#include <KARRI/DataStructures/Graph/Graph.h>
-#include <KARRI/DataStructures/Graph/Import/DimacsImporter.h>
-#include <KARRI/DataStructures/Graph/Import/MatSimImporter.h>
-#include <KARRI/DataStructures/Graph/Import/VehicleOsmImporter.h>
-#include <KARRI/DataStructures/Graph/Import/VisumImporter.h>
-#include <KARRI/DataStructures/Graph/Import/XatfImporter.h>
-#include <KARRI/Tools/CommandLine/CommandLineParser.h>
-#include <KARRI/Tools/ContainerHelpers.h>
+#include "Common/Constants.h"
+#include "KARRI/Algorithms/GraphTraversal/StronglyConnectedComponents.h"
+#include "KARRI/DataStructures/Geometry/Area.h"
+#include "KARRI/DataStructures/Geometry/Point.h"
+#include "KARRI/DataStructures/Graph/Attributes/CapacityAttribute.h"
+#include "KARRI/DataStructures/Graph/Attributes/CoordinateAttribute.h"
+#include "KARRI/DataStructures/Graph/Attributes/EdgeIdAttribute.h"
+#include "KARRI/DataStructures/Graph/Attributes/FreeFlowSpeedAttribute.h"
+#include "KARRI/DataStructures/Graph/Attributes/LatLngAttribute.h"
+#include "KARRI/DataStructures/Graph/Attributes/LengthAttribute.h"
+#include "KARRI/DataStructures/Graph/Attributes/NumLanesAttribute.h"
+#include "KARRI/DataStructures/Graph/Attributes/OsmRoadCategoryAttribute.h"
+#include "KARRI/DataStructures/Graph/Attributes/RoadGeometryAttribute.h"
+#include "KARRI/DataStructures/Graph/Attributes/SequentialVertexIdAttribute.h"
+#include "KARRI/DataStructures/Graph/Attributes/SpeedLimitAttribute.h"
+#include "KARRI/DataStructures/Graph/Attributes/TravelTimeAttribute.h"
+#include "KARRI/DataStructures/Graph/Attributes/VertexIdAttribute.h"
+#include "KARRI/DataStructures/Graph/Attributes/XatfRoadCategoryAttribute.h"
+#include "KARRI/DataStructures/Graph/Export/DefaultExporter.h"
+#include "KARRI/DataStructures/Graph/Graph.h"
+#include "KARRI/DataStructures/Graph/Import/DimacsImporter.h"
+#include "KARRI/DataStructures/Graph/Import/MatSimImporter.h"
+#include "KARRI/DataStructures/Graph/Import/VehicleOsmImporter.h"
+#include "KARRI/DataStructures/Graph/Import/VisumImporter.h"
+#include "KARRI/DataStructures/Graph/Import/XatfImporter.h"
+#include "KARRI/Tools/CommandLine/CommandLineParser.h"
+#include "KARRI/Tools/ContainerHelpers.h"
 
 inline void printUsage() {
   std::cout <<
@@ -93,13 +92,13 @@ inline void printUsage() {
 }
 
 // A graph data structure encompassing all vertex and edge attributes available for output.
-using VertexAttributes = karri::VertexAttrs<
-    CoordinateAttribute, karri::LatLngAttribute, SequentialVertexIdAttribute, VertexIdAttribute>;
-using EdgeAttributes = karri::EdgeAttrs<
+using VertexAttributes = VertexAttrs<
+    CoordinateAttribute, LatLngAttribute, SequentialVertexIdAttribute, VertexIdAttribute>;
+using EdgeAttributes = EdgeAttrs<
     CapacityAttribute, EdgeIdAttribute, FreeFlowSpeedAttribute, LengthAttribute,
     NumLanesAttribute, OsmRoadCategoryAttribute, RoadGeometryAttribute, SpeedLimitAttribute,
     TravelTimeAttribute, XatfRoadCategoryAttribute>;
-using GraphT = karri::KaRRiStaticGraph<VertexAttributes, EdgeAttributes>;
+using GraphT = KaRRiStaticGraph<VertexAttributes, EdgeAttributes>;
 
 // Imports a graph according to the input file format specified on the command line and returns it.
 inline GraphT importGraph(const CommandLineParser& clp) {
@@ -150,7 +149,7 @@ inline GraphT importGraph(const CommandLineParser& clp) {
     }
     return GraphT(infile, VisumImporter(infile, sys, crs, precision, period));
   } else if (format == "xatf") {
-    return GraphT(infile, karri::XatfImporter());
+    return GraphT(infile, XatfImporter());
   } else {
     throw std::invalid_argument("unrecognized input file format -- '" + format + "'");
   }
@@ -206,7 +205,7 @@ int main(int argc, char* argv[]) {
 
     if (clp.isSet("p")) {
       std::cout << "Extracting the given region..." << std::flush;
-      boost::dynamic_bitset<> isVertexInsideRegion(graph.numVertices());
+      BitVector isVertexInsideRegion(graph.numVertices());
       Area area;
       area.importFromOsmPolyFile(clp.getValue<std::string>("p"));
       const auto box = area.boundingBox();

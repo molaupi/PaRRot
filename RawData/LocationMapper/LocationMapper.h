@@ -30,26 +30,25 @@
 // output mapper to transform the vertex in the target graph to the desired output representation (vertex or edge).
 // The output mapper may additionally make use of the original location for a better mapping.
 // The mapping can be given a location (vertex or edge) in the output graph that is avoided if desired.
-template <
-    typename InputLocationToLatLngMapperT,
-    typename LatLngToTargetVertexMapperT,
-    typename TarVertexToOutputLocT>
+template<
+        typename InputLocationToLatLngMapperT,
+        typename LatLngToTargetVertexMapperT,
+        typename TarVertexToOutputLocT>
 class LocationMapper {
 
-public:
-    LocationMapper(InputLocationToLatLngMapperT& inputLocationToLatLngMapper,
-        LatLngToTargetVertexMapperT& latLngToTargetVertexMapper,
-        TarVertexToOutputLocT& tarVertexToOutputLoc)
-        : inputLocationToLatLngMapper(inputLocationToLatLngMapper)
-        , latLngToTargetVertexMapper(latLngToTargetVertexMapper)
-        , tarVertexToOutputLoc(tarVertexToOutputLoc)
-    {
-    }
 
-    bool mapLocation(const typename InputLocationToLatLngMapperT::InputType& inputLoc,
-        int& outLoc, const int tarLocToAvoid = INVALID_ID)
-    {
-        const karri::LatLng& latLng = inputLocationToLatLngMapper(inputLoc);
+public:
+
+    LocationMapper(InputLocationToLatLngMapperT &inputLocationToLatLngMapper,
+                   LatLngToTargetVertexMapperT &latLngToTargetVertexMapper,
+                   TarVertexToOutputLocT &tarVertexToOutputLoc)
+            : inputLocationToLatLngMapper(inputLocationToLatLngMapper),
+              latLngToTargetVertexMapper(latLngToTargetVertexMapper),
+              tarVertexToOutputLoc(tarVertexToOutputLoc) {}
+
+    bool mapLocation(const typename InputLocationToLatLngMapperT::InputType &inputLoc,
+                    int &outLoc, const int tarLocToAvoid = INVALID_ID) {
+        const LatLng &latLng = inputLocationToLatLngMapper(inputLoc);
         const int tarVertex = latLngToTargetVertexMapper.mapToTargetVertex(latLng);
         if (tarVertex == INVALID_VERTEX)
             return false;
@@ -59,7 +58,9 @@ public:
     }
 
 private:
-    InputLocationToLatLngMapperT& inputLocationToLatLngMapper;
-    LatLngToTargetVertexMapperT& latLngToTargetVertexMapper;
-    TarVertexToOutputLocT& tarVertexToOutputLoc;
+
+    InputLocationToLatLngMapperT &inputLocationToLatLngMapper;
+    LatLngToTargetVertexMapperT &latLngToTargetVertexMapper;
+    TarVertexToOutputLocT &tarVertexToOutputLoc;
+
 };

@@ -25,25 +25,22 @@
 #pragma once
 
 #include "KARRI/Algorithms/Dijkstra/Dijkstra.h"
-#include "KARRI/DataStructures/Labels/BasicLabelSet.h"
 #include "KARRI/DataStructures/Labels/ParentInfo.h"
+#include "KARRI/DataStructures/Labels/BasicLabelSet.h"
+
 
 // Given a vertex in a graph, this facility chooses another vertex that is different from the original one,
 // eligible according to a given eligibility criterion and as close to the given vertex as possible.
-template <typename GraphT,
-    typename WeightT,
-    typename IsEligibleT>
+template<typename GraphT,
+        typename WeightT,
+        typename IsEligibleT>
 class CloseEligibleVertexChooser {
 
     struct StopWhenVertexWithEligibleIncEdgeFound {
-        StopWhenVertexWithEligibleIncEdgeFound(CloseEligibleVertexChooser& chooser)
-            : chooser(chooser)
-        {
-        }
+        StopWhenVertexWithEligibleIncEdgeFound(CloseEligibleVertexChooser &chooser) : chooser(chooser) {}
 
-        template <typename DistLabelT, typename DistLabelContainerT>
-        bool operator()(const int v, DistLabelT&, const DistLabelContainerT&)
-        {
+        template<typename DistLabelT, typename DistLabelContainerT>
+        bool operator()(const int v, DistLabelT &, const DistLabelContainerT &) {
             if (v != chooser.vertex && chooser.isEligible(v)) {
                 chooser.vertex = v; // Sets vertexToRepair to the vertex found.
                 return true;
@@ -51,31 +48,32 @@ class CloseEligibleVertexChooser {
             return false;
         }
 
-        CloseEligibleVertexChooser& chooser;
+        CloseEligibleVertexChooser &chooser;
     };
 
 public:
-    CloseEligibleVertexChooser(const GraphT& graph, const IsEligibleT& isEligible)
-        : graph(graph)
-        , isEligible(isEligible)
-        , vertex(INVALID_VERTEX)
-        , search(graph, { *this })
-    {
-    }
 
-    int findOtherVertex(const int v)
-    {
+    CloseEligibleVertexChooser(const GraphT &graph, const IsEligibleT &isEligible)
+            : graph(graph),
+              isEligible(isEligible),
+              vertex(INVALID_VERTEX),
+              search(graph, {*this}) {}
+
+    int findOtherVertex(const int v) {
         vertex = v;
         search.run(v);
         return vertex;
     }
 
 private:
-    const GraphT& graph;
-    const IsEligibleT& isEligible;
 
-    using Search = karri::KaRRiDijkstra<GraphT, WeightT, BasicLabelSet<0, ParentInfo::NO_PARENT_INFO>,
-        StopWhenVertexWithEligibleIncEdgeFound>;
+    const GraphT &graph;
+    const IsEligibleT &isEligible;
+
+    using Search = KaRRiDijkstra<GraphT, WeightT, BasicLabelSet<0, ParentInfo::NO_PARENT_INFO>,
+            StopWhenVertexWithEligibleIncEdgeFound>;
     int vertex;
     Search search;
+
+
 };

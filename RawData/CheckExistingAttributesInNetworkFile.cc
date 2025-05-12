@@ -24,24 +24,25 @@
 
 #include <cstdlib>
 #include <random>
-#include <KARRI/Tools/CommandLine/CommandLineParser.h>
-#include <KARRI/DataStructures/Graph/Attributes/EdgeIdAttribute.h>
-#include <KARRI/DataStructures/Graph/Graph.h>
-#include <KARRI/DataStructures/Graph/Attributes/CarEdgeToPsgEdgeAttribute.h>
-#include <KARRI/Algorithms/KaRRi/BaseObjects/Request.h>
-#include <KARRI/DataStructures/Utilities/OriginDestination.h>
-#include <KARRI/DataStructures/Graph/Attributes/EdgeTailAttribute.h>
-#include <KARRI/DataStructures/Graph/Attributes/FreeFlowSpeedAttribute.h>
-#include <KARRI/DataStructures/Graph/Attributes/LatLngAttribute.h>
-#include <KARRI/DataStructures/Graph/Attributes/OsmRoadCategoryAttribute.h>
-#include <KARRI/DataStructures/Graph/Attributes/RoadGeometryAttribute.h>
-#include <KARRI/DataStructures/Graph/Attributes/SpeedLimitAttribute.h>
-#include <KARRI/DataStructures/Graph/Attributes/TraversalCostAttribute.h>
-#include <KARRI/DataStructures/Graph/Attributes/UnpackingInfoAttribute.h>
-#include <KARRI/DataStructures/Graph/Attributes/CoordinateAttribute.h>
-#include <KARRI/DataStructures/Graph/Attributes/OsmNodeIdAttribute.h>
-#include <KARRI/DataStructures/Graph/Attributes/SequentialVertexIdAttribute.h>
-#include <KARRI/DataStructures/Graph/Attributes/VertexIdAttribute.h>
+
+#include "Common/Constants.h"
+#include "KARRI/Algorithms/KaRRi/BaseObjects/Request.h"
+#include "KARRI/DataStructures/Graph/Attributes/EdgeIdAttribute.h"
+#include "KARRI/DataStructures/Graph/Graph.h"
+#include "KARRI/DataStructures/Graph/Attributes/CarEdgeToPsgEdgeAttribute.h"
+#include "KARRI/DataStructures/Utilities/OriginDestination.h"
+#include "KARRI/DataStructures/Graph/Attributes/EdgeTailAttribute.h"
+#include "KARRI/DataStructures/Graph/Attributes/FreeFlowSpeedAttribute.h"
+#include "KARRI/DataStructures/Graph/Attributes/OsmRoadCategoryAttribute.h"
+#include "KARRI/DataStructures/Graph/Attributes/RoadGeometryAttribute.h"
+#include "KARRI/DataStructures/Graph/Attributes/SpeedLimitAttribute.h"
+#include "KARRI/DataStructures/Graph/Attributes/TraversalCostAttribute.h"
+#include "KARRI/DataStructures/Graph/Attributes/UnpackingInfoAttribute.h"
+#include "KARRI/DataStructures/Graph/Attributes/CoordinateAttribute.h"
+#include "KARRI/DataStructures/Graph/Attributes/OsmNodeIdAttribute.h"
+#include "KARRI/DataStructures/Graph/Attributes/SequentialVertexIdAttribute.h"
+#include "KARRI/DataStructures/Graph/Attributes/VertexIdAttribute.h"
+#include "KARRI/Tools/CommandLine/CommandLineParser.h"
 
 inline void printUsage() {
     std::cout <<
@@ -63,7 +64,7 @@ int main(int argc, char *argv[]) {
 
         // Read the vehicle network from file.
         std::cout << "Reading vehicle network from file... " << std::flush;
-        using EdgeAttributes = karri::EdgeAttrs<
+        using EdgeAttributes = EdgeAttrs<
                 CapacityAttribute,
                 EdgeIdAttribute,
                 EdgeTailAttribute,
@@ -78,14 +79,14 @@ int main(int argc, char *argv[]) {
                 UnpackingInfoAttribute,
                 XatfRoadCategoryAttribute
         >;
-        using VertexAttributes = karri::VertexAttrs<
+        using VertexAttributes = VertexAttrs<
                 CoordinateAttribute,
-                karri::LatLngAttribute,
+                LatLngAttribute,
                 OsmNodeIdAttribute,
                 SequentialVertexIdAttribute,
                 VertexIdAttribute
         >;
-        using InputGraph = karri::KaRRiStaticGraph<VertexAttributes, EdgeAttributes>;
+        using InputGraph = KaRRiStaticGraph<VertexAttributes, EdgeAttributes>;
         std::ifstream graphFile(graphFileName, std::ios::binary);
         if (!graphFile.good())
             throw std::invalid_argument("file not found -- '" + graphFileName + "'");
@@ -127,7 +128,7 @@ int main(int argc, char *argv[]) {
 
         if (inputGraph.get<CoordinateAttribute>(0) != CoordinateAttribute::defaultValue())
             std::cout << "Has CoordinateAttribute." << std::endl;
-        if (inputGraph.get<karri::LatLngAttribute>(0) != karri::LatLngAttribute::defaultValue())
+        if (inputGraph.get<LatLngAttribute>(0) != LatLngAttribute::defaultValue())
             std::cout << "Has LatLngAttribute." << std::endl;
         if (inputGraph.get<OsmNodeIdAttribute>(0) != OsmNodeIdAttribute::defaultValue())
             std::cout << "Has OsmNodeIdAttribute." << std::endl;

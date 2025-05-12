@@ -25,16 +25,18 @@
 #include <cstdlib>
 #include <random>
 #include <iomanip>
+#include "Common/Constants.h"
 #include "KARRI/Tools/CommandLine/CommandLineParser.h"
-#include "KARRI/DataStructures/Graph/Attributes/EdgeIdAttribute.h"
+#include "KARRI/Tools/CommandLine/ProgressBar.h"
 #include "KARRI/DataStructures/Graph/Graph.h"
+#include "KARRI/DataStructures/Graph/Attributes/EdgeIdAttribute.h"
 #include "KARRI/DataStructures/Graph/Attributes/CarEdgeToPsgEdgeAttribute.h"
-#include "KARRI/Algorithms/KaRRi/BaseObjects/Request.h"
+#include "KARRI/DataStructures/Graph/Attributes/OsmNodeIdAttribute.h"
 #include "KARRI/DataStructures/Utilities/OriginDestination.h"
 #include "KARRI/DataStructures/Geometry/Area.h"
 #include "KARRI/DataStructures/Geometry/KDTree.h"
 #include "KARRI/DataStructures/Graph/Attributes/EdgeTailAttribute.h"
-#include "KARRI/DataStructures/Graph/Attributes/OsmNodeIdAttribute.h"
+#include "KARRI/Algorithms/KaRRi/BaseObjects/Request.h"
 #include "LocationMapper/LatLngToTargetVertexMapper.h"
 #include "LocationMapper/InputLocationToLatLngMapper.h"
 #include "LocationMapper/LocationMapper.h"
@@ -65,13 +67,13 @@ inline void printUsage() {
               "  -d-col-name <name>     name of destination column in OD-pairs file (dflt: 'destination')\n"
               "  -v <file>              path to CSV file containing input vehicles\n"
               "  -l-col-name <name>     name of initial location column in vehicles file (dflt: 'initial_location')\n"
-              "  -in-repr <repr>        Representation of locations in input. Possible values:\n"
+              "  -in-repr <repr>        Representation of locations in input. Possible values: "
               "                             vertex-id   (ID of vertex in source graph; requires -src-g; default)\n"
               "                             edge-id     (ID of edge in source graph; requires -src-g)\n"
               "                             lat-lng     (Latitude and longitude in format '(lat|lng)')\n"
               "                             epsg-31467  (Easting (=X) and northing (=Y) in EPSG 31467 in format '(X|Y)')\n"
               "  -src-g <file>          source graph file in binary format (required for certain values of -in-repr)\n"
-              "  -out-repr <repr>       Representation of locations in output. Possible values:\n"
+              "  -out-repr <repr>       Representation of locations in output. Possible values: "
               "                             vertex-id (dflt)\n"
               "                             edge-id\n"
               "  -a <file>              optional .poly file describing area encompassing all OD-pairs/all vehicle locations.\n"
@@ -114,8 +116,9 @@ void transformPairs(const InputLocsT &inputPairs,
                     LocationMapperT &locationMapper,
                     const std::string &outputFileName) {
 
-    std::cout << "Transforming OD-pairs ... " << std::flush;
+    std::cout << "Transforming OD-pairs ... " << std::endl;
     std::vector<OriginDestination> outputPairs;
+    KaRRiProgressBar progressBar(inputPairs.size());
     for (const auto& curPair : inputPairs) {
 
         int mappingOfOrigin = INVALID_VERTEX;
@@ -123,12 +126,13 @@ void transformPairs(const InputLocsT &inputPairs,
         int mappingOfDestination = INVALID_VERTEX;
         success &= locationMapper.mapLocation(curPair.second, mappingOfDestination, mappingOfOrigin);
 
+        ++progressBar;
         if (!success)
             continue;
 
         outputPairs.emplace_back(mappingOfOrigin, mappingOfDestination);
     }
-    std::cout << " done.\n";
+    std::cout << "\ndone.\n";
 
     std::cout << "Writing " << outputPairs.size() << " pairs to output..." << std::flush;
     std::ofstream out(outputFileName + ".csv");
@@ -367,7 +371,7 @@ int main(int argc, char *argv[]) {
             outputFileName = outputFileName.substr(0, outputFileName.size() - 4);
         LogManager<std::ofstream>::setBaseFileName(outputFileName + ".");
 
-        using Graph = karri::KaRRiStaticGraph<karri::VertexAttrs<karri::LatLngAttribute, OsmNodeIdAttribute>, karri::EdgeAttrs<EdgeIdAttribute, CarEdgeToPsgEdgeAttribute, EdgeTailAttribute, TravelTimeAttribute>>;
+        using Graph = KaRRiStaticGraph<VertexAttrs<LatLngAttribute, OsmNodeIdAttribute>, EdgeAttrs<EdgeIdAttribute, CarEdgeToPsgEdgeAttribute, EdgeTailAttribute, TravelTimeAttribute>>;
 
         // Read target network
         std::cout << "Reading target network from file... " << std::flush;

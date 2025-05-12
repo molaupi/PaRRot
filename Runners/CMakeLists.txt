@@ -37,7 +37,7 @@ endif()
 
 # Single Queries
 
-add_executable(PTaxi RunSingleQueries.cpp)
+add_executable(PTaxi RunPTaxi.cpp)
 target_compile_definitions(PTaxi PRIVATE CSV_IO_NO_THREAD)
 target_link_libraries(PTaxi routingkit vectorclass fast_cpp_csv_parser kassert)
 target_include_directories(PTaxi PUBLIC ${PARROT_INCLUDE_DIR})

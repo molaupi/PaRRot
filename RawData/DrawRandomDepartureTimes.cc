@@ -25,9 +25,11 @@
 #include <cstdlib>
 #include <random>
 #include <fstream>
-#include <KARRI/Tools/CommandLine/CommandLineParser.h>
-#include <KARRI/Algorithms/KaRRi/BaseObjects/Request.h>
-#include <KARRI/DataStructures/Utilities/OriginDestination.h>
+
+#include "Common/Constants.h"
+#include "KARRI/Algorithms/KaRRi/BaseObjects/Request.h"
+#include "KARRI/DataStructures/Utilities/OriginDestination.h"
+#include "KARRI/Tools/CommandLine/CommandLineParser.h"
 
 inline void printUsage() {
     std::cout <<

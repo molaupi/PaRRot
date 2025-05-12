@@ -24,16 +24,18 @@
 
 
 #include <iostream>
-#include <KARRI/Tools/CommandLine/CommandLineParser.h>
-#include <KARRI/DataStructures/Geometry/LatLng.h>
-#include <KARRI/DataStructures/Containers/BitVector.h>
-#include <KARRI/DataStructures/Graph/Attributes/LatLngAttribute.h>
-#include <KARRI/DataStructures/Graph/Graph.h>
-#include <KARRI/DataStructures/Graph/Attributes/EdgeIdAttribute.h>
-#include <KARRI/DataStructures/Graph/Attributes/EdgeTailAttribute.h>
 #include <nlohmann/json.hpp>
 #include <fstream>
 #include <random>
+
+#include "Common/Constants.h"
+#include "KARRI/DataStructures/Geometry/LatLng.h"
+#include "KARRI/DataStructures/Containers/BitVector.h"
+#include "KARRI/DataStructures/Graph/Attributes/LatLngAttribute.h"
+#include "KARRI/DataStructures/Graph/Graph.h"
+#include "KARRI/DataStructures/Graph/Attributes/EdgeIdAttribute.h"
+#include "KARRI/DataStructures/Graph/Attributes/EdgeTailAttribute.h"
+#include "KARRI/Tools/CommandLine/CommandLineParser.h"
 
 inline void printUsage() {
     std::cout <<
@@ -122,7 +124,7 @@ int main(int argc, char *argv[]) {
 
         // Read the source network from file.
         std::cout << "Reading source network from file... " << std::flush;
-        using InputGraph = karri::KaRRiStaticGraph<karri::VertexAttrs<karri::LatLngAttribute>, karri::EdgeAttrs<EdgeIdAttribute, EdgeTailAttribute>>;
+        using InputGraph = KaRRiStaticGraph<VertexAttrs<LatLngAttribute>, EdgeAttrs<EdgeIdAttribute, EdgeTailAttribute>>;
         std::ifstream inputGraphFile(inputGraphFileName, std::ios::binary);
         if (!inputGraphFile.good())
             throw std::invalid_argument("file not found -- '" + inputGraphFileName + "'");
