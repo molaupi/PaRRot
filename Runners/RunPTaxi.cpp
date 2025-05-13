@@ -35,6 +35,7 @@
 
 #include "../PTaxi/PTAndTaxiTripFinder.h"
 #include "../PTaxi/FirstTaxiSharingLeg.h"
+#include "../PTaxi/StationBucketsEnvironment.h"
 
 #include <ULTRA/Algorithms/RAPTOR/ULTRARAPTOR.h>
 
@@ -128,26 +129,30 @@ inline void printUsage() {
               "Usage: karri -veh-g <vehicle network> -psg-g <passenger network> -r <requests> -v <vehicles> -o <file>\n"
               "Runs Karlsruhe Rapid Ridesharing (KaRRi) simulation with given vehicle and passenger road networks,\n"
               "requests, and vehicles. Writes output files to specified base path."
-              "  -veh-g <file>          vehicle road network in binary format.\n"
-              "  -psg-g <file>          passenger road (and path) network in binary format.\n"
-              "  -r <file>              requests in CSV format.\n"
-              "  -v <file>              vehicles in CSV format.\n"
-              "  -s <sec>               stop time (in s). (dflt: 60s)\n"
-              "  -w <sec>               maximum wait time (in s). (dflt: 300s)\n"
-              "  -a <factor>            model parameter alpha for max trip time = a * OD-dist + b (dflt: 1.7)\n"
-              "  -b <seconds>           model parameter beta for max trip time = a * OD-dist + b (dflt: 120)\n"
-              "  -p-radius <sec>        walking radius (in s) for pickup locations around origin. (dflt: 300s)\n"
-              "  -d-radius <sec>        walking radius (in s) for dropoff locations around destination. (dflt: 300s)\n"
-              "  -max-num-p <int>       max number of pickup locations to consider, sampled from all in radius. Set to 0 for no limit (dflt).\n"
-              "  -max-num-d <int>       max number of dropoff locations to consider, sampled from all in radius. Set to 0 for no limit (dflt).\n"
-              "  -always-veh            if set, the rider is not allowed to walk to their destination without a vehicle trip.\n"
-              "  -veh-h <file>          contraction hierarchy for the vehicle network in binary format.\n"
-              "  -psg-h <file>          contraction hierarchy for the passenger network in binary format.\n"
-              "  -veh-d <file>          separator decomposition for the vehicle network in binary format (needed for CCHs).\n"
-              "  -psg-d <file>          separator decomposition for the passenger network in binary format (needed for CCHs).\n"
-              "  -csv-in-LOUD-format    if set, assumes that input files are in the format used by LOUD.\n"
-              "  -o <file>              generate output files at name <file> (specify name without file suffix).\n"
-              "  -help                  show usage help text.\n";
+              "  -veh-g <file>            vehicle road network in binary format.\n"
+              "  -psg-g <file>            passenger road (and path) network in binary format.\n"
+              "  -r <file>                requests in CSV format.\n"
+              "  -v <file>                vehicles in CSV format.\n"
+              "  -s <sec>                 stop time (in s). (dflt: 60s)\n"
+              "  -w <sec>                 maximum wait time (in s). (dflt: 300s)\n"
+              "  -a <factor>              model parameter alpha for max trip time = a * OD-dist + b (dflt: 1.7)\n"
+              "  -b <seconds>             model parameter beta for max trip time = a * OD-dist + b (dflt: 120)\n"
+              "  -p-radius <sec>          walking radius (in s) for pickup locations around origin. (dflt: 300s)\n"
+              "  -d-radius <sec>          walking radius (in s) for dropoff locations around destination. (dflt: 300s)\n"
+              "  -max-num-p <int>         max number of pickup locations to consider, sampled from all in radius. Set to 0 for no limit (dflt).\n"
+              "  -max-num-d <int>         max number of dropoff locations to consider, sampled from all in radius. Set to 0 for no limit (dflt).\n"
+              "  -always-veh              if set, the rider is not allowed to walk to their destination without a vehicle trip.\n"
+              "  -veh-h <file>            contraction hierarchy for the vehicle network in binary format.\n"
+              "  -psg-h <file>            contraction hierarchy for the passenger network in binary format.\n"
+              "  -veh-d <file>            separator decomposition for the vehicle network in binary format (needed for CCHs).\n"
+              "  -psg-d <file>            separator decomposition for the passenger network in binary format (needed for CCHs).\n"
+              "  -csv-in-LOUD-format      if set, assumes that input files are in the format used by LOUD.\n"
+              "  -o <file>                generate output files at name <file> (specify name without file suffix).\n"
+              "  -raptor-data <file>      file with the precomputed RAPTOR data\n"
+              "  -station-mapping <file>  file which maps the station used in RAPTOR to vertices in the given passenger road graph\n"
+              "  -bucket-graph <file>     precomputed bucket graph for use in ULTRA in binary format.\n"
+              "  -station-buckets <file>  precomputed station buckets for use in KaRRi in binary format.\n"
+              "  -help                    show usage help text.\n";
 }
 
 int main(int argc, char *argv[]) {
@@ -186,6 +191,9 @@ int main(int argc, char *argv[]) {
         const auto raptorFileName = clp.getValue<std::string>("raptor-data");
         const auto stationMappingFileName = clp.getValue<std::string>("station-mapping");
         const auto bucketGraphFileName = clp.getValue<std::string>("bucket-graph");
+        const auto stationBucketsOutputFilename = clp.getValue<std::string>("station-buckets");
+        const auto stationBucketsPositionsFileName = stationBucketsOutputFilename + ".positions.bucket.bin";
+        const auto stationBucketsEntriesFileName = stationBucketsOutputFilename + ".entries.bucket.bin";
 
         auto outputFileName = clp.getValue<std::string>("o");
         if (endsWith(outputFileName, ".csv"))
@@ -592,31 +600,21 @@ int main(int argc, char *argv[]) {
 
         // Read the station mapping file
         std::cout << "Reading station mapping from file... " << std::flush;
-        std::vector<size_t> vertexIdOfStation;
-        int edgeId;
+        std::vector<int> vertexIdOfStation;
+        int vertexId;
         io::CSVReader<1> stationMappingFileReader(stationMappingFileName);
 
         stationMappingFileReader.read_header(io::ignore_no_column, "initial_location");
 
-        while (stationMappingFileReader.read_row(edgeId)) {
-            if (edgeId < 0) {
-                throw std::invalid_argument("invalid edge id for a station-- '" + std::to_string(edgeId) + "'");
+        while (stationMappingFileReader.read_row(vertexId)) {
+            if (vertexId < 0) {
+                throw std::invalid_argument("invalid vertex id for a station-- '" + std::to_string(vertexId) + "'");
             }
 
-            // edge id in the station mapping file is the edge id in the passenger graph
-            size_t vertexId = psgInputGraph.edgeHead(edgeId);
+            // vertex id in the station mapping file is the vertex id in the passenger graph
             vertexIdOfStation.push_back(vertexId);
         }
         std::cout << "done.\n";
-
-        // Buckets for stations bauen
-        // UnsortedLastStopBucketsEnvironment -> BucketsEnvironment: only generate 
-        // Reverse Downward Graph: anstatt UpwardGraph in LastStop
-        // GenerateEntry struct
-        // benutzt DynamicBucketContainer -> (CompactLastStopBucketContainer) optimierung
-        // DynamicBucketContainer mitgeben als Referenz
-        // LastStopBCHQuery (nur if branch)
-
 
         // Convert CH
 
@@ -761,7 +759,19 @@ int main(int argc, char *argv[]) {
         using PTAndTaxiTripFinderImpl = PTAndTaxiTripFinder<InsertionFinderImpl, VehicleInputGraph, PsgInputGraph, PsgCHEnv, PTAlgorithm>;
         PTAndTaxiTripFinderImpl ptAndTaxiTripFinder(insertionFinder, vehicleInputGraph, psgInputGraph, *psgChEnv, ptAlgorithm, order);
 
-        // Build buckets for PT stations
+        // Buckets for PT stations
+        using StationBucketsEnv = StationBucketsEnvironment<PsgInputGraph, PsgCHEnv>;
+
+        std::cout << "Read station buckets from file... " << std::flush;
+        std::ifstream inPositions(stationBucketsPositionsFileName, std::ios::binary);
+        std::ifstream inEntries(stationBucketsEntriesFileName, std::ios::binary);
+        StationBucketsEnv stationBucketsEnv(psgInputGraph, *psgChEnv);
+        stationBucketsEnv.readFrom(inPositions, inEntries);
+        std::cout << "done.\n";
+        
+        // StationBucketContainer mitgeben als Referenz
+        // LastStopBCHQuery (nur if branch)
+
 
 
 #if KARRI_OUTPUT_VEHICLE_PATHS

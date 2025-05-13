@@ -32,38 +32,20 @@
 inline void printUsage() {
     std::cout <<
               "Usage: \n"
-              "     TransformLocations -src-g <file> -tar-g <file> -p <file> -o <file>\n"
-              "     TransformLocations -src-g <file> -tar-g <file> -v <file> -o <file>\n"
-              "     TransformLocations -tar-g <file> -p <file> -in-repr <edge|vertex> -out-repr <vertex|edge> -o <file>\n"
-              "     TransformLocations -tar-g <file> -v <file> -in-repr <edge|vertex> -out-repr <vertex|edge> -o <file>\n"
-              "Takes a set of origin-destination pairs or initial vehicle locations and transforms the locations to the "
-              "geographically closest locations in a target network. The target network should geographically encompass "
-              "all locations.\n"
-              "Input locations may be specified as vertices or edges in a source network or coordinates in a GCS (see -in-repr).\n"
-              "Output locations may be vertices or edges in the target network (see -out-repr).\n"
-              "Vertices can be transformed to incident edges in the same network and vice versa by specifying identical source and\n"
-              "target networks (mapping done with vertex/edge IDs).\n"
-              "  -tar-g <file>          target graph file in binary format\n"
-              "  -d <dist>              maximum geographical distance (in m) for transformation from one vertex to another.\n"
-              "                              Set to 0 to allow unlimited radius (dflt).\n"
-              "  -psg                   if set, restrict eligible locations in target graph to those accessible by vehicles and passengers.\n"
-              "  -p <file>              path to CSV file containing input OD-pairs\n"
-              "  -o-col-name <name>     name of origin column in OD-pairs file (dflt: 'origin')\n"
-              "  -d-col-name <name>     name of destination column in OD-pairs file (dflt: 'destination')\n"
-              "  -v <file>              path to CSV file containing input vehicles\n"
-              "  -l-col-name <name>     name of initial location column in vehicles file (dflt: 'initial_location')\n"
-              "  -in-repr <repr>        Representation of locations in input. Possible values:\n"
-              "                             vertex-id   (ID of vertex in source graph; requires -src-g; default)\n"
-              "                             edge-id     (ID of edge in source graph; requires -src-g)\n"
-              "                             lat-lng     (Latitude and longitude in format '(lat|lng)')\n"
-              "                             epsg-31467  (Easting (=X) and northing (=Y) in EPSG 31467 in format '(X|Y)')\n"
-              "  -src-g <file>          source graph file in binary format (required for certain values of -in-repr)\n"
-              "  -out-repr <repr>       Representation of locations in output. Possible values:\n"
-              "                             vertex-id (dflt)\n"
-              "                             edge-id\n"
-              "  -a <file>              optional .poly file describing area encompassing all OD-pairs/all vehicle locations.\n"
-              "  -o <file>              place transformed OD-pairs in <file>\n"
-              "  -help                  display this help and exit\n";
+              "     BuildStaticBuckets -veh-g <file> -psg-g <file> -veh-h <file> -psg-h <file> -raptor-data <file> -station-mapping <file>\n"
+              "     -o-bucket-graph <file> -o-station-buckets <file>\n"
+              "Build static buckets for the preprocessing of PTaxi and write them to the specified output files.\n"
+              "1. Build the bucket graph for the passenger network for use in ULTRA algorithm.\n"
+              "2. Build the buckets for the stations in the vehicle network for use in KaRRi.\n"
+              "  -veh-g <file>              vehicle road network in binary format.\n"
+              "  -psg-g <file>              passenger road (and path) network in binary format.\n"
+              "  -veh-h <file>              contraction hierarchy for the vehicle network in binary format.\n"
+              "  -psg-h <file>              contraction hierarchy for the passenger network in binary format.\n"
+              "  -raptor-data <file>        file with the precomputed RAPTOR data\n"
+              "  -station-mapping <file>    file which maps the station used in RAPTOR to edges in the given road graph\n"
+              "  -o-bucket-graph <file>     bucket graph for ULTRA in <file>\n"
+              "  -o-station-buckets <file>  station buckets for KaRRi in <file>\n"
+              "  -help                      display this help and exit\n";
 }
 
 int main(int argc, char *argv[]) {
@@ -84,7 +66,7 @@ int main(int argc, char *argv[]) {
         const auto raptorFileName = clp.getValue<std::string>("raptor-data");
         const auto stationMappingFileName = clp.getValue<std::string>("station-mapping");
         const auto bucketGraphOutputFileName = clp.getValue<std::string>("o-bucket-graph");
-        auto stationBucketsOutputFilename = clp.getValue<std::string>("o-station-buckets");
+        const auto stationBucketsOutputFilename = clp.getValue<std::string>("o-station-buckets");
         const auto stationBucketsPositionsFileName = stationBucketsOutputFilename + ".positions.bucket.bin";
         const auto stationBucketsEntriesFileName = stationBucketsOutputFilename + ".entries.bucket.bin";
 
@@ -218,8 +200,8 @@ int main(int argc, char *argv[]) {
                 throw std::invalid_argument("invalid edge id for a station-- '" + std::to_string(edgeId) + "'");
             }
 
-            // edge id in the station mapping file is the edge id in the passenger graph
-            int vertexId = psgInputGraph.edgeHead(edgeId);
+            // edge id in the station mapping file is the edge id in the vehicle graph
+            int vertexId = vehicleInputGraph.edgeHead(edgeId);
             vertexIdOfStation.push_back(vertexId);
         }
         std::cout << "done.\n";
@@ -332,7 +314,6 @@ int main(int argc, char *argv[]) {
         std::ifstream inEntries(stationBucketsEntriesFileName, std::ios::binary);
         StationBucketsEnv readStationBucketsEnv(psgInputGraph, *psgChEnv);
         readStationBucketsEnv.readFrom(inPositions, inEntries);
-
         std::cout << "done.\n";
 
 

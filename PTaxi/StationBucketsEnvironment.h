@@ -60,20 +60,18 @@ namespace karri {
         };
 
         struct GenerateEntry {
-            explicit GenerateEntry(BucketContainer &bucketContainer, int &stationId, int &verticesVisited)
-                    : bucketContainer(bucketContainer), curStation(stationId), verticesVisited(verticesVisited) {}
+            explicit GenerateEntry(BucketContainer &bucketContainer, int &stationId)
+                    : bucketContainer(bucketContainer), curStation(stationId) {}
 
             template<typename DistLabelT, typename DistLabelContT>
             bool operator()(const int v, DistLabelT &distToV, const DistLabelContT &) {
                 auto entry = BucketEntry(curStation, distToV[0]);
                 bucketContainer.insert(v, entry);
-                ++verticesVisited;
                 return false;
             }
 
             BucketContainer &bucketContainer;
             int &curStation;
-            int &verticesVisited;
         };
         
     public:
@@ -83,8 +81,9 @@ namespace karri {
                   ch(chEnv.getCH()),
                   searchGraph(ch.downwardGraph()),
                   bucketContainer(searchGraph.numVertices()),
+                  maxDetourUntilEndOfServiceTime(INFTY),
                   entryGenSearch(
-                          chEnv.getReverseSearch(GenerateEntry(bucketContainer, stationId, verticesVisitedInSearch),
+                          chEnv.getReverseSearch(GenerateEntry(bucketContainer, stationId),
                                                  StopWhenDistanceExceeded(maxDetourUntilEndOfServiceTime)))
                 {}
 
@@ -94,8 +93,7 @@ namespace karri {
         }
 
         void generateBucketEntries(int &stationVertex) {
-            
-            verticesVisitedInSearch = 0;
+            stationId = stationVertex;
             entryGenSearch.run(ch.rank(stationVertex));
         }
 
@@ -128,8 +126,6 @@ namespace karri {
 
         int stationId;
         int maxDetourUntilEndOfServiceTime;
-        int entriesVisitedInSearch;
-        int verticesVisitedInSearch;
 
         GenerateEntriesSearch entryGenSearch;
 
