@@ -36,6 +36,7 @@
 #include "../PTaxi/PTAndTaxiTripFinder.h"
 #include "../PTaxi/FirstTaxiSharingLeg.h"
 #include "../PTaxi/StationBucketsEnvironment.h"
+#include "../PTaxi/StationBCHQuery.h"
 
 #include <ULTRA/Algorithms/RAPTOR/ULTRARAPTOR.h>
 
@@ -771,6 +772,8 @@ int main(int argc, char *argv[]) {
         
         // StationBucketContainer mitgeben als Referenz
         // LastStopBCHQuery (nur if branch)
+        using StationBCH = StationBCHQuery<VehCHEnv, StationBucketsEnv>;
+        StationBCH stationBCH(stationBucketsEnv, vertexIdOfStation.size(), *vehChEnv, routeState);
 
 
 
