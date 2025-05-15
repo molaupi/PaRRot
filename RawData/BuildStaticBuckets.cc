@@ -41,11 +41,12 @@ inline void printUsage() {
               "  -psg-g <file>              passenger road (and path) network in binary format.\n"
               "  -veh-h <file>              contraction hierarchy for the vehicle network in binary format.\n"
               "  -psg-h <file>              contraction hierarchy for the passenger network in binary format.\n"
-              "  -raptor-data <file>        file with the precomputed RAPTOR data\n"
-              "  -station-mapping <file>    file which maps the station used in RAPTOR to edges in the given road graph\n"
-              "  -o-bucket-graph <file>     bucket graph for ULTRA in <file>\n"
-              "  -o-station-buckets <file>  station buckets for KaRRi in <file>\n"
-              "  -help                      display this help and exit\n";
+              "  -raptor-data <file>        file with the precomputed RAPTOR data.\n"
+              "  -station-mapping <file>    file which maps the station used in RAPTOR to edges in the given road graph.\n"
+              "  -o-bucket-graph <file>     bucket graph for ULTRA in <file>.\n"
+              "  -o-psg-ch <file>           converted passenger graph for ULTRA in <file>.\n"
+              "  -o-station-buckets <file>  station buckets for KaRRi in <file>.\n"
+              "  -help                      display this help and exit.\n";
 }
 
 int main(int argc, char *argv[]) {
@@ -65,10 +66,10 @@ int main(int argc, char *argv[]) {
         const auto psgHierarchyFileName = clp.getValue<std::string>("psg-h");
         const auto raptorFileName = clp.getValue<std::string>("raptor-data");
         const auto stationMappingFileName = clp.getValue<std::string>("station-mapping");
+        const auto psgChOutputFileName = clp.getValue<std::string>("o-psg-ch");
         const auto bucketGraphOutputFileName = clp.getValue<std::string>("o-bucket-graph");
-        const auto stationBucketsOutputFilename = clp.getValue<std::string>("o-station-buckets");
-        const auto stationBucketsPositionsFileName = stationBucketsOutputFilename + ".positions.bucket.bin";
-        const auto stationBucketsEntriesFileName = stationBucketsOutputFilename + ".entries.bucket.bin";
+        auto stationBucketsOutputFilename = clp.getValue<std::string>("o-station-buckets");
+        if (!endsWith(stationBucketsOutputFilename, ".bucket.bin")) stationBucketsOutputFilename += ".bucket.bin";
 
         // Read the vehicle network from file.
         std::cout << "Reading vehicle network from file... " << std::flush;
@@ -200,8 +201,8 @@ int main(int argc, char *argv[]) {
                 throw std::invalid_argument("invalid edge id for a station-- '" + std::to_string(edgeId) + "'");
             }
 
-            // edge id in the station mapping file is the edge id in the vehicle graph
-            int vertexId = vehicleInputGraph.edgeHead(edgeId);
+            // vertex id in the station mapping file is the vertex id in the passenger graph
+            int vertexId = psgChEnv->getCH().rank(psgInputGraph.edgeHead(vehicleInputGraph.toPsgEdge(edgeId)));
             vertexIdOfStation.push_back(vertexId);
         }
         std::cout << "done.\n";
@@ -289,6 +290,10 @@ int main(int argc, char *argv[]) {
         ULTRACH::BucketQuery bucketGraph(psgCh, FORWARD, raptor.numberOfStops());
         std::cout << "done.\n";
 
+        std::cout << "Writing UTLRA reordered passenger CH to file... " << std::flush;
+        psgCh.writeBinary(psgChOutputFileName);
+        std::cout << "done.\n";
+
         std::cout << "Writing bucket graph to file... " << std::flush;
         bucketGraph.writeBinary(bucketGraphOutputFileName);
         std::cout << "done.\n";
@@ -304,16 +309,14 @@ int main(int argc, char *argv[]) {
         std::cout << "done.\n";
 
         std::cout << "Writing station buckets to file... " << std::flush;
-        std::ofstream outPositions(stationBucketsPositionsFileName, std::ios::binary);
-        std::ofstream outEntries(stationBucketsEntriesFileName, std::ios::binary);
-        stationBucketsEnv.writeTo(outPositions, outEntries);
+        std::ofstream out(stationBucketsOutputFilename, std::ios::binary);
+        stationBucketsEnv.writeBucketsTo(out);
         std::cout << "done.\n";
         
         std::cout << "Read station buckets from file... " << std::flush;
-        std::ifstream inPositions(stationBucketsPositionsFileName, std::ios::binary);
-        std::ifstream inEntries(stationBucketsEntriesFileName, std::ios::binary);
+        std::ifstream in(stationBucketsOutputFilename, std::ios::binary);
         StationBucketsEnv readStationBucketsEnv(psgInputGraph, *psgChEnv);
-        readStationBucketsEnv.readFrom(inPositions, inEntries);
+        readStationBucketsEnv.readBucketsFrom(in);
         std::cout << "done.\n";
 
 

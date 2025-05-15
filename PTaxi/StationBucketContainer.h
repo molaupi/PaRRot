@@ -51,14 +51,6 @@ public:
         assert(!entries.empty());
     }
     
-    const std::vector<BucketEntryT> &getEntries() const {
-        return entries;
-    }
-
-    const std::vector<BucketPosition> &getBucketPositions() const {
-        return bucketPositions;
-    }
-
     // Returns the bucket of the specified vertex.
     Bucket getBucketOf(const int vertex) const {
         assert(vertex >= 0);
@@ -101,6 +93,18 @@ public:
 
         const auto hole = BucketEntryT();
         return std::all_of(entries.begin(), entries.end(), [hole](const BucketEntryT &entry) { return entry == hole; });
+    }
+
+    // Reads the bucket container from a binary file. 
+    void readFrom(std::ifstream &in) {
+        bio::read(in, bucketPositions);
+        bio::read(in, entries);
+    }
+
+    // Writes the bucket container to a binary file
+    void writeTo(std::ofstream &out) const {
+        bio::write(out, bucketPositions);
+        bio::write(out, entries);
     }
 
 private:

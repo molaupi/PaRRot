@@ -102,7 +102,7 @@ namespace karri {
 
             template<typename DistLabelT, typename DistLabelContainerT>
             bool operator()(const int, DistLabelT &distToV, const DistLabelContainerT & /*distLabels*/) const {
-                return allSet(search.pruner.doesDistanceNotAdmitBestAsgn(distToV, false));
+                return false;
             }
 
         private:
@@ -112,6 +112,13 @@ namespace karri {
 
 
     public:
+    
+        // Pruning: 
+        // 1. no
+        // 2. from origin to v
+        // 3. consider the routes of the taxi before origin
+        // Stop:
+        // no stop criterium
 
         StationBCHQuery(
                 const StationBucketsEnvT &stationBucketsEnv,

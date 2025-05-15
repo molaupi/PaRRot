@@ -32,8 +32,10 @@
 
 namespace karri {
 
-
-// Data structure for tracking distances from origin to stations.
+// Data structure for dynamically tracking distances from pickups -> stations.
+// TODO: Adapt this copy of TentativeLastStopDistances to the new use-case.
+// Allocates entries for distances from a last stop s to all PD locs when one relevant distance from s is found
+// for the first time.
     template<typename LabelSetT>
     class TentativeStationDistances {
 
@@ -44,10 +46,12 @@ namespace karri {
     public:
 
         TentativeStationDistances(const int numberOfStations)
-                : distances(numberOfStations, DistanceLabel(INFTY)) {}
+                : startIdxForStation(numberOfStations, INVALID_INDEX),
+                  distances() {}
 
         void init(const int &numBatches) {
             curNumBatches = numBatches;
+            startIdxForStation.clear();
             distances.clear();
         }
 
@@ -56,11 +60,21 @@ namespace karri {
         }
 
         int getDistance(const int &stationId, const int &pdLocId) {
-            return distances[stationId][0];
+            assert(stationId < startIdxForStation.size());
+            const int startIdx = startIdxForStation[stationId];
+            if (startIdx == INVALID_INDEX)
+                return INFTY;
+
+            const int batchIdx = pdLocId / K;
+            return distances[startIdx + batchIdx][pdLocId % K];
         }
 
         DistanceLabel getDistancesForCurBatch(const int &stationId) {
-            return distances[stationId];
+            assert(stationId < startIdxForStation.size());
+            const int startIdx = startIdxForStation[stationId];
+            if (startIdx == INVALID_INDEX)
+                return DistanceLabel(INFTY);
+            return distances[startIdx + curBatchIdx];
         }
 
         void
@@ -69,14 +83,20 @@ namespace karri {
             if (!anySet(batchInsertMask))
                 return;
 
-            distances[stationId].setIf(distanceBatch, batchInsertMask);
+            if (startIdxForStation[stationId] == INVALID_INDEX) {
+                startIdxForStation[stationId] = distances.size();
+                distances.insert(distances.end(), curNumBatches, DistanceLabel(INFTY));
+            }
+
+            distances[startIdxForStation[stationId] + curBatchIdx].setIf(distanceBatch, batchInsertMask);
         }
 
 
     private:
 
         int curNumBatches;
-        std::vector<DistanceLabel> distances; // curNumBatches DistanceLabels per vehicle
+        TimestampedVector<int> startIdxForStation;
+        std::vector<DistanceLabel> distances; // curNumBatches DistanceLabels per station
 
         int curBatchIdx;
 

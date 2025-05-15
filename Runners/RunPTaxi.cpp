@@ -149,9 +149,10 @@ inline void printUsage() {
               "  -psg-d <file>            separator decomposition for the passenger network in binary format (needed for CCHs).\n"
               "  -csv-in-LOUD-format      if set, assumes that input files are in the format used by LOUD.\n"
               "  -o <file>                generate output files at name <file> (specify name without file suffix).\n"
-              "  -raptor-data <file>      file with the precomputed RAPTOR data\n"
-              "  -station-mapping <file>  file which maps the station used in RAPTOR to vertices in the given passenger road graph\n"
+              "  -raptor-data <file>      file with the precomputed RAPTOR data.\n"
+              "  -station-mapping <file>  file which maps the station used in RAPTOR to vertices in the given passenger road graph.\n"
               "  -bucket-graph <file>     precomputed bucket graph for use in ULTRA in binary format.\n"
+              "  -psg-ch <file>           converted passenger graph for use in ULTRA in binary format.\n"
               "  -station-buckets <file>  precomputed station buckets for use in KaRRi in binary format.\n"
               "  -help                    show usage help text.\n";
 }
@@ -192,9 +193,9 @@ int main(int argc, char *argv[]) {
         const auto raptorFileName = clp.getValue<std::string>("raptor-data");
         const auto stationMappingFileName = clp.getValue<std::string>("station-mapping");
         const auto bucketGraphFileName = clp.getValue<std::string>("bucket-graph");
-        const auto stationBucketsOutputFilename = clp.getValue<std::string>("station-buckets");
-        const auto stationBucketsPositionsFileName = stationBucketsOutputFilename + ".positions.bucket.bin";
-        const auto stationBucketsEntriesFileName = stationBucketsOutputFilename + ".entries.bucket.bin";
+        const auto psgChFileName = clp.getValue<std::string>("psg-ch");
+        auto stationBucketsFilename = clp.getValue<std::string>("station-buckets");
+        if (!endsWith(stationBucketsFilename, ".bucket.bin")) stationBucketsFilename += ".bucket.bin";
 
         auto outputFileName = clp.getValue<std::string>("o");
         if (endsWith(outputFileName, ".csv"))
@@ -602,23 +603,23 @@ int main(int argc, char *argv[]) {
         // Read the station mapping file
         std::cout << "Reading station mapping from file... " << std::flush;
         std::vector<int> vertexIdOfStation;
-        int vertexId;
+        int edgeId;
         io::CSVReader<1> stationMappingFileReader(stationMappingFileName);
 
         stationMappingFileReader.read_header(io::ignore_no_column, "initial_location");
 
-        while (stationMappingFileReader.read_row(vertexId)) {
-            if (vertexId < 0) {
-                throw std::invalid_argument("invalid vertex id for a station-- '" + std::to_string(vertexId) + "'");
+        while (stationMappingFileReader.read_row(edgeId)) {
+            if (edgeId < 0) {
+                throw std::invalid_argument("invalid edge id for a station-- '" + std::to_string(edgeId) + "'");
             }
 
             // vertex id in the station mapping file is the vertex id in the passenger graph
+            int vertexId = psgChEnv->getCH().rank(psgInputGraph.edgeHead(vehicleInputGraph.toPsgEdge(edgeId)));
             vertexIdOfStation.push_back(vertexId);
         }
         std::cout << "done.\n";
 
         // Convert CH
-
         std::cout << "Convert the karri::CH to ULTRA::CH... " << std::flush;
         std::cout << "[Vehicle CH]... " << std::flush;
 
@@ -673,59 +674,16 @@ int main(int argc, char *argv[]) {
         /* std::cout << "## Psg BACKWARD ##" << std::endl; */
         /* vehicleCh.getGraph(BACKWARD).printAnalysis(); */
 
-        std::cout << "[Passenger CH]... " << std::flush;
-        // convert from KARRI:CH to ULTRA::CH
-        auto& karriPsgCH = psgChEnv->getCH();
-        auto& karriPsgUpCHGraph = karriPsgCH.upwardGraph();
-        auto& karriPsgDownCHGraph = karriPsgCH.downwardGraph();
 
-        assert(karriPsgUpCHGraph.numVertices() == karriPsgDownCHGraph.numVertices());
-
-        CHConstructionGraph upPsgCHGraph;
-        CHConstructionGraph downPsgCHGraph;
-
-        upPsgCHGraph.addVertices(karriPsgUpCHGraph.numVertices());
-        upPsgCHGraph.reserve(karriPsgUpCHGraph.numVertices(), karriPsgUpCHGraph.numEdges());
-
-        FORALL_VALID_EDGES(karriPsgUpCHGraph, v, e)
-        {
-            auto edgeHandle = upPsgCHGraph.addEdge(Vertex(v), Vertex(karriPsgUpCHGraph.edgeHead(e)));
-            edgeHandle.set(Weight, karriPsgUpCHGraph.traversalCost(e));
-            // since UnpackingInfoAttribute is defined a little weird (via the two edges directly, rather than the ViaVertex itself), we need to get the Vertex
-            auto& unpackingInfoOfEdge = karriPsgUpCHGraph.unpackingInfo(e);
-            if (unpackingInfoOfEdge.second == INVALID_EDGE) {
-                // this case, the edge was an input edge => set invalid vertex as viavertex
-                edgeHandle.set(ViaVertex, noVertex);
-            } else {
-                // otherwise take the FromVertex / edgeTail from the first edge
-                assert(unpackingInfoOfEdge.first < karriPsgDownCHGraph.numEdges());
-                edgeHandle.set(ViaVertex, Vertex(karriPsgDownCHGraph.edgeHead(unpackingInfoOfEdge.first)));
-            }
-        }
-
-        downPsgCHGraph.addVertices(karriPsgDownCHGraph.numVertices());
-        downPsgCHGraph.reserve(karriPsgDownCHGraph.numVertices(), karriPsgDownCHGraph.numEdges());
-
-        FORALL_VALID_EDGES(karriPsgDownCHGraph, v, e)
-        {
-            auto edgeHandle = downPsgCHGraph.addEdge(Vertex(v), Vertex(karriPsgDownCHGraph.edgeHead(e)));
-            edgeHandle.set(Weight, karriPsgDownCHGraph.traversalCost(e));
-            // TODO
-            edgeHandle.set(ViaVertex, noVertex);
-            /* // since UnpackingInfoAttribute is defined a little weird (via the two edges directly, rather than the ViaVertex itself), we need to get the Vertex */
-            /* auto& unpackingInfoOfEdge = karriPsgDownCHGraph.unpackingInfo(e); */
-            /* if (unpackingInfoOfEdge.second == INVALID_EDGE) { */
-            /*     // this case, the edge was an input edge => set invalid vertex as viavertex */
-            /*     edgeHandle.set(ViaVertex, noVertex); */
-            /* } else { */
-            /*     // otherwise take the FromVertex / edgeTail from the first edge */
-            /*     assert(unpackingInfoOfEdge.first < karriPsgUpCHGraph.numEdges()); */
-            /*     edgeHandle.set(ViaVertex, Vertex(karriPsgUpCHGraph.edgeHead(unpackingInfoOfEdge.first))); */
-            /* } */
-        }
-
-        ULTRACH::CH psgCh(std::move(upPsgCHGraph), std::move(downPsgCHGraph));
+        ULTRACH::CH psgCh;
+        psgCh.readBinary(psgChFileName);
+        std::cout << "done.\n";
         
+        std::cout << "## Psg FORWARD ##" << std::endl;
+        psgCh.getGraph(FORWARD).printAnalysis();
+        std::cout << "## Psg BACKWARD ##" << std::endl;
+        psgCh.getGraph(BACKWARD).printAnalysis();
+
         // Reorder the vertices in the passenger CH
         Order order(Construct::Id, psgCh.numVertices());
         std::vector<bool> swapped(psgCh.numVertices(), false);
@@ -741,14 +699,7 @@ int main(int argc, char *argv[]) {
             swapped[stop] = true;
             swapped[newStopId] = true;
         }
-        psgCh.applyVertexOrder(order);
 
-        // std::cout << "## Psg FORWARD ##" << std::endl;
-        // psgCh.getGraph(FORWARD).printAnalysis();
-        // std::cout << "## Psg BACKWARD ##" << std::endl;
-        // psgCh.getGraph(BACKWARD).printAnalysis();
-
-        std::cout << "done.\n";
 
         // Use ULTRA CH to build ULTRA algorithm instance
         using PTAlgorithm = RAPTOR::ULTRARAPTOR<RAPTOR::AggregateProfiler, false>;
@@ -763,11 +714,10 @@ int main(int argc, char *argv[]) {
         // Buckets for PT stations
         using StationBucketsEnv = StationBucketsEnvironment<PsgInputGraph, PsgCHEnv>;
 
-        std::cout << "Read station buckets from file... " << std::flush;
-        std::ifstream inPositions(stationBucketsPositionsFileName, std::ios::binary);
-        std::ifstream inEntries(stationBucketsEntriesFileName, std::ios::binary);
+        std::cout << "Reading station buckets from file... " << std::flush;
+        std::ifstream in(stationBucketsFilename, std::ios::binary);
         StationBucketsEnv stationBucketsEnv(psgInputGraph, *psgChEnv);
-        stationBucketsEnv.readFrom(inPositions, inEntries);
+        stationBucketsEnv.readBucketsFrom(in);
         std::cout << "done.\n";
         
         // StationBucketContainer mitgeben als Referenz
