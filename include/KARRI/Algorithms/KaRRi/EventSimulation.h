@@ -287,7 +287,6 @@ namespace karri {
 
             const auto &request = requests[reqId];
             // Find best assignment 
-            // TODO: Add case for PT only trips
             auto ptAndTaxiTripFinderResponse = ptAndTaxiTripFinder.findBestAssignment(request);
             auto firstTaxiLeg = ptAndTaxiTripFinderResponse.getFirstTaxiLeg();
             auto ptLeg = ptAndTaxiTripFinderResponse.getPTLeg();
@@ -297,11 +296,12 @@ namespace karri {
     
                 applyAssignment(firstTaxiLeg, reqId, occTime);
     
-                const auto time = timer.elapsed<std::chrono::nanoseconds>();
-                eventSimulationStatsLogger << occTime << ",RequestReceipt," << time << '\n';
             } else if (ptAndTaxiTripFinderResponse.isValidPTOnlyTrip()) {
-                // TODO: Handle PT only trip
+                applyJourney(ptLeg, reqId, occTime);
             }
+
+            const auto time = timer.elapsed<std::chrono::nanoseconds>();
+            eventSimulationStatsLogger << occTime << ",RequestReceipt," << time << '\n';
         
         }
 
@@ -354,6 +354,17 @@ namespace karri {
                 default:
                     break;
             }
+        }
+
+        template<typename JourneyResponseT>
+        void applyJourney(JourneyResponseT &ptResponse, const int reqId, const int occTime) {
+            int id, key;
+            requestEvents.deleteMin(id, key); 
+            assert(id == reqId && key == occTime);
+
+            requestState[reqId] = FINISHED;
+            requestData[reqId].assignmentCost = ptResponse.getBestCost();
+
         }
 
         void handleWalkingArrivalAtDest(const int reqId, const int occTime) {

@@ -28,7 +28,8 @@
 namespace karri {
 
 
-    template<int PASSENGER_COST_SCALE = 1, int WALKING_COST_SCALE = 0, int VEHICLE_COST_SCALE = 1, int WAIT_TIME_VIOLATION_WEIGHT = 1, int TRIP_TIME_VIOLATION_WEIGHT = 10>
+    template<int PASSENGER_COST_SCALE = 1, int WALKING_COST_SCALE = 0, int VEHICLE_COST_SCALE = 1, int WAIT_TIME_VIOLATION_WEIGHT = 1, int TRIP_TIME_VIOLATION_WEIGHT = 10, 
+             int TRANSFER_COST_SCALE = 1, int TRANSFER_INCONVENIENCE_WEIGHT = 10>
     struct TimeIsMoneyCostFunction {
 
         static constexpr int PSG_WEIGHT = PASSENGER_COST_SCALE;
@@ -142,7 +143,11 @@ namespace karri {
         }
         
         static inline int calcTransferCost(const int totalTransferTime) {
-            return PASSENGER_COST_SCALE * totalTransferTime;
+            return TRANSFER_COST_SCALE * totalTransferTime;
+        }
+
+        static inline int calcTransferPenalty(const int numberOfTransfers) {
+            return TRANSFER_INCONVENIENCE_WEIGHT * numberOfTransfers;
         }
 
         template<typename DistanceLabel>

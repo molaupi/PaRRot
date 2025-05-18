@@ -18,6 +18,7 @@ public:
             bestCost = CostCalculator::calcPTJourneyCost(
                                                 getTotalTripTime(), 
                                                 getTotalTransferTime(), 
+                                                getNumberOfTransfers(),
                                                 firstTaxiLeg);
             
         }
@@ -32,12 +33,16 @@ public:
         return bestJourney;
     }
 
-    int getTotalTransferTime() const {
+    inline const int getTotalTransferTime() const {
         return valid ? RAPTOR::totalTransferTime(bestJourney) : 0;
     }
 
-    int getTotalTripTime() const {
+    inline const int getTotalTripTime() const {
         return valid ? bestJourney.back().arrivalTime - bestJourney.front().departureTime : 0;
+    }
+
+    inline const int getNumberOfTransfers() const {
+        return valid ? RAPTOR::countTrips(bestJourney) - 1 : 0;
     }
     
 private:
@@ -65,7 +70,7 @@ public:
     
     bool hasValidFirstTaxiLeg() const { 
         // check whether vehicle is set
-        return firstTaxiLeg.getBestAssignment().vehicle != nullptr; 
+        return firstTaxiLeg.getBestAssignment().vehicle != nullptr || firstTaxiLeg.isNotUsingVehicleBest(); 
     }
     
     bool hasValidPTLeg() const { 
@@ -74,7 +79,7 @@ public:
     
     bool hasValidSecondTaxiLeg() const { 
         // check whether vehicle is set
-        return secondTaxiLeg.getBestAssignment().vehicle != nullptr; 
+        return secondTaxiLeg.getBestAssignment().vehicle != nullptr || secondTaxiLeg.isNotUsingVehicleBest(); 
     }
     
     // Check if this is a valid combined trip (taxi + PT + taxi)
