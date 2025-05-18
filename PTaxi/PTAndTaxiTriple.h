@@ -11,7 +11,7 @@ namespace karri {
 class PTResult {
     using Journey = RAPTOR::Journey;
 public:
-    PTResult(bool valid) : valid(valid), bestCost(INFTY) {}
+    PTResult() : valid(false), bestCost(INFTY) {}
 
     PTResult(Journey earliestJourney, RequestState &firstTaxiLeg) 
         : bestJourney(std::move(earliestJourney)), valid(true) {
@@ -58,6 +58,10 @@ public:
     RequestState& getFirstTaxiLeg() { return firstTaxiLeg; }
     PTResult& getPTLeg() { return ptLeg; }
     RequestState& getSecondTaxiLeg() { return secondTaxiLeg; }
+
+    const int getTotalCost() const {
+        return firstTaxiLeg.getBestCost() + ptLeg.getBestCost() + secondTaxiLeg.getBestCost();
+    }
     
     bool hasValidFirstTaxiLeg() const { 
         // check whether vehicle is set

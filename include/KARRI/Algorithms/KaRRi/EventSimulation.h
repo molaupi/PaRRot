@@ -292,12 +292,16 @@ namespace karri {
             auto firstTaxiLeg = ptAndTaxiTripFinderResponse.getFirstTaxiLeg();
             auto ptLeg = ptAndTaxiTripFinderResponse.getPTLeg();
             
-            systemStateUpdater.writeBestAssignmentToLogger(firstTaxiLeg);
-
-            applyAssignment(firstTaxiLeg, reqId, occTime);
-
-            const auto time = timer.elapsed<std::chrono::nanoseconds>();
-            eventSimulationStatsLogger << occTime << ",RequestReceipt," << time << '\n';
+            if (ptAndTaxiTripFinderResponse.isValidTaxiOnlyTrip()) {
+                systemStateUpdater.writeBestAssignmentToLogger(firstTaxiLeg);
+    
+                applyAssignment(firstTaxiLeg, reqId, occTime);
+    
+                const auto time = timer.elapsed<std::chrono::nanoseconds>();
+                eventSimulationStatsLogger << occTime << ",RequestReceipt," << time << '\n';
+            } else if (ptAndTaxiTripFinderResponse.isValidPTOnlyTrip()) {
+                // TODO: Handle PT only trip
+            }
         
         }
 
