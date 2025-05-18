@@ -590,6 +590,15 @@ namespace karri {
             return walkMinCost <= vehMinCost;
         }
 
+        // Calculates the cost for a PT Journey
+        template<typename RequestContext>
+        static int calcPTJourneyCost(const int totalTripTime, const int totalTransferTime, const RequestContext &context) {
+            const int tripCost = F::calcTripCost(totalTripTime, context);
+            const int transferCost = F::calcTransferCost(totalTransferTime);
+
+            return tripCost + transferCost;
+        }
+
 
     private:
 

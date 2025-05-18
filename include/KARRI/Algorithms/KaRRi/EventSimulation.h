@@ -290,6 +290,8 @@ namespace karri {
             // TODO: Add case for PT only trips
             auto ptAndTaxiTripFinderResponse = ptAndTaxiTripFinder.findBestAssignment(request);
             auto firstTaxiLeg = ptAndTaxiTripFinderResponse.getFirstTaxiLeg();
+            auto ptLeg = ptAndTaxiTripFinderResponse.getPTLeg();
+            
             systemStateUpdater.writeBestAssignmentToLogger(firstTaxiLeg);
 
             applyAssignment(firstTaxiLeg, reqId, occTime);

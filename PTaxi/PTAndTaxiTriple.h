@@ -1,24 +1,49 @@
 #pragma once
 
-#include <KARRI/Algorithms/KaRRi/RequestState/RequestState.h>
 #include <utility>
 #include <limits>
+#include <KARRI/Algorithms/KaRRi/RequestState/RequestState.h>
+#include <ULTRA/DataStructures/RAPTOR/Entities/Journey.h>
 
 namespace karri {
 
 // TODO: Define the proper PT result type based ULTRARAPTOR result
 class PTResult {
+    using Journey = RAPTOR::Journey;
 public:
-    PTResult() = default;
+    PTResult(bool valid) : valid(valid), bestCost(INFTY) {}
 
-    PTResult(bool valid) : valid(valid) {}
+    PTResult(Journey earliestJourney, RequestState &firstTaxiLeg) 
+        : bestJourney(std::move(earliestJourney)), valid(true) {
+            bestCost = CostCalculator::calcPTJourneyCost(
+                                                getTotalTripTime(), 
+                                                getTotalTransferTime(), 
+                                                firstTaxiLeg);
+            
+        }
     
     // Flag to indicate if this PT result is valid or not
     bool isValid() const { return valid; }
     void setValid(bool isValid) { valid = isValid; }
+
+    const int &getBestCost() const { return bestCost;}
+
+    const Journey &getBestJourney() const {
+        return bestJourney;
+    }
+
+    int getTotalTransferTime() const {
+        return valid ? RAPTOR::totalTransferTime(bestJourney) : 0;
+    }
+
+    int getTotalTripTime() const {
+        return valid ? bestJourney.back().arrivalTime - bestJourney.front().departureTime : 0;
+    }
     
 private:
-    bool valid = false;
+    bool valid;
+    int bestCost;
+    Journey bestJourney;
 };
 
 class PTAndTaxiTriple {
@@ -31,8 +56,8 @@ public:
           secondTaxiLeg(secondTaxiLeg) {}
     
     RequestState& getFirstTaxiLeg() { return firstTaxiLeg; }
-    const PTResult& getPTLeg() const { return ptLeg; }
-    const RequestState& getSecondTaxiLeg() const { return secondTaxiLeg; }
+    PTResult& getPTLeg() { return ptLeg; }
+    RequestState& getSecondTaxiLeg() { return secondTaxiLeg; }
     
     bool hasValidFirstTaxiLeg() const { 
         // check whether vehicle is set

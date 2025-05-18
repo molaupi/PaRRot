@@ -36,19 +36,18 @@ namespace karri {
                   chOrder(order) {}
 
         PTAndTaxiTriple findBestAssignment(const Request &req) {
-            // First taxi leg
-            auto taxiOnlyResult = assignmentFinder.findBestAssignment(req);
+            // First taxi leg and invalid second taxi leg
+            auto taxiOnlyResponse = assignmentFinder.findBestAssignment(req);
             RequestState invalidTaxiResponse;
             
             // PT leg
             VertexQuery query = convertKARRIRequestToULTRAQuery(req);
             ptAlgorithm.run(query.source, query.departureTime, query.target);
 
-            // TODO: return found PT result with ULTRARAPTOR algorithm
-            PTResult invalidPTResponse(false);
+            PTResult ptOnlyResponse(ptAlgorithm.getEarliestJourney(query.target), taxiOnlyResponse);
             
             // Return the combined results
-            return PTAndTaxiTriple(taxiOnlyResult, invalidPTResponse, invalidTaxiResponse);
+            return PTAndTaxiTriple(taxiOnlyResponse, ptOnlyResponse, invalidTaxiResponse);
         }
 
     private:

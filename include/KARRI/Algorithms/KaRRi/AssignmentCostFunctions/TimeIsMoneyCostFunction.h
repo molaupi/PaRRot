@@ -140,6 +140,10 @@ namespace karri {
         static inline int calcVehicleCost(const int residualDetourAtEnd) {
             return VEHICLE_COST_SCALE * residualDetourAtEnd;
         }
+        
+        static inline int calcTransferCost(const int totalTransferTime) {
+            return PASSENGER_COST_SCALE * totalTransferTime;
+        }
 
         template<typename DistanceLabel>
         static inline DistanceLabel calcKVehicleCosts(const DistanceLabel &totalDetour) {
