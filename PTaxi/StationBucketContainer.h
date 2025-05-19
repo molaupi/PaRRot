@@ -111,5 +111,4 @@ private:
 
     std::vector<BucketPosition> bucketPositions;
     std::vector<BucketEntryT> entries;
-    int numEntriesVisited;
 };

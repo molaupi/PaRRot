@@ -60,18 +60,21 @@ namespace karri {
         };
 
         struct GenerateEntry {
-            explicit GenerateEntry(BucketContainer &bucketContainer, int &stationId)
-                    : bucketContainer(bucketContainer), curStation(stationId) {}
+            explicit GenerateEntry(BucketContainer &bucketContainer, int &curStationId, int &verticesVisited)
+                    : bucketContainer(bucketContainer), curStationId(curStationId), verticesVisited(verticesVisited) {}
 
             template<typename DistLabelT, typename DistLabelContT>
             bool operator()(const int v, DistLabelT &distToV, const DistLabelContT &) {
-                auto entry = BucketEntry(curStation, distToV[0]);
+                auto entry = BucketEntry(curStationId, distToV[0]);
                 bucketContainer.insert(v, entry);
+                ++verticesVisited;
                 return false;
             }
 
             BucketContainer &bucketContainer;
-            int &curStation;
+            int &curStationId;
+            int &verticesVisited;
+
         };
         
     public:
@@ -81,10 +84,9 @@ namespace karri {
                   ch(chEnv.getCH()),
                   searchGraph(ch.downwardGraph()),
                   bucketContainer(searchGraph.numVertices()),
-                  maxDetourUntilEndOfServiceTime(INFTY),
                   entryGenSearch(
-                          chEnv.getReverseSearch(GenerateEntry(bucketContainer, stationId),
-                                                 StopWhenDistanceExceeded(maxDetourUntilEndOfServiceTime)))
+                          chEnv.getReverseSearch(GenerateEntry(bucketContainer, stationId, verticesVisitedInSearch),
+                                                 StopWhenDistanceExceeded(INFTY)))
                 {}
 
 
@@ -92,9 +94,10 @@ namespace karri {
             return bucketContainer;
         }
 
-        void generateBucketEntries(int &stationVertex) {
-            stationId = stationVertex;
-            entryGenSearch.run(ch.rank(stationVertex));
+        void generateBucketEntries(const Station &station) {
+            verticesVisitedInSearch = 0;
+            stationId = station.stationId;
+            entryGenSearch.run(ch.rank(station.vertexId));
         }
 
         // Reads the bucket container from a binary file. 
@@ -119,7 +122,7 @@ namespace karri {
         BucketContainer bucketContainer;
 
         int stationId;
-        int maxDetourUntilEndOfServiceTime;
+        int verticesVisitedInSearch;
 
         GenerateEntriesSearch entryGenSearch;
 

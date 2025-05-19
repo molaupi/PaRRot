@@ -723,6 +723,7 @@ int main(int argc, char *argv[]) {
         // Run BCH queries from origin to all stations
         using StationBCH = StationBCHQuery<VehicleInputGraph, VehCHEnv, StationBucketsEnv>;
         StationBCH stationBCH(vehicleInputGraph, *vehChEnv, stationBucketsEnv, routeState, vertexIdOfStation.size());
+        PDLocs pdLocs;
         for (const auto &request: requests) {
             const PDLoc originPickup = {
                 0, // pickup id
@@ -732,10 +733,11 @@ int main(int argc, char *argv[]) {
                 0, // vehicle driving time from this pickup to the origin
                 0 // vehicle driving time from origin to this pickup
             };
-            PDLocs pdLocs;
             pdLocs.pickups.push_back(originPickup);
-            stationBCH.runBchQueries(pdLocs);
         }
+        stationBCH.runBchQueries(pdLocs);
+
+        std::cout << "Origin to all stations done.\n";
 
 
 #if KARRI_OUTPUT_VEHICLE_PATHS

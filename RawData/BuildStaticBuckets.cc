@@ -26,6 +26,7 @@
 #include <ULTRA/Algorithms/CH/Query/BucketQuery.h>
 #include <ULTRA/DataStructures/RAPTOR/Data.h>
 
+#include "../PTaxi/Station.h"
 #include "../PTaxi/StationBucketsEnvironment.h"
 
 
@@ -190,8 +191,9 @@ int main(int argc, char *argv[]) {
 
         // Read the station mapping file
         std::cout << "Reading station mapping from file... " << std::flush;
-        std::vector<int> vertexIdOfStation;
+        PTStations stations;
         int edgeId;
+        int stationId = 0;
         io::CSVReader<1> stationMappingFileReader(stationMappingFileName);
 
         stationMappingFileReader.read_header(io::ignore_no_column, "initial_location");
@@ -203,7 +205,8 @@ int main(int argc, char *argv[]) {
 
             // vertex id in the station mapping file is the vertex id in the passenger graph
             int vertexId = psgChEnv->getCH().rank(psgInputGraph.edgeHead(vehicleInputGraph.toPsgEdge(edgeId)));
-            vertexIdOfStation.push_back(vertexId);
+            stations.push_back({stationId, vertexId});
+            stationId++;
         }
         std::cout << "done.\n";
 
@@ -266,7 +269,7 @@ int main(int argc, char *argv[]) {
         Order order(Construct::Id, psgCh.numVertices());
         std::vector<bool> swapped(psgCh.numVertices(), false);
         for (const StopId stop : raptor.stops()) {
-            const auto newStopId = vertexIdOfStation[stop];
+            const auto newStopId = stations[stop].vertexId;
             assert(newStopId < order.size());
 
             if (swapped[stop] || swapped[newStopId]) {
@@ -303,8 +306,8 @@ int main(int argc, char *argv[]) {
         StationBucketsEnv stationBucketsEnv(psgInputGraph, *psgChEnv);
 
         std::cout << "Building buckets for stations... " << std::flush;
-        for (auto& vertexId : vertexIdOfStation) {
-            stationBucketsEnv.generateBucketEntries(vertexId);
+        for (const auto& station : stations) {
+            stationBucketsEnv.generateBucketEntries(station);
         }
         std::cout << "done.\n";
 
