@@ -41,7 +41,7 @@ namespace karri {
         public:
         static constexpr bool SORTED = false;
         
-        // .targetId is vehicle ID, .distToTarget is distance from last stop to vertex
+        // .targetId is station ID, .distToTarget is distance from vertex to last stop
         using BucketContainer = StationBucketContainer<BucketEntry>;
         using BucketPosition = ValueBlockPosition;
 

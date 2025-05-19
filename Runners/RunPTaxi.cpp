@@ -613,7 +613,7 @@ int main(int argc, char *argv[]) {
                 throw std::invalid_argument("invalid edge id for a station-- '" + std::to_string(edgeId) + "'");
             }
 
-            // vertex id in the station mapping file is the vertex id in the passenger graph
+            // edge id in the station mapping file is the id in the vehicle graph with mapping to passenger graph
             int vertexId = psgChEnv->getCH().rank(psgInputGraph.edgeHead(vehicleInputGraph.toPsgEdge(edgeId)));
             vertexIdOfStation.push_back(vertexId);
         }
@@ -720,11 +720,22 @@ int main(int argc, char *argv[]) {
         stationBucketsEnv.readBucketsFrom(in);
         std::cout << "done.\n";
         
-        // StationBucketContainer mitgeben als Referenz
-        // LastStopBCHQuery (nur if branch)
-        using StationBCH = StationBCHQuery<VehCHEnv, StationBucketsEnv>;
-        StationBCH stationBCH(stationBucketsEnv, vertexIdOfStation.size(), *vehChEnv, routeState);
-
+        // Run BCH queries from origin to all stations
+        using StationBCH = StationBCHQuery<VehicleInputGraph, VehCHEnv, StationBucketsEnv>;
+        StationBCH stationBCH(vehicleInputGraph, *vehChEnv, stationBucketsEnv, routeState, vertexIdOfStation.size());
+        for (const auto &request: requests) {
+            const PDLoc originPickup = {
+                0, // pickup id
+                request.origin, // pickup location in road network
+                vehicleInputGraph.toPsgEdge(edgeId), // pickup location in passenger road network
+                0, // walking time from origin to this pickup
+                0, // vehicle driving time from this pickup to the origin
+                0 // vehicle driving time from origin to this pickup
+            };
+            PDLocs pdLocs;
+            pdLocs.pickups.push_back(originPickup);
+            stationBCH.runBchQueries(pdLocs);
+        }
 
 
 #if KARRI_OUTPUT_VEHICLE_PATHS
@@ -749,8 +760,8 @@ int main(int argc, char *argv[]) {
         }
 
         // Run simulation:
-        using EventSimulationImpl = EventSimulation<InsertionFinderImpl, PTAndTaxiTripFinderImpl, SystemStateUpdaterImpl, RouteState>;
-        EventSimulationImpl eventSimulation(fleet, requests, insertionFinder, ptAndTaxiTripFinder, systemStateUpdater,
+        using EventSimulationImpl = EventSimulation<PTAndTaxiTripFinderImpl, SystemStateUpdaterImpl, RouteState>;
+        EventSimulationImpl eventSimulation(fleet, requests, ptAndTaxiTripFinder, systemStateUpdater,
                                             routeState, true);
         eventSimulation.run();
 

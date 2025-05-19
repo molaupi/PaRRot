@@ -33,8 +33,7 @@
 namespace karri {
 
 // Data structure for dynamically tracking distances from pickups -> stations.
-// TODO: Adapt this copy of TentativeLastStopDistances to the new use-case.
-// Allocates entries for distances from a last stop s to all PD locs when one relevant distance from s is found
+// Allocates entries for distances to a station s from all pickups when one relevant distance to s is found
 // for the first time.
     template<typename LabelSetT>
     class TentativeStationDistances {
