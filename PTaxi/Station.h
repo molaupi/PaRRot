@@ -29,7 +29,8 @@
 // Models a station with a station ID and a corresponding vertex ID in the passenger road network.
 struct Station {
     int stationId;
-    int vertexId;
+    int psgVertexId; // vertex ID in the passenger road network
+    int vehVertexId; // vertex ID in the vehicle road network
 };
 
 using PTStations = std::vector<Station>;

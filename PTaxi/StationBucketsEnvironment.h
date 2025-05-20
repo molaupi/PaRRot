@@ -31,6 +31,7 @@
 #include <KARRI/Algorithms/CH/CH.h>
 
 #include "StationBucketContainer.h"
+#include "Station.h"
 
 namespace karri {
 
@@ -97,7 +98,7 @@ namespace karri {
         void generateBucketEntries(const Station &station) {
             verticesVisitedInSearch = 0;
             stationId = station.stationId;
-            entryGenSearch.run(ch.rank(station.vertexId));
+            entryGenSearch.run(ch.rank(station.vehVertexId));
         }
 
         // Reads the bucket container from a binary file. 

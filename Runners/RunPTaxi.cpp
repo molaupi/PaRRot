@@ -602,8 +602,9 @@ int main(int argc, char *argv[]) {
 
         // Read the station mapping file
         std::cout << "Reading station mapping from file... " << std::flush;
-        std::vector<int> vertexIdOfStation;
+        PTStations stations;
         int edgeId;
+        int stationId = 0;
         io::CSVReader<1> stationMappingFileReader(stationMappingFileName);
 
         stationMappingFileReader.read_header(io::ignore_no_column, "initial_location");
@@ -613,9 +614,11 @@ int main(int argc, char *argv[]) {
                 throw std::invalid_argument("invalid edge id for a station-- '" + std::to_string(edgeId) + "'");
             }
 
-            // edge id in the station mapping file is the id in the vehicle graph with mapping to passenger graph
-            int vertexId = psgChEnv->getCH().rank(psgInputGraph.edgeHead(vehicleInputGraph.toPsgEdge(edgeId)));
-            vertexIdOfStation.push_back(vertexId);
+            // vertex id in the station mapping file is the vertex id in the road network
+            int psgVertexId = psgInputGraph.edgeHead(vehicleInputGraph.toPsgEdge(edgeId));
+            int vehVertexId = vehicleInputGraph.edgeHead(edgeId);
+            stations.push_back({stationId, psgVertexId, vehVertexId});
+            stationId++;
         }
         std::cout << "done.\n";
 
@@ -684,11 +687,11 @@ int main(int argc, char *argv[]) {
         std::cout << "## Psg BACKWARD ##" << std::endl;
         psgCh.getGraph(BACKWARD).printAnalysis();
 
-        // Reorder the vertices in the passenger CH
+        // Order of the vertices in the passenger CH
         Order order(Construct::Id, psgCh.numVertices());
         std::vector<bool> swapped(psgCh.numVertices(), false);
         for (const StopId stop : raptor.stops()) {
-            const auto newStopId = vertexIdOfStation[stop];
+            const auto newStopId = stations[stop].psgVertexId;
             assert(newStopId < order.size());
 
             if (swapped[stop] || swapped[newStopId]) {
@@ -712,23 +715,23 @@ int main(int argc, char *argv[]) {
         PTAndTaxiTripFinderImpl ptAndTaxiTripFinder(insertionFinder, vehicleInputGraph, psgInputGraph, *psgChEnv, ptAlgorithm, order);
 
         // Buckets for PT stations
-        using StationBucketsEnv = StationBucketsEnvironment<PsgInputGraph, PsgCHEnv>;
+        using StationBucketsEnv = StationBucketsEnvironment<VehicleInputGraph, VehCHEnv>;
 
         std::cout << "Reading station buckets from file... " << std::flush;
         std::ifstream in(stationBucketsFilename, std::ios::binary);
-        StationBucketsEnv stationBucketsEnv(psgInputGraph, *psgChEnv);
+        StationBucketsEnv stationBucketsEnv(vehicleInputGraph, *vehChEnv);
         stationBucketsEnv.readBucketsFrom(in);
         std::cout << "done.\n";
         
         // Run BCH queries from origin to all stations
         using StationBCH = StationBCHQuery<VehicleInputGraph, VehCHEnv, StationBucketsEnv>;
-        StationBCH stationBCH(vehicleInputGraph, *vehChEnv, stationBucketsEnv, routeState, vertexIdOfStation.size());
+        StationBCH stationBCH(vehicleInputGraph, *vehChEnv, stationBucketsEnv, routeState, stations.size());
         PDLocs pdLocs;
         for (const auto &request: requests) {
             const PDLoc originPickup = {
-                0, // pickup id
+                request.requestId, // pickup id
                 request.origin, // pickup location in road network
-                vehicleInputGraph.toPsgEdge(edgeId), // pickup location in passenger road network
+                vehicleInputGraph.toPsgEdge(request.origin), // pickup location in passenger road network
                 0, // walking time from origin to this pickup
                 0, // vehicle driving time from this pickup to the origin
                 0 // vehicle driving time from origin to this pickup

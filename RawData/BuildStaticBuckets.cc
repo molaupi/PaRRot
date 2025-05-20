@@ -26,7 +26,6 @@
 #include <ULTRA/Algorithms/CH/Query/BucketQuery.h>
 #include <ULTRA/DataStructures/RAPTOR/Data.h>
 
-#include "../PTaxi/Station.h"
 #include "../PTaxi/StationBucketsEnvironment.h"
 
 
@@ -203,9 +202,10 @@ int main(int argc, char *argv[]) {
                 throw std::invalid_argument("invalid edge id for a station-- '" + std::to_string(edgeId) + "'");
             }
 
-            // vertex id in the station mapping file is the vertex id in the passenger graph
-            int vertexId = psgChEnv->getCH().rank(psgInputGraph.edgeHead(vehicleInputGraph.toPsgEdge(edgeId)));
-            stations.push_back({stationId, vertexId});
+            // vertex id in the station mapping file is the vertex id in the road network
+            int psgVertexId = psgInputGraph.edgeHead(vehicleInputGraph.toPsgEdge(edgeId));
+            int vehVertexId = vehicleInputGraph.edgeHead(edgeId);
+            stations.push_back({stationId, psgVertexId, vehVertexId});
             stationId++;
         }
         std::cout << "done.\n";
@@ -269,7 +269,7 @@ int main(int argc, char *argv[]) {
         Order order(Construct::Id, psgCh.numVertices());
         std::vector<bool> swapped(psgCh.numVertices(), false);
         for (const StopId stop : raptor.stops()) {
-            const auto newStopId = stations[stop].vertexId;
+            const auto newStopId = stations[stop].psgVertexId;
             assert(newStopId < order.size());
 
             if (swapped[stop] || swapped[newStopId]) {
@@ -302,8 +302,8 @@ int main(int argc, char *argv[]) {
         std::cout << "done.\n";
 
         // Station Buckets for first taxi leg in KaRRi
-        using StationBucketsEnv = karri::StationBucketsEnvironment<PsgInputGraph, PsgCHEnv>;
-        StationBucketsEnv stationBucketsEnv(psgInputGraph, *psgChEnv);
+        using StationBucketsEnv = karri::StationBucketsEnvironment<VehicleInputGraph, VehCHEnv>;
+        StationBucketsEnv stationBucketsEnv(vehicleInputGraph, *vehChEnv);
 
         std::cout << "Building buckets for stations... " << std::flush;
         for (const auto& station : stations) {
@@ -318,7 +318,7 @@ int main(int argc, char *argv[]) {
         
         std::cout << "Read station buckets from file... " << std::flush;
         std::ifstream in(stationBucketsOutputFilename, std::ios::binary);
-        StationBucketsEnv readStationBucketsEnv(psgInputGraph, *psgChEnv);
+        StationBucketsEnv readStationBucketsEnv(vehicleInputGraph, *vehChEnv);
         readStationBucketsEnv.readBucketsFrom(in);
         std::cout << "done.\n";
 
