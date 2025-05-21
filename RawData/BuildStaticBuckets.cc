@@ -203,8 +203,8 @@ int main(int argc, char *argv[]) {
             }
 
             // vertex id in the station mapping file is the vertex id in the road network
-            int psgVertexId = psgInputGraph.edgeHead(vehicleInputGraph.toPsgEdge(edgeId));
-            int vehVertexId = vehicleInputGraph.edgeHead(edgeId);
+            int psgVertexId = psgChEnv->getCH().rank(psgInputGraph.edgeHead(vehicleInputGraph.toPsgEdge(edgeId)));
+            int vehVertexId = vehChEnv->getCH().rank(vehicleInputGraph.edgeHead(edgeId));
             stations.push_back({stationId, psgVertexId, vehVertexId});
             stationId++;
         }

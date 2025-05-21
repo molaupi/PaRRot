@@ -31,7 +31,6 @@
 #include <KARRI/Algorithms/CH/CH.h>
 
 #include "StationBucketContainer.h"
-#include "Station.h"
 
 namespace karri {
 

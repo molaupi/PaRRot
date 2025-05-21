@@ -34,9 +34,7 @@
 #include <Common/Constants.h>
 
 #include "../PTaxi/PTAndTaxiTripFinder.h"
-#include "../PTaxi/FirstTaxiSharingLeg.h"
 #include "../PTaxi/StationBucketsEnvironment.h"
-#include "../PTaxi/StationBCHQuery.h"
 
 #include <ULTRA/Algorithms/RAPTOR/ULTRARAPTOR.h>
 
@@ -615,8 +613,8 @@ int main(int argc, char *argv[]) {
             }
 
             // vertex id in the station mapping file is the vertex id in the road network
-            int psgVertexId = psgInputGraph.edgeHead(vehicleInputGraph.toPsgEdge(edgeId));
-            int vehVertexId = vehicleInputGraph.edgeHead(edgeId);
+            int psgVertexId = psgChEnv->getCH().rank(psgInputGraph.edgeHead(vehicleInputGraph.toPsgEdge(edgeId)));
+            int vehVertexId = vehChEnv->getCH().rank(vehicleInputGraph.edgeHead(edgeId));
             stations.push_back({stationId, psgVertexId, vehVertexId});
             stationId++;
         }
@@ -709,38 +707,20 @@ int main(int argc, char *argv[]) {
 
         PTAlgorithm ptAlgorithm(raptor, psgCh, bucketGraphFileName);
         
-        // -> pass ULTRA algorithm instance to PTAndTaxiTripFinder
-
-        using PTAndTaxiTripFinderImpl = PTAndTaxiTripFinder<InsertionFinderImpl, VehicleInputGraph, PsgInputGraph, PsgCHEnv, PTAlgorithm>;
-        PTAndTaxiTripFinderImpl ptAndTaxiTripFinder(insertionFinder, vehicleInputGraph, psgInputGraph, *psgChEnv, ptAlgorithm, order);
-
         // Buckets for PT stations
         using StationBucketsEnv = StationBucketsEnvironment<VehicleInputGraph, VehCHEnv>;
-
+        
         std::cout << "Reading station buckets from file... " << std::flush;
         std::ifstream in(stationBucketsFilename, std::ios::binary);
         StationBucketsEnv stationBucketsEnv(vehicleInputGraph, *vehChEnv);
         stationBucketsEnv.readBucketsFrom(in);
         std::cout << "done.\n";
         
-        // Run BCH queries from origin to all stations
-        using StationBCH = StationBCHQuery<VehicleInputGraph, VehCHEnv, StationBucketsEnv>;
-        StationBCH stationBCH(vehicleInputGraph, *vehChEnv, stationBucketsEnv, routeState, stations.size());
-        PDLocs pdLocs;
-        for (const auto &request: requests) {
-            const PDLoc originPickup = {
-                request.requestId, // pickup id
-                request.origin, // pickup location in road network
-                vehicleInputGraph.toPsgEdge(request.origin), // pickup location in passenger road network
-                0, // walking time from origin to this pickup
-                0, // vehicle driving time from this pickup to the origin
-                0 // vehicle driving time from origin to this pickup
-            };
-            pdLocs.pickups.push_back(originPickup);
-        }
-        stationBCH.runBchQueries(pdLocs);
+        
+        // -> pass ULTRA algorithm instance and stationBucketsEnv to PTAndTaxiTripFinder
+        using PTAndTaxiTripFinderImpl = PTAndTaxiTripFinder<InsertionFinderImpl, VehicleInputGraph, VehCHEnv, PsgInputGraph, PsgCHEnv, StationBucketsEnv, PTAlgorithm>;
+        PTAndTaxiTripFinderImpl ptAndTaxiTripFinder(insertionFinder, vehicleInputGraph, *vehChEnv, psgInputGraph, *psgChEnv, stations, stationBucketsEnv, ptAlgorithm, order);
 
-        std::cout << "Origin to all stations done.\n";
 
 
 #if KARRI_OUTPUT_VEHICLE_PATHS

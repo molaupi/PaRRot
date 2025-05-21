@@ -123,14 +123,12 @@ namespace karri {
                 const InputGraphT &inputGraph,
                 const CHEnvT &chEnv,
                 const StationBucketsEnvT &stationBucketsEnv,
-                const RouteState& routeState,
                 const int numberOfStations)
                 : inputGraph(inputGraph),
                   upwardSearch(chEnv.template getForwardSearch<ScanBucket, StopLastStopBCH, LabelSetT>(
                                ScanBucket(*this), StopLastStopBCH(*this))),
                   ch(chEnv.getCH()),
                   bucketContainer(stationBucketsEnv.getBuckets()),
-                  routeState(routeState),
                   tentativeDistances(numberOfStations),
                   stationsSeen(numberOfStations),
                   numVerticesSettled(0),
@@ -205,7 +203,6 @@ namespace karri {
         const InputGraphT &inputGraph;
         const CH &ch;
         const typename StationBucketsEnvT::BucketContainer &bucketContainer;
-        const RouteState& routeState;
 
         TentativeStationDistances <LabelSetT> tentativeDistances;
 
