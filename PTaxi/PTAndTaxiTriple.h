@@ -13,14 +13,20 @@ class PTResult {
 public:
     PTResult() : valid(false), bestCost(INFTY) {}
 
-    PTResult(Journey earliestJourney, RequestState &firstTaxiLeg) 
-        : bestJourney(std::move(earliestJourney)), valid(true) {
-            bestCost = CostCalculator::calcPTJourneyCost(
-                                                getTotalTripTime(), 
-                                                getTotalTransferTime(), 
-                                                getNumberOfTransfers(),
+    PTResult(std::vector<Journey> &journeyParetoFront, RequestState &firstTaxiLeg) 
+        : bestCost(INFTY), valid(true) {
+            int cost;
+            for (Journey &journey: journeyParetoFront) {
+                cost = CostCalculator::calcPTJourneyCost(
+                                                getTotalTripTime(journey), 
+                                                getTotalTransferTime(journey), 
+                                                getNumberOfTransfers(journey),
                                                 firstTaxiLeg);
-            
+                if (cost < bestCost) {
+                    bestCost = cost;
+                    bestJourney = journey;
+                };
+            }
         }
     
     // Flag to indicate if this PT result is valid or not
@@ -29,20 +35,21 @@ public:
 
     const int &getBestCost() const { return bestCost;}
 
+    // Best cost from the pareto front
     const Journey &getBestJourney() const {
         return bestJourney;
     }
 
-    inline const int getTotalTransferTime() const {
-        return valid ? RAPTOR::totalTransferTime(bestJourney) : 0;
+    inline const int getTotalTransferTime(Journey journey) const {
+        return valid ? RAPTOR::totalTransferTime(journey) : 0;
     }
 
-    inline const int getTotalTripTime() const {
-        return valid ? bestJourney.back().arrivalTime - bestJourney.front().departureTime : 0;
+    inline const int getTotalTripTime(Journey journey) const {
+        return valid ? journey.back().arrivalTime - journey.front().departureTime : 0;
     }
 
-    inline const int getNumberOfTransfers() const {
-        return valid ? RAPTOR::countTrips(bestJourney) - 1 : 0;
+    inline const int getNumberOfTransfers(Journey journey) const {
+        return valid ? RAPTOR::countTrips(journey) - 1 : 0;
     }
     
 private:

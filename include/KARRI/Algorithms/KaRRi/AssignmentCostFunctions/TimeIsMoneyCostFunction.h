@@ -142,6 +142,7 @@ namespace karri {
             return VEHICLE_COST_SCALE * residualDetourAtEnd;
         }
         
+        // waiting time / trip time
         static inline int calcTransferCost(const int totalTransferTime) {
             return TRANSFER_COST_SCALE * totalTransferTime;
         }

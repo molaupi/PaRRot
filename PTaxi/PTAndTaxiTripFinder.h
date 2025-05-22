@@ -48,14 +48,15 @@ namespace karri {
 
         PTAndTaxiTriple findBestAssignment(const Request &req) {
             // Taxi only leg and invalid taxi leg
-            auto taxiOnlyResponse = assignmentFinder.findBestAssignment(req);
+            auto taxiOnlyResponse = findBestTaxiAssignment(req);
             RequestState invalidTaxiResponse;
             
             VertexQuery query = convertKARRIRequestToULTRAQuery(req);
             ptAlgorithm.run(query.source, query.departureTime, query.target);
             
             // PT only leg and invalid PT leg
-            PTResult ptOnlyResponse(ptAlgorithm.getEarliestJourney(query.target), taxiOnlyResponse);
+            auto paretoFront = ptAlgorithm.getJourneys();
+            PTResult ptOnlyResponse(paretoFront, taxiOnlyResponse);
             PTResult invalidPTResponse;
 
             auto firstTaxiLeg = runFirstTaxiSharingLeg(req);
@@ -66,6 +67,8 @@ namespace karri {
             } else {
                 return PTAndTaxiTriple(invalidTaxiResponse, ptOnlyResponse, invalidTaxiResponse);
             }
+
+            // -> upper bound cost for next steps
         }
 
     private:
@@ -79,21 +82,41 @@ namespace karri {
             return VertexQuery(originVertex, destinationVertex, requestTime);
         }
 
+        RequestState findBestTaxiAssignment(const Request &req) {
+            // Initialize finder for this request, find PD locations:
+            RequestState rs = assignmentFinder.initializeRequestState(req);
+            stats::DispatchingPerformanceStats& stats = rs.stats();
+            // Pull this out to use in first taxi leg as well
+            PDLocs pdLocs = assignmentFinder.findPDLocs(req, stats.initializationStats);
+            stats.numPickups = pdLocs.numPickups();
+            stats.numDropoffs = pdLocs.numDropoffs();
+            assignmentFinder.initializeComponentsForRequest(rs, pdLocs, stats);
+
+            return assignmentFinder.findBestAssignment(rs, pdLocs, stats);
+        }
+
         RequestState runFirstTaxiSharingLeg(const Request &req) {
             // Run BCH queries from origin to all stations
+            // reachable pickups from origin from KaRRi
             PDLocs pdLocs;
             const PDLoc originPickup = {
                 req.requestId, // pickup id
                 req.origin, // pickup location in road network
-                vehCh.rank(vehInputGraph.toPsgEdge(req.origin)), // pickup location in passenger road network
+                vehInputGraph.toPsgEdge(req.origin), // pickup location in passenger road network
                 0, // walking time from origin to this pickup
                 0, // vehicle driving time from this pickup to the origin
                 0 // vehicle driving time from origin to this pickup
             };
             pdLocs.pickups.push_back(originPickup);
             
+            // pickup -> stations
             stationBCH.runBchQueries(pdLocs);
                         
+            // last stop -> pickups
+            // PALS Individual BCH
+            // neu laufen lassen mit eigenen pruning für alle stations
+
+            // -> assignment with earliest arrival time (explicit the earliest arrival time + taxi assignment)
             RequestState empty;
             return empty;
         }

@@ -283,7 +283,7 @@ namespace karri {
             KaRRiTimer timer;
 
             const auto &request = requests[reqId];
-            // Find best assignment 
+            // Find best assignment -> PTAndTaxiTripFinder
             auto ptAndTaxiTripFinderResponse = ptAndTaxiTripFinder.findBestAssignment(request);
             auto firstTaxiLeg = ptAndTaxiTripFinderResponse.getFirstTaxiLeg();
             auto ptLeg = ptAndTaxiTripFinderResponse.getPTLeg();
@@ -296,6 +296,8 @@ namespace karri {
             } else if (ptAndTaxiTripFinderResponse.isValidPTOnlyTrip()) {
                 applyJourney(ptLeg, reqId, occTime);
             }
+
+            // PT und taxi leg einzeln betrachten
 
             const auto time = timer.elapsed<std::chrono::nanoseconds>();
             eventSimulationStatsLogger << occTime << ",RequestReceipt," << time << '\n';

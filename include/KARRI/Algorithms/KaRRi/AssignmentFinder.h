@@ -80,15 +80,8 @@ namespace karri {
                   dalsAssignments(dalsAssignments),
                   relevantPdLocsFilter(relevantPdLocsFilter) {}
 
-        RequestState findBestAssignment(const Request &req) {
-
-            // Initialize finder for this request, find PD locations:
-            RequestState rs = requestStateInitializer.initializeRequestState(req);
-            stats::DispatchingPerformanceStats& stats = rs.stats();
-            PDLocs pdLocs = pdLocsFinder.findPDLocs(req.origin, req.destination, stats.initializationStats);
-            stats.numPickups = pdLocs.numPickups();
-            stats.numDropoffs = pdLocs.numDropoffs();
-            initializeComponentsForRequest(rs, pdLocs, stats);
+        // Separate functions into smaller steps -> for intermediate results that are useful for first taxi leg
+        RequestState findBestAssignment(RequestState &rs, PDLocs &pdLocs, stats::DispatchingPerformanceStats& stats) {
 
             // Compute PD distances:
             const auto ffPdDistances = ffPDDistanceSearches.run(rs, pdLocs, stats.pdDistancesStats);
@@ -126,17 +119,27 @@ namespace karri {
             return rs;
         }
 
-    private:
+        RequestState initializeRequestState(const Request &req) {
+            return requestStateInitializer.initializeRequestState(req);
+        }
 
+        PDLocs findPDLocs(const Request &req, stats::InitializationPerformanceStats& stats) {
+            return pdLocsFinder.findPDLocs(req.origin, req.destination, stats);
+        }
+
+        // compute PDDistances(const RequestState &requestState, const PDLocs &pdLocs, stats::PDDistancesPerformanceStats& stats) {
+        //     return ffPDDistanceSearches.run(requestState, pdLocs, stats);
+        // }
+        
         void initializeComponentsForRequest(const RequestState& requestState, const PDLocs &pdLocs, stats::DispatchingPerformanceStats& stats) {
             feasibleEllipticPickups.init(pdLocs.numPickups(), stats.ellipticBchStats);
             auto pickupsAtExistingStops = pdLocsAtExistingStopsFinder.template findPDLocsAtExistingStops<PICKUP>(pdLocs.pickups, stats.ellipticBchStats);
             feasibleEllipticPickups.initializeDistancesForPdLocsAtExistingStops(std::move(pickupsAtExistingStops), inputGraph, stats.ellipticBchStats);
-
+            
             feasibleEllipticDropoffs.init(pdLocs.numDropoffs(), stats.ellipticBchStats);
             auto dropoffsAtExistingStops = pdLocsAtExistingStopsFinder.template findPDLocsAtExistingStops<DROPOFF>(pdLocs.dropoffs, stats.ellipticBchStats);
             feasibleEllipticDropoffs.initializeDistancesForPdLocsAtExistingStops(std::move(dropoffsAtExistingStops), inputGraph, stats.ellipticBchStats);
-
+            
             // Initialize components according to new request state:
             ellipticBchSearches.init(requestState, pdLocs, stats.ellipticBchStats);
             ffPDDistanceSearches.init(requestState, pdLocs, stats.pdDistancesStats);
@@ -145,6 +148,9 @@ namespace karri {
             palsAssignments.init(requestState, pdLocs, stats.palsAssignmentsStats);
             dalsAssignments.init(requestState, pdLocs, stats.dalsAssignmentsStats);
         }
+
+
+    private:
 
         const InputGraphT &inputGraph;
         FeasibleEllipticDistancesT& feasibleEllipticPickups;
