@@ -44,7 +44,8 @@ namespace karri {
                   stationBucketsEnv(stationBucketsEnv),
                   stationBCH(vehInputGraph, vehChEnv, stationBucketsEnv, stations.size()),
                   ptAlgorithm(ptAlgorithm),
-                  chOrder(order) {}
+                  chOrder(order), 
+                  bestCost(INFTY) {}
 
         PTAndTaxiTriple findBestAssignment(const Request &req) {
             // Taxi only leg and invalid taxi leg
@@ -59,16 +60,17 @@ namespace karri {
             PTResult ptOnlyResponse(paretoFront, taxiOnlyResponse);
             PTResult invalidPTResponse;
 
+            const bool taxiOnlyHasBestCost = taxiOnlyResponse.getBestCost() < ptOnlyResponse.getBestCost();
+            bestCost = taxiOnlyHasBestCost ? taxiOnlyResponse.getBestCost() : ptOnlyResponse.getBestCost();
+
             auto firstTaxiLeg = runFirstTaxiSharingLeg(req);
             
             // Return the combined results
-            if (taxiOnlyResponse.getBestCost() < ptOnlyResponse.getBestCost()) {
+            if (taxiOnlyHasBestCost) {
                 return PTAndTaxiTriple(taxiOnlyResponse, invalidPTResponse, invalidTaxiResponse);
             } else {
                 return PTAndTaxiTriple(invalidTaxiResponse, ptOnlyResponse, invalidTaxiResponse);
             }
-
-            // -> upper bound cost for next steps
         }
 
     private:
@@ -92,25 +94,15 @@ namespace karri {
             stats.numDropoffs = pdLocs.numDropoffs();
             assignmentFinder.initializeComponentsForRequest(rs, pdLocs, stats);
 
+            relevantPdLocs = pdLocs;
+
             return assignmentFinder.findBestAssignment(rs, pdLocs, stats);
         }
 
         RequestState runFirstTaxiSharingLeg(const Request &req) {
             // Run BCH queries from origin to all stations
             // reachable pickups from origin from KaRRi
-            PDLocs pdLocs;
-            const PDLoc originPickup = {
-                req.requestId, // pickup id
-                req.origin, // pickup location in road network
-                vehInputGraph.toPsgEdge(req.origin), // pickup location in passenger road network
-                0, // walking time from origin to this pickup
-                0, // vehicle driving time from this pickup to the origin
-                0 // vehicle driving time from origin to this pickup
-            };
-            pdLocs.pickups.push_back(originPickup);
-            
-            // pickup -> stations
-            stationBCH.runBchQueries(pdLocs);
+            stationBCH.runBchQueries(relevantPdLocs);
                         
             // last stop -> pickups
             // PALS Individual BCH
@@ -126,12 +118,16 @@ namespace karri {
         const PsgInputGraphT &psgInputGraph;
         const CH &psgCh;
         const CH &vehCh;
+
         Order &chOrder;
+        PDLocs relevantPdLocs;
 
         PTStations stations;
         StationBucketsEnvT &stationBucketsEnv;
         StationBCH stationBCH;
 
         PTAlgorithmT &ptAlgorithm;
+
+        int bestCost;
     };
 }

@@ -30,6 +30,7 @@
 struct Station {
     int stationId;
     int psgVertexId; // vertex ID in the passenger road network
+    int psgChOrder; // order in the passenger CH
     int vehVertexId; // vertex ID in the vehicle road network
 };
 

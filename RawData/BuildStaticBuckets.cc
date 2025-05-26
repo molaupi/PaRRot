@@ -26,6 +26,7 @@
 #include <ULTRA/Algorithms/CH/Query/BucketQuery.h>
 #include <ULTRA/DataStructures/RAPTOR/Data.h>
 
+#include "../PTaxi/Station.h"
 #include "../PTaxi/StationBucketsEnvironment.h"
 
 
@@ -203,9 +204,10 @@ int main(int argc, char *argv[]) {
             }
 
             // vertex id in the station mapping file is the vertex id in the road network
-            int psgVertexId = psgChEnv->getCH().rank(psgInputGraph.edgeHead(vehicleInputGraph.toPsgEdge(edgeId)));
-            int vehVertexId = vehChEnv->getCH().rank(vehicleInputGraph.edgeHead(edgeId));
-            stations.push_back({stationId, psgVertexId, vehVertexId});
+            int psgVertexId = psgInputGraph.edgeHead(vehicleInputGraph.toPsgEdge(edgeId));
+            int psgChOrder = psgChEnv->getCH().rank(psgVertexId);
+            int vehVertexId = vehicleInputGraph.edgeHead(edgeId);
+            stations.push_back({stationId, psgVertexId, psgChOrder, vehVertexId});
             stationId++;
         }
         std::cout << "done.\n";
@@ -269,7 +271,7 @@ int main(int argc, char *argv[]) {
         Order order(Construct::Id, psgCh.numVertices());
         std::vector<bool> swapped(psgCh.numVertices(), false);
         for (const StopId stop : raptor.stops()) {
-            const auto newStopId = stations[stop].psgVertexId;
+            const auto newStopId = stations[stop].psgChOrder;
             assert(newStopId < order.size());
 
             if (swapped[stop] || swapped[newStopId]) {

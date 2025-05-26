@@ -204,7 +204,7 @@ namespace karri {
         const CH &ch;
         const typename StationBucketsEnvT::BucketContainer &bucketContainer;
 
-        TentativeStationDistances <LabelSetT> tentativeDistances;
+        TentativeStationDistances<LabelSetT> tentativeDistances;
 
         LightweightSubset stationsSeen;
         int numVerticesSettled;
