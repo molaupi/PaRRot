@@ -142,6 +142,10 @@ namespace karri {
                 runSearchesForPickupBatch(i, pdLocs);
         }
 
+        TentativeStationDistances<LabelSetT> &getTentativeDistances() {
+            return tentativeDistances;
+        }
+
     private:
 
         void initPickupSearches(const PDLocs& pdLocs) {

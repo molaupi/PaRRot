@@ -19,6 +19,7 @@ namespace karri {
             typename PsgInputGraphT,
             typename PsgCHEnvT,
             typename StationBucketsEnvT,
+            typename PALSToStationsT,
             typename PTAlgorithmT
     >
     class PTAndTaxiTripFinder {
@@ -33,6 +34,7 @@ namespace karri {
                             const PsgCHEnvT &psgChEnv,
                             PTStations stations,
                             StationBucketsEnvT &stationBucketsEnv,
+                            PALSToStationsT &palsToStations,
                             PTAlgorithmT &ptAlgorithm,
                             Order &order)
                 : assignmentFinder(assignmentFinder), 
@@ -43,6 +45,7 @@ namespace karri {
                   stations(stations),
                   stationBucketsEnv(stationBucketsEnv),
                   stationBCH(vehInputGraph, vehChEnv, stationBucketsEnv, stations.size()),
+                  palsToStations(palsToStations),
                   ptAlgorithm(ptAlgorithm),
                   chOrder(order), 
                   bestCost(INFTY) {}
@@ -100,6 +103,9 @@ namespace karri {
         }
 
         RequestState runFirstTaxiSharingLeg(const Request &req) {
+            RequestState rs;
+            stats::DispatchingPerformanceStats& stats = rs.stats();
+
             // Run BCH queries from origin to all stations
             // reachable pickups from origin from KaRRi
             stationBCH.runBchQueries(relevantPdLocs);
@@ -107,10 +113,10 @@ namespace karri {
             // last stop -> pickups
             // PALS Individual BCH
             // neu laufen lassen mit eigenen pruning für alle stations
+            palsToStations.tryPickupAfterLastStop(rs, stationBCH.getTentativeDistances(), relevantPdLocs, stations, stats.palsAssignmentsStats);
 
             // -> assignment with earliest arrival time (explicit the earliest arrival time + taxi assignment)
-            RequestState empty;
-            return empty;
+            return rs;
         }
 
         AssignmentFinderT &assignmentFinder;
@@ -125,6 +131,7 @@ namespace karri {
         PTStations stations;
         StationBucketsEnvT &stationBucketsEnv;
         StationBCH stationBCH;
+        PALSToStationsT &palsToStations;
 
         PTAlgorithmT &ptAlgorithm;
 

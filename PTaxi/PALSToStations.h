@@ -30,7 +30,7 @@
 #include <KARRI/Algorithms/KaRRi/LastStopSearches/LastStopBCHQuery.h>
 #include <KARRI/Algorithms/KaRRi/CostCalculator.h>
 
-namespace karri::PickupAfterLastStopStrategies {
+namespace karri {
 
     template<typename InputGraphT, typename CHEnvT, typename LastStopBucketsEnvT, typename StationDistancesT, typename LabelSetT>
     class PALSToStations {

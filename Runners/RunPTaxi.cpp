@@ -35,6 +35,8 @@
 
 #include "../PTaxi/PTAndTaxiTripFinder.h"
 #include "../PTaxi/StationBucketsEnvironment.h"
+#include "../PTaxi/PALSToStations.h"
+
 
 #include <ULTRA/Algorithms/RAPTOR/ULTRARAPTOR.h>
 
@@ -716,11 +718,16 @@ int main(int argc, char *argv[]) {
         StationBucketsEnv stationBucketsEnv(vehicleInputGraph, *vehChEnv);
         stationBucketsEnv.readBucketsFrom(in);
         std::cout << "done.\n";
+
+        // PALS strategy for stations
+        using StationDistances = TentativeStationDistances<BasicLabelSet<0, ParentInfo::FULL_PARENT_INFO>>;
+        using PALSToStationsImplementation = PALSToStations<VehicleInputGraph, VehCHEnv, LastStopBucketsEnv, StationDistances, PALSLabelSet>;
+        PALSToStationsImplementation palsToStations(vehicleInputGraph, fleet, *vehChEnv, lastStopBucketsEnv, routeState);
         
         
-        // -> pass ULTRA algorithm instance and stationBucketsEnv to PTAndTaxiTripFinder
-        using PTAndTaxiTripFinderImpl = PTAndTaxiTripFinder<InsertionFinderImpl, VehicleInputGraph, VehCHEnv, PsgInputGraph, PsgCHEnv, StationBucketsEnv, PTAlgorithm>;
-        PTAndTaxiTripFinderImpl ptAndTaxiTripFinder(insertionFinder, vehicleInputGraph, *vehChEnv, psgInputGraph, *psgChEnv, stations, stationBucketsEnv, ptAlgorithm, order);
+        // -> pass ULTRA algorithm instance and stationBucketsEnv, palsToStations to PTAndTaxiTripFinder
+        using PTAndTaxiTripFinderImpl = PTAndTaxiTripFinder<InsertionFinderImpl, VehicleInputGraph, VehCHEnv, PsgInputGraph, PsgCHEnv, StationBucketsEnv, PALSToStationsImplementation, PTAlgorithm>;
+        PTAndTaxiTripFinderImpl ptAndTaxiTripFinder(insertionFinder, vehicleInputGraph, *vehChEnv, psgInputGraph, *psgChEnv, stations, stationBucketsEnv, palsToStations, ptAlgorithm, order);
 
 
 
