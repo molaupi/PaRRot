@@ -50,6 +50,7 @@ namespace karri {
 
         void init(const int &numBatches) {
             curNumBatches = numBatches;
+            minDistancesPerPDLoc.resize(numBatches, INFTY);
             startIdxForStation.clear();
             distances.clear();
         }
@@ -69,8 +70,11 @@ namespace karri {
         }
 
         int getMinDistanceForPDLoc(const int &pdLocId) {
-            // TODO: get the correct min distance for pdLocId
-            return distances[0][pdLocId % K];
+            return minDistancesPerPDLoc[pdLocId / K].horizontalMin();
+        }
+
+        int getMinDistanceToAnyStation() {
+            return minDistanceToAnyStation;
         }
 
         DistanceLabel getDistancesForCurBatch(const int &stationId) {
@@ -92,6 +96,8 @@ namespace karri {
                 distances.insert(distances.end(), curNumBatches, DistanceLabel(INFTY));
             }
 
+            minDistanceToAnyStation = std::min(minDistanceToAnyStation, distanceBatch.horizontalMin());
+            minDistancesPerPDLoc[curBatchIdx].min(distanceBatch); 
             distances[startIdxForStation[stationId] + curBatchIdx].setIf(distanceBatch, batchInsertMask);
         }
 
@@ -101,8 +107,8 @@ namespace karri {
         int curNumBatches;
         TimestampedVector<int> startIdxForStation;
         std::vector<DistanceLabel> distances; // curNumBatches DistanceLabels per station
-        std::vector<int> minDistancesPerPDLoc; // minDistancesPerPDLoc[pdLocId] = min distance to any station s for pdLocId
-
+        std::vector<DistanceLabel> minDistancesPerPDLoc; // minDistancesPerPDLoc[pdLocId] = min distance to any station s for pdLocId
+        int minDistanceToAnyStation;
         int curBatchIdx;
 
     };

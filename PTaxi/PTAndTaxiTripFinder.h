@@ -97,12 +97,13 @@ namespace karri {
             assignmentFinder.initializeComponentsForRequest(rs, pdLocs, stats);
 
             relevantPdLocs = pdLocs;
+            curReqState = rs;
 
             return assignmentFinder.findBestAssignment(rs, pdLocs, stats);
         }
 
         RequestState runFirstTaxiSharingLeg(const Request &req) {
-            RequestState rs;
+            RequestState rs = curReqState;
             stats::DispatchingPerformanceStats& stats = rs.stats();
 
             // Run BCH queries from origin to all stations
@@ -112,6 +113,7 @@ namespace karri {
             // last stop -> pickups
             // PALS Individual BCH
             // neu laufen lassen mit eigenen pruning für alle stations
+            palsToStations.setExternalCostUpperBound(bestCost);
             palsToStations.tryPickupAfterLastStop(rs, stationBCH.getTentativeDistances(), relevantPdLocs, stations, stats.palsAssignmentsStats);
 
             // -> assignment with earliest arrival time (explicit the earliest arrival time + taxi assignment)
@@ -133,7 +135,8 @@ namespace karri {
         PALSToStationsT &palsToStations;
 
         PTAlgorithmT &ptAlgorithm;
-
+        
+        RequestState curReqState;
         int bestCost;
     };
 }

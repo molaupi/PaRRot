@@ -52,7 +52,7 @@ namespace karri {
             // assignment than the best known.
             LabelMask doesDistanceNotAdmitBestAsgn(const DistanceLabel &distancesToPickups,
                                                    const bool considerPickupWalkingDists = false) const {
-                assert(strat.curReqState->minDirectPDDist < INFTY);
+                assert(strat.minDistanceToAnyStation < INFTY);
 
                 if (strat.upperBoundCost >= INFTY) {
                     // If current best is INFTY, only indices i with distancesToPickups[i] >= INFTY or
@@ -62,7 +62,7 @@ namespace karri {
 
                 const auto &walkingDists = considerPickupWalkingDists ? strat.currentPickupWalkingDists : 0;
 
-                const DistanceLabel directDist = strat.curReqState->minDirectPDDist;
+                const DistanceLabel directDist = strat.minDistanceToAnyStation;
                 const auto detourTillDepAtPickup = distancesToPickups + DistanceLabel(InputConfig::getInstance().stopTime);
                 auto tripTimeTillDepAtPickup = detourTillDepAtPickup;
                 tripTimeTillDepAtPickup.max(walkingDists);
@@ -81,7 +81,7 @@ namespace karri {
             // minDistancesToPickups needs to be a vehicle-independent lower bound on the last stop distance.
             LabelMask doesArrTimeNotAdmitBestAsgn(const DistanceLabel &arrTimesAtPickups,
                                                   const DistanceLabel &minDistancesToPickups) const {
-                assert(strat.curReqState->minDirectPDDist < INFTY);
+                assert(strat.minDistanceToAnyStation < INFTY);
 
                 if (strat.upperBoundCost >= INFTY) {
                     // If current best is INFTY, only indices i with arrTimesAtPickups[i] >= INFTY or
@@ -89,7 +89,7 @@ namespace karri {
                     return ~((arrTimesAtPickups < INFTY) & (minDistancesToPickups < INFTY));
                 }
 
-                const DistanceLabel directDist = strat.curReqState->minDirectPDDist;
+                const DistanceLabel directDist = strat.minDistanceToAnyStation;
                 const auto detourTillDepAtPickup = minDistancesToPickups + DistanceLabel(InputConfig::getInstance().stopTime);
                 auto depTimeAtPickup = arrTimesAtPickups + DistanceLabel(InputConfig::getInstance().stopTime);
                 const auto reqTime = DistanceLabel(strat.curReqState->originalRequest.requestTime);
@@ -110,7 +110,7 @@ namespace karri {
                     return ~(distancesToPickups < INFTY);
                 }
 
-                const DistanceLabel directDist = strat.curReqState->minDirectPDDist;
+                const DistanceLabel directDist = strat.minDistanceToAnyStation;
                 const auto detourTillDepAtPickup = distancesToPickups + InputConfig::getInstance().stopTime;
                 const auto &stopIdx = strat.routeState.numStopsOf(vehId) - 1;
                 const int vehDepTimeAtLastStop = time_utils::getVehDepTimeAtStopForRequest(vehId, stopIdx,
@@ -167,6 +167,7 @@ namespace karri {
                   vehiclesSeenForPickups(fleet.size()) {}
 
         void tryPickupAfterLastStop(RequestState& requestState, StationDistancesT& stationDistances, const PDLocs& pdLocs, const PTStations& stations, stats::PalsAssignmentsPerformanceStats& stats) {
+            minDistanceToAnyStation = stationDistances.getMinDistanceToAnyStation();
             runBchSearches(requestState, stationDistances, pdLocs, stats);
             enumerateAssignments(requestState, stationDistances, pdLocs, stations, stats);
         }
@@ -321,6 +322,8 @@ namespace karri {
         DistanceLabel currentPickupWalkingDists;
         DistanceLabel curPassengerArrTimesAtPickups;
         DistanceLabel curDistancesToDest;
+
+        int minDistanceToAnyStation;
 
         int totalNumEdgeRelaxations;
         int totalNumVerticesSettled;
