@@ -34,8 +34,9 @@
 #include <Common/Constants.h>
 
 #include "../PTaxi/PTAndTaxiTripFinder.h"
-#include "../PTaxi/StationBucketsEnvironment.h"
+#include "../PTaxi/StationBCHQuery.h"
 #include "../PTaxi/PALSToStations.h"
+#include "../PTaxi/StationBucketsEnvironment.h"
 
 
 #include <ULTRA/Algorithms/RAPTOR/ULTRARAPTOR.h>
@@ -719,15 +720,25 @@ int main(int argc, char *argv[]) {
         stationBucketsEnv.readBucketsFrom(in);
         std::cout << "done.\n";
 
-        // PALS strategy for stations
-        using StationDistances = TentativeStationDistances<BasicLabelSet<0, ParentInfo::FULL_PARENT_INFO>>;
-        using PALSToStationsImplementation = PALSToStations<VehicleInputGraph, VehCHEnv, LastStopBucketsEnv, StationDistances, PALSLabelSet>;
+        using StationBCH = StationBCHQuery<VehicleInputGraph, VehCHEnv, StationBucketsEnv>;
+        
+        // PALS for stations
+        using PALSToStationsImplementation = PALSToStations<VehicleInputGraph, VehCHEnv, LastStopBucketsEnv, StationBCH::StationDistances, PALSLabelSet>;
         PALSToStationsImplementation palsToStations(vehicleInputGraph, fleet, *vehChEnv, lastStopBucketsEnv, routeState);
         
-        
         // -> pass ULTRA algorithm instance and stationBucketsEnv, palsToStations to PTAndTaxiTripFinder
-        using PTAndTaxiTripFinderImpl = PTAndTaxiTripFinder<InsertionFinderImpl, VehicleInputGraph, VehCHEnv, PsgInputGraph, PsgCHEnv, StationBucketsEnv, PALSToStationsImplementation, PTAlgorithm>;
-        PTAndTaxiTripFinderImpl ptAndTaxiTripFinder(insertionFinder, vehicleInputGraph, *vehChEnv, psgInputGraph, *psgChEnv, stations, stationBucketsEnv, palsToStations, ptAlgorithm, order);
+        using PTAndTaxiTripFinderImpl = PTAndTaxiTripFinder<
+                InsertionFinderImpl, 
+                VehicleInputGraph, 
+                VehCHEnv, 
+                PsgInputGraph, 
+                PsgCHEnv, 
+                StationBucketsEnv,
+                StationBCH,
+                PALSToStationsImplementation, 
+                PTAlgorithm>;
+        PTAndTaxiTripFinderImpl ptAndTaxiTripFinder(insertionFinder, vehicleInputGraph, *vehChEnv, psgInputGraph, *psgChEnv, 
+            stations, stationBucketsEnv, palsToStations, ptAlgorithm, order);
 
 
 

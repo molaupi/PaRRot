@@ -1,7 +1,6 @@
 #pragma once
 
 #include "PTAndTaxiTriple.h"
-#include "StationBCHQuery.h"
 #include "Station.h"
 #include <KARRI/Algorithms/CH/CH.h>
 #include <ULTRA/DataStructures/Queries/Queries.h>
@@ -19,13 +18,13 @@ namespace karri {
             typename PsgInputGraphT,
             typename PsgCHEnvT,
             typename StationBucketsEnvT,
+            typename StationBCHQueryT,
             typename PALSToStationsT,
             typename PTAlgorithmT
     >
     class PTAndTaxiTripFinder {
 
     public:
-    using StationBCH = StationBCHQuery<VehicleInputGraphT, VehCHEnvT, StationBucketsEnvT>;
     
         PTAndTaxiTripFinder(AssignmentFinderT &assignmentFinder,
                             const VehicleInputGraphT &vehInputGraph,
@@ -130,7 +129,7 @@ namespace karri {
 
         PTStations stations;
         StationBucketsEnvT &stationBucketsEnv;
-        StationBCH stationBCH;
+        StationBCHQueryT stationBCH;
         PALSToStationsT &palsToStations;
 
         PTAlgorithmT &ptAlgorithm;

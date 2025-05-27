@@ -166,7 +166,7 @@ namespace karri {
                          PickupAfterLastStopPruner(*this, CostCalculator(routeState))),
                   vehiclesSeenForPickups(fleet.size()) {}
 
-        void tryPickupAfterLastStop(RequestState& requestState, const StationDistancesT& stationDistances, const PDLocs& pdLocs, const PTStations& stations, stats::PalsAssignmentsPerformanceStats& stats) {
+        void tryPickupAfterLastStop(RequestState& requestState, StationDistancesT& stationDistances, const PDLocs& pdLocs, const PTStations& stations, stats::PalsAssignmentsPerformanceStats& stats) {
             runBchSearches(requestState, stationDistances, pdLocs, stats);
             enumerateAssignments(requestState, stationDistances, pdLocs, stations, stats);
         }
@@ -179,7 +179,7 @@ namespace karri {
     private:
 
         // Run BCH searches that find distances from last stops to pickups
-        void runBchSearches(RequestState& requestState, const StationDistancesT& stationDistances, const PDLocs& pdLocs, stats::PalsAssignmentsPerformanceStats& stats) {
+        void runBchSearches(RequestState& requestState, StationDistancesT& stationDistances, const PDLocs& pdLocs, stats::PalsAssignmentsPerformanceStats& stats) {
             KaRRiTimer timer;
 
             initPickupSearches(requestState, pdLocs);
@@ -195,7 +195,7 @@ namespace karri {
         }
 
         // Enumerate assignments with pickup after last stop
-        void enumerateAssignments(RequestState& requestState, const StationDistancesT& stationDistances, const PDLocs& pdLocs, const PTStations& stations, stats::PalsAssignmentsPerformanceStats& stats) {
+        void enumerateAssignments(RequestState& requestState, StationDistancesT& stationDistances, const PDLocs& pdLocs, const PTStations& stations, stats::PalsAssignmentsPerformanceStats& stats) {
             using namespace time_utils;
 
 
@@ -248,7 +248,7 @@ namespace karri {
 
                         // Try inserting pair with pickup after last stop:
                         ++numAssignmentsTried;
-                        asgn.distToDropoff = stationDistances.getDistance(station.stationId, asgn.pickup);
+                        asgn.distToDropoff = stationDistances.getDistance(station.stationId, asgn.pickup.id);
                         requestState.tryAssignmentWithKnownCost(asgn, calculator.calc(asgn, requestState));
                     }
                 }
@@ -279,7 +279,7 @@ namespace karri {
             distances.init(numPickupBatches);
         }
 
-        void runSearchesForPickupBatch(const int firstPickupId, const RequestState& requestState, const StationDistancesT& stationDistances, const PDLocs& pdLocs) {
+        void runSearchesForPickupBatch(const int firstPickupId, const RequestState& requestState, StationDistancesT& stationDistances, const PDLocs& pdLocs) {
             assert(firstPickupId % K == 0 && firstPickupId < pdLocs.numPickups());
 
 

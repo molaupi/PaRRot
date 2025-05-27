@@ -113,6 +113,8 @@ namespace karri {
 
 
     public:
+
+     using StationDistances = TentativeStationDistances<LabelSetT>;
     
         // Pruning: 
         // 1. no
@@ -208,7 +210,7 @@ namespace karri {
         const CH &ch;
         const typename StationBucketsEnvT::BucketContainer &bucketContainer;
 
-        TentativeStationDistances<LabelSetT> tentativeDistances;
+        StationDistances tentativeDistances;
 
         LightweightSubset stationsSeen;
         int numVerticesSettled;
