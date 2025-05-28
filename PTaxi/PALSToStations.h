@@ -250,7 +250,7 @@ namespace karri {
                         // Try inserting pair with pickup after last stop:
                         ++numAssignmentsTried;
                         asgn.distToDropoff = stationDistances.getDistance(station.stationId, asgn.pickup.id);
-                        requestState.tryAssignmentWithKnownCost(asgn, calculator.calc(asgn, requestState));
+                        requestState.tryAssignmentWithArrivalTime(asgn);
                     }
                 }
             }

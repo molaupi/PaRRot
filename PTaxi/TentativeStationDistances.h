@@ -46,6 +46,7 @@ namespace karri {
 
         TentativeStationDistances(const int numberOfStations)
                 : startIdxForStation(numberOfStations, INVALID_INDEX),
+                  minDistanceToAnyStation(INFTY),
                   distances() {}
 
         void init(const int &numBatches) {

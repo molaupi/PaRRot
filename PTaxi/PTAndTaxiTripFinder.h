@@ -116,7 +116,7 @@ namespace karri {
             palsToStations.setExternalCostUpperBound(bestCost);
             palsToStations.tryPickupAfterLastStop(rs, stationBCH.getTentativeDistances(), relevantPdLocs, stations, stats.palsAssignmentsStats);
 
-            // -> assignment with earliest arrival time (explicit the earliest arrival time + taxi assignment)
+            // -> assignment with earliest arrival time (bestAssignment + bestArrivalTime)
             return rs;
         }
 

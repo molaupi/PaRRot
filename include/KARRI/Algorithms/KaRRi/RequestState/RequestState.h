@@ -49,6 +49,7 @@ namespace karri {
                   minDirectPDDist(-1),
                   bestAssignment(),
                   bestCost(INFTY),
+                  bestArrivalTime(INFTY),
                   notUsingVehicleIsBest(false),
                   notUsingVehicleDist(INFTY) {}
 
@@ -120,6 +121,26 @@ namespace karri {
             return false;
         }
 
+        bool tryAssignmentWithArrivalTime(const Assignment &asgn) {
+            const int arrivalTime = calcArrivalTime(asgn);
+            if (arrivalTime < INFTY && (arrivalTime < bestArrivalTime ||
+                                        (arrivalTime == bestArrivalTime &&
+                                         breakCostTie(asgn, bestAssignment)))) {
+                bestAssignment = asgn;
+                bestArrivalTime = arrivalTime;
+                notUsingVehicleIsBest = false;
+                notUsingVehicleDist = INFTY;
+                return true;
+            }
+            return false;
+        }
+
+        int calcArrivalTime(const Assignment &asgn) {
+            return now() + 
+                asgn.pickup.walkingDist + asgn.distToPickup + asgn.distFromPickup + 
+                asgn.distToDropoff + asgn.distFromDropoff + asgn.dropoff.walkingDist;
+        }
+
         void tryNotUsingVehicleAssignment(const int notUsingVehDist, const int travelTimeOfDestEdge) {
             const int cost = CostCalculator::calcCostForNotUsingVehicle(notUsingVehDist, travelTimeOfDestEdge, *this);
             if (cost < bestCost) {
@@ -168,6 +189,7 @@ namespace karri {
         // Information about best known assignment for current request
         Assignment bestAssignment;
         int bestCost;
+        int bestArrivalTime;
         bool notUsingVehicleIsBest;
         int notUsingVehicleDist;
     };
