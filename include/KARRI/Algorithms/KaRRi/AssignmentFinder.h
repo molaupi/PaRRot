@@ -50,6 +50,7 @@ namespace karri {
             typename RelevantPdLocsFilterT
     >
     class AssignmentFinder {
+    using PDDistancesT = FfPdDistanceSearchesT::PDDistancesT;
 
     public:
 
@@ -81,22 +82,8 @@ namespace karri {
                   relevantPdLocsFilter(relevantPdLocsFilter) {}
 
         // Separate functions into smaller steps -> for intermediate results that are useful for first taxi leg
-        RequestState findBestAssignment(RequestState &rs, PDLocs &pdLocs, stats::DispatchingPerformanceStats& stats) {
-
-            // Compute PD distances:
-            const auto ffPdDistances = ffPDDistanceSearches.run(rs, pdLocs, stats.pdDistancesStats);
-
-            // Try PALS assignments:
-            palsAssignments.findAssignments(rs, ffPdDistances, pdLocs, stats.palsAssignmentsStats);
-
-            // Run elliptic BCH searches (populates feasibleEllipticPickups and feasibleEllipticDropoffs):
-            ellipticBchSearches.run(feasibleEllipticPickups, feasibleEllipticDropoffs, rs, pdLocs, stats.ellipticBchStats);
-
-            // Filter feasible PD-locations between ordinary stops:
-            const auto relOrdinaryPickups = relevantPdLocsFilter.filterOrdinaryPickups(feasibleEllipticPickups, rs, pdLocs,
-                                                                                       stats.ordAssignmentsStats);
-            const auto relOrdinaryDropoffs = relevantPdLocsFilter.filterOrdinaryDropoffs(feasibleEllipticDropoffs,
-                                                                                         rs, pdLocs, stats.ordAssignmentsStats);
+        RequestState findBestAssignment(RequestState &rs, PDLocs &pdLocs, 
+                PDDistancesT &ffPdDistances, RelevantPDLocs &relOrdinaryPickups, RelevantPDLocs &relOrdinaryDropoffs, stats::DispatchingPerformanceStats& stats) { 
 
             // Try ordinary assignments:
             ordAssignments.findAssignments(relOrdinaryPickups, relOrdinaryDropoffs, rs, ffPdDistances, pdLocs, stats.ordAssignmentsStats);
@@ -127,9 +114,23 @@ namespace karri {
             return pdLocsFinder.findPDLocs(req.origin, req.destination, stats);
         }
 
-        // compute PDDistances(const RequestState &requestState, const PDLocs &pdLocs, stats::PDDistancesPerformanceStats& stats) {
-        //     return ffPDDistanceSearches.run(requestState, pdLocs, stats);
-        // }
+        PDDistancesT computePDDistances(RequestState &requestState, const PDLocs &pdLocs, stats::PDDistancesPerformanceStats& stats) {
+            return ffPDDistanceSearches.run(requestState, pdLocs, stats);
+        }
+        
+        void tryPALSAssignments(RequestState &requestState, PDLocs &pdLocs, PDDistancesT &ffPdDistances, stats::PalsAssignmentsPerformanceStats stats) {
+            palsAssignments.findAssignments(requestState, ffPdDistances, pdLocs, stats);
+        }
+
+        void runEllipticBCHSearches(RequestState &requestState, PDLocs &pdLocs, stats::EllipticBCHPerformanceStats& stats) {
+            ellipticBchSearches.run(feasibleEllipticPickups, feasibleEllipticDropoffs, requestState, pdLocs, stats);
+        }
+
+        std::pair<RelevantPDLocs, RelevantPDLocs> filterOrdinaryPDLocs(const RequestState &requestState, const PDLocs &pdLocs, stats::OrdAssignmentsPerformanceStats& stats) {
+            const auto relOrdinaryPickups = relevantPdLocsFilter.filterOrdinaryPickups(feasibleEllipticPickups, requestState, pdLocs, stats);
+            const auto relOrdinaryDropoffs = relevantPdLocsFilter.filterOrdinaryDropoffs(feasibleEllipticDropoffs, requestState, pdLocs, stats);
+            return {relOrdinaryPickups, relOrdinaryDropoffs};
+        }
         
         void initializeComponentsForRequest(const RequestState& requestState, const PDLocs &pdLocs, stats::DispatchingPerformanceStats& stats) {
             feasibleEllipticPickups.init(pdLocs.numPickups(), stats.ellipticBchStats);

@@ -3,6 +3,7 @@
 #include "PTAndTaxiTriple.h"
 #include "Station.h"
 #include <KARRI/Algorithms/CH/CH.h>
+#include <KARRI/Algorithms/KaRRi/RequestState/RelevantPDLocs.h>
 #include <ULTRA/DataStructures/Queries/Queries.h>
 #include <ULTRA/Helpers/Vector/Permutation.h>
 
@@ -31,6 +32,7 @@ namespace karri {
                             const VehCHEnvT &vehChEnv,
                             const PsgInputGraphT &psgInputGraph,
                             const PsgCHEnvT &psgChEnv,
+                            const Fleet &fleet,
                             PTStations stations,
                             StationBucketsEnvT &stationBucketsEnv,
                             PALSToStationsT &palsToStations,
@@ -47,7 +49,8 @@ namespace karri {
                   palsToStations(palsToStations),
                   ptAlgorithm(ptAlgorithm),
                   chOrder(order), 
-                  bestCost(INFTY) {}
+                  bestCost(INFTY),
+                  relOrdinaryPickups(fleet.size()) {}
 
         PTAndTaxiTriple findBestAssignment(const Request &req) {
             // Taxi only leg and invalid taxi leg
@@ -90,7 +93,7 @@ namespace karri {
             // Initialize finder for this request, find PD locations:
             RequestState rs = assignmentFinder.initializeRequestState(req);
             stats::DispatchingPerformanceStats& stats = rs.stats();
-            // Pull this out to use in first taxi leg as well
+            
             PDLocs pdLocs = assignmentFinder.findPDLocs(req, stats.initializationStats);
             stats.numPickups = pdLocs.numPickups();
             stats.numDropoffs = pdLocs.numDropoffs();
@@ -99,13 +102,30 @@ namespace karri {
             relevantPdLocs = pdLocs;
             curReqState = rs;
 
-            return assignmentFinder.findBestAssignment(rs, pdLocs, stats);
+            auto ffPdDistances = assignmentFinder.computePDDistances(rs, pdLocs, stats.pdDistancesStats);
+
+            assignmentFinder.tryPALSAssignments(rs, pdLocs, ffPdDistances, stats.palsAssignmentsStats);
+            assignmentFinder.runEllipticBCHSearches(rs, pdLocs, stats.ellipticBchStats);
+
+            auto relOrdinaryPdLocs = assignmentFinder.filterOrdinaryPDLocs(rs, pdLocs, stats.ordAssignmentsStats);
+
+            relOrdinaryPickups = relOrdinaryPdLocs.first;
+
+            return assignmentFinder.findBestAssignment(rs, pdLocs, ffPdDistances, relOrdinaryPdLocs.first, relOrdinaryPdLocs.second, stats);
         }
 
         RequestState runFirstTaxiSharingLeg(const Request &req) {
             RequestState rs = curReqState;
             stats::DispatchingPerformanceStats& stats = rs.stats();
 
+            runPALS(rs, stats.palsAssignmentsStats);
+            runOrdinary(rs, stats.ordAssignmentsStats);
+
+            // -> assignment with earliest arrival time (bestAssignment + bestArrivalTime)
+            return rs;
+        }
+
+        void runPALS(RequestState &rs, stats::PalsAssignmentsPerformanceStats &stats) {
             // Run BCH queries from origin to all stations
             // reachable pickups from origin from KaRRi
             stationBCH.runBchQueries(relevantPdLocs);
@@ -114,10 +134,13 @@ namespace karri {
             // PALS Individual BCH
             // neu laufen lassen mit eigenen pruning für alle stations
             palsToStations.setExternalCostUpperBound(bestCost);
-            palsToStations.tryPickupAfterLastStop(rs, stationBCH.getTentativeDistances(), relevantPdLocs, stations, stats.palsAssignmentsStats);
+            palsToStations.tryPickupAfterLastStop(rs, stationBCH.getTentativeDistances(), relevantPdLocs, stations, stats);
+        }
 
-            // -> assignment with earliest arrival time (bestAssignment + bestArrivalTime)
-            return rs;
+        void runOrdinary(RequestState &rs, stats::OrdAssignmentsPerformanceStats &stats) {
+            for (const auto &vehId : relOrdinaryPickups.getVehiclesWithRelevantPDLocs()) {
+                std::cout << "Vehicle with relevant pickup: " << vehId << std::endl;
+            }
         }
 
         AssignmentFinderT &assignmentFinder;
@@ -128,6 +151,7 @@ namespace karri {
 
         Order &chOrder;
         PDLocs relevantPdLocs;
+        RelevantPDLocs relOrdinaryPickups;
 
         PTStations stations;
         StationBucketsEnvT &stationBucketsEnv;

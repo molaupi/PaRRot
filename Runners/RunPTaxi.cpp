@@ -737,7 +737,7 @@ int main(int argc, char *argv[]) {
                 StationBCH,
                 PALSToStationsImplementation, 
                 PTAlgorithm>;
-        PTAndTaxiTripFinderImpl ptAndTaxiTripFinder(insertionFinder, vehicleInputGraph, *vehChEnv, psgInputGraph, *psgChEnv, 
+        PTAndTaxiTripFinderImpl ptAndTaxiTripFinder(insertionFinder, vehicleInputGraph, *vehChEnv, psgInputGraph, *psgChEnv, fleet,
             stations, stationBucketsEnv, palsToStations, ptAlgorithm, order);
 
 
