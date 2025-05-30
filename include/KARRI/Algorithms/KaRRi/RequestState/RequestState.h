@@ -121,8 +121,8 @@ namespace karri {
             return false;
         }
 
-        bool tryAssignmentWithArrivalTime(const Assignment &asgn) {
-            const int arrivalTime = calcArrivalTime(asgn);
+        bool tryAssignmentWithArrivalTime(const Assignment &asgn, const RouteState &routeState) {
+            const int arrivalTime = calcArrivalTime(asgn, routeState);
             if (arrivalTime < INFTY && (arrivalTime < bestArrivalTime ||
                                         (arrivalTime == bestArrivalTime &&
                                          breakCostTie(asgn, bestAssignment)))) {
@@ -133,12 +133,6 @@ namespace karri {
                 return true;
             }
             return false;
-        }
-
-        int calcArrivalTime(const Assignment &asgn) {
-            return now() + 
-                asgn.pickup.walkingDist + asgn.distToPickup + asgn.distFromPickup + 
-                asgn.distToDropoff + asgn.distFromDropoff + asgn.dropoff.walkingDist;
         }
 
         void tryNotUsingVehicleAssignment(const int notUsingVehDist, const int travelTimeOfDestEdge) {
@@ -181,6 +175,14 @@ namespace karri {
         }
 
     private:
+
+        int calcArrivalTime(const Assignment &asgn, const RouteState &routeState) {
+        using namespace time_utils;
+        const int actualDepTimeAtPickup = getActualDepTimeAtPickup(asgn, *this, routeState);
+        const int initialPickupDetour = calcInitialPickupDetour(asgn, actualDepTimeAtPickup, *this, routeState);
+        const bool dropoffAtExistingStop = isDropoffAtExistingStop(asgn, routeState);
+        return getArrTimeAtDropoff(actualDepTimeAtPickup, asgn, initialPickupDetour, dropoffAtExistingStop, routeState);
+        }
 
         stats::DispatchingPerformanceStats perfStats;
         stats::OsmRoadCategoryStats allPDLocsRoadCatStats;

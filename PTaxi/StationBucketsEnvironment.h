@@ -97,7 +97,9 @@ namespace karri {
         void generateBucketEntries(const Station &station) {
             verticesVisitedInSearch = 0;
             stationId = station.stationId;
-            entryGenSearch.run(ch.rank(station.vehVertexId));
+            const auto stationVertex = inputGraph.edgeHead(station.vehEdgeId);
+
+            entryGenSearch.run(ch.rank(stationVertex));
         }
 
         // Reads the bucket container from a binary file. 

@@ -26,12 +26,12 @@
 #pragma once
 #include <vector>
 
-// Models a station with a station ID and a corresponding vertex ID in the passenger road network.
+// Models a station with a station ID and a corresponding edge ID in the passenger road network.
 struct Station {
     int stationId;
-    int psgVertexId; // vertex ID in the passenger road network
+    int psgEdgeId; // edge ID in the passenger road network
     int psgChOrder; // order in the passenger CH
-    int vehVertexId; // vertex ID in the vehicle road network
+    int vehEdgeId; // edge ID in the vehicle road network
 };
 
 using PTStations = std::vector<Station>;

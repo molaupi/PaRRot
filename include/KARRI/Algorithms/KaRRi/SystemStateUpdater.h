@@ -311,6 +311,10 @@ namespace karri {
             if (!pickupAtExistingStop) {
                 ellipticBucketsEnv.generateTargetBucketEntries(*asgn.vehicle, pickupIndex, stats);
                 ellipticBucketsEnv.generateSourceBucketEntries(*asgn.vehicle, pickupIndex, stats);
+                // calculate the relevant stations for this new stop
+                // stationsInEllipses.recomputeStationInEllipseForStop(pickupIndex - 1);
+                // stationsInEllipses.computeNewStationsInEllipsesForStop(pickupIndex);
+
             }
 
             // If no new stop was inserted for the pickup, we do not need to generate any new entries for it.
@@ -322,6 +326,7 @@ namespace karri {
             // If dropoff is not the new last stop, we generate elliptic source buckets for it.
             if (dropoffIndex < numStops - 1) {
                 ellipticBucketsEnv.generateSourceBucketEntries(*asgn.vehicle, dropoffIndex, stats);
+                // stationsInEllipses.computeNewStationsInEllipsesForStop(dropoffIndex);
                 return;
             }
 
@@ -330,6 +335,7 @@ namespace karri {
             const auto pickupAtEnd = pickupIndex + 1 == dropoffIndex && pickupIndex > asgn.pickupStopIdx;
             const int formerLastStopIdx = dropoffIndex - pickupAtEnd - 1;
             ellipticBucketsEnv.generateSourceBucketEntries(*asgn.vehicle, formerLastStopIdx, stats);
+            // stationsInEllipses.computeNewStationsInEllipsesForStop(dropoffIndex);
 
             // Remove last stop bucket entries for former last stop and generate them for dropoff
             if (formerLastStopIdx == 0) {

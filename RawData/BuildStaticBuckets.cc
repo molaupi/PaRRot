@@ -203,11 +203,11 @@ int main(int argc, char *argv[]) {
                 throw std::invalid_argument("invalid edge id for a station-- '" + std::to_string(edgeId) + "'");
             }
 
-            // vertex id in the station mapping file is the vertex id in the road network
-            int psgVertexId = psgInputGraph.edgeHead(vehicleInputGraph.toPsgEdge(edgeId));
+            // edge id in the station mapping file is the edge id in the road network
+            int psgEdgeId = vehicleInputGraph.toPsgEdge(edgeId);
+            int psgVertexId = psgInputGraph.edgeHead(psgEdgeId);
             int psgChOrder = psgChEnv->getCH().rank(psgVertexId);
-            int vehVertexId = vehicleInputGraph.edgeHead(edgeId);
-            stations.push_back({stationId, psgVertexId, psgChOrder, vehVertexId});
+            stations.push_back({stationId, psgEdgeId, psgChOrder, edgeId});
             stationId++;
         }
         std::cout << "done.\n";

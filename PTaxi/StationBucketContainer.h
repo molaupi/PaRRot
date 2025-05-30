@@ -44,6 +44,7 @@ public:
         assert(numVertices >= 0);
     }
 
+    // TODO: Change to R Value Reference to avoid copying
     StationBucketContainer(std::vector<BucketPosition> bucketPositions,
                            std::vector<BucketEntryT> entries)
             : bucketPositions(bucketPositions), entries(entries) {

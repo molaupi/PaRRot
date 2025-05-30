@@ -240,8 +240,8 @@ namespace karri {
                     for (auto &station: stations) {
                         asgn.dropoff = {
                             station.stationId,
-                            station.vehVertexId,
-                            station.psgVertexId,
+                            station.vehEdgeId, // location -> edgeId
+                            station.psgEdgeId, // location -> edgeId
                             0,
                             0,
                             0
@@ -250,7 +250,7 @@ namespace karri {
                         // Try inserting pair with pickup after last stop:
                         ++numAssignmentsTried;
                         asgn.distToDropoff = stationDistances.getDistance(station.stationId, asgn.pickup.id);
-                        requestState.tryAssignmentWithArrivalTime(asgn);
+                        requestState.tryAssignmentWithKnownCost(asgn, calculator.calc(asgn, requestState));
                     }
                 }
             }

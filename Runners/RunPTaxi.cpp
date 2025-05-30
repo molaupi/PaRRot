@@ -574,25 +574,7 @@ int main(int argc, char *argv[]) {
         FeasibleEllipticDistancesImpl feasibleEllipticPickups(fleet.size(), routeState);
         FeasibleEllipticDistancesImpl feasibleEllipticDropoffs(fleet.size(), routeState);
 
-        using InsertionFinderImpl = AssignmentFinder<
-                VehicleInputGraph,
-                FeasibleEllipticDistancesImpl,
-                RequestStateInitializerImpl,
-                PDLocsFinderImpl,
-                PDLocsAtExistingStopsFinderImpl,
-                EllipticBCHSearchesImpl,
-                FFPDDistanceQueryImpl,
-                OrdinaryAssignmentsFinderImpl,
-                PBNSInsertionsFinderImpl,
-                PALSInsertionsFinderImpl,
-                DALSInsertionsFinderImpl,
-                RelevantPDLocsFilterImpl>;
-        InsertionFinderImpl insertionFinder(vehicleInputGraph, requestStateInitializer, pdLocsFinder, pdLocsAtExistingStops,
-            feasibleEllipticPickups, feasibleEllipticDropoffs,
-            ellipticSearches, ffPDDistanceQuery, ordinaryInsertionsFinder, pbnsInsertionsFinder, palsInsertionsFinder,
-            dalsInsertionsFinder, relevantPdLocsFilter);
-
-
+        
         // Read the RAPTOR data
         std::cout << "Reading RAPTOR data from file... " << std::flush;
         RAPTOR::Data raptor(raptorFileName);
@@ -615,11 +597,11 @@ int main(int argc, char *argv[]) {
                 throw std::invalid_argument("invalid edge id for a station-- '" + std::to_string(edgeId) + "'");
             }
 
-            // vertex id in the station mapping file is the vertex id in the road network
-            int psgVertexId = psgInputGraph.edgeHead(vehicleInputGraph.toPsgEdge(edgeId));
+            // edge id in the station mapping file is the edge id in the road network
+            int psgEdgeId = vehicleInputGraph.toPsgEdge(edgeId);
+            int psgVertexId = psgInputGraph.edgeHead(psgEdgeId);
             int psgChOrder = psgChEnv->getCH().rank(psgVertexId);
-            int vehVertexId = vehicleInputGraph.edgeHead(edgeId);
-            stations.push_back({stationId, psgVertexId, psgChOrder, vehVertexId});
+            stations.push_back({stationId, psgEdgeId, psgChOrder, edgeId});
             stationId++;
         }
         std::cout << "done.\n";
@@ -728,7 +710,17 @@ int main(int argc, char *argv[]) {
         
         // -> pass ULTRA algorithm instance and stationBucketsEnv, palsToStations to PTAndTaxiTripFinder
         using PTAndTaxiTripFinderImpl = PTAndTaxiTripFinder<
-                InsertionFinderImpl, 
+                FeasibleEllipticDistancesImpl,
+                RequestStateInitializerImpl,
+                PDLocsFinderImpl,
+                PDLocsAtExistingStopsFinderImpl,
+                EllipticBCHSearchesImpl,
+                FFPDDistanceQueryImpl,
+                OrdinaryAssignmentsFinderImpl,
+                PBNSInsertionsFinderImpl,
+                PALSInsertionsFinderImpl,
+                DALSInsertionsFinderImpl,
+                RelevantPDLocsFilterImpl, 
                 VehicleInputGraph, 
                 VehCHEnv, 
                 PsgInputGraph, 
@@ -737,8 +729,12 @@ int main(int argc, char *argv[]) {
                 StationBCH,
                 PALSToStationsImplementation, 
                 PTAlgorithm>;
-        PTAndTaxiTripFinderImpl ptAndTaxiTripFinder(insertionFinder, vehicleInputGraph, *vehChEnv, psgInputGraph, *psgChEnv, fleet,
-            stations, stationBucketsEnv, palsToStations, ptAlgorithm, order);
+        PTAndTaxiTripFinderImpl ptAndTaxiTripFinder(requestStateInitializer, pdLocsFinder, pdLocsAtExistingStops,
+                                                    feasibleEllipticPickups, feasibleEllipticDropoffs, ellipticSearches, 
+                                                    ffPDDistanceQuery, ordinaryInsertionsFinder, pbnsInsertionsFinder, 
+                                                    palsInsertionsFinder, dalsInsertionsFinder, relevantPdLocsFilter, 
+                                                    vehicleInputGraph, *vehChEnv, psgInputGraph, *psgChEnv, fleet, 
+                                                    stations, stationBucketsEnv, palsToStations, ptAlgorithm, order);
 
 
 
