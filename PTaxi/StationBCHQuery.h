@@ -54,21 +54,34 @@ namespace karri {
 
             template<typename DistLabelT, typename DistLabelContainerT>
             bool operator()(const int v, DistLabelT &distToV, const DistLabelContainerT & /*distLabels*/) {
-
+            
                 int numEntriesScannedHere = 0;
-                
-                // previous if block here
-                auto bucket = search.bucketContainer.getBucketOf(v);
-                for (const auto &entry: bucket) {
-                    ++numEntriesScannedHere;
 
-                    const int &stationId = entry.targetId;
+                if constexpr (!StationBucketsEnvT::SORTED) {
+                    auto bucket = search.bucketContainer.getBucketOf(v);
+                    for (const auto &entry: bucket) {
+                        ++numEntriesScannedHere;
 
-                    const DistanceLabel distViaV = distToV + DistanceLabel(entry.distToTarget);
-                    tryUpdatingDistance(stationId, distViaV);
+                        const int &stationId = entry.targetId;
+
+                        const DistanceLabel distViaV = distToV + DistanceLabel(entry.distToTarget);
+                        tryUpdatingDistance(stationId, distViaV);
+                    }
+                } else {
+                        auto bucket = search.bucketContainer.getBucketOf(v);
+
+                        for (const auto &entry: bucket) {
+                            ++numEntriesScannedHere;
+
+                            const int &stationId = entry.targetId;
+                            const DistanceLabel distViaV = distToV + DistanceLabel(entry.distToTarget);
+                            // const auto atLeastAsGoodAsCurBest = ~search.pruner.doesDistanceNotAdmitBestAsgn(distViaV, true);
+                            // if (!anySet(atLeastAsGoodAsCurBest))
+                            //     break;
+
+                            tryUpdatingDistance(stationId, distViaV);
+                        }
                 }
-
-                // removed else branch
                 
                 search.numEntriesVisited += numEntriesScannedHere;
                 ++search.numVerticesSettled;

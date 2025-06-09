@@ -39,10 +39,17 @@ namespace karri {
 
         
         public:
-        static constexpr bool SORTED = false;
+        static constexpr bool SORTED = true;
         
-        // .targetId is station ID, .distToTarget is distance from vertex to last stop
-        using BucketContainer = StationBucketContainer<BucketEntry>;
+        
+        struct CompareEntries {
+            bool operator()(const BucketEntry &e1, const BucketEntry &e2) const {
+                return e1.distToTarget < e2.distToTarget;
+            }
+        };
+        
+        // .targetId is station ID, .distToTarget is distance from vertex to station
+        using BucketContainer = StationBucketContainer<BucketEntry, CompareEntries>;
         using BucketPosition = ValueBlockPosition;
 
     private:
