@@ -36,9 +36,9 @@ namespace karri {
 
 
     template<typename InputGraphT, typename CHEnvT,
-            typename StationBucketsEnvT,
+            typename StopAndStationBucketsEnvT,
             typename LabelSetT = BasicLabelSet<0, ParentInfo::FULL_PARENT_INFO>>
-    class StationBCHQuery {
+    class StationsInEllipse {
 
     private:
 
@@ -50,37 +50,21 @@ namespace karri {
 
         public:
 
-            explicit ScanBucket(StationBCHQuery &search) : search(search) {}
+            explicit ScanBucket(StationsInEllipse &search) : search(search) {}
 
             template<typename DistLabelT, typename DistLabelContainerT>
             bool operator()(const int v, DistLabelT &distToV, const DistLabelContainerT & /*distLabels*/) {
             
                 int numEntriesScannedHere = 0;
 
-                if constexpr (!StationBucketsEnvT::SORTED) {
-                    auto bucket = search.bucketContainer.getBucketOf(v);
-                    for (const auto &entry: bucket) {
-                        ++numEntriesScannedHere;
+                auto bucket = search.bucketContainer.getBucketOf(v);
+                for (const auto &entry: bucket) {
+                    ++numEntriesScannedHere;
 
-                        const int &stationId = entry.targetId;
+                    const int &stationId = entry.targetId;
 
-                        const DistanceLabel distViaV = distToV + DistanceLabel(entry.distToTarget);
-                        tryUpdatingDistance(stationId, distViaV);
-                    }
-                } else {
-                        auto bucket = search.bucketContainer.getBucketOf(v);
-
-                        for (const auto &entry: bucket) {
-                            ++numEntriesScannedHere;
-
-                            const int &stationId = entry.targetId;
-                            const DistanceLabel distViaV = distToV + DistanceLabel(entry.distToTarget);
-                            // const auto atLeastAsGoodAsCurBest = ~search.pruner.doesDistanceNotAdmitBestAsgn(distViaV, true);
-                            // if (!anySet(atLeastAsGoodAsCurBest))
-                            //     break;
-
-                            tryUpdatingDistance(stationId, distViaV);
-                        }
+                    const DistanceLabel distViaV = distToV + DistanceLabel(entry.distToTarget);
+                    tryUpdatingDistance(stationId, distViaV);
                 }
                 
                 search.numEntriesVisited += numEntriesScannedHere;
@@ -106,12 +90,12 @@ namespace karri {
             }
 
 
-            StationBCHQuery &search;
+            StationsInEllipse &search;
         };
 
 
-        struct StopStationBCH {
-            explicit StopStationBCH(const StationBCHQuery &search) : search(search) {}
+        struct StopLastStopBCH {
+            explicit StopLastStopBCH(const StationsInEllipse &search) : search(search) {}
 
             template<typename DistLabelT, typename DistLabelContainerT>
             bool operator()(const int, DistLabelT &distToV, const DistLabelContainerT & /*distLabels*/) const {
@@ -120,7 +104,7 @@ namespace karri {
             }
 
         private:
-            const StationBCHQuery &search;
+            const StationsInEllipse &search;
 
         };
 
@@ -134,16 +118,16 @@ namespace karri {
         // 2. from origin to v
         // 3. consider the routes of the taxi before origin
 
-        StationBCHQuery(
+        StationsInEllipse(
                 const InputGraphT &inputGraph,
                 const CHEnvT &chEnv,
-                const StationBucketsEnvT &stationBucketsEnv,
+                const StopAndStationBucketsEnvT &stopAndStationBucketsEnv,
                 const int numberOfStations)
                 : inputGraph(inputGraph),
-                  upwardSearch(chEnv.template getForwardSearch<ScanBucket, StopStationBCH, LabelSetT>(
-                               ScanBucket(*this), StopStationBCH(*this))),
+                  upwardSearch(chEnv.template getForwardSearch<ScanBucket, StopLastStopBCH, LabelSetT>(
+                               ScanBucket(*this), StopLastStopBCH(*this))),
                   ch(chEnv.getCH()),
-                  bucketContainer(stationBucketsEnv.getBuckets()),
+                  bucketContainer(stopAndStationBucketsEnv.getBuckets()),
                   tentativeDistances(numberOfStations),
                   stationsSeen(numberOfStations),
                   numVerticesSettled(0),
@@ -217,11 +201,11 @@ namespace karri {
             return numEntriesVisited;
         }
 
-        typename CHEnvT::template UpwardSearch<ScanBucket, StopStationBCH, LabelSetT> upwardSearch;
+        typename CHEnvT::template UpwardSearch<ScanBucket, StopLastStopBCH, LabelSetT> upwardSearch;
 
         const InputGraphT &inputGraph;
         const CH &ch;
-        const typename StationBucketsEnvT::BucketContainer &bucketContainer;
+        const typename StopAndStationBucketsEnvT::BucketContainer &bucketContainer;
 
         StationDistances tentativeDistances;
 

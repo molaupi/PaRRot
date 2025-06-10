@@ -312,7 +312,7 @@ namespace karri {
                 ellipticBucketsEnv.generateTargetBucketEntries(*asgn.vehicle, pickupIndex, stats);
                 ellipticBucketsEnv.generateSourceBucketEntries(*asgn.vehicle, pickupIndex, stats);
                 // calculate the relevant stations for this new stop
-                // stationsInEllipses.recomputeStationInEllipseForStop(pickupIndex - 1);
+                // stationsInEllipses.recomputeStationsInEllipseForStop(pickupIndex - 1);
                 // stationsInEllipses.computeNewStationsInEllipsesForStop(pickupIndex);
 
             }
