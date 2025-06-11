@@ -36,6 +36,7 @@ namespace karri {
     template<typename InputGraphT,
             typename EllipticBucketsEnvT,
             typename LastStopBucketsEnvT,
+            typename StationsInEllipseT,
             typename CurVehLocsT,
             typename PathTrackerT,
             typename LoggerT = NullLogger>
@@ -47,13 +48,15 @@ namespace karri {
                            const CurVehLocsT &curVehLocs,
                            PathTrackerT &pathTracker,
                            RouteState &routeState, EllipticBucketsEnvT &ellipticBucketsEnv,
-                           LastStopBucketsEnvT &lastStopBucketsEnv)
+                           LastStopBucketsEnvT &lastStopBucketsEnv,
+                           StationsInEllipseT &stationsInEllipse)
                 : inputGraph(inputGraph),
                   curVehLocs(curVehLocs),
                   pathTracker(pathTracker),
                   routeState(routeState),
                   ellipticBucketsEnv(ellipticBucketsEnv),
                   lastStopBucketsEnv(lastStopBucketsEnv),
+                  stationsInEllipse(stationsInEllipse),
                   bestAssignmentsLogger(LogManager<LoggerT>::getLogger("bestassignments.csv",
                                                                        "request_id, "
                                                                        "request_time, "
@@ -356,6 +359,9 @@ namespace karri {
         // Bucket state
         EllipticBucketsEnvT &ellipticBucketsEnv;
         LastStopBucketsEnvT &lastStopBucketsEnv;
+
+        // Stations in Ellipse
+        StationsInEllipseT &stationsInEllipse;
 
         // Performance Loggers
         LoggerT &bestAssignmentsLogger;

@@ -37,6 +37,7 @@
 #include "../PTaxi/StationBCHQuery.h"
 #include "../PTaxi/PALSToStations.h"
 #include "../PTaxi/StationBucketsEnvironment.h"
+#include "../PTaxi/StationsInEllipse.h"
 
 
 #include <ULTRA/Algorithms/RAPTOR/ULTRARAPTOR.h>
@@ -746,11 +747,13 @@ int main(int argc, char *argv[]) {
         VehPathTracker pathTracker;
 #endif
 
+        using StationsInEllipseImpl = StationsInEllipse<VehicleInputGraph, VehCHEnv, EllipticBucketsEnv, StationBucketsEnv>;
+        StationsInEllipseImpl stationsInEllipse(vehicleInputGraph, *vehChEnv, routeState, ellipticBucketsEnv, stationBucketsEnv, stations.size());
 
-        using SystemStateUpdaterImpl = SystemStateUpdater<VehicleInputGraph, EllipticBucketsEnv, LastStopBucketsEnv, CurVehLocToPickupSearchesImpl, VehPathTracker, std::ofstream>;
+        using SystemStateUpdaterImpl = SystemStateUpdater<VehicleInputGraph, EllipticBucketsEnv, LastStopBucketsEnv, StationsInEllipseImpl, CurVehLocToPickupSearchesImpl, VehPathTracker, std::ofstream>;
         SystemStateUpdaterImpl
                 systemStateUpdater(vehicleInputGraph, curVehLocToPickupSearches,
-                                   pathTracker, routeState, ellipticBucketsEnv, lastStopBucketsEnv);
+                                   pathTracker, routeState, ellipticBucketsEnv, lastStopBucketsEnv, stationsInEllipse);
 
 
         // Initialize last stop state for initial locations of vehicles

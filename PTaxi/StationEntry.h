@@ -28,29 +28,23 @@
 #include <cstdint>
 #include <limits>
 
-// This class represents an entry in the bucket of a station s. 
+// This class represents an entry of a relevant station for dropoff in a stop pair. 
 // It stores the distance from the previous stop of a vehicle to the station
 // and the distance from the station to the next stop of the vehicle.
 struct StationEntry {
   StationEntry() noexcept = default;
 
-  StationEntry(const int stationId, const int vehId, const int stopIndex, 
+  StationEntry(const int stationId, 
                const int distFromStopToStation, const int distFromStationToStop) noexcept
-      : stationId(stationId), 
-        vehId(vehId), 
-        stopIndex(stopIndex), 
+      : targetId(stationId), 
         distFromStopToStation(distFromStopToStation), 
         distFromStationToStop(distFromStationToStop) {}
 
   constexpr bool operator==(const StationEntry& rhs) const noexcept {
-    return stationId == rhs.stationId && 
-           vehId == rhs.vehId && 
-           stopIndex == rhs.stopIndex;
+    return targetId == rhs.targetId;
   }
 
-  int32_t stationId = std::numeric_limits<int32_t>::max();
-  int32_t vehId = std::numeric_limits<int32_t>::max();
-  int32_t stopIndex = std::numeric_limits<int32_t>::max();
+  int32_t targetId = std::numeric_limits<int32_t>::max(); // station ID
   int32_t distFromStopToStation;
   int32_t distFromStationToStop;
 };
