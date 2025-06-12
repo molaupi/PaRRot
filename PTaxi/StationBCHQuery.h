@@ -54,6 +54,9 @@ namespace karri {
 
             template<typename DistLabelT, typename DistLabelContainerT>
             bool operator()(const int v, DistLabelT &distToV, const DistLabelContainerT & /*distLabels*/) {
+                // Check if we can prune at this vertex based only on the distance from v to the pickup(s)
+                if (allSet(search.canPrune(distToV)))
+                    return true;
             
                 int numEntriesScannedHere = 0;
 
@@ -75,7 +78,9 @@ namespace karri {
 
                             const int &stationId = entry.targetId;
                             const DistanceLabel distViaV = distToV + DistanceLabel(entry.distToTarget);
-                            if (!anySet(search.canPrune(distViaV)))
+                            const auto atLeastAsGoodAsCurBest = ~search.canPrune(distViaV);
+
+                            if (!anySet(atLeastAsGoodAsCurBest))
                                 break;
 
                             tryUpdatingDistance(stationId, distViaV);

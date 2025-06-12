@@ -36,7 +36,6 @@ namespace karri {
 
 
     template<typename InputGraphT, typename CHEnvT,
-            typename EllipticBucketsEnvT,
             typename StationBucketsEnvT,
             typename LabelSetT = BasicLabelSet<0, ParentInfo::FULL_PARENT_INFO>>
     class StationsInEllipse {
@@ -47,33 +46,52 @@ namespace karri {
         using DistanceLabel = typename LabelSetT::DistanceLabel;
         using LabelMask = typename LabelSetT::LabelMask;
 
-
-        using EllipticBucketContainer = typename EllipticBucketsEnvT::BucketContainer;
         using StationBucketContainer = typename StationBucketsEnvT::BucketContainer;
-        using BucketContainer = DynamicBucketContainer<StationEntry>;
+        using StopBucketContainer = DynamicBucketContainer<StationEntry>;
 
         struct ScanSourceBucket {
 
         public:
 
-            explicit ScanSourceBucket(StationsInEllipse &search) 
-                : search(search) {}
+            explicit ScanSourceBucket(StationsInEllipse &search) : search(search) {}
 
             template<typename DistLabelT, typename DistLabelContainerT>
             bool operator()(const int v, DistLabelT &distToV, const DistLabelContainerT & /*distLabels*/) {
-            
+
+                // Check if we can prune at this vertex based only on the distance from v to the pickup(s)
+                if (allSet(search.exceedsLeewayForStop(distToV)))
+                    return true;
+
                 int numEntriesScannedHere = 0;
 
-                auto ellipticBucket = search.sourceEllipticBucketContainer.getBucketOf(v);
-                for (const auto &entry: ellipticBucket) {
-                    ++numEntriesScannedHere;
+                if constexpr (!StationBucketsEnvT::SORTED) {
+                    auto bucket = search.stationbucketContainer.getBucketOf(v);
+                    for (const auto &entry: bucket) {
+                        ++numEntriesScannedHere;
 
-                    if (search.curStopId == entry.targetId) {
-                        checkAllStationsInEllipse(entry);
+                        const int &stationId = entry.targetId;
+
+                        const DistanceLabel distViaV = distToV + DistanceLabel(entry.distToTarget);
+                        tryUpdatingDistance(stationId, distViaV);
+                    }
+                } else {
+
+                    auto bucket = search.stationbucketContainer.getBucketOf(v);
+
+                    for (const auto &entry: bucket) {
+                        ++numEntriesScannedHere;
+
+                        const int &stationId = entry.targetId;
+                        const DistanceLabel distViaV = entry.distToTarget + distToV;
+                        const auto atLeastAsGoodAsCurBest = ~search.exceedsLeewayForStop(distViaV);
+                        if (!anySet(atLeastAsGoodAsCurBest))
+                            break;
+
+                        tryUpdatingDistance(stationId, distViaV);
+                        
                     }
                 }
-                
-                // when station bucket is sorted -> check leeway and break if exceeded
+
                 search.numEntriesVisited += numEntriesScannedHere;
                 ++search.numVerticesSettled;
 
@@ -81,22 +99,21 @@ namespace karri {
             }
 
         private:
-        
-            template<typename BucketEntryT>
-            void checkAllStationsInEllipse(const BucketEntryT &entry) {
-                auto stationBucket = search.stationbucketContainer.getBucketOf(entry.targetId);
-                for (const auto &stationEntry: stationBucket) {
-                    const int distFromStopToStation = entry.distToTarget + stationEntry.distToTarget;
 
-                    if (distFromStopToStation > entry.leeway) {
-                        continue; // skip stations that are too far away
-                    }
-
-                    // If the station was seen, we can update the entry
-                    search.stationAndStopBucketContainer.insert(search.curStopId, StationEntry(stationEntry.targetId, distFromStopToStation, INFTY));
-                    search.stationsSeen.insert(stationEntry.targetId);
+            void tryUpdatingDistance(const int stationId, const DistanceLabel& distToStop) {
+                // Update tentative distances to v for any searches where distViaV admits a possible better assignment
+                // than the current best and where distViaV is at least as good as the current tentative distance.
+                LabelMask mask = ~(search.distFromStopToStations[stationId] < distToStop);
+                mask &= distToStop < INFTY;
+                if (!anySet(mask))
+                    return;
+                
+                if (anySet(mask)) { // if any search requires updates, update the right ones according to mask
+                    search.distFromStopToStations[stationId].setIf(distToStop, mask);
+                    search.vehiclesSeen.insert(stationId);
                 }
             }
+
 
             StationsInEllipse &search;
         };
@@ -105,24 +122,45 @@ namespace karri {
 
         public:
 
-            explicit ScanTargetBucket(StationsInEllipse &search) 
-                : search(search) {}
+            explicit ScanTargetBucket(StationsInEllipse &search) : search(search) {}
 
             template<typename DistLabelT, typename DistLabelContainerT>
-            bool operator()(const int v, DistLabelT &distToV, const DistLabelContainerT & /*distLabels*/) {
-            
+            bool operator()(const int v, DistLabelT &distFromV, const DistLabelContainerT & /*distLabels*/) {
+
+                // Check if we can prune at this vertex based only on the distance from v to the pickup(s)
+                if (allSet(search.exceedsLeewayForStop(distFromV)))
+                    return true;
+
                 int numEntriesScannedHere = 0;
 
-                auto ellipticBucket = search.targetEllipticBucketContainer.getBucketOf(v);
-                for (const auto &entry: ellipticBucket) {
-                    ++numEntriesScannedHere;
+                if constexpr (!StationBucketsEnvT::SORTED) {
+                    auto bucket = search.stationbucketContainer.getBucketOf(v);
+                    for (const auto &entry: bucket) {
+                        ++numEntriesScannedHere;
 
-                    if (search.curNextStopId == entry.targetId) {
-                        checkAllStationsInEllipse(entry);
+                        const int &stationId = entry.targetId;
+
+                        const DistanceLabel distViaV = distFromV + DistanceLabel(entry.distToTarget);
+                        tryUpdatingDistance(stationId, distViaV);
                     }
+                } else {
 
+                    auto bucket = search.stationbucketContainer.getBucketOf(v);
+
+                    for (const auto &entry: bucket) {
+                        ++numEntriesScannedHere;
+
+                        const int &stationId = entry.targetId;
+                        const DistanceLabel distViaV = entry.distToTarget + distFromV;
+                        const auto atLeastAsGoodAsCurBest = ~search.exceedsLeewayForStop(distViaV);
+                        if (!anySet(atLeastAsGoodAsCurBest))
+                            break;
+
+                        tryUpdatingDistance(stationId, distViaV);
+                        
+                    }
                 }
-                
+
                 search.numEntriesVisited += numEntriesScannedHere;
                 ++search.numVerticesSettled;
 
@@ -130,22 +168,21 @@ namespace karri {
             }
 
         private:
-        
-            template<typename BucketEntryT>
-            void checkAllStationsInEllipse(const BucketEntryT &entry) {
-                auto stationBucket = search.stationbucketContainer.getBucketOf(entry.targetId);
-                for (const auto &stationEntry: stationBucket) {
-                    const int distFromStationToStop = entry.distToTarget + stationEntry.distToTarget;
 
-                    if (distFromStationToStop > entry.leeway) {
-                        continue; // skip stations that are too far away
-                    }
-
-                    // If the station was seen, we can update the entry
-                    search.stationAndStopBucketContainer.insert(search.curStopId, StationEntry(stationEntry.targetId, INFTY, distFromStationToStop));
-                    search.stationsSeen.insert(stationEntry.targetId);
+            void tryUpdatingDistance(const int stationId, const DistanceLabel& distFromV) {
+                // Update tentative distances to v for any searches where distViaV admits a possible better assignment
+                // than the current best and where distViaV is at least as good as the current tentative distance.
+                LabelMask mask = ~(search.distFromStationsToStop[stationId] < distFromV);
+                mask &= distFromV < INFTY;
+                if (!anySet(mask))
+                    return;
+                
+                if (anySet(mask)) { // if any search requires updates, update the right ones according to mask
+                    search.distFromStationsToStop[stationId].setIf(distFromV, mask);
+                    search.vehiclesSeen.insert(stationId);
                 }
             }
+
 
             StationsInEllipse &search;
         };
@@ -155,9 +192,8 @@ namespace karri {
             explicit StopEllipseSearch(const StationsInEllipse &search) : search(search) {}
 
             template<typename DistLabelT, typename DistLabelContainerT>
-            bool operator()(const int, DistLabelT &distToV, const DistLabelContainerT & /*distLabels*/) const {
-                // no stop criterium
-                return false;
+            bool operator()(const int, DistLabelT &distToOrFromV, const DistLabelContainerT & /*distLabels*/) const {
+                return allSet(search.exceedsLeewayForStop(distToOrFromV));
             }
 
         private:
@@ -172,7 +208,6 @@ namespace karri {
                 const InputGraphT &inputGraph,
                 const CHEnvT &chEnv,
                 RouteState &routeState, 
-                const EllipticBucketsEnvT &ellipticBucketsEnv,
                 const StationBucketsEnvT &stationBucketsEnv,
                 const int numberOfStations)
                 : inputGraph(inputGraph),
@@ -182,49 +217,62 @@ namespace karri {
                                ScanTargetBucket(*this), StopEllipseSearch(*this))),
                   ch(chEnv.getCH()),
                   routeState(routeState),
-                  sourceEllipticBucketContainer(ellipticBucketsEnv.getSourceBuckets()),
-                  targetEllipticBucketContainer(ellipticBucketsEnv.getTargetBuckets()),
                   stationbucketContainer(stationBucketsEnv.getBuckets()),
-                  stationAndStopBucketContainer(inputGraph.numVertices()),
+                  stopBucketContainer(routeState.getMaxStopId()),
                   stationsSeen(numberOfStations),
+                  distFromStopToStations(numberOfStations, DistanceLabel(INFTY)),
+                  distFromStationsToStop(numberOfStations, DistanceLabel(INFTY)),
                   curStopId(INVALID_ID),
-                  curNextStopId(INVALID_ID),
                   numVerticesSettled(0),
                   numEntriesVisited(0) {}
 
         void computeNewStationsInEllipsesForStop(const int stopIndex, const int vehId) {
-            // Run the upward search from the first stop vertex
             const int stopId = routeState.stopIdsFor(vehId)[stopIndex];
-            curStopId = stopId;
             const int stopVertex = inputGraph.edgeHead(stopId);
             const int stopRank = ch.rank(stopVertex);
+            
+            init(stopId);
+            
+            // Run the upward search 
             upwardSearch.runWithOffset({stopRank});
 
             // Run the reverse upward search from the second stop vertex
-            const int nextStopId = routeState.stopIdsFor(vehId)[stopIndex + 1];
-            curNextStopId = nextStopId;
-            const int nextStopVertex = inputGraph.edgeHead(nextStopId);
-            const int nextStopRank = ch.rank(nextStopVertex);
-            reverseUpwardSearch.runWithOffset({nextStopRank});
+            reverseUpwardSearch.runWithOffset({stopRank});
 
-            for (auto &stationEntry: stationAndStopBucketContainer.getBucketOf(curStopId)) {
-                const int stationId = stationEntry.targetId;
+            for (int stationId = 0; stationId < stationsSeen.size(); ++stationId) {
                 if (!stationsSeen.contains(stationId)) {
                     continue;
                 }
+
                 // If the station was seen, we can check the leeway
-                const int distFromStopToStation = stationEntry.distFromStopToStation;
-                const int distFromStationToStop = stationEntry.distFromStationToStop;
-                const int leeway = routeState.leewayOfLegStartingAt(curStopId);
+                const DistanceLabel distFromStopToStation = distFromStopToStations[stationId];
+                const DistanceLabel distFromStationToStop = distFromStationsToStop[stationId];
 
                 // only add the entry to the container if the leeway is not exceeded
-                if (distFromStopToStation + distFromStationToStop > leeway) {
-                    stationAndStopBucketContainer.remove(curStopId, stationId);
+                if (distFromStopToStation + distFromStationToStop <= routeState.leewayOfLegStartingAt(curStopId)) {
+                    stopBucketContainer.insert(curStopId, StationEntry(stationId, distFromStopToStation, distFromStationToStop));
                 }
             }
         }
 
+        LabelMask exceedsLeewayForStop(const DistanceLabel &distanceToStop) {
+            return routeState.leewayOfLegStartingAt(curStopId) < distanceToStop;
+        }
+
     private:
+
+        void init(const int stopId) {
+            curStopId = stopId;
+            stationsSeen.clear();
+            distFromStopToStations.clear();
+            distFromStationsToStop.clear();
+            numVerticesSettled = 0;
+            numEntriesVisited = 0;
+
+            // Initialize the distances from the stop to the stations
+            distFromStopToStations.resize(stationsSeen.size(), DistanceLabel(INFTY));
+            distFromStationsToStop.resize(stationsSeen.size(), DistanceLabel(INFTY));
+        }
 
         int getNumEdgeRelaxations() const {
             return upwardSearch.getNumEdgeRelaxations();
@@ -245,15 +293,15 @@ namespace karri {
         const CH &ch;
         RouteState &routeState;
         
-        const EllipticBucketContainer &sourceEllipticBucketContainer;
-        const EllipticBucketContainer &targetEllipticBucketContainer;
         const StationBucketContainer &stationbucketContainer;
-        BucketContainer stationAndStopBucketContainer;
+        StopBucketContainer stopBucketContainer;
 
         LightweightSubset stationsSeen;
 
+        std::vector<DistanceLabel> distFromStopToStations;
+        std::vector<DistanceLabel> distFromStationsToStop;
+
         int curStopId;
-        int curNextStopId;
 
         int numVerticesSettled;
         int numEntriesVisited;

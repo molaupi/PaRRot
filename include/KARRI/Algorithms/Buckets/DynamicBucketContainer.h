@@ -32,7 +32,7 @@
 
 #include "../../DataStructures/Utilities/DynamicRagged2DArrays.h"
 
-// This class maintains a dynamic bucket for each vertex for bucket-based CH searches. We store all
+// This class maintains a dynamic bucket for each entity (vertex, stop) for bucket-based CH searches. We store all
 // bucket entries in a single dynamic value array. The entries in the same bucket are stored
 // consecutively in memory, in no particular order. In addition, an index array stores the starting
 // and ending point of each bucket's value block in the value array.
@@ -48,35 +48,34 @@
 template<typename BucketEntryT>
 class DynamicBucketContainer {
 public:
-
     using Bucket = ConstantVectorRange<BucketEntryT>;
 
-    // Constructs a container that can maintain buckets for the specified number of vertices.
-    explicit DynamicBucketContainer(const int numVertices) : bucketPositions(numVertices) {
-        assert(numVertices >= 0);
+    // Constructs a container that can maintain buckets for the specified number of entities.
+    explicit DynamicBucketContainer(const int numEntities) : bucketPositions(numEntities) {
+        assert(numEntities >= 0);
     }
 
-    // Returns the bucket of the specified vertex.
-    Bucket getBucketOf(const int vertex) const {
-        assert(vertex >= 0);
-        assert(vertex < bucketPositions.size());
-        const auto &pos = bucketPositions[vertex];
+    // Returns the bucket of the specified entity.
+    Bucket getBucketOf(const int entityId) const {
+        assert(entityId >= 0);
+        assert(entityId < bucketPositions.size());
+        const auto &pos = bucketPositions[entityId];
         return Bucket(entries.begin() + pos.start, entries.begin() + pos.end);
     }
 
-    Bucket getUnsortedBucketOf(const int vertex) const {
-        return getBucketOf(vertex);
+    Bucket getUnsortedBucketOf(const int entityId) const {
+        return getBucketOf(entityId);
     }
 
-    // Inserts the given entry into the bucket of the specified vertex.
-    bool insert(const int vertex, const BucketEntryT &entry) {
-        insertion(vertex, entry, bucketPositions, entries);
+    // Inserts the given entry into the bucket of the specified entity.
+    bool insert(const int entityId, const BucketEntryT &entry) {
+        insertion(entityId, entry, bucketPositions, entries);
         return true;
     }
 
-    // Inserts the given entry into the bucket of the specified vertex at the given index (within the bucket).
-    bool stableInsert(const int vertex, const int idx, const BucketEntryT &entry) {
-        stableInsertion(vertex, idx, entry, bucketPositions, entries);
+    // Inserts the given entry into the bucket of the specified entity at the given index (within the bucket).
+    bool stableInsert(const int entityId, const int idx, const BucketEntryT &entry) {
+        stableInsertion(entityId, idx, entry, bucketPositions, entries);
         return true;
     }
 

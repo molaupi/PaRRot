@@ -747,8 +747,8 @@ int main(int argc, char *argv[]) {
         VehPathTracker pathTracker;
 #endif
 
-        using StationsInEllipseImpl = StationsInEllipse<VehicleInputGraph, VehCHEnv, EllipticBucketsEnv, StationBucketsEnv>;
-        StationsInEllipseImpl stationsInEllipse(vehicleInputGraph, *vehChEnv, routeState, ellipticBucketsEnv, stationBucketsEnv, stations.size());
+        using StationsInEllipseImpl = StationsInEllipse<VehicleInputGraph, VehCHEnv, StationBucketsEnv>;
+        StationsInEllipseImpl stationsInEllipse(vehicleInputGraph, *vehChEnv, routeState, stationBucketsEnv, stations.size());
 
         using SystemStateUpdaterImpl = SystemStateUpdater<VehicleInputGraph, EllipticBucketsEnv, LastStopBucketsEnv, StationsInEllipseImpl, CurVehLocToPickupSearchesImpl, VehPathTracker, std::ofstream>;
         SystemStateUpdaterImpl
