@@ -73,6 +73,7 @@ namespace karri {
                     }
                 }
                 
+                // when station bucket is sorted -> check leeway and break if exceeded
                 search.numEntriesVisited += numEntriesScannedHere;
                 ++search.numVerticesSettled;
 
@@ -216,6 +217,7 @@ namespace karri {
                 const int distFromStationToStop = stationEntry.distFromStationToStop;
                 const int leeway = routeState.leewayOfLegStartingAt(curStopId);
 
+                // only add the entry to the container if the leeway is not exceeded
                 if (distFromStopToStation + distFromStationToStop > leeway) {
                     stationAndStopBucketContainer.remove(curStopId, stationId);
                 }

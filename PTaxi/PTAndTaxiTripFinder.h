@@ -56,6 +56,7 @@ namespace karri {
                             const PsgInputGraphT &psgInputGraph,
                             const PsgCHEnvT &psgChEnv,
                             const Fleet &fleet,
+                            RouteState &routeState,
                             PTStations stations,
                             StationBucketsEnvT &stationBucketsEnv,
                             PALSToStationsT &palsToStations,
@@ -79,7 +80,7 @@ namespace karri {
                   vehCh(vehChEnv.getCH()),
                   stations(stations),
                   stationBucketsEnv(stationBucketsEnv),
-                  stationBCH(vehInputGraph, vehChEnv, stationBucketsEnv, stations.size()),
+                  stationBCH(vehInputGraph, vehChEnv, routeState, stationBucketsEnv, stations.size()),
                   palsToStations(palsToStations),
                   ptAlgorithm(ptAlgorithm),
                   chOrder(order), 
@@ -188,7 +189,8 @@ namespace karri {
         void runPALS(RequestState &rs, stats::PalsAssignmentsPerformanceStats &stats) {
             // Run BCH queries from origin to all stations
             // reachable pickups from origin from KaRRi
-            stationBCH.runBchQueries(relevantPdLocs);
+            stationBCH.setExternalCostUpperBound(bestCost);
+            stationBCH.runBchQueries(relevantPdLocs, rs);
                         
             // last stop -> pickups
             // PALS Individual BCH

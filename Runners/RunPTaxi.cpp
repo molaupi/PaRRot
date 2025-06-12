@@ -734,7 +734,7 @@ int main(int argc, char *argv[]) {
                                                     feasibleEllipticPickups, feasibleEllipticDropoffs, ellipticSearches, 
                                                     ffPDDistanceQuery, ordinaryInsertionsFinder, pbnsInsertionsFinder, 
                                                     palsInsertionsFinder, dalsInsertionsFinder, relevantPdLocsFilter, 
-                                                    vehicleInputGraph, *vehChEnv, psgInputGraph, *psgChEnv, fleet, 
+                                                    vehicleInputGraph, *vehChEnv, psgInputGraph, *psgChEnv, fleet, routeState,
                                                     stations, stationBucketsEnv, palsToStations, ptAlgorithm, order);
 
 
