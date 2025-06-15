@@ -36,6 +36,7 @@
 #include "../PTaxi/PTAndTaxiTripFinder.h"
 #include "../PTaxi/StationBCHQuery.h"
 #include "../PTaxi/PALSToStations.h"
+#include "../PTaxi/OrdinaryToStations.h"
 #include "../PTaxi/StationBucketsEnvironment.h"
 #include "../PTaxi/StationsInEllipse.h"
 
@@ -711,6 +712,9 @@ int main(int argc, char *argv[]) {
 
         using StationsInEllipseImpl = StationsInEllipse<VehicleInputGraph, VehCHEnv, StationBucketsEnv>;
         StationsInEllipseImpl stationsInEllipse(vehicleInputGraph, *vehChEnv, routeState, stationBucketsEnv, stations.size());
+
+        // Ordinary for stations
+        using OrdinaryToStationsImplementation =  OrdinaryToStations<StationsInEllipseImpl, StationBCH::StationDistances>;
         
         // -> pass ULTRA algorithm instance and stationBucketsEnv, palsToStations to PTAndTaxiTripFinder
         using PTAndTaxiTripFinderImpl = PTAndTaxiTripFinder<
@@ -733,6 +737,7 @@ int main(int argc, char *argv[]) {
                 StationBCH,
                 PALSToStationsImplementation,
                 StationsInEllipseImpl,
+                OrdinaryToStationsImplementation,
                 PTAlgorithm>;
         PTAndTaxiTripFinderImpl ptAndTaxiTripFinder(requestStateInitializer, pdLocsFinder, pdLocsAtExistingStops,
                                                     feasibleEllipticPickups, feasibleEllipticDropoffs, ellipticSearches, 

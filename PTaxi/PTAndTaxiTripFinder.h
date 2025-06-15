@@ -32,6 +32,7 @@ namespace karri {
             typename StationBCHQueryT,
             typename PALSToStationsT,
             typename StationsInEllipseT,
+            typename OrdinaryToStationsT,
             typename PTAlgorithmT
     >
     class PTAndTaxiTripFinder {
@@ -87,6 +88,7 @@ namespace karri {
                   stationBCH(vehInputGraph, vehChEnv, routeState, stationBucketsEnv, stations.size()),
                   palsToStations(palsToStations),
                   stationsInEllipse(stationsInEllipse),
+                  ordinaryToStations(fleet, routeState),
                   ptAlgorithm(ptAlgorithm),
                   chOrder(order), 
                   bestCost(INFTY),
@@ -205,44 +207,7 @@ namespace karri {
         }
 
         void runOrdinary(RequestState &rs, stats::OrdAssignmentsPerformanceStats &stats) {
-            for (const auto &vehId: relPickups.getVehiclesWithRelevantPDLocs()) {
-                KASSERT(relPickups.hasRelevantSpotsFor(vehId));
-
-                Assignment asgn(&fleet[vehId]);
-
-                for (const auto &pickupEntry: relPickups.relevantSpotsFor(vehId)) {
-
-                    asgn.pickup = relevantPdLocs.pickups[pickupEntry.pdId];
-                    asgn.pickupStopIdx = pickupEntry.stopIndex;
-                    asgn.distToPickup = pickupEntry.distToPDLoc;
-                    asgn.distFromPickup = pickupEntry.distFromPDLocToNextStop;
-
-                    // Iterates through all stops after the pickup's stop index and try to find a station as a dropoff.
-                    for (int i = pickupEntry.stopIndex; i++; i < routeState.numStopsOf(vehId)) {
-                        const auto curStopId = routeState.stopIdsFor(vehId)[i];
-
-                        // for each station in ellipse, try assignment
-                        for (const auto &stationEntry: stationsInEllipse.getStationsInEllipse(curStopId)) {
-                            const auto &station = stations[stationEntry.targetId];
-
-                            asgn.dropoff = {
-                                station.stationId, // PDLoc ID
-                                station.vehEdgeId, // Location in road network
-                                station.psgEdgeId, // Location in passenger road network
-                                0, // Walking time from this dropoff to destination
-                                0, // Vehicle driving time from this dropoff to the destination
-                                0 // Vehicle driving time from destination to this dropoff
-                            };
-                            
-                            asgn.dropoffStopIdx = i;
-                            asgn.distToDropoff = stationEntry.distFromStopToStation;
-                            asgn.distFromDropoff = stationEntry.distFromStationToStop;
-
-                            rs.tryAssignmentWithKnownCost(asgn, CostCalculator(routeState).calc(asgn, rs));
-                        }
-                    }
-                }        
-            }
+            ordinaryToStations.enumerateAssignments(rs, relevantPdLocs, relPickups, stations, stationsInEllipse, stationBCH.getTentativeDistances(), stats);
         }
 
         void initializeComponentsForRequest(const RequestState& requestState, const PDLocs &pdLocs, stats::DispatchingPerformanceStats& stats) {
@@ -296,6 +261,7 @@ namespace karri {
         PALSToStationsT &palsToStations;
 
         StationsInEllipseT &stationsInEllipse;
+        OrdinaryToStationsT ordinaryToStations;
 
         PTAlgorithmT &ptAlgorithm;
         
