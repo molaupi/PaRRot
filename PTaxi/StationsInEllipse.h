@@ -230,6 +230,10 @@ namespace karri {
             const int stopId = routeState.stopIdsFor(vehId)[stopIndex];
             const int stopVertex = inputGraph.edgeHead(stopId);
             const int stopRank = ch.rank(stopVertex);
+
+            const int nextStopId = routeState.stopIdsFor(vehId)[stopIndex + 1];
+            const int nextStopVertex = inputGraph.edgeHead(nextStopId);
+            const int nextStopRank = ch.rank(nextStopVertex);
             
             init(stopId);
             
@@ -237,7 +241,7 @@ namespace karri {
             upwardSearch.runWithOffset({stopRank});
 
             // Run the reverse upward search from the second stop vertex
-            reverseUpwardSearch.runWithOffset({stopRank});
+            reverseUpwardSearch.runWithOffset({nextStopRank});
 
             for (int stationId = 0; stationId < stationsSeen.size(); ++stationId) {
                 if (!stationsSeen.contains(stationId)) {
@@ -249,10 +253,21 @@ namespace karri {
                 const DistanceLabel distFromStationToStop = distFromStationsToStop[stationId];
 
                 // only add the entry to the container if the leeway is not exceeded
-                if (distFromStopToStation + distFromStationToStop <= routeState.leewayOfLegStartingAt(curStopId)) {
+                if (!allSet(exceedsLeewayForStop(distFromStopToStation + distFromStationToStop))) {
                     stopBucketContainer.insert(curStopId, StationEntry(stationId, distFromStopToStation, distFromStationToStop));
                 }
             }
+        }
+
+        void recomputeStationsInEllipseForStop(const int stopIndex, const int vehId) {
+            const int stopId = routeState.stopIdsFor(vehId)[stopIndex];
+            init(stopId);
+
+            // Clear the bucket for the current stop
+            stopBucketContainer.clearBucket(curStopId);
+
+            // Recompute the stations in the ellipse for the current stop
+            computeNewStationsInEllipsesForStop(stopIndex, vehId);
         }
 
         LabelMask exceedsLeewayForStop(const DistanceLabel &distanceToStop) {

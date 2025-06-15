@@ -79,15 +79,15 @@ public:
         return true;
     }
 
-    // Finds an entry for targetId in the bucket of the specified vertex and applies the given transformation to it.
+    // Finds an entry for targetId in the bucket of the specified entity and applies the given transformation to it.
     // The transformation must be callable with a single entry of type BucketEntryT& as an argument.
     // Returns true if an entry is found and replaced and false if no entry with targetId can be found.
     template<typename TransformationT>
-    bool update(const int vertex, const int targetId, const TransformationT &transform) {
-        assert(vertex >= 0);
-        assert(vertex < bucketPositions.size());
+    bool update(const int entityId, const int targetId, const TransformationT &transform) {
+        assert(entityId >= 0);
+        assert(entityId < bucketPositions.size());
         numEntriesVisited = 0;
-        const auto &pos = bucketPositions[vertex];
+        const auto &pos = bucketPositions[entityId];
         for (auto i = pos.start; i < pos.end; ++i) {
             ++numEntriesVisited;
             if (entries[i].targetId == targetId) {
@@ -98,51 +98,51 @@ public:
         return false;
     }
 
-    // Removes the entry for targetId from the bucket of the specified vertex.
-    bool remove(const int vertex, const int targetId) {
-        assert(vertex >= 0);
-        assert(vertex < bucketPositions.size());
+    // Removes the entry for targetId from the bucket of the specified entity.
+    bool remove(const int entityId, const int targetId) {
+        assert(entityId >= 0);
+        assert(entityId < bucketPositions.size());
         numEntriesVisited = 0;
-        const auto &pos = bucketPositions[vertex];
+        const auto &pos = bucketPositions[entityId];
         for (auto i = pos.start; i < pos.end; ++i) {
             ++numEntriesVisited;
             if (entries[i].targetId == targetId) {
-                removal(vertex, i - pos.start, bucketPositions, entries);
+                removal(entityId, i - pos.start, bucketPositions, entries);
                 return true;
             }
         }
         return false;
     }
 
-    // Removes the given entry from the bucket of the specified vertex.
-    bool remove(const int vertex, const BucketEntryT &entry) {
-        return remove(vertex, entry.targetId);
+    // Removes the given entry from the bucket of the specified entity.
+    bool remove(const int entityId, const BucketEntryT &entry) {
+        return remove(entityId, entry.targetId);
     }
 
 
     // Removes multiple entries at given indices in the bucket. Indices have to be sorted in ascending order.
     template<typename IndicesRangeT>
-    void removeSortedIndices(const int vertex, const IndicesRangeT &indicesRange) {
-        assert(vertex >= 0);
-        assert(vertex < bucketPositions.size());
-        removalOfSortedCols(vertex, indicesRange, bucketPositions, entries);
+    void removeSortedIndices(const int entityId, const IndicesRangeT &indicesRange) {
+        assert(entityId >= 0);
+        assert(entityId < bucketPositions.size());
+        removalOfSortedCols(entityId, indicesRange, bucketPositions, entries);
 //        numEntriesVisited = indicesRange.size();
     }
 
     // Removes multiple entries at given indices in the bucket while keeping the order of remaining elements.
     // Indices have to be sorted in ascending order.
     template<typename IndicesRangeT>
-    void stableRemoveSortedIndices(const int vertex, const IndicesRangeT &indicesRange) {
-        assert(vertex >= 0);
-        assert(vertex < bucketPositions.size());
-        stableRemovalOfSortedCols(vertex, indicesRange, bucketPositions, entries);
+    void stableRemoveSortedIndices(const int entityId, const IndicesRangeT &indicesRange) {
+        assert(entityId >= 0);
+        assert(entityId < bucketPositions.size());
+        stableRemovalOfSortedCols(entityId, indicesRange, bucketPositions, entries);
 //        numEntriesVisited = indicesRange.size();
     }
 
-    void clearBucket(const int vertex) {
-        assert(vertex >= 0);
-        assert(vertex < bucketPositions.size());
-        auto &bucketPos = bucketPositions[vertex];
+    void clearBucket(const int entityId) {
+        assert(entityId >= 0);
+        assert(entityId < bucketPositions.size());
+        auto &bucketPos = bucketPositions[entityId];
         std::fill(entries.begin() + bucketPos.start, entries.begin() + bucketPos.end, BucketEntryT());
         bucketPos.end = bucketPos.start;
     }
