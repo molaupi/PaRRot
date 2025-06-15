@@ -708,6 +708,9 @@ int main(int argc, char *argv[]) {
         // PALS for stations
         using PALSToStationsImplementation = PALSToStations<VehicleInputGraph, VehCHEnv, LastStopBucketsEnv, StationBCH::StationDistances, PALSLabelSet>;
         PALSToStationsImplementation palsToStations(vehicleInputGraph, fleet, *vehChEnv, lastStopBucketsEnv, routeState);
+
+        using StationsInEllipseImpl = StationsInEllipse<VehicleInputGraph, VehCHEnv, StationBucketsEnv>;
+        StationsInEllipseImpl stationsInEllipse(vehicleInputGraph, *vehChEnv, routeState, stationBucketsEnv, stations.size());
         
         // -> pass ULTRA algorithm instance and stationBucketsEnv, palsToStations to PTAndTaxiTripFinder
         using PTAndTaxiTripFinderImpl = PTAndTaxiTripFinder<
@@ -728,14 +731,15 @@ int main(int argc, char *argv[]) {
                 PsgCHEnv, 
                 StationBucketsEnv,
                 StationBCH,
-                PALSToStationsImplementation, 
+                PALSToStationsImplementation,
+                StationsInEllipseImpl,
                 PTAlgorithm>;
         PTAndTaxiTripFinderImpl ptAndTaxiTripFinder(requestStateInitializer, pdLocsFinder, pdLocsAtExistingStops,
                                                     feasibleEllipticPickups, feasibleEllipticDropoffs, ellipticSearches, 
                                                     ffPDDistanceQuery, ordinaryInsertionsFinder, pbnsInsertionsFinder, 
                                                     palsInsertionsFinder, dalsInsertionsFinder, relevantPdLocsFilter, 
                                                     vehicleInputGraph, *vehChEnv, psgInputGraph, *psgChEnv, fleet, routeState,
-                                                    stations, stationBucketsEnv, palsToStations, ptAlgorithm, order);
+                                                    stations, stationBucketsEnv, palsToStations, stationsInEllipse, ptAlgorithm, order);
 
 
 
@@ -746,9 +750,6 @@ int main(int argc, char *argv[]) {
         using VehPathTracker = NoOpPathTracker;
         VehPathTracker pathTracker;
 #endif
-
-        using StationsInEllipseImpl = StationsInEllipse<VehicleInputGraph, VehCHEnv, StationBucketsEnv>;
-        StationsInEllipseImpl stationsInEllipse(vehicleInputGraph, *vehChEnv, routeState, stationBucketsEnv, stations.size());
 
         using SystemStateUpdaterImpl = SystemStateUpdater<VehicleInputGraph, EllipticBucketsEnv, LastStopBucketsEnv, StationsInEllipseImpl, CurVehLocToPickupSearchesImpl, VehPathTracker, std::ofstream>;
         SystemStateUpdaterImpl

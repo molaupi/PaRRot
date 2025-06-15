@@ -274,6 +274,11 @@ namespace karri {
             return routeState.leewayOfLegStartingAt(curStopId) < distanceToStop;
         }
 
+        ConstantVectorRange<StationEntry> getStationsInEllipse(const int stopId) const {
+            assert(stopId >= 0);
+            return stopBucketContainer.getBucketOf(stopId);
+        }
+
     private:
 
         void init(const int stopId) {

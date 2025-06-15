@@ -239,12 +239,12 @@ namespace karri {
 
                     for (auto &station: stations) {
                         asgn.dropoff = {
-                            station.stationId,
-                            station.vehEdgeId, // location -> edgeId
-                            station.psgEdgeId, // location -> edgeId
-                            0,
-                            0,
-                            0
+                            station.stationId, // PDLoc ID
+                            station.vehEdgeId, // Location in road network
+                            station.psgEdgeId, // Location in passenger road network
+                            0, // Walking time from this dropoff to destination
+                            0, // Vehicle driving time from this dropoff to the destination
+                            0 // Vehicle driving time from destination to this dropoff
                         };
 
                         // Try inserting pair with pickup after last stop:

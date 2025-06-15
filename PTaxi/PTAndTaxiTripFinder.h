@@ -31,6 +31,7 @@ namespace karri {
             typename StationBucketsEnvT,
             typename StationBCHQueryT,
             typename PALSToStationsT,
+            typename StationsInEllipseT,
             typename PTAlgorithmT
     >
     class PTAndTaxiTripFinder {
@@ -60,6 +61,7 @@ namespace karri {
                             PTStations stations,
                             StationBucketsEnvT &stationBucketsEnv,
                             PALSToStationsT &palsToStations,
+                            StationsInEllipseT &stationsInEllipse,
                             PTAlgorithmT &ptAlgorithm,
                             Order &order)
                 : feasibleEllipticPickups(feasibleEllipticPickups),
@@ -78,10 +80,13 @@ namespace karri {
                   psgInputGraph(psgInputGraph),
                   psgCh(psgChEnv.getCH()),
                   vehCh(vehChEnv.getCH()),
+                  routeState(routeState),
+                  fleet(fleet),
                   stations(stations),
                   stationBucketsEnv(stationBucketsEnv),
                   stationBCH(vehInputGraph, vehChEnv, routeState, stationBucketsEnv, stations.size()),
                   palsToStations(palsToStations),
+                  stationsInEllipse(stationsInEllipse),
                   ptAlgorithm(ptAlgorithm),
                   chOrder(order), 
                   bestCost(INFTY),
@@ -200,14 +205,44 @@ namespace karri {
         }
 
         void runOrdinary(RequestState &rs, stats::OrdAssignmentsPerformanceStats &stats) {
-            for (const auto &vehId : relPickups.getVehiclesWithRelevantPDLocs()) {
-                std::cout << "Vehicle with relevant pickup: " << vehId << std::endl;
-            }
+            for (const auto &vehId: relPickups.getVehiclesWithRelevantPDLocs()) {
+                KASSERT(relPickups.hasRelevantSpotsFor(vehId));
 
-            // for each stop pair BCH forward from first, BCH backward from second
-            // for all stations
-            // distance sum < leeway -> try assignment with all relevant pickups before the stop pairs
-            // RouteState::leewayOfLegStartingAt(stopId)
+                Assignment asgn(&fleet[vehId]);
+
+                for (const auto &pickupEntry: relPickups.relevantSpotsFor(vehId)) {
+
+                    asgn.pickup = relevantPdLocs.pickups[pickupEntry.pdId];
+                    asgn.pickupStopIdx = pickupEntry.stopIndex;
+                    asgn.distToPickup = pickupEntry.distToPDLoc;
+                    asgn.distFromPickup = pickupEntry.distFromPDLocToNextStop;
+
+                    // Iterates through all stops after the pickup's stop index and try to find a station as a dropoff.
+                    for (int i = pickupEntry.stopIndex; i++; i < routeState.numStopsOf(vehId)) {
+                        const auto curStopId = routeState.stopIdsFor(vehId)[i];
+
+                        // for each station in ellipse, try assignment
+                        for (const auto &stationEntry: stationsInEllipse.getStationsInEllipse(curStopId)) {
+                            const auto &station = stations[stationEntry.targetId];
+
+                            asgn.dropoff = {
+                                station.stationId, // PDLoc ID
+                                station.vehEdgeId, // Location in road network
+                                station.psgEdgeId, // Location in passenger road network
+                                0, // Walking time from this dropoff to destination
+                                0, // Vehicle driving time from this dropoff to the destination
+                                0 // Vehicle driving time from destination to this dropoff
+                            };
+                            
+                            asgn.dropoffStopIdx = i;
+                            asgn.distToDropoff = stationEntry.distFromStopToStation;
+                            asgn.distFromDropoff = stationEntry.distFromStationToStop;
+
+                            rs.tryAssignmentWithKnownCost(asgn, CostCalculator(routeState).calc(asgn, rs));
+                        }
+                    }
+                }        
+            }
         }
 
         void initializeComponentsForRequest(const RequestState& requestState, const PDLocs &pdLocs, stats::DispatchingPerformanceStats& stats) {
@@ -248,6 +283,9 @@ namespace karri {
         const CH &psgCh;
         const CH &vehCh;
 
+        const Fleet &fleet;
+        RouteState &routeState;
+
         Order &chOrder;
         PDLocs relevantPdLocs;
         RelevantPDLocs relPickups;
@@ -256,6 +294,8 @@ namespace karri {
         StationBucketsEnvT &stationBucketsEnv;
         StationBCHQueryT stationBCH;
         PALSToStationsT &palsToStations;
+
+        StationsInEllipseT &stationsInEllipse;
 
         PTAlgorithmT &ptAlgorithm;
         
