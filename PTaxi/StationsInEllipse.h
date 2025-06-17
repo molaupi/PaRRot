@@ -207,7 +207,7 @@ namespace karri {
         StationsInEllipse(
                 const InputGraphT &inputGraph,
                 const CHEnvT &chEnv,
-                RouteState &routeState, 
+                const RouteState &routeState, 
                 const StationBucketsEnvT &stationBucketsEnv,
                 const int numberOfStations)
                 : inputGraph(inputGraph),
@@ -311,7 +311,7 @@ namespace karri {
 
         const InputGraphT &inputGraph;
         const CH &ch;
-        RouteState &routeState;
+        const RouteState &routeState;
         
         const StationBucketContainer &stationbucketContainer;
         StopBucketContainer stopBucketContainer;

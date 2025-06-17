@@ -67,7 +67,7 @@ public:
     // Inserts the given entry into the bucket of the specified vertex.
     bool insert(const int v, const BucketEntryT &entry) {
         const auto &pos = bucketPositions[v];
-        const auto col = searchForInsertionIdx(entry, pos.start, comparator) - pos.start;
+        const auto col = searchForInsertionIdx(entry, pos.start, pos.end, comparator) - pos.start;
         stableInsertion(v, col, entry, bucketPositions, entries);
         return true;
     }

@@ -317,12 +317,6 @@ int main(int argc, char *argv[]) {
         std::ofstream out(stationBucketsOutputFilename, std::ios::binary);
         stationBucketsEnv.writeBucketsTo(out);
         std::cout << "done.\n";
-        
-        std::cout << "Read station buckets from file... " << std::flush;
-        std::ifstream in(stationBucketsOutputFilename, std::ios::binary);
-        StationBucketsEnv readStationBucketsEnv(vehicleInputGraph, *vehChEnv);
-        readStationBucketsEnv.readBucketsFrom(in);
-        std::cout << "done.\n";
 
 
     } catch (std::exception &e) {

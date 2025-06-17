@@ -129,6 +129,9 @@ namespace karri {
 
             void updateUpperBoundCost(const int vehId, const DistanceLabel &distancesToPickups) {
                 assert(allSet(distancesToPickups >= 0));
+                // If the distance to the pickup is INFTY, then this vehicle cannot perform a PALS assignment.
+                if (strat.curDistancesToDest.horizontalMin() == INFTY) 
+                    return;
                 const DistanceLabel cost = calc.template calcUpperBoundCostForKPairedAssignmentsAfterLastStop<LabelSetT>(
                         strat.fleet[vehId], distancesToPickups, strat.curPassengerArrTimesAtPickups,
                         strat.curDistancesToDest,
@@ -294,7 +297,7 @@ namespace karri {
                 travelTimes[i] = inputGraph.travelTime(pickup.loc);
                 currentPickupWalkingDists[i] = pickup.walkingDist;
                 curPassengerArrTimesAtPickups[i] = requestState.getPassengerArrAtPickup(pickup);
-                curDistancesToDest[i] = stationDistances.getDistance(0, pickup.id);
+                curDistancesToDest[i] = stationDistances.getDistanceToDestinationFrom(pickup.id);
             }
 
             distances.setCurBatchIdx(firstPickupId / K);

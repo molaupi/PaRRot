@@ -70,6 +70,18 @@ namespace karri {
             return distances[startIdx + batchIdx][pdLocId % K];
         }
 
+        int getDistanceToDestinationFrom(const int &pdLocId) {
+            if (stationIdxForStation.empty()) return INFTY;
+
+            for (int stationId = 0; stationId < startIdxForStation.size(); ++stationId) {
+                const int startIdx = startIdxForStation[stationId];
+                if (startIdx != INVALID_INDEX)
+                    return distances[startIdx + pdLocId / K][pdLocId % K];
+            }
+
+            return INFTY;
+        }
+
         int getMinDistanceForPDLoc(const int &pdLocId) {
             return minDistancesPerPDLoc[pdLocId / K].horizontalMin();
         }

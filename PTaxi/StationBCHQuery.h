@@ -54,7 +54,7 @@ namespace karri {
 
             template<typename DistLabelT, typename DistLabelContainerT>
             bool operator()(const int v, DistLabelT &distToV, const DistLabelContainerT & /*distLabels*/) {
-                // Check if we can prune at this vertex based only on the distance from v to the pickup(s)
+                // Check if we can prune at this vertex based only on the distance to v
                 if (allSet(search.canPrune(distToV)))
                     return true;
             
@@ -102,12 +102,10 @@ namespace karri {
                 mask &= distFromPDLoc < INFTY;
                 if (!anySet(mask))
                     return;
-
-                if (anySet(mask)) { // if any search requires updates, update the right ones according to mask
-                    search.tentativeDistances.setDistancesForCurBatchIf(stationId, distFromPDLoc, mask);
-                    search.stationsSeen.insert(stationId);
-                    // search.updateUpperBoundCost(stationId, distFromPDLoc);
-                }
+                    
+                search.tentativeDistances.setDistancesForCurBatchIf(stationId, distFromPDLoc, mask);
+                search.stationsSeen.insert(stationId);
+                // search.updateUpperBoundCost(stationId, distFromPDLoc);
             }
 
 
@@ -120,6 +118,9 @@ namespace karri {
 
             template<typename DistLabelT, typename DistLabelContainerT>
             bool operator()(const int, DistLabelT &distToV, const DistLabelContainerT & /*distLabels*/) const {
+                if constexpr (!StationBucketsEnvT::SORTED) {
+                    return false;
+                }
                 return allSet(search.canPrune(distToV));
             }
 
