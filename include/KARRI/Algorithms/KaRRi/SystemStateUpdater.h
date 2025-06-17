@@ -314,9 +314,9 @@ namespace karri {
             if (!pickupAtExistingStop) {
                 ellipticBucketsEnv.generateTargetBucketEntries(*asgn.vehicle, pickupIndex, stats);
                 ellipticBucketsEnv.generateSourceBucketEntries(*asgn.vehicle, pickupIndex, stats);
-                // calculate the relevant stations for this new stop
-                // stationsInEllipses.recomputeStationsInEllipseForStop(pickupIndex - 1);
-                // stationsInEllipses.computeNewStationsInEllipsesForStop(pickupIndex);
+                // calculate the relevant stations for this new pickup stop
+                stationsInEllipse.recomputeStationsInEllipseForStop(pickupIndex - 1, vehId);
+                stationsInEllipse.computeNewStationsInEllipsesForStop(pickupIndex, vehId);
 
             }
 
@@ -325,11 +325,13 @@ namespace karri {
                 return;
 
             ellipticBucketsEnv.generateTargetBucketEntries(*asgn.vehicle, dropoffIndex, stats);
-
+            
             // If dropoff is not the new last stop, we generate elliptic source buckets for it.
             if (dropoffIndex < numStops - 1) {
                 ellipticBucketsEnv.generateSourceBucketEntries(*asgn.vehicle, dropoffIndex, stats);
-                // stationsInEllipses.computeNewStationsInEllipsesForStop(dropoffIndex);
+                // calculate the relevant stations for this new dropoff stop
+                stationsInEllipse.recomputeStationsInEllipseForStop(dropoffIndex - 1, vehId);
+                stationsInEllipse.computeNewStationsInEllipsesForStop(dropoffIndex, vehId);
                 return;
             }
 
@@ -338,7 +340,7 @@ namespace karri {
             const auto pickupAtEnd = pickupIndex + 1 == dropoffIndex && pickupIndex > asgn.pickupStopIdx;
             const int formerLastStopIdx = dropoffIndex - pickupAtEnd - 1;
             ellipticBucketsEnv.generateSourceBucketEntries(*asgn.vehicle, formerLastStopIdx, stats);
-            // stationsInEllipses.computeNewStationsInEllipsesForStop(dropoffIndex);
+            stationsInEllipse.computeNewStationsInEllipsesForStop(formerLastStopIdx, vehId);
 
             // Remove last stop bucket entries for former last stop and generate them for dropoff
             if (formerLastStopIdx == 0) {

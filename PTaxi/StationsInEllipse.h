@@ -110,7 +110,7 @@ namespace karri {
                 
                 if (anySet(mask)) { // if any search requires updates, update the right ones according to mask
                     search.distFromStopToStations[stationId].setIf(distToStop, mask);
-                    search.vehiclesSeen.insert(stationId);
+                    search.stationsSeen.insert(stationId);
                 }
             }
 
@@ -179,7 +179,7 @@ namespace karri {
                 
                 if (anySet(mask)) { // if any search requires updates, update the right ones according to mask
                     search.distFromStationsToStop[stationId].setIf(distFromV, mask);
-                    search.vehiclesSeen.insert(stationId);
+                    search.stationsSeen.insert(stationId);
                 }
             }
 
@@ -238,10 +238,10 @@ namespace karri {
             init(stopId);
             
             // Run the upward search 
-            upwardSearch.runWithOffset({stopRank});
+            upwardSearch.run(stopRank);
 
             // Run the reverse upward search from the second stop vertex
-            reverseUpwardSearch.runWithOffset({nextStopRank});
+            reverseUpwardSearch.run(nextStopRank);
 
             for (int stationId = 0; stationId < stationsSeen.size(); ++stationId) {
                 if (!stationsSeen.contains(stationId)) {
@@ -254,7 +254,7 @@ namespace karri {
 
                 // only add the entry to the container if the leeway is not exceeded
                 if (!allSet(exceedsLeewayForStop(distFromStopToStation + distFromStationToStop))) {
-                    stopBucketContainer.insert(curStopId, StationEntry(stationId, distFromStopToStation, distFromStationToStop));
+                    stopBucketContainer.insert(curStopId, StationEntry(stationId, distFromStopToStation.horizontalMin(), distFromStationToStop.horizontalMin()));
                 }
             }
         }
@@ -270,7 +270,7 @@ namespace karri {
             computeNewStationsInEllipsesForStop(stopIndex, vehId);
         }
 
-        LabelMask exceedsLeewayForStop(const DistanceLabel &distanceToStop) {
+        LabelMask exceedsLeewayForStop(const DistanceLabel &distanceToStop) const {
             return routeState.leewayOfLegStartingAt(curStopId) < distanceToStop;
         }
 

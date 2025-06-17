@@ -71,7 +71,7 @@ namespace karri {
         }
 
         int getDistanceToDestinationFrom(const int &pdLocId) {
-            if (stationIdxForStation.empty()) return INFTY;
+            if (startIdxForStation.empty()) return INFTY;
 
             for (int stationId = 0; stationId < startIdxForStation.size(); ++stationId) {
                 const int startIdx = startIdxForStation[stationId];

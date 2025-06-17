@@ -207,7 +207,7 @@ namespace karri {
         }
 
         void runOrdinary(RequestState &rs, stats::OrdAssignmentsPerformanceStats &stats) {
-            // ordinaryToStations.enumerateAssignments(rs, relevantPdLocs, relPickups, stations, stationsInEllipse, stationBCH.getTentativeDistances(), stats);
+            ordinaryToStations.enumerateAssignments(rs, relevantPdLocs, relPickups, stations, stationsInEllipse, stationBCH.getTentativeDistances(), stats);
         }
 
         void initializeComponentsForRequest(const RequestState& requestState, const PDLocs &pdLocs, stats::DispatchingPerformanceStats& stats) {

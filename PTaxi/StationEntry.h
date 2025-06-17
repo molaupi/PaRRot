@@ -35,7 +35,8 @@ struct StationEntry {
   StationEntry() noexcept = default;
 
   StationEntry(const int stationId, 
-               const int distFromStopToStation, const int distFromStationToStop) noexcept
+               const int distFromStopToStation, 
+               const int distFromStationToStop) noexcept
       : targetId(stationId), 
         distFromStopToStation(distFromStopToStation), 
         distFromStationToStop(distFromStationToStop) {}
