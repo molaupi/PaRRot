@@ -69,6 +69,8 @@ public:
 
     // Inserts the given entry into the bucket of the specified entity.
     bool insert(const int entityId, const BucketEntryT &entry) {
+        assert(entityId >= 0);
+        assert(entityId < bucketPositions.size());
         insertion(entityId, entry, bucketPositions, entries);
         return true;
     }
@@ -168,6 +170,16 @@ public:
     // Returns the number of bucket entries visited during the last remove operation.
     int getNumEntriesVisitedInLastUpdateOrRemove() const noexcept {
         return numEntriesVisited;
+    }
+
+    void checkAndResize(const int maxEntityId) {
+        if (maxEntityId >= bucketPositions.size()) {
+            bucketPositions.resize(maxEntityId + 1, BucketPosition{0, 0});
+        }
+    }
+
+    int getBucketPositionsSize() const noexcept {
+        return bucketPositions.size();
     }
 
 private:

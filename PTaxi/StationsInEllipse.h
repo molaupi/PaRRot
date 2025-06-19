@@ -276,6 +276,9 @@ namespace karri {
 
         ConstantVectorRange<StationEntry> getStationsInEllipse(const int stopId) const {
             assert(stopId >= 0);
+            if (stopBucketContainer.getBucketPositionsSize() <= stopId) {
+                return ConstantVectorRange<StationEntry>();
+            }
             return stopBucketContainer.getBucketOf(stopId);
         }
 
@@ -292,6 +295,7 @@ namespace karri {
             // Initialize the distances from the stop to the stations
             distFromStopToStations.resize(stationsSeen.size(), DistanceLabel(INFTY));
             distFromStationsToStop.resize(stationsSeen.size(), DistanceLabel(INFTY));
+            stopBucketContainer.checkAndResize(routeState.getMaxStopId());
         }
 
         int getNumEdgeRelaxations() const {

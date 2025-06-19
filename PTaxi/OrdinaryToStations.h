@@ -65,9 +65,8 @@ namespace karri {
                     asgn.distToPickup = pickupEntry.distToPDLoc;
                     asgn.distFromPickup = pickupEntry.distFromPDLocToNextStop;
 
-                    // Iterates through all stops after the pickup's stop index and try to find a station as a dropoff.
-                    for (int i = pickupEntry.stopIndex; i++; i < routeState.numStopsOf(vehId)) {
-                        // SPECIAL CASE FOR PAIRED ASSIGNMENTS:
+                    // Iterates through stops [pickup's stop index; last stop) and try to find a station as a dropoff.
+                    for (int i = pickupEntry.stopIndex; i < routeState.numStopsOf(vehId) - 1; ++i) {
 
                         const auto curStopId = routeState.stopIdsFor(vehId)[i];
 
