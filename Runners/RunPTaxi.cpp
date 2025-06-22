@@ -37,6 +37,7 @@
 #include "../PTaxi/StationBCHQuery.h"
 #include "../PTaxi/LastStopToStationBCHQuery.h"
 #include "../PTaxi/PALSToStations.h"
+#include "../PTaxi/DALSToStations.h"
 #include "../PTaxi/OrdinaryToStations.h"
 #include "../PTaxi/StationBucketsEnvironment.h"
 #include "../PTaxi/StationsInEllipse.h"
@@ -714,11 +715,15 @@ int main(int argc, char *argv[]) {
         using PALSToStationsImplementation = PALSToStations<VehicleInputGraph, VehCHEnv, LastStopBucketsEnv, StationBCH::StationDistances, PALSLabelSet>;
         PALSToStationsImplementation palsToStations(vehicleInputGraph, fleet, *vehChEnv, lastStopBucketsEnv, routeState);
 
+        // DALS for stations
+        using DALSToStationsImplementation = DALSToStations<VehicleInputGraph, VehCHEnv, StationBCH::StationDistances, CurVehLocToPickupSearchesImpl, PALSLabelSet>;
+        DALSToStationsImplementation dalsToStations(vehicleInputGraph, fleet, *vehChEnv, curVehLocToPickupSearches, routeState, stations);
+
         using StationsInEllipseImpl = StationsInEllipse<VehicleInputGraph, VehCHEnv, StationBucketsEnv>;
         StationsInEllipseImpl stationsInEllipse(vehicleInputGraph, *vehChEnv, routeState, stationBucketsEnv, stations.size());
 
         // Ordinary for stations
-        using OrdinaryToStationsImplementation =  OrdinaryToStations<StationsInEllipseImpl, StationBCH::StationDistances>;
+        using OrdinaryToStationsImpl =  OrdinaryToStations<StationsInEllipseImpl, StationBCH::StationDistances>;
         
         // -> pass ULTRA algorithm instance and stationBucketsEnv, palsToStations to PTAndTaxiTripFinder
         using PTAndTaxiTripFinderImpl = PTAndTaxiTripFinder<
@@ -741,14 +746,17 @@ int main(int argc, char *argv[]) {
                 StationBCH,
                 PALSToStationsImplementation,
                 StationsInEllipseImpl,
-                OrdinaryToStationsImplementation,
+                OrdinaryToStationsImpl,
+                LastStopToStationBCH,
+                DALSToStationsImplementation,
                 PTAlgorithm>;
         PTAndTaxiTripFinderImpl ptAndTaxiTripFinder(requestStateInitializer, pdLocsFinder, pdLocsAtExistingStops,
                                                     feasibleEllipticPickups, feasibleEllipticDropoffs, ellipticSearches, 
                                                     ffPDDistanceQuery, ordinaryInsertionsFinder, pbnsInsertionsFinder, 
                                                     palsInsertionsFinder, dalsInsertionsFinder, relevantPdLocsFilter, 
                                                     vehicleInputGraph, *vehChEnv, psgInputGraph, *psgChEnv, fleet, routeState,
-                                                    stations, stationBucketsEnv, palsToStations, stationsInEllipse, ptAlgorithm, order);
+                                                    stations, stationBucketsEnv, palsToStations, stationsInEllipse, lastStopToStationBCH, dalsToStations,
+                                                    ptAlgorithm, order);
 
 
 

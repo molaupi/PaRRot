@@ -37,7 +37,7 @@ namespace karri {
             typename EllipticBucketsEnvT,
             typename LastStopBucketsEnvT,
             typename StationsInEllipseT,
-            typename LastStopToStationBCHT,
+            typename LastStopToStationBCHQueryT,
             typename CurVehLocsT,
             typename PathTrackerT,
             typename LoggerT = NullLogger>
@@ -51,7 +51,7 @@ namespace karri {
                            RouteState &routeState, EllipticBucketsEnvT &ellipticBucketsEnv,
                            LastStopBucketsEnvT &lastStopBucketsEnv,
                            StationsInEllipseT &stationsInEllipse,
-                           LastStopToStationBCHT &lastStopToStationBCHQuery)
+                           LastStopToStationBCHQueryT &lastStopToStationBCHQuery)
                 : inputGraph(inputGraph),
                   curVehLocs(curVehLocs),
                   pathTracker(pathTracker),
@@ -370,7 +370,7 @@ namespace karri {
         StationsInEllipseT &stationsInEllipse;
 
         // Last stop to station BCH query
-        LastStopToStationBCHT &lastStopToStationBCHQuery;
+        LastStopToStationBCHQueryT &lastStopToStationBCHQuery;
 
         // Performance Loggers
         LoggerT &bestAssignmentsLogger;
