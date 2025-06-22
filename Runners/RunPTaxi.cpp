@@ -35,6 +35,7 @@
 
 #include "../PTaxi/PTAndTaxiTripFinder.h"
 #include "../PTaxi/StationBCHQuery.h"
+#include "../PTaxi/LastStopToStationBCHQuery.h"
 #include "../PTaxi/PALSToStations.h"
 #include "../PTaxi/OrdinaryToStations.h"
 #include "../PTaxi/StationBucketsEnvironment.h"
@@ -705,6 +706,9 @@ int main(int argc, char *argv[]) {
         std::cout << "done.\n";
 
         using StationBCH = StationBCHQuery<VehicleInputGraph, VehCHEnv, StationBucketsEnv>;
+        using LastStopToStationBCH = LastStopToStationBCHQuery<VehicleInputGraph, VehCHEnv, StationBucketsEnv>;
+
+        LastStopToStationBCHQuery lastStopToStationBCH(vehicleInputGraph, *vehChEnv, fleet, routeState, stationBucketsEnv, stations.size());
         
         // PALS for stations
         using PALSToStationsImplementation = PALSToStations<VehicleInputGraph, VehCHEnv, LastStopBucketsEnv, StationBCH::StationDistances, PALSLabelSet>;
@@ -756,10 +760,10 @@ int main(int argc, char *argv[]) {
         VehPathTracker pathTracker;
 #endif
 
-        using SystemStateUpdaterImpl = SystemStateUpdater<VehicleInputGraph, EllipticBucketsEnv, LastStopBucketsEnv, StationsInEllipseImpl, CurVehLocToPickupSearchesImpl, VehPathTracker, std::ofstream>;
+        using SystemStateUpdaterImpl = SystemStateUpdater<VehicleInputGraph, EllipticBucketsEnv, LastStopBucketsEnv, StationsInEllipseImpl, LastStopToStationBCH, CurVehLocToPickupSearchesImpl, VehPathTracker, std::ofstream>;
         SystemStateUpdaterImpl
                 systemStateUpdater(vehicleInputGraph, curVehLocToPickupSearches,
-                                   pathTracker, routeState, ellipticBucketsEnv, lastStopBucketsEnv, stationsInEllipse);
+                                   pathTracker, routeState, ellipticBucketsEnv, lastStopBucketsEnv, stationsInEllipse, lastStopToStationBCH);
 
 
         // Initialize last stop state for initial locations of vehicles

@@ -276,9 +276,6 @@ namespace karri {
 
         ConstantVectorRange<StationEntry> getStationsInEllipse(const int stopId) const {
             assert(stopId >= 0);
-            if (stopBucketContainer.getBucketPositionsSize() <= stopId) {
-                return ConstantVectorRange<StationEntry>();
-            }
             return stopBucketContainer.getBucketOf(stopId);
         }
 
