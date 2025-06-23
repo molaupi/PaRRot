@@ -96,7 +96,9 @@ namespace karri {
                   lastStopToStationBCH(lastStopToStationBCH),
                   dalsToStations(dalsToStations),
                   ptAlgorithm(ptAlgorithm),
-                  chOrder(order), 
+                  chOrder(order),
+                  curRelOrdinaryPickups(fleet.size()),
+                  curRelPickupsBns(fleet.size()), 
                   bestCost(INFTY) {}
 
         PTAndTaxiTriple findBestAssignment(const Request &req) {
@@ -135,7 +137,7 @@ namespace karri {
             stats.numDropoffs = pdLocs.numDropoffs();
             initializeComponentsForRequest(rs, pdLocs, stats);
 
-            curPdLocs = &pdLocs;
+            curPdLocs = pdLocs;
             curReqState = rs;
 
             // Compute PD distances:
@@ -148,22 +150,22 @@ namespace karri {
             ellipticBchSearches.run(feasibleEllipticPickups, feasibleEllipticDropoffs, rs, pdLocs, stats.ellipticBchStats);
 
             // Filter feasible PD-locations between ordinary stops:
-            const auto relOrdinaryPickups = relevantPdLocsFilter.filterOrdinaryPickups(feasibleEllipticPickups, rs, pdLocs,
+            const auto &relOrdinaryPickups = relevantPdLocsFilter.filterOrdinaryPickups(feasibleEllipticPickups, rs, pdLocs,
                                                                                        stats.ordAssignmentsStats);
-            const auto relOrdinaryDropoffs = relevantPdLocsFilter.filterOrdinaryDropoffs(feasibleEllipticDropoffs,
+            const auto &relOrdinaryDropoffs = relevantPdLocsFilter.filterOrdinaryDropoffs(feasibleEllipticDropoffs,
                                                                                          rs, pdLocs, stats.ordAssignmentsStats);
 
 
-            curRelOrdinaryPickups = &relOrdinaryPickups;
+            curRelOrdinaryPickups = relOrdinaryPickups;
 
             // Try ordinary assignments:
             ordAssignments.findAssignments(relOrdinaryPickups, relOrdinaryDropoffs, rs, ffPdDistances, pdLocs, stats.ordAssignmentsStats);
 
             // Filter feasible pickups before next stops:
-            const auto relPickupsBeforeNextStop = relevantPdLocsFilter.filterPickupsBeforeNextStop(
+            const auto &relPickupsBeforeNextStop = relevantPdLocsFilter.filterPickupsBeforeNextStop(
                     feasibleEllipticPickups, rs, pdLocs, stats.pbnsAssignmentsStats);
 
-            curRelPickupsBns = &relPickupsBeforeNextStop;
+            curRelPickupsBns = relPickupsBeforeNextStop;
 
             // Try DALS assignments:
             dalsAssignments.findAssignments(relOrdinaryPickups, relPickupsBeforeNextStop, rs, pdLocs, stats.dalsAssignmentsStats);
@@ -196,7 +198,7 @@ namespace karri {
 
             runPALS(rs, stats.palsAssignmentsStats);
             runOrdinary(rs, stats.ordAssignmentsStats);
-            runDALS(rs, stats.dalsAssignmentsStats);
+            // runDALS(rs, stats.dalsAssignmentsStats);
 
             // -> assignment with best cost
             return rs;
@@ -206,21 +208,21 @@ namespace karri {
             // Run BCH queries from origin to all stations
             // reachable pickups from origin from KaRRi
             stationBCH.setExternalCostUpperBound(bestCost);
-            stationBCH.runBchQueries(*curPdLocs, rs);
+            stationBCH.runBchQueries(curPdLocs, rs);
                         
             // last stop -> pickups
             // PALS Individual BCH
             // neu laufen lassen mit eigenen pruning für alle stations
             palsToStations.setExternalCostUpperBound(bestCost);
-            palsToStations.tryPickupAfterLastStop(rs, stationBCH.getTentativeDistances(), *curPdLocs, stations, stats);
+            palsToStations.tryPickupAfterLastStop(rs, stationBCH.getTentativeDistances(), curPdLocs, stations, stats);
         }
 
         void runOrdinary(RequestState &rs, stats::OrdAssignmentsPerformanceStats &stats) {
-            ordinaryToStations.enumerateAssignments(rs, *curPdLocs, *curRelOrdinaryPickups, stations, stationsInEllipse, stationBCH.getTentativeDistances(), stats);
+            ordinaryToStations.enumerateAssignments(rs, curPdLocs, curRelOrdinaryPickups, stations, stationsInEllipse, stationBCH.getTentativeDistances(), stats);
         }
 
         void runDALS(RequestState &rs, stats::DalsAssignmentsPerformanceStats &stats) {
-            dalsToStations.tryDropoffAfterLastStop(*curRelOrdinaryPickups, *curRelPickupsBns, rs, lastStopToStationBCH.getTentativeDistances(), *curPdLocs, stats);
+            dalsToStations.tryDropoffAfterLastStop(curRelOrdinaryPickups, curRelPickupsBns, rs, lastStopToStationBCH.getTentativeDistances(), curPdLocs, stats);
         }
 
         void initializeComponentsForRequest(const RequestState& requestState, const PDLocs &pdLocs, stats::DispatchingPerformanceStats& stats) {
@@ -265,9 +267,9 @@ namespace karri {
         RouteState &routeState;
 
         Order &chOrder;
-        RelevantPDLocs const *curRelOrdinaryPickups;
-        RelevantPDLocs const *curRelPickupsBns;
-        PDLocs const *curPdLocs;
+        RelevantPDLocs curRelOrdinaryPickups;
+        RelevantPDLocs curRelPickupsBns;
+        PDLocs curPdLocs;
 
         PTStations stations;
         StationBucketsEnvT &stationBucketsEnv;
