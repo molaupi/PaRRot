@@ -37,7 +37,6 @@ namespace karri {
             typename EllipticBucketsEnvT,
             typename LastStopBucketsEnvT,
             typename StationsInEllipseT,
-            typename LastStopToStationBCHQueryT,
             typename CurVehLocsT,
             typename PathTrackerT,
             typename LoggerT = NullLogger>
@@ -50,8 +49,7 @@ namespace karri {
                            PathTrackerT &pathTracker,
                            RouteState &routeState, EllipticBucketsEnvT &ellipticBucketsEnv,
                            LastStopBucketsEnvT &lastStopBucketsEnv,
-                           StationsInEllipseT &stationsInEllipse,
-                           LastStopToStationBCHQueryT &lastStopToStationBCHQuery)
+                           StationsInEllipseT &stationsInEllipse)
                 : inputGraph(inputGraph),
                   curVehLocs(curVehLocs),
                   pathTracker(pathTracker),
@@ -59,7 +57,6 @@ namespace karri {
                   ellipticBucketsEnv(ellipticBucketsEnv),
                   lastStopBucketsEnv(lastStopBucketsEnv),
                   stationsInEllipse(stationsInEllipse),
-                  lastStopToStationBCHQuery(lastStopToStationBCHQuery),
                   bestAssignmentsLogger(LogManager<LoggerT>::getLogger("bestassignments.csv",
                                                                        "request_id, "
                                                                        "request_time, "
@@ -171,6 +168,8 @@ namespace karri {
             // Update buckets and route state
             ellipticBucketsEnv.deleteSourceBucketEntries(veh, 0);
             ellipticBucketsEnv.deleteTargetBucketEntries(veh, 1);
+            // remove the stations from the ellipse that are no longer relevant
+            stationsInEllipse.removeStationsForStop(0, veh.vehicleId);
             routeState.removeStartOfCurrentLeg(veh.vehicleId);
 
             // If vehicle has become idle, update last stop bucket entries
@@ -344,7 +343,6 @@ namespace karri {
             const int formerLastStopIdx = dropoffIndex - pickupAtEnd - 1;
             ellipticBucketsEnv.generateSourceBucketEntries(*asgn.vehicle, formerLastStopIdx, stats);
             stationsInEllipse.computeNewStationsInEllipsesForStop(formerLastStopIdx, vehId);
-            lastStopToStationBCHQuery.runBchQueries(vehId);
 
             // Remove last stop bucket entries for former last stop and generate them for dropoff
             if (formerLastStopIdx == 0) {
@@ -368,9 +366,6 @@ namespace karri {
 
         // Stations in Ellipse
         StationsInEllipseT &stationsInEllipse;
-
-        // Last stop to station BCH query
-        LastStopToStationBCHQueryT &lastStopToStationBCHQuery;
 
         // Performance Loggers
         LoggerT &bestAssignmentsLogger;

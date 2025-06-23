@@ -707,10 +707,7 @@ int main(int argc, char *argv[]) {
         std::cout << "done.\n";
 
         using StationBCH = StationBCHQuery<VehicleInputGraph, VehCHEnv, StationBucketsEnv>;
-        using LastStopToStationBCH = LastStopToStationBCHQuery<VehicleInputGraph, VehCHEnv, StationBucketsEnv>;
 
-        LastStopToStationBCHQuery lastStopToStationBCH(vehicleInputGraph, *vehChEnv, fleet, routeState, stationBucketsEnv, stations.size());
-        
         // PALS for stations
         using PALSToStationsImplementation = PALSToStations<VehicleInputGraph, VehCHEnv, LastStopBucketsEnv, StationBCH::StationDistances, PALSLabelSet>;
         PALSToStationsImplementation palsToStations(vehicleInputGraph, fleet, *vehChEnv, lastStopBucketsEnv, routeState);
@@ -747,7 +744,6 @@ int main(int argc, char *argv[]) {
                 PALSToStationsImplementation,
                 StationsInEllipseImpl,
                 OrdinaryToStationsImpl,
-                LastStopToStationBCH,
                 DALSToStationsImplementation,
                 PTAlgorithm>;
         PTAndTaxiTripFinderImpl ptAndTaxiTripFinder(requestStateInitializer, pdLocsFinder, pdLocsAtExistingStops,
@@ -755,7 +751,7 @@ int main(int argc, char *argv[]) {
                                                     ffPDDistanceQuery, ordinaryInsertionsFinder, pbnsInsertionsFinder, 
                                                     palsInsertionsFinder, dalsInsertionsFinder, relevantPdLocsFilter, 
                                                     vehicleInputGraph, *vehChEnv, psgInputGraph, *psgChEnv, fleet, routeState,
-                                                    stations, stationBucketsEnv, palsToStations, stationsInEllipse, lastStopToStationBCH, dalsToStations,
+                                                    stations, stationBucketsEnv, palsToStations, stationsInEllipse, dalsToStations,
                                                     ptAlgorithm, order);
 
 
@@ -768,10 +764,10 @@ int main(int argc, char *argv[]) {
         VehPathTracker pathTracker;
 #endif
 
-        using SystemStateUpdaterImpl = SystemStateUpdater<VehicleInputGraph, EllipticBucketsEnv, LastStopBucketsEnv, StationsInEllipseImpl, LastStopToStationBCH, CurVehLocToPickupSearchesImpl, VehPathTracker, std::ofstream>;
+        using SystemStateUpdaterImpl = SystemStateUpdater<VehicleInputGraph, EllipticBucketsEnv, LastStopBucketsEnv, StationsInEllipseImpl, CurVehLocToPickupSearchesImpl, VehPathTracker, std::ofstream>;
         SystemStateUpdaterImpl
                 systemStateUpdater(vehicleInputGraph, curVehLocToPickupSearches,
-                                   pathTracker, routeState, ellipticBucketsEnv, lastStopBucketsEnv, stationsInEllipse, lastStopToStationBCH);
+                                   pathTracker, routeState, ellipticBucketsEnv, lastStopBucketsEnv, stationsInEllipse);
 
 
         // Initialize last stop state for initial locations of vehicles

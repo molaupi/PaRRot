@@ -260,14 +260,15 @@ namespace karri {
         }
 
         void recomputeStationsInEllipseForStop(const int stopIndex, const int vehId) {
-            const int stopId = routeState.stopIdsFor(vehId)[stopIndex];
-            init(stopId);
-
-            // Clear the bucket for the current stop
-            stopBucketContainer.clearBucket(curStopId);
-
+            removeStationsForStop(stopIndex, vehId);
+            
             // Recompute the stations in the ellipse for the current stop
             computeNewStationsInEllipsesForStop(stopIndex, vehId);
+        }
+        
+        void removeStationsForStop(const int stopIndex, const int vehId) {
+            const int stopId = routeState.stopIdsFor(vehId)[stopIndex];
+            stopBucketContainer.clearBucket(stopId);
         }
 
         LabelMask exceedsLeewayForStop(const DistanceLabel &distanceToStop) const {

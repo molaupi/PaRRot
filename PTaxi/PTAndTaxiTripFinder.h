@@ -33,7 +33,6 @@ namespace karri {
             typename PALSToStationsT,
             typename StationsInEllipseT,
             typename OrdinaryToStationsT,
-            typename LastStopToStationBCHQueryT,
             typename DALSToStationsT,
             typename PTAlgorithmT
     >
@@ -65,7 +64,6 @@ namespace karri {
                             StationBucketsEnvT &stationBucketsEnv,
                             PALSToStationsT &palsToStations,
                             StationsInEllipseT &stationsInEllipse,
-                            LastStopToStationBCHQueryT &lastStopToStationBCH,
                             DALSToStationsT &dalsToStations,
                             PTAlgorithmT &ptAlgorithm,
                             Order &order)
@@ -93,7 +91,6 @@ namespace karri {
                   palsToStations(palsToStations),
                   stationsInEllipse(stationsInEllipse),
                   ordinaryToStations(fleet, routeState),
-                  lastStopToStationBCH(lastStopToStationBCH),
                   dalsToStations(dalsToStations),
                   ptAlgorithm(ptAlgorithm),
                   chOrder(order),
@@ -222,7 +219,7 @@ namespace karri {
         }
 
         void runDALS(RequestState &rs, stats::DalsAssignmentsPerformanceStats &stats) {
-            dalsToStations.tryDropoffAfterLastStop(curRelOrdinaryPickups, curRelPickupsBns, rs, lastStopToStationBCH.getTentativeDistances(), curPdLocs, stats);
+            dalsToStations.tryDropoffAfterLastStop(curRelOrdinaryPickups, curRelPickupsBns, rs, curPdLocs, stats);
         }
 
         void initializeComponentsForRequest(const RequestState& requestState, const PDLocs &pdLocs, stats::DispatchingPerformanceStats& stats) {
@@ -279,7 +276,6 @@ namespace karri {
         StationsInEllipseT &stationsInEllipse;
         OrdinaryToStationsT ordinaryToStations;
 
-        LastStopToStationBCHQueryT &lastStopToStationBCH;
         DALSToStationsT &dalsToStations;
 
         PTAlgorithmT &ptAlgorithm;
