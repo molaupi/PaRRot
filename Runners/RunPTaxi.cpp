@@ -713,8 +713,8 @@ int main(int argc, char *argv[]) {
         PALSToStationsImplementation palsToStations(vehicleInputGraph, fleet, *vehChEnv, lastStopBucketsEnv, routeState);
 
         // DALS for stations
-        using DALSToStationsImplementation = DALSToStations<VehicleInputGraph, VehCHEnv, StationBCH::StationDistances, CurVehLocToPickupSearchesImpl, PALSLabelSet>;
-        DALSToStationsImplementation dalsToStations(vehicleInputGraph, fleet, *vehChEnv, curVehLocToPickupSearches, routeState, stations);
+        using DALSToStationsImplementation = DALSToStations<VehicleInputGraph, VehCHEnv, CurVehLocToPickupSearchesImpl, StationBucketsEnv, PALSLabelSet>;
+        DALSToStationsImplementation dalsToStations(vehicleInputGraph, fleet, *vehChEnv, curVehLocToPickupSearches, routeState, stationBucketsEnv, stations);
 
         using StationsInEllipseImpl = StationsInEllipse<VehicleInputGraph, VehCHEnv, StationBucketsEnv>;
         StationsInEllipseImpl stationsInEllipse(vehicleInputGraph, *vehChEnv, routeState, stationBucketsEnv, stations.size());

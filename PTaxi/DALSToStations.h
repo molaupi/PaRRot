@@ -35,16 +35,98 @@ namespace karri {
 
     template<typename InputGraphT,
             typename CHEnvT,
-            typename StationDistancesT,
             typename CurVehLocToPickupSearchesT,
+            typename StationBucketsEnvT,
             typename LabelSet>
     class DALSToStations {
     private:
 
-
         static constexpr int K = LabelSet::K;
         using LabelMask = typename LabelSet::LabelMask;
         using DistanceLabel = typename LabelSet::DistanceLabel;
+        
+        struct ScanBucket {
+
+        public:
+
+            explicit ScanBucket(DALSToStations &search) : search(search){}
+
+            template<typename DistLabelT, typename DistLabelContainerT>
+            bool operator()(const int v, DistLabelT &distToV, const DistLabelContainerT & /*distLabels*/) {
+                // Check if we can prune at this vertex based only on the distance to v
+                if (allSet(search.canPrune(distToV)))
+                    return true;
+            
+                int numEntriesScannedHere = 0;
+
+                if constexpr (!StationBucketsEnvT::SORTED) {
+                    auto bucket = search.bucketContainer.getBucketOf(v);
+                    for (const auto &entry: bucket) {
+                        ++numEntriesScannedHere;
+
+                        const int &stationId = entry.targetId;
+
+                        const DistanceLabel distViaV = distToV + DistanceLabel(entry.distToTarget);
+                        tryUpdatingDistance(stationId, distViaV);
+                    }
+                } else {
+                        auto bucket = search.bucketContainer.getBucketOf(v);
+
+                        for (const auto &entry: bucket) {
+                            ++numEntriesScannedHere;
+
+                            const int &stationId = entry.targetId;
+                            const DistanceLabel distViaV = distToV + DistanceLabel(entry.distToTarget);
+                            const auto atLeastAsGoodAsCurBest = ~search.canPrune(distViaV);
+
+                            if (!anySet(atLeastAsGoodAsCurBest))
+                                break;
+
+                            tryUpdatingDistance(stationId, distViaV);
+                        }
+                }
+                
+                search.numEntriesVisited += numEntriesScannedHere;
+                ++search.numVerticesSettled;
+
+                return false;
+            }
+
+        private:
+
+            void tryUpdatingDistance(const int stationId, const DistanceLabel& distFromPDLoc) {
+                // Update tentative distances to v for any searches where distViaV admits a possible better assignment
+                // than the current best and where distViaV is at least as good as the current tentative distance.
+                LabelMask mask = ~(search.tentativeDistances.getDistancesForCurBatch(stationId) < distFromPDLoc);
+                mask &= distFromPDLoc < INFTY;
+                if (!anySet(mask))
+                    return;
+                    
+                search.tentativeDistances.setDistancesForCurBatchIf(stationId, distFromPDLoc, mask);
+                // search.updateUpperBoundCost(stationId, distFromPDLoc);
+            }
+
+
+            DALSToStations &search;
+        };
+
+
+        struct StopStationBCH {
+            explicit StopStationBCH(const DALSToStations &search) : search(search) {}
+
+            template<typename DistLabelT, typename DistLabelContainerT>
+            bool operator()(const int, DistLabelT &distToV, const DistLabelContainerT & /*distLabels*/) const {
+                if constexpr (!StationBucketsEnvT::SORTED) {
+                    return false;
+                }
+                return allSet(search.canPrune(distToV));
+            }
+
+        private:
+            const DALSToStations &search;
+
+        };
+
 
     public:
 
@@ -53,15 +135,20 @@ namespace karri {
                               const CHEnvT &chEnv,
                               CurVehLocToPickupSearchesT &curVehLocToPickupSearchesT,
                               const RouteState &routeState,
+                              const StationBucketsEnvT &stationBucketsEnv,
                               PTStations &ptStations)
                 : inputGraph(inputGraph),
+                  ch(chEnv.getCH()),
                   fleet(fleet),
                   calculator(routeState),
+                  upwardSearch(chEnv.template getForwardSearch<ScanBucket, StopStationBCH, LabelSet>(
+                        ScanBucket(*this), StopStationBCH(*this))),
                   curVehLocToPickupSearches(curVehLocToPickupSearchesT),
                   routeState(routeState),
                   checkPBNSForVehicle(fleet.size()),
+                  bucketContainer(stationBucketsEnv.getBuckets()),
                   ptStations(ptStations),
-                  lastStopDistances(fleet.size())  {}
+                  tentativeDistances(ptStations.size())  {}
 
         void tryDropoffAfterLastStop(const RelevantPDLocs &relevantOrdinaryPickups,
                                      const RelevantPDLocs &relevantPickupsBeforeNextStop,
@@ -74,7 +161,96 @@ namespace karri {
             enumerateAssignments(relevantOrdinaryPickups, relevantPickupsBeforeNextStop, requestState, pdLocs, stats);
         }
 
+        // Run BCH queries that obtain distances from pickups to stations
+        void runBchQueries(const PDLocs& pdLocs, const RequestState& requestState) {
+
+            initPickupSearches(pdLocs, requestState);
+            for (unsigned int i = 0; i < pdLocs.numPickups(); i += K)
+                runSearchesForPickupBatch(i, pdLocs);
+        }
+
+        TentativeStationDistances<LabelSet> &getTentativeDistances() {
+            return tentativeDistances;
+        }
+
+         // Sets a known upper bound on the cost of a PALS insertion.
+        void setExternalCostUpperBound(const int c) {
+            externalUpperBoundCost = c;
+        }
+
+        LabelMask canPrune(const DistanceLabel &distancesToPickups) const {
+            if (upperBoundCost >= INFTY) {
+                // If current best is INFTY, only indices i with distancesToPickups[i] >= INFTY or
+                // minDirectDistances[i] >= INFTY are worse than the current best.
+                return ~(distancesToPickups < INFTY);
+            }
+
+            DistanceLabel costLowerBound;
+            // calculator.template calcLowerBoundCostForKPALSAssignmentsWithPTStations<LabelSet>(distancesToPickups, *curReqState);
+
+            costLowerBound.setIf(DistanceLabel(INFTY), ~(distancesToPickups < INFTY));
+
+            return upperBoundCost < costLowerBound;
+        }
+
     private:
+
+        void initPickupSearches(const PDLocs& pdLocs, const RequestState& requestState) {
+            totalNumEdgeRelaxations = 0;
+            totalNumVerticesSettled = 0;
+            totalNumEntriesScanned = 0;
+            
+            curReqState = &requestState;
+            upperBoundCost = std::min(requestState.getBestCost(), externalUpperBoundCost);
+            externalUpperBoundCost = INFTY;
+
+            const int numPickupBatches = pdLocs.numPickups() / K + (pdLocs.numPickups() % K != 0);
+            tentativeDistances.init(numPickupBatches);
+        }
+
+        void runSearchesForPickupBatch(const int firstPickupId, const PDLocs& pdLocs) {
+            assert(firstPickupId % K == 0 && firstPickupId < pdLocs.numPickups());
+
+
+            std::array<int, K> pickupTails;
+            std::array<int, K> travelTimes;
+            for (int i = 0; i < K; ++i) {
+                const auto &pickup =
+                        firstPickupId + i < pdLocs.numPickups() ? pdLocs.pickups[firstPickupId + i]
+                                                                      : pdLocs.pickups[firstPickupId];
+                pickupTails[i] = inputGraph.edgeTail(pickup.loc);
+                travelTimes[i] = inputGraph.travelTime(pickup.loc);
+            }
+
+            tentativeDistances.setCurBatchIdx(firstPickupId / K);
+            run(pickupTails, travelTimes);
+
+            totalNumEdgeRelaxations += getNumEdgeRelaxations();
+            totalNumVerticesSettled += getNumVerticesSettled();
+            totalNumEntriesScanned += getNumEntriesScanned();
+        }
+
+        void run(const std::array<int, K> &sources,
+                 const std::array<int, K> offsets = {}) {
+            numVerticesSettled = 0;
+            numEntriesVisited = 0;
+            std::array<int, K> sources_ranks = {};
+            std::transform(sources.begin(), sources.end(), sources_ranks.begin(),
+                           [&](const int v) { return ch.rank(v); });
+            upwardSearch.runWithOffset(sources_ranks, offsets);
+        }
+        
+        int getNumEdgeRelaxations() const {
+            return upwardSearch.getNumEdgeRelaxations();
+        }
+
+        int getNumVerticesSettled() const {
+            return numVerticesSettled;
+        }
+
+        int getNumEntriesScanned() const {
+            return numEntriesVisited;
+        }
 
         // Enumerate DALS assignments
         void enumerateAssignments(const RelevantPDLocs &relevantOrdinaryPickups,
@@ -291,11 +467,14 @@ namespace karri {
         }
 
         inline int getDistanceToDropoff(const int vehId, const int stationId) {
-            return lastStopDistances.getDistance(vehId, stationId);
+            return tentativeDistances.getDistance(stationId, vehId);
         }
 
+        typename CHEnvT::template UpwardSearch<ScanBucket, StopStationBCH, LabelSet> upwardSearch;
+        const typename StationBucketsEnvT::BucketContainer &bucketContainer;
 
         const InputGraphT &inputGraph;
+        const CH &ch;
         const Fleet &fleet;
         CostCalculator calculator;
         CurVehLocToPickupSearchesT &curVehLocToPickupSearches;
@@ -317,15 +496,23 @@ namespace karri {
         std::vector<PickupBeforeNextStopContinuation> pbnsContinuations;
 
         int upperBoundCost;
+        int externalUpperBoundCost; // External upper bound on the cost of a PALS insertion
 
         // Vehicles seen by any last stop search
         DistanceLabel currentDropoffWalkingDists;
-        TentativeLastStopDistances<LabelSet> lastStopDistances;
-
+        TentativeStationDistances<LabelSet> tentativeDistances;
+        
         // Pointers to request state and relevant PD locs so Dijkstra search callback has access to them
         RequestState const *curReqState;
         RelevantPDLocs const *curRelOrdinaryPickups;
         RelevantPDLocs const *curRelPickupsBns;
+
+        int numVerticesSettled;
+        int numEntriesVisited;
+
+        int totalNumEdgeRelaxations;
+        int totalNumVerticesSettled;
+        int totalNumEntriesScanned;
 
     };
     

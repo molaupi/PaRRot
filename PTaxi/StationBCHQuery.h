@@ -165,7 +165,7 @@ namespace karri {
                 runSearchesForPickupBatch(i, pdLocs);
         }
 
-        TentativeStationDistances<LabelSetT> &getTentativeDistances() {
+        StationDistances &getTentativeDistances() {
             return tentativeDistances;
         }
 
