@@ -195,7 +195,7 @@ namespace karri {
 
             runPALS(rs, stats.palsAssignmentsStats);
             runOrdinary(rs, stats.ordAssignmentsStats);
-            // runDALS(rs, stats.dalsAssignmentsStats);
+            runDALS(rs, stats.dalsAssignmentsStats);
 
             // -> assignment with best cost
             return rs;
@@ -219,6 +219,7 @@ namespace karri {
         }
 
         void runDALS(RequestState &rs, stats::DalsAssignmentsPerformanceStats &stats) {
+            dalsToStations.setExternalCostUpperBound(bestCost);
             dalsToStations.tryDropoffAfterLastStop(curRelOrdinaryPickups, curRelPickupsBns, rs, curPdLocs, stats);
         }
 
