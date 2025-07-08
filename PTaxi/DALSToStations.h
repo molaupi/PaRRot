@@ -305,13 +305,13 @@ namespace karri {
 
                 for (const auto &station: ptStations) {
                     asgn.dropoff = {
-                            station.stationId, // PDLoc ID
-                            station.vehEdgeId, // Location in road network
-                            station.psgEdgeId, // Location in passenger road network
-                            0, // Walking time from this dropoff to destination
-                            0, // Vehicle driving time from this dropoff to the destination
-                            0 // Vehicle driving time from destination to this dropoff
-                        };
+                        station.stationId, // PDLoc ID
+                        station.vehEdgeId, // Location in road network
+                        station.psgEdgeId, // Location in passenger road network
+                        0, // Walking time from this dropoff to destination
+                        0, // Vehicle driving time from this dropoff to the destination
+                        0 // Vehicle driving time from destination to this dropoff
+                    };
 
                     asgn.distToDropoff = currentLastStopDistances[station.stationId][i];
                     if (asgn.distToDropoff >= INFTY)

@@ -34,6 +34,7 @@ namespace karri {
             typename StationsInEllipseT,
             typename OrdinaryToStationsT,
             typename DALSToStationsT,
+            typename PBNSToStationsT,
             typename PTAlgorithmT
     >
     class PTAndTaxiTripFinder {
@@ -65,6 +66,7 @@ namespace karri {
                             PALSToStationsT &palsToStations,
                             StationsInEllipseT &stationsInEllipse,
                             DALSToStationsT &dalsToStations,
+                            PBNSToStationsT &pbnsToStations,
                             PTAlgorithmT &ptAlgorithm,
                             Order &order)
                 : feasibleEllipticPickups(feasibleEllipticPickups),
@@ -92,6 +94,7 @@ namespace karri {
                   stationsInEllipse(stationsInEllipse),
                   ordinaryToStations(fleet, routeState),
                   dalsToStations(dalsToStations),
+                  pbnsToStations(pbnsToStations),
                   ptAlgorithm(ptAlgorithm),
                   chOrder(order),
                   curRelOrdinaryPickups(fleet.size()),
@@ -196,6 +199,7 @@ namespace karri {
             runPALS(rs, stats.palsAssignmentsStats);
             runOrdinary(rs, stats.ordAssignmentsStats);
             runDALS(rs, stats.dalsAssignmentsStats);
+            runPBNS(rs, stats.pbnsAssignmentsStats);
 
             // -> assignment with best cost
             return rs;
@@ -221,6 +225,10 @@ namespace karri {
         void runDALS(RequestState &rs, stats::DalsAssignmentsPerformanceStats &stats) {
             dalsToStations.setExternalCostUpperBound(bestCost);
             dalsToStations.tryDropoffAfterLastStop(curRelOrdinaryPickups, curRelPickupsBns, rs, curPdLocs, stats);
+        }
+
+        void runPBNS(RequestState &rs, stats::PbnsAssignmentsPerformanceStats &stats) {
+            pbnsToStations.findAssignments(curRelPickupsBns, stations, stationsInEllipse, stationBCH.getTentativeDistances(), rs, curPdLocs, stats);
         }
 
         void initializeComponentsForRequest(const RequestState& requestState, const PDLocs &pdLocs, stats::DispatchingPerformanceStats& stats) {
@@ -278,6 +286,7 @@ namespace karri {
         OrdinaryToStationsT ordinaryToStations;
 
         DALSToStationsT &dalsToStations;
+        PBNSToStationsT &pbnsToStations;
 
         PTAlgorithmT &ptAlgorithm;
         
