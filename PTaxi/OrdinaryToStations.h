@@ -90,7 +90,7 @@ namespace karri {
                             // In case of paired assignment:
                             if (asgn.pickupStopIdx == asgn.dropoffStopIdx) {
                                 asgn.distFromPickup = 0;
-                                asgn.distToDropoff = stationDistances.getDistance(station.stationId, asgn.pickup.id);
+                                asgn.distToDropoff = stationDistances.getDistance(asgn.dropoff.id, asgn.pickup.id);
                             }
 
                             ++numAssignmentsTried;

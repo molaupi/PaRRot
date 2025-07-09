@@ -160,7 +160,7 @@ namespace karri {
                                            curVehLocToPickupSearches.getTotalVehicleToPickupSearchTimeForRequest();
 
             for (unsigned int i = 0; i < fleet.size(); i += K) {
-                runSearchesForVehicleBatch(i);
+                runSearchesForVehicleBatch(i, stats);
                 enumerateAssignmentsForVehicleBatch(i, relevantOrdinaryPickups, relevantPickupsBeforeNextStop, requestState, pdLocs, stats);
             }
 
@@ -215,9 +215,10 @@ namespace karri {
             currentLastStopDistances.resize(ptStations.size(), DistanceLabel(INFTY));
         }
 
-        void runSearchesForVehicleBatch(const int firstVehId) {
-            assert(firstVehId % K == 0 && firstVehId < fleet.size());
+        void runSearchesForVehicleBatch(const int firstVehId, stats::DalsAssignmentsPerformanceStats& stats) {
+            KaRRiTimer timer;
 
+            assert(firstVehId % K == 0 && firstVehId < fleet.size());
 
             std::array<int, K> lastStopTails;
             std::array<int, K> travelTimes;
@@ -230,8 +231,11 @@ namespace karri {
                 lastStopTails[i] = inputGraph.edgeTail(lastStopLocation);
                 travelTimes[i] = inputGraph.travelTime(lastStopLocation);
             }
+            
             run(lastStopTails, travelTimes);
+            const int64_t searchTime = timer.elapsed<std::chrono::nanoseconds>();
 
+            stats.searchTime += searchTime;
             totalNumEdgeRelaxations += getNumEdgeRelaxations();
             totalNumVerticesSettled += getNumVerticesSettled();
             totalNumEntriesScanned += getNumEntriesScanned();
