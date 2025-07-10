@@ -166,7 +166,6 @@ namespace karri {
             assert(vehId < fleetSize);
 
             const int lastStopIndex = routeState.numStopsOf(vehId) - 1;
-            
             const int lastStopLocation = routeState.stopLocationsFor(vehId)[lastStopIndex];
             const int lastStopTail = inputGraph.edgeTail(lastStopLocation);
             const int lastStopTravelTime = inputGraph.travelTime(lastStopLocation);

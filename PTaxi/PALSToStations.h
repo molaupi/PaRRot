@@ -286,7 +286,6 @@ namespace karri {
         void runSearchesForPickupBatch(const int firstPickupId, const RequestState& requestState, StationDistancesT& stationDistances, const PDLocs& pdLocs) {
             assert(firstPickupId % K == 0 && firstPickupId < pdLocs.numPickups());
 
-
             std::array<int, K> pickupTails;
             std::array<int, K> travelTimes;
             for (int i = 0; i < K; ++i) {

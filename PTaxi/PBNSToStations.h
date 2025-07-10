@@ -114,9 +114,6 @@ namespace karri {
                                               const PTStations& stations, StationsInEllipseT &stationsInEllipse , StationDistancesT &stationDistances,
                                               RequestState& requestState, const PDLocs& pdLocs) {
 
-            const auto firstStopId = routeState.stopIdsFor(veh.vehicleId)[0];
-            const auto &relevantStationsBeforeNextStop = stationsInEllipse.getStationsInEllipse(firstStopId);
-
             Assignment asgn(&veh);
 
             for (const auto &entry: relPickupsBns.relevantSpotsFor(veh.vehicleId)) {
