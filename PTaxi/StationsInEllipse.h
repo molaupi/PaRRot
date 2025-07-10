@@ -219,19 +219,21 @@ namespace karri {
                   stationsSeen(numberOfStations),
                   distFromStopToStations(numberOfStations, DistanceLabel(INFTY)),
                   distFromStationsToStop(numberOfStations, DistanceLabel(INFTY)),
-                  curStopId(INVALID_ID),
+                  curLeeway(0),
                   numVerticesSettled(0),
                   numEntriesVisited(0) {}
 
         void computeNewStationsInEllipsesForStop(const int stopIndex, const int vehId) {
             const int stopId = routeState.stopIdsFor(vehId)[stopIndex];
-            const int stopVertex = inputGraph.edgeHead(stopId);
+            const int stopLoc = routeState.stopLocationsFor(vehId)[stopIndex];
+            const int stopVertex = inputGraph.edgeHead(stopLoc);
             const int stopRank = ch.rank(stopVertex);
 
             assert(stopIndex < routeState.numStopsOf(vehId) - 1);
 
-            const int nextStopId = routeState.stopIdsFor(vehId)[stopIndex + 1];
-            const int nextStopVertex = inputGraph.edgeHead(nextStopId);
+            const int nextStopLoc = routeState.stopLocationsFor(vehId)[stopIndex + 1];
+            const int nextStopVertex = inputGraph.edgeTail(nextStopLoc);
+            const int nextStopOffset = inputGraph.travelTime(nextStopLoc);
             const int nextStopRank = ch.rank(nextStopVertex);
             
             init(stopId);
@@ -242,21 +244,18 @@ namespace karri {
 
             // Run the reverse upward search from the second stop vertex
             // This will compute the distances from all stations to the next stop
-            reverseUpwardSearch.run(nextStopRank);
+            reverseUpwardSearch.runWithOffset(nextStopRank, nextStopOffset);
 
-            for (int stationId = 0; stationId < stationsSeen.size(); ++stationId) {
-                if (!stationsSeen.contains(stationId)) {
-                    continue;
-                }
+            for (const auto& stationId : stationsSeen) {
 
                 // If the station was seen, we can check the leeway
-                const DistanceLabel distFromStopToStation = distFromStopToStations[stationId];
-                const DistanceLabel distFromStationToStop = distFromStationsToStop[stationId];
+                const int distFromStopToStation = distFromStopToStations[stationId][0];
+                const int distFromStationToStop = distFromStationsToStop[stationId][0];
 
                 // Only add the entry to the container if the leeway is not exceeded
                 if (!allSet(exceedsLeewayForStop(distFromStopToStation + distFromStationToStop))) {
-                    StationEntry entry(stationId, distFromStopToStation.horizontalMin(), distFromStationToStop.horizontalMin());
-                    stopBucketContainer.insert(curStopId, entry);
+                    StationEntry entry(stationId, distFromStopToStation, distFromStationToStop);
+                    stopBucketContainer.insert(stopId, entry);
                 }
             }
         }
@@ -272,7 +271,7 @@ namespace karri {
         }
 
         LabelMask exceedsLeewayForStop(const DistanceLabel &distanceToStop) const {
-            return routeState.leewayOfLegStartingAt(curStopId) < distanceToStop;
+            return curLeeway < distanceToStop;
         }
 
         ConstantVectorRange<StationEntry> getStationsInEllipse(const int stopId) const {
@@ -283,16 +282,14 @@ namespace karri {
     private:
 
         void init(const int stopId) {
-            curStopId = stopId;
+            curLeeway = routeState.leewayOfLegStartingAt(stopId);
             stationsSeen.clear();
-            distFromStopToStations.clear();
-            distFromStationsToStop.clear();
             numVerticesSettled = 0;
             numEntriesVisited = 0;
 
             // Initialize the distances from the stop to the stations
-            distFromStopToStations.resize(stationsSeen.size(), DistanceLabel(INFTY));
-            distFromStationsToStop.resize(stationsSeen.size(), DistanceLabel(INFTY));
+            std::fill(distFromStopToStations.begin(), distFromStopToStations.end(), INFTY);
+            std::fill(distFromStationsToStop.begin(), distFromStationsToStop.end(), INFTY);
             stopBucketContainer.checkAndResize(routeState.getMaxStopId());
         }
 
@@ -323,7 +320,7 @@ namespace karri {
         std::vector<DistanceLabel> distFromStopToStations;
         std::vector<DistanceLabel> distFromStationsToStop;
 
-        int curStopId;
+        int curLeeway;
 
         int numVerticesSettled;
         int numEntriesVisited;
