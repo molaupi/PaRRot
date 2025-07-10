@@ -70,19 +70,17 @@ namespace karri {
                         ++numEntriesScannedHere;
 
                         const int &stationId = entry.targetId;
-
                         const DistanceLabel distViaV = distToV + DistanceLabel(entry.distToTarget);
                         tryUpdatingDistance(stationId, distViaV);
                     }
                 } else {
-
                     auto bucket = search.stationbucketContainer.getBucketOf(v);
 
                     for (const auto &entry: bucket) {
                         ++numEntriesScannedHere;
 
                         const int &stationId = entry.targetId;
-                        const DistanceLabel distViaV = entry.distToTarget + distToV;
+                        const DistanceLabel distViaV = distToV + DistanceLabel(entry.distToTarget);
                         const auto atLeastAsGoodAsCurBest = ~search.exceedsLeewayForStop(distViaV);
                         if (!anySet(atLeastAsGoodAsCurBest))
                             break;
@@ -139,7 +137,6 @@ namespace karri {
                         ++numEntriesScannedHere;
 
                         const int &stationId = entry.targetId;
-
                         const DistanceLabel distViaV = distFromV + DistanceLabel(entry.distToTarget);
                         tryUpdatingDistance(stationId, distViaV);
                     }
@@ -151,7 +148,7 @@ namespace karri {
                         ++numEntriesScannedHere;
 
                         const int &stationId = entry.targetId;
-                        const DistanceLabel distViaV = entry.distToTarget + distFromV;
+                        const DistanceLabel distViaV = distFromV + DistanceLabel(entry.distToTarget);
                         const auto atLeastAsGoodAsCurBest = ~search.exceedsLeewayForStop(distViaV);
                         if (!anySet(atLeastAsGoodAsCurBest))
                             break;
@@ -169,16 +166,16 @@ namespace karri {
 
         private:
 
-            void tryUpdatingDistance(const int stationId, const DistanceLabel& distFromV) {
+            void tryUpdatingDistance(const int stationId, const DistanceLabel& distFromStop) {
                 // Update tentative distances to v for any searches where distViaV admits a possible better assignment
                 // than the current best and where distViaV is at least as good as the current tentative distance.
-                LabelMask mask = ~(search.distFromStationsToStop[stationId] < distFromV);
-                mask &= distFromV < INFTY;
+                LabelMask mask = ~(search.distFromStationsToStop[stationId] < distFromStop);
+                mask &= distFromStop < INFTY;
                 if (!anySet(mask))
                     return;
                 
                 if (anySet(mask)) { // if any search requires updates, update the right ones according to mask
-                    search.distFromStationsToStop[stationId].setIf(distFromV, mask);
+                    search.distFromStationsToStop[stationId].setIf(distFromStop, mask);
                     search.stationsSeen.insert(stationId);
                 }
             }
@@ -231,16 +228,20 @@ namespace karri {
             const int stopVertex = inputGraph.edgeHead(stopId);
             const int stopRank = ch.rank(stopVertex);
 
+            assert(stopIndex < routeState.numStopsOf(vehId) - 1);
+
             const int nextStopId = routeState.stopIdsFor(vehId)[stopIndex + 1];
             const int nextStopVertex = inputGraph.edgeHead(nextStopId);
             const int nextStopRank = ch.rank(nextStopVertex);
             
             init(stopId);
             
-            // Run the upward search 
+            // Run the upward search from the first stop vertex
+            // This will compute the distances from the stop to all stations
             upwardSearch.run(stopRank);
 
             // Run the reverse upward search from the second stop vertex
+            // This will compute the distances from all stations to the next stop
             reverseUpwardSearch.run(nextStopRank);
 
             for (int stationId = 0; stationId < stationsSeen.size(); ++stationId) {
@@ -252,17 +253,16 @@ namespace karri {
                 const DistanceLabel distFromStopToStation = distFromStopToStations[stationId];
                 const DistanceLabel distFromStationToStop = distFromStationsToStop[stationId];
 
-                // only add the entry to the container if the leeway is not exceeded
+                // Only add the entry to the container if the leeway is not exceeded
                 if (!allSet(exceedsLeewayForStop(distFromStopToStation + distFromStationToStop))) {
-                    stopBucketContainer.insert(curStopId, StationEntry(stationId, distFromStopToStation.horizontalMin(), distFromStationToStop.horizontalMin()));
+                    StationEntry entry(stationId, distFromStopToStation.horizontalMin(), distFromStationToStop.horizontalMin());
+                    stopBucketContainer.insert(curStopId, entry);
                 }
             }
         }
 
         void recomputeStationsInEllipseForStop(const int stopIndex, const int vehId) {
             removeStationsForStop(stopIndex, vehId);
-            
-            // Recompute the stations in the ellipse for the current stop
             computeNewStationsInEllipsesForStop(stopIndex, vehId);
         }
         

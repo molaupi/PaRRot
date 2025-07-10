@@ -223,7 +223,7 @@ namespace karri {
             const auto stopLocations = routeState.stopLocationsFor(vehId);
             const auto stopIds = routeState.stopIdsFor(vehId);
 
-            for (int i = 0; i < numStops; ++i) {
+            for (int i = 0; i < numStops - 1; ++i) {
                 const auto stopId = stopIds[i];
                 const auto &relevantStations = stationsInEllipse.getStationsInEllipse(stopId);
 
@@ -238,7 +238,7 @@ namespace karri {
                         0 // Vehicle driving time from destination to this dropoff
                     };
 
-                    if (i + 1 < numStops && stopLocations[i + 1] == asgn.dropoff.loc)
+                    if (stopLocations[i + 1] == asgn.dropoff.loc)
                         continue;
                     if (asgn.dropoff.loc == asgn.pickup.loc)
                         continue;
@@ -280,7 +280,7 @@ namespace karri {
                 asgn.distFromPickup = continuation.distFromPickup;
 
                 for (auto stopIndex = continuation.continueStopIndex;
-                     stopIndex < numStops; ++stopIndex) {
+                     stopIndex < numStops - 1; ++stopIndex) {
                     asgn.dropoffStopIdx = stopIndex;
                 
                     const auto stopId = stopIds[stopIndex];
@@ -297,8 +297,7 @@ namespace karri {
                             0 // Vehicle driving time from destination to this dropoff
                         };
 
-                        if (stopIndex + 1 < numStops &&
-                            stopLocations[stopIndex + 1] == asgn.dropoff.loc)
+                        if (stopLocations[stopIndex + 1] == asgn.dropoff.loc)
                             continue;
 
                         if (asgn.dropoff.loc == asgn.pickup.loc)
