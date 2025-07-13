@@ -61,7 +61,7 @@ namespace karri {
                   routeState(routeState) {}
 
         void findAssignments(const RelevantPDLocs &relPickupsBns, 
-                             const PTStations& stations, StationsInEllipseT &stationsInEllipse , StationDistancesT &stationDistances,
+                             const PTStations& stations, StationsInEllipseT &stationsInEllipse, StationDistancesT &stationDistances,
                              RequestState& requestState, const PDLocs& pdLocs, 
                              stats::PbnsAssignmentsPerformanceStats& stats) {
             numAssignmentsTriedWithPickupBeforeNextStop = 0;
@@ -220,9 +220,9 @@ namespace karri {
             const auto stopLocations = routeState.stopLocationsFor(vehId);
             const auto stopIds = routeState.stopIdsFor(vehId);
 
-            for (int i = 0; i < numStops - 1; ++i) {
-                const auto stopId = stopIds[i];
-                const auto &relevantStations = stationsInEllipse.getStationsInEllipse(stopId);
+            for (int i = 1; i < numStops - 1; ++i) {
+                const auto curStopId = stopIds[i];
+                const auto &relevantStations = stationsInEllipse.getStationsInEllipse(curStopId);
 
                 for (auto &entry: relevantStations) {
                     const auto &station = stations[entry.targetId];
@@ -280,8 +280,8 @@ namespace karri {
                      stopIndex < numStops - 1; ++stopIndex) {
                     asgn.dropoffStopIdx = stopIndex;
                 
-                    const auto stopId = stopIds[stopIndex];
-                    const auto &relevantOrdinaryStations = stationsInEllipse.getStationsInEllipse(stopId);
+                    const auto curStopId = stopIds[stopIndex];
+                    const auto &relevantOrdinaryStations = stationsInEllipse.getStationsInEllipse(curStopId);
 
                     for (auto &entry: relevantOrdinaryStations) {
                         const auto &station = stations[entry.targetId];
