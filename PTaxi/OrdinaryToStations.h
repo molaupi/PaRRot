@@ -63,7 +63,6 @@ namespace karri {
                     asgn.pickup = pdLocs.pickups[pickupEntry.pdId];
                     asgn.pickupStopIdx = pickupEntry.stopIndex;
                     asgn.distToPickup = pickupEntry.distToPDLoc;
-                    asgn.distFromPickup = pickupEntry.distFromPDLocToNextStop;
 
                     // Iterates through stops [pickup's stop index; last stop) and try to find a station as a dropoff.
                     for (int i = pickupEntry.stopIndex; i < routeState.numStopsOf(vehId) - 1; ++i) {
@@ -85,12 +84,14 @@ namespace karri {
 
                             asgn.dropoffStopIdx = i;
                             asgn.distFromDropoff = stationEntry.distFromStationToStop;
-                            asgn.distToDropoff = stationEntry.distFromStopToStation;
 
                             // In case of paired assignment:
                             if (asgn.pickupStopIdx == asgn.dropoffStopIdx) {
                                 asgn.distFromPickup = 0;
                                 asgn.distToDropoff = stationDistances.getDistance(asgn.dropoff.id, asgn.pickup.id);
+                            } else {
+                                asgn.distFromPickup = pickupEntry.distFromPDLocToNextStop;
+                                asgn.distToDropoff = stationEntry.distFromStopToStation;
                             }
 
                             ++numAssignmentsTried;

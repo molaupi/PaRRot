@@ -36,6 +36,9 @@ public:
     using ValueType = typename std::iterator_traits<IteratorT>::value_type;
     using Iterator = IteratorT;
 
+    // Default constructor creates an empty range
+    IteratorRange() : startingPoint{}, endingPoint{} {}
+
     IteratorRange(const IteratorT startingPoint, const IteratorT endingPoint)
             : startingPoint(startingPoint), endingPoint(endingPoint) {}
 
