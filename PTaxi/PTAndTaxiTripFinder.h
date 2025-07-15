@@ -192,20 +192,21 @@ namespace karri {
             return VertexQuery(originVertex, destinationVertex, requestTime);
         }
 
-        RequestState runFirstTaxiSharingLeg(const Request &req) {
+        FirstTaxiLegResult runFirstTaxiSharingLeg(const Request &req) {
             RequestState rs = curReqState;
+            FirstTaxiLegResult firstTaxiLegResult(stations.size());
             stats::DispatchingPerformanceStats& stats = rs.stats();
 
-            runPALS(rs, stats.palsAssignmentsStats);
-            runOrdinary(rs, stats.ordAssignmentsStats);
-            runDALS(rs, stats.dalsAssignmentsStats);
-            runPBNS(rs, stats.pbnsAssignmentsStats);
+            runPALS(rs, stats.palsAssignmentsStats, firstTaxiLegResult);
+            runOrdinary(rs, stats.ordAssignmentsStats, firstTaxiLegResult);
+            runDALS(rs, stats.dalsAssignmentsStats, firstTaxiLegResult);
+            runPBNS(rs, stats.pbnsAssignmentsStats, firstTaxiLegResult);
 
             // -> assignment with best cost
-            return rs;
+            return firstTaxiLegResult;
         }
 
-        void runPALS(RequestState &rs, stats::PalsAssignmentsPerformanceStats &stats) {
+        void runPALS(RequestState &rs, stats::PalsAssignmentsPerformanceStats &stats, FirstTaxiLegResult &firstTaxiLegResult) {
             // Run BCH queries from origin to all stations
             // reachable pickups from origin from KaRRi
             stationBCH.setExternalCostUpperBound(bestCost);
@@ -215,20 +216,20 @@ namespace karri {
             // PALS Individual BCH
             // neu laufen lassen mit eigenen pruning für alle stations
             palsToStations.setExternalCostUpperBound(bestCost);
-            palsToStations.tryPickupAfterLastStop(rs, stationBCH.getTentativeDistances(), curPdLocs, stations, stats);
+            palsToStations.tryPickupAfterLastStop(rs, stationBCH.getTentativeDistances(), curPdLocs, stations, stats, firstTaxiLegResult);
         }
 
-        void runOrdinary(RequestState &rs, stats::OrdAssignmentsPerformanceStats &stats) {
-            ordinaryToStations.enumerateAssignments(rs, curPdLocs, curRelOrdinaryPickups, stations, stationsInEllipse, stationBCH.getTentativeDistances(), stats);
+        void runOrdinary(RequestState &rs, stats::OrdAssignmentsPerformanceStats &stats, FirstTaxiLegResult &firstTaxiLegResult) {
+            ordinaryToStations.enumerateAssignments(rs, curPdLocs, curRelOrdinaryPickups, stations, stationsInEllipse, stationBCH.getTentativeDistances(), stats, firstTaxiLegResult);
         }
 
-        void runDALS(RequestState &rs, stats::DalsAssignmentsPerformanceStats &stats) {
+        void runDALS(RequestState &rs, stats::DalsAssignmentsPerformanceStats &stats, FirstTaxiLegResult &firstTaxiLegResult) {
             dalsToStations.setExternalCostUpperBound(bestCost);
-            dalsToStations.tryDropoffAfterLastStop(curRelOrdinaryPickups, curRelPickupsBns, rs, curPdLocs, stats);
+            dalsToStations.tryDropoffAfterLastStop(curRelOrdinaryPickups, curRelPickupsBns, rs, curPdLocs, stats, firstTaxiLegResult);
         }
 
-        void runPBNS(RequestState &rs, stats::PbnsAssignmentsPerformanceStats &stats) {
-            pbnsToStations.findAssignments(curRelPickupsBns, stations, stationsInEllipse, stationBCH.getTentativeDistances(), rs, curPdLocs, stats);
+        void runPBNS(RequestState &rs, stats::PbnsAssignmentsPerformanceStats &stats, FirstTaxiLegResult &firstTaxiLegResult) {
+            pbnsToStations.findAssignments(curRelPickupsBns, stations, stationsInEllipse, stationBCH.getTentativeDistances(), rs, curPdLocs, stats, firstTaxiLegResult);
         }
 
         void initializeComponentsForRequest(const RequestState& requestState, const PDLocs &pdLocs, stats::DispatchingPerformanceStats& stats) {

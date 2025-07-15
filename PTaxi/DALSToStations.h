@@ -134,7 +134,7 @@ namespace karri {
                               CurVehLocToPickupSearchesT &curVehLocToPickupSearchesT,
                               const RouteState &routeState,
                               const StationBucketsEnvT &stationBucketsEnv,
-                              PTStations &ptStations)
+                              PTStations &stations)
                 : inputGraph(inputGraph),
                   ch(chEnv.getCH()),
                   fleet(fleet),
@@ -145,13 +145,14 @@ namespace karri {
                   routeState(routeState),
                   checkPBNSForVehicle(fleet.size()),
                   bucketContainer(stationBucketsEnv.getBuckets()),
-                  ptStations(ptStations),
-                  currentLastStopDistances(ptStations.size(), DistanceLabel(INFTY)) {}
+                  stations(stations),
+                  currentLastStopDistances(stations.size(), DistanceLabel(INFTY)) {}
 
         void tryDropoffAfterLastStop(const RelevantPDLocs &relevantOrdinaryPickups,
                                      const RelevantPDLocs &relevantPickupsBeforeNextStop,
                                      RequestState& requestState,
-                                     const PDLocs& pdLocs, stats::DalsAssignmentsPerformanceStats& stats) {
+                                     const PDLocs& pdLocs, stats::DalsAssignmentsPerformanceStats& stats,
+                                     FirstTaxiLegResult &firstTaxiLegResult) {
             curReqState = &requestState;
             curRelOrdinaryPickups = &relevantOrdinaryPickups;
             curRelPickupsBns = &relevantPickupsBeforeNextStop;
@@ -161,7 +162,7 @@ namespace karri {
 
             for (unsigned int i = 0; i < fleet.size(); i += K) {
                 runSearchesForVehicleBatch(i, stats);
-                enumerateAssignmentsForVehicleBatch(i, relevantOrdinaryPickups, relevantPickupsBeforeNextStop, requestState, pdLocs, stats);
+                enumerateAssignmentsForVehicleBatch(i, relevantOrdinaryPickups, relevantPickupsBeforeNextStop, requestState, pdLocs, stats, firstTaxiLegResult);
             }
 
             // Time spent to locate vehicles and compute distances from current vehicle locations to pickups is counted
@@ -212,7 +213,7 @@ namespace karri {
 
             const int numBatches = fleet.size() / K + (fleet.size() % K != 0);
             currentLastStopDistances.clear();
-            currentLastStopDistances.resize(ptStations.size(), DistanceLabel(INFTY));
+            currentLastStopDistances.resize(stations.size(), DistanceLabel(INFTY));
         }
 
         void runSearchesForVehicleBatch(const int firstVehId, stats::DalsAssignmentsPerformanceStats& stats) {
@@ -267,13 +268,14 @@ namespace karri {
                                                  const RelevantPDLocs &relevantOrdinaryPickups,
                                                  const RelevantPDLocs &relevantPickupsBeforeNextStop,
                                                  RequestState& requestState,
-                                                 const PDLocs& pdLocs, stats::DalsAssignmentsPerformanceStats& stats) {
+                                                 const PDLocs& pdLocs, stats::DalsAssignmentsPerformanceStats& stats,
+                                                 FirstTaxiLegResult &firstTaxiLegResult) {
 
             int numAssignmentsTried = 0;
             KaRRiTimer timer;
 
-            enumerateAssignmentsWithOrdinaryPickupForVehicleBatch(firstVehId, numAssignmentsTried, relevantOrdinaryPickups, requestState, pdLocs);
-            enumerateAssignmentsWithPBNSForVehicleBatch(firstVehId, numAssignmentsTried, relevantPickupsBeforeNextStop, requestState, pdLocs);
+            enumerateAssignmentsWithOrdinaryPickupForVehicleBatch(firstVehId, numAssignmentsTried, relevantOrdinaryPickups, requestState, pdLocs, firstTaxiLegResult);
+            enumerateAssignmentsWithPBNSForVehicleBatch(firstVehId, numAssignmentsTried, relevantPickupsBeforeNextStop, requestState, pdLocs, firstTaxiLegResult);
 
             const int64_t tryAssignmentsTime = timer.elapsed<std::chrono::nanoseconds>();
             stats.tryAssignmentsTime += tryAssignmentsTime;
@@ -282,10 +284,12 @@ namespace karri {
         
         // Enumerate assignments where pickup is after next stop (ordinary pickup):
         void enumerateAssignmentsWithOrdinaryPickupForVehicleBatch(const int firstVehId,
-                                                    int &numAssignmentsTried,
-                                                    const RelevantPDLocs &relevantOrdinaryPickups,
-                                                    RequestState& requestState,
-                                                    const PDLocs& pdLocs) {
+                                                                   int &numAssignmentsTried,
+                                                                   const RelevantPDLocs &relevantOrdinaryPickups,
+                                                                   RequestState& requestState,
+                                                                   const PDLocs& pdLocs,
+                                                                   FirstTaxiLegResult &firstTaxiLegResult) {
+            
             Assignment asgn;
 
             checkPBNSForVehicle.reset();
@@ -307,7 +311,7 @@ namespace karri {
                 asgn.vehicle = &fleet[vehId];
                 asgn.dropoffStopIdx = numStops - 1;
 
-                for (const auto &station: ptStations) {
+                for (const auto &station: stations) {
                     asgn.dropoff = {
                         station.stationId, // PDLoc ID
                         station.vehEdgeId, // Location in road network
@@ -352,7 +356,8 @@ namespace karri {
                         asgn.pickupStopIdx = entry.stopIndex;
                         asgn.distToPickup = entry.distToPDLoc;
                         asgn.distFromPickup = entry.distFromPDLocToNextStop;
-                        requestState.tryAssignmentWithKnownCost(asgn, calculator.calc(asgn, requestState));
+                        // requestState.tryAssignmentWithKnownCost(asgn, calculator.calc(asgn, requestState));
+                        firstTaxiLegResult.tryAssignmentWithKnownCostForStation(station.stationId, asgn, calculator.calc(asgn, requestState));
                     }
                     
                     if (pickupIt == relevantPickupsInRevOrder.end()) {
@@ -368,10 +373,12 @@ namespace karri {
 
         // Enumerate assignments where the pickup is before the next stop (PBNS + DALS):
         void enumerateAssignmentsWithPBNSForVehicleBatch(const int firstVehId,
-                                          int &numAssignmentsTried,
-                                          const RelevantPDLocs &relevantPickupsBeforeNextStop,
-                                          RequestState& requestState,
-                                          const PDLocs& pdLocs) {
+                                                         int &numAssignmentsTried,
+                                                         const RelevantPDLocs &relevantPickupsBeforeNextStop,
+                                                         RequestState& requestState,
+                                                         const PDLocs& pdLocs,
+                                                         FirstTaxiLegResult &firstTaxiLegResult) {
+            
             Assignment asgn;
             asgn.pickupStopIdx = 0;
 
@@ -401,7 +408,7 @@ namespace karri {
                 for (auto &entry: relevantPickupsBeforeNextStop.relevantSpotsFor(vehId)) {
                     asgn.pickup = pdLocs.pickups[entry.pdId];
                     asgn.distFromPickup = entry.distFromPDLocToNextStop;
-                    for (const auto &station: ptStations) {
+                    for (const auto &station: stations) {
                         asgn.dropoff = {
                             station.stationId, // PDLoc ID
                             station.vehEdgeId, // Location in road network
@@ -421,7 +428,8 @@ namespace karri {
 
                         if (curVehLocToPickupSearches.knowsDistance(vehId, asgn.pickup.id)) {
                             asgn.distToPickup = curVehLocToPickupSearches.getDistance(vehId, asgn.pickup.id);
-                            requestState.tryAssignmentWithKnownCost(asgn, calculator.calc(asgn, requestState));
+                            // requestState.tryAssignmentWithKnownCost(asgn, calculator.calc(asgn, requestState));
+                            firstTaxiLegResult.tryAssignmentWithKnownCostForStation(station.stationId, asgn, calculator.calc(asgn, requestState));
                             ++numAssignmentsTried;
                         } else {
                             asgn.distToPickup = entry.distToPDLoc;
@@ -445,7 +453,7 @@ namespace karri {
                 curVehLocToPickupSearches.computeExactDistancesVia(fleet[vehId], pdLocs);
                 for (const auto &continuation: pbnsContinuations) {
                     assert(continuation.pickupID >= 0 && continuation.pickupID < pdLocs.numPickups());
-                    assert(continuation.fromStationID >= 0 && continuation.fromStationID < ptStations.size());
+                    assert(continuation.fromStationID >= 0 && continuation.fromStationID < stations.size());
                     asgn.pickup = pdLocs.pickups[continuation.pickupID];
 
                     asgn.distToPickup = curVehLocToPickupSearches.getDistance(vehId,
@@ -455,11 +463,12 @@ namespace karri {
 
                     asgn.distFromPickup = continuation.distFromPickup;
                     for (int stationId = continuation.fromStationID;
-                         stationId < ptStations.size(); ++stationId) {
+                         stationId < stations.size(); ++stationId) {
+                        const auto &station = stations[stationId];
                         asgn.dropoff = {
                             stationId, // PDLoc ID
-                            ptStations[stationId].vehEdgeId, // Location in road network
-                            ptStations[stationId].psgEdgeId, // Location in passenger road network
+                            station.vehEdgeId, // Location in road network
+                            station.psgEdgeId, // Location in passenger road network
                             0, // Walking time from this dropoff to destination
                             0, // Vehicle driving time from this dropoff to the destination
                             0 // Vehicle driving time from destination to this dropoff
@@ -474,7 +483,8 @@ namespace karri {
 
                         ++numAssignmentsTried;
                         asgn.dropoffStopIdx = numStops - 1;
-                        requestState.tryAssignmentWithKnownCost(asgn, calculator.calc(asgn, requestState));
+                        // requestState.tryAssignmentWithKnownCost(asgn, calculator.calc(asgn, requestState));
+                        firstTaxiLegResult.tryAssignmentWithKnownCostForStation(stationId, asgn, calculator.calc(asgn, requestState));
                     }
                 }
             }
@@ -492,7 +502,7 @@ namespace karri {
         const RouteState &routeState;
 
         // Stations
-        PTStations &ptStations;
+        PTStations &stations;
 
         // Flag per vehicle that tells us if we still have to consider a pickup before the next stop of the vehicle.
         FastResetFlagArray<> checkPBNSForVehicle;

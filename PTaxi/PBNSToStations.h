@@ -63,7 +63,9 @@ namespace karri {
         void findAssignments(const RelevantPDLocs &relPickupsBns, 
                              const PTStations& stations, StationsInEllipseT &stationsInEllipse, StationDistancesT &stationDistances,
                              RequestState& requestState, const PDLocs& pdLocs, 
-                             stats::PbnsAssignmentsPerformanceStats& stats) {
+                             stats::PbnsAssignmentsPerformanceStats& stats,
+                             FirstTaxiLegResult &firstTaxiLegResult) {
+            
             numAssignmentsTriedWithPickupBeforeNextStop = 0;
             KaRRiTimer timer;
 
@@ -81,7 +83,7 @@ namespace karri {
 
                 curVehLocToPickupSearches.computeExactDistancesVia(fleet[vehId], pdLocs);
 
-                finishContinuations(fleet[vehId], stations, stationsInEllipse, stationDistances, requestState, pdLocs);
+                finishContinuations(fleet[vehId], stations, stationsInEllipse, stationDistances, requestState, pdLocs, firstTaxiLegResult);
             }
 
             const auto time = timer.elapsed<std::chrono::nanoseconds>() -
@@ -259,7 +261,14 @@ namespace karri {
             return numStops;
         }
 
-        void finishContinuations(const Vehicle &veh, const PTStations& stations, StationsInEllipseT &stationsInEllipse, StationDistancesT &stationDistances, RequestState& requestState, const PDLocs& pdLocs) {
+        void finishContinuations(const Vehicle &veh, 
+                                 const PTStations& stations, 
+                                 StationsInEllipseT &stationsInEllipse, 
+                                 StationDistancesT &stationDistances, 
+                                 RequestState& requestState, 
+                                 const PDLocs& pdLocs,
+                                 FirstTaxiLegResult &firstTaxiLegResult) {
+            
             const auto stopLocations = routeState.stopLocationsFor(veh.vehicleId);
             const auto numStops = routeState.numStopsOf(veh.vehicleId);
             const auto stopIds = routeState.stopIdsFor(veh.vehicleId);
@@ -304,7 +313,8 @@ namespace karri {
                         asgn.distToDropoff = entry.distFromStopToStation;
                         asgn.distFromDropoff = entry.distFromStationToStop;
 
-                        requestState.tryAssignmentWithKnownCost(asgn, calculator.calc(asgn, requestState));
+                        // requestState.tryAssignmentWithKnownCost(asgn, calculator.calc(asgn, requestState));
+                        firstTaxiLegResult.tryAssignmentWithKnownCostForStation(station.stationId, asgn, calculator.calc(asgn, requestState));
 
                         if (stopIndex > continuation.continueStopIndex) { // Do not count assignment at continuation twice
                             ++numAssignmentsTriedWithPickupBeforeNextStop;
@@ -347,7 +357,8 @@ namespace karri {
                         continue;
 
                     asgn.distToDropoff = stationDistances.getDistance(asgn.dropoff.id, asgn.pickup.id);
-                    requestState.tryAssignmentWithKnownCost(asgn, calculator.calc(asgn, requestState));
+                    // requestState.tryAssignmentWithKnownCost(asgn, calculator.calc(asgn, requestState));
+                    firstTaxiLegResult.tryAssignmentWithKnownCostForStation(station.stationId, asgn, calculator.calc(asgn, requestState));
                 }
             }
         }

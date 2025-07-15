@@ -169,10 +169,14 @@ namespace karri {
                          PickupAfterLastStopPruner(*this, CostCalculator(routeState))),
                   vehiclesSeenForPickups(fleet.size()) {}
 
-        void tryPickupAfterLastStop(RequestState& requestState, StationDistancesT& stationDistances, const PDLocs& pdLocs, const PTStations& stations, stats::PalsAssignmentsPerformanceStats& stats) {
+        void tryPickupAfterLastStop(RequestState& requestState, 
+                                    StationDistancesT& stationDistances, 
+                                    const PDLocs& pdLocs, const PTStations& stations, 
+                                    stats::PalsAssignmentsPerformanceStats& stats,
+                                    FirstTaxiLegResult &firstTaxiLegResult) {
             minDistanceToAnyStation = stationDistances.getMinDistanceToAnyStation();
             runBchSearches(requestState, stationDistances, pdLocs, stats);
-            enumerateAssignments(requestState, stationDistances, pdLocs, stations, stats);
+            enumerateAssignments(requestState, stationDistances, pdLocs, stations, stats, firstTaxiLegResult);
         }
 
         // Sets a known upper bound on the cost of a PALS insertion.
@@ -199,7 +203,11 @@ namespace karri {
         }
 
         // Enumerate assignments with pickup after last stop
-        void enumerateAssignments(RequestState& requestState, StationDistancesT& stationDistances, const PDLocs& pdLocs, const PTStations& stations, stats::PalsAssignmentsPerformanceStats& stats) {
+        void enumerateAssignments(RequestState& requestState, 
+                                  StationDistancesT& stationDistances, 
+                                  const PDLocs& pdLocs, const PTStations& stations, 
+                                  stats::PalsAssignmentsPerformanceStats& stats,
+                                  FirstTaxiLegResult &firstTaxiLegResult) {
             using namespace time_utils;
 
 
@@ -240,7 +248,7 @@ namespace karri {
                     if (minCost > requestState.getBestCost())
                         continue;
 
-                    for (auto &station: stations) {
+                    for (const auto &station: stations) {
                         asgn.dropoff = {
                             station.stationId, // PDLoc ID
                             station.vehEdgeId, // Location in road network
@@ -253,7 +261,8 @@ namespace karri {
                         // Try inserting pair with pickup after last stop:
                         ++numAssignmentsTried;
                         asgn.distToDropoff = stationDistances.getDistance(station.stationId, asgn.pickup.id);
-                        requestState.tryAssignmentWithKnownCost(asgn, calculator.calc(asgn, requestState));
+                        // requestState.tryAssignmentWithKnownCost(asgn, calculator.calc(asgn, requestState));
+                        firstTaxiLegResult.tryAssignmentWithKnownCostForStation(station.stationId, asgn, calculator.calc(asgn, requestState));
                     }
                 }
             }

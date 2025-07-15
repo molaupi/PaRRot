@@ -44,7 +44,7 @@ namespace karri {
 
         void enumerateAssignments(RequestState& requestState, const PDLocs& pdLocs, const RelevantPDLocs& relPickups, 
                                   const PTStations& stations, StationsInEllipseT &stationsInEllipse , StationDistancesT &stationDistances,
-                                  stats::OrdAssignmentsPerformanceStats &stats) {
+                                  stats::OrdAssignmentsPerformanceStats &stats, FirstTaxiLegResult &firstTaxiLegResult) {
 
             using namespace time_utils;
 
@@ -95,7 +95,8 @@ namespace karri {
                             }
 
                             ++numAssignmentsTried;
-                            requestState.tryAssignmentWithKnownCost(asgn, calculator.calc(asgn, requestState));
+                            // requestState.tryAssignmentWithKnownCost(asgn, calculator.calc(asgn, requestState));
+                            firstTaxiLegResult.tryAssignmentWithKnownCostForStation(station.stationId, asgn, calculator.calc(asgn, requestState));
                         }
                     }
                 }        
