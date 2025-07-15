@@ -59,19 +59,21 @@ private:
 class FirstTaxiLegResult {
     struct StationCost {
         StationCost() noexcept = default;
-        StationCost(const int stationId, const int cost, const Assignment &asgn) noexcept
-            : bestCost(cost), stationId(stationId), bestAssignment(asgn) {}
+        StationCost(const int stationId, const int cost, const int arrivalTime, const Assignment &asgn) noexcept
+            : stationId(stationId), bestCost(cost), arrivalTime(arrivalTime), bestAssignment(asgn) {}
 
         int stationId = INVALID_ID;
         int bestCost = INFTY;
+        int arrivalTime = INFTY;
         Assignment bestAssignment;
     };
 
 
 public:
-    explicit FirstTaxiLegResult(const int numStations): results(numStations) {
-            assert(numStations >= 0);
-        }
+    explicit FirstTaxiLegResult(const RouteState &routeState, const RequestState &requestState, const int numStations)
+            : results(numStations), routeState(routeState), requestState(requestState) {
+                assert(numStations >= 0);
+            }
 
     bool tryAssignmentWithKnownCostForStation(const int stationId, const Assignment &asgn, const int cost) {
         if (stationId < 0 || stationId >= results.size()) return false;
@@ -82,12 +84,23 @@ public:
 
             stationCost.bestAssignment = asgn;
             stationCost.bestCost = cost;
+            stationCost.arrivalTime = calcArrivalTime(asgn);
             return true;
         }
         return false;
     }
 
 private:
+    int calcArrivalTime(const Assignment &asgn) {
+        using namespace time_utils;
+        const int actualDepTimeAtPickup = getActualDepTimeAtPickup(asgn, requestState, routeState);
+        const int initialPickupDetour = calcInitialPickupDetour(asgn, actualDepTimeAtPickup, requestState, routeState);
+        const bool dropoffAtExistingStop = isDropoffAtExistingStop(asgn, routeState);
+        return getArrTimeAtDropoff(actualDepTimeAtPickup, asgn, initialPickupDetour, dropoffAtExistingStop, routeState);
+    }
+
+    const RouteState &routeState;
+    const RequestState &requestState;
     std::vector<StationCost> results;
 };
 

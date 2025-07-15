@@ -194,7 +194,7 @@ namespace karri {
 
         FirstTaxiLegResult runFirstTaxiSharingLeg(const Request &req) {
             RequestState rs = curReqState;
-            FirstTaxiLegResult firstTaxiLegResult(stations.size());
+            FirstTaxiLegResult firstTaxiLegResult(routeState, rs, stations.size());
             stats::DispatchingPerformanceStats& stats = rs.stats();
 
             runPALS(rs, stats.palsAssignmentsStats, firstTaxiLegResult);
@@ -202,7 +202,7 @@ namespace karri {
             runDALS(rs, stats.dalsAssignmentsStats, firstTaxiLegResult);
             runPBNS(rs, stats.pbnsAssignmentsStats, firstTaxiLegResult);
 
-            // -> assignment with best cost
+            // -> assignment with best cost for each PT station
             return firstTaxiLegResult;
         }
 
