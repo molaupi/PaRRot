@@ -79,7 +79,7 @@ namespace karri {
 
                 assert(routeState.occupanciesFor(vehId)[0]  + requestState.originalRequest.numRiders <= fleet[vehId].capacity);
 
-                determineNecessaryExactDistances(fleet[vehId], relPickupsBns, stations, stationsInEllipse, stationDistances, requestState, pdLocs);
+                determineNecessaryExactDistances(fleet[vehId], relPickupsBns, stations, stationsInEllipse, stationDistances, requestState, pdLocs, firstTaxiLegResult);
 
                 curVehLocToPickupSearches.computeExactDistancesVia(fleet[vehId], pdLocs);
 
@@ -114,7 +114,7 @@ namespace karri {
         // the iteration of combinations for that pickup after the computation of exact distances.
         void determineNecessaryExactDistances(const Vehicle &veh, const RelevantPDLocs &relPickupsBns,
                                               const PTStations& stations, StationsInEllipseT &stationsInEllipse , StationDistancesT &stationDistances,
-                                              RequestState& requestState, const PDLocs& pdLocs) {
+                                              RequestState& requestState, const PDLocs& pdLocs, FirstTaxiLegResult &firstTaxiLegResult) {
 
             Assignment asgn(&veh);
 
@@ -130,8 +130,8 @@ namespace karri {
                 const auto lowerBoundCostPairedAssignment = calculator.calcCostLowerBoundForPairedAssignmentBeforeNextStop(
                         veh, asgn.pickup, asgn.distToPickup, stationDistances.getMinDistanceForPDLoc(asgn.pickup.id),
                         distFromPickup, requestState);
-                if (lowerBoundCostPairedAssignment < requestState.getBestCost()) {
-                    const auto requireExactDistance = tryLowerBoundsForPaired(asgn, stations, stationsInEllipse, stationDistances, requestState, pdLocs);
+                if (lowerBoundCostPairedAssignment < firstTaxiLegResult.getBestCostForAllStations()) {
+                    const auto requireExactDistance = tryLowerBoundsForPaired(asgn, stations, stationsInEllipse, stationDistances, requestState, pdLocs, firstTaxiLegResult);
                     if (requireExactDistance) {
                         // In this case some paired assignment before the next stop needs the exact distance to pickup via
                         // the vehicle. Postpone computation of the yet unknown exact distance and the rest of the paired
@@ -147,7 +147,7 @@ namespace karri {
                 }
 
                 asgn.distFromPickup = distFromPickup;
-                const auto scannedUntilIndex = tryLowerBoundsForOrdinary(asgn, stations, stationsInEllipse, requestState, pdLocs);
+                const auto scannedUntilIndex = tryLowerBoundsForOrdinary(asgn, stations, stationsInEllipse, requestState, pdLocs, firstTaxiLegResult);
 
                 if (scannedUntilIndex < routeState.numStopsOf(veh.vehicleId)) {
                     // In this case some assignment with the pickup before the next stop and an ordinary dropoff
@@ -165,7 +165,13 @@ namespace karri {
         // Examines combinations of a given pickup and all stations before the next stop of a given vehicle until a
         // paired assignment needs the exact distance to the pickup via the vehicle. Returns true if the exact distance is needed 
         // or false if all combinations could be filtered.
-        bool tryLowerBoundsForPaired(Assignment &asgn, const PTStations& stations, StationsInEllipseT &stationsInEllipse, StationDistancesT &stationDistances, RequestState& requestState, const PDLocs& pdLocs) {
+        bool tryLowerBoundsForPaired(Assignment &asgn, 
+                                     const PTStations& stations, 
+                                     StationsInEllipseT &stationsInEllipse, 
+                                     StationDistancesT &stationDistances, 
+                                     RequestState& requestState,
+                                     const PDLocs& pdLocs,
+                                     FirstTaxiLegResult &firstTaxiLegResult) {
             assert(asgn.vehicle && asgn.pickup.id != INVALID_ID);
             const auto vehId = asgn.vehicle->vehicleId;
 
@@ -198,8 +204,8 @@ namespace karri {
                 asgn.distToDropoff = stationDistances.getDistance(asgn.dropoff.id, asgn.pickup.id);
                 asgn.distFromDropoff = entry.distFromStationToStop;
                 const auto cost = calculator.calc(asgn, requestState);
-                if (cost < requestState.getBestCost() || (cost == requestState.getBestCost() &&
-                                                          breakCostTie(asgn, requestState.getBestAssignment()))) {
+                if (cost < firstTaxiLegResult.getBestCostForAllStations() || (cost == firstTaxiLegResult.getBestCostForAllStations() &&
+                                                          breakCostTie(asgn, firstTaxiLegResult.getBestAssignmentForAllStations()))) {
                     // Lower bound is better than best known cost => We need the exact distance to pickup.
                     // Return and postpone remaining combinations.
 
@@ -213,7 +219,12 @@ namespace karri {
         // Examines combinations of a given pickup before the next stop and all relevant stations after later stops of a given
         // vehicle until an assignment requires the exact distance to the pickup via the vehicle. Returns a stop index in the vehicle's route
         // at which the exact distance is first needed or the vehicle's number of stops if all combinations could be filtered.
-        int tryLowerBoundsForOrdinary(Assignment &asgn, const PTStations& stations, StationsInEllipseT &stationsInEllipse, RequestState& requestState, const PDLocs& pdLocs) {
+        int tryLowerBoundsForOrdinary(Assignment &asgn, 
+                                      const PTStations& stations, 
+                                      StationsInEllipseT &stationsInEllipse, 
+                                      RequestState& requestState, 
+                                      const PDLocs& pdLocs,
+                                      FirstTaxiLegResult &firstTaxiLegResult) {
             using namespace time_utils;
             assert(asgn.vehicle && asgn.pickup.id != INVALID_ID);
             const auto vehId = asgn.vehicle->vehicleId;
@@ -248,8 +259,8 @@ namespace karri {
 
                     ++numAssignmentsTriedWithPickupBeforeNextStop;
                     const auto cost = calculator.calc(asgn, requestState);
-                    if (cost < requestState.getBestCost() || (cost == requestState.getBestCost() &&
-                                                              breakCostTie(asgn, requestState.getBestAssignment()))) {
+                    if (cost < firstTaxiLegResult.getBestCostForAllStations() || (cost == firstTaxiLegResult.getBestCostForAllStations() &&
+                                                              breakCostTie(asgn, firstTaxiLegResult.getBestAssignmentForAllStations()))) {
                         // Lower bound is better than best known cost => We need the exact distance to pickup.
                         // Return and postpone remaining combinations.
 

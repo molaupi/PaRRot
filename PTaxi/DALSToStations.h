@@ -157,6 +157,8 @@ namespace karri {
             curRelOrdinaryPickups = &relevantOrdinaryPickups;
             curRelPickupsBns = &relevantPickupsBeforeNextStop;
 
+            initLastStopSearches(requestState, firstTaxiLegResult);
+
             const int64_t pbnsTimeBefore = curVehLocToPickupSearches.getTotalLocatingVehiclesTimeForRequest() +
                                            curVehLocToPickupSearches.getTotalVehicleToPickupSearchTimeForRequest();
 
@@ -201,14 +203,14 @@ namespace karri {
 
     private:
 
-        void initLastStopSearches(const RequestState& requestState) {
+        void initLastStopSearches(const RequestState& requestState, FirstTaxiLegResult &firstTaxiLegResult) {
             totalNumberOfCandidateDropoffs = 0;
             totalNumEdgeRelaxations = 0;
             totalNumVerticesSettled = 0;
             totalNumEntriesScanned = 0;
             
             curReqState = &requestState;
-            upperBoundCost = std::min(requestState.getBestCost(), externalUpperBoundCost);
+            upperBoundCost = std::min(firstTaxiLegResult.getBestCostForAllStations(), externalUpperBoundCost);
             externalUpperBoundCost = INFTY;
 
             const int numBatches = fleet.size() / K + (fleet.size() % K != 0);
@@ -343,7 +345,7 @@ namespace karri {
 
                             const auto minCostFromHere = calculator.calcVehicleIndependentCostLowerBoundForDALSWithKnownMinDistToDropoff(
                                     asgn.dropoff.walkingDist, asgn.distToDropoff, minTripTimeToLastStop, requestState);
-                            if (minCostFromHere > requestState.getBestCost())
+                            if (minCostFromHere > firstTaxiLegResult.getBestCostForAllStations())
                                 break;
 
                             curPickupIndex = entry.stopIndex;
@@ -434,9 +436,9 @@ namespace karri {
                         } else {
                             asgn.distToPickup = entry.distToPDLoc;
                             const auto lowerBoundCost = calculator.calc(asgn, requestState);
-                            if (lowerBoundCost < requestState.getBestCost() ||
-                                (lowerBoundCost == requestState.getBestCost() &&
-                                 breakCostTie(asgn, requestState.getBestAssignment()))) {
+                            if (lowerBoundCost < firstTaxiLegResult.getBestCostForAllStations() ||
+                                (lowerBoundCost == firstTaxiLegResult.getBestCostForAllStations() &&
+                                 breakCostTie(asgn, firstTaxiLegResult.getBestAssignmentForAllStations()))) {
                                 // In this case, we need the exact distance to the pickup via the current location of the
                                 // vehicle. We postpone computation of that distance to be able to bundle it with the
                                 // computation of distances to other pickups via the vehicle location. Then all remaining

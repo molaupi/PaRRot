@@ -71,7 +71,7 @@ class FirstTaxiLegResult {
 
 public:
     explicit FirstTaxiLegResult(const RouteState &routeState, const RequestState &requestState, const int numStations)
-            : results(numStations), routeState(routeState), requestState(requestState) {
+            : results(numStations), routeState(routeState), requestState(requestState), bestCostForAllStations(INFTY), bestAssignmentForAllStations() {
                 assert(numStations >= 0);
             }
 
@@ -85,9 +85,21 @@ public:
             stationCost.bestAssignment = asgn;
             stationCost.bestCost = cost;
             stationCost.arrivalTime = calcArrivalTime(asgn);
+            if (stationCost.bestCost < bestCostForAllStations) {
+                bestCostForAllStations = stationCost.bestCost;
+                bestAssignmentForAllStations = stationCost.bestAssignment;
+            }
             return true;
         }
         return false;
+    }
+
+    const Assignment &getBestAssignmentForAllStations() const {
+        return bestAssignmentForAllStations;
+    }
+
+    const int &getBestCostForAllStations() const {
+        return bestCostForAllStations;
     }
 
 private:
@@ -102,6 +114,8 @@ private:
     const RouteState &routeState;
     const RequestState &requestState;
     std::vector<StationCost> results;
+    int bestCostForAllStations;
+    Assignment bestAssignmentForAllStations;
 };
 
 } // namespace karri

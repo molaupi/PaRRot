@@ -105,7 +105,6 @@ namespace karri {
                     
                 search.tentativeDistances.setDistancesForCurBatchIf(stationId, distFromPDLoc, mask);
                 search.stationsSeen.insert(stationId);
-                // search.updateUpperBoundCost(stationId, distFromPDLoc);
             }
 
 
@@ -175,7 +174,7 @@ namespace karri {
         }
 
         LabelMask canPrune(const DistanceLabel &distancesToPickups) const {
-            if (upperBoundCost >= INFTY) {
+            if (externalUpperBoundCost >= INFTY) {
                 // If current best is INFTY, only indices i with distancesToPickups[i] >= INFTY or
                 // minDirectDistances[i] >= INFTY are worse than the current best.
                 return ~(distancesToPickups < INFTY);
@@ -186,7 +185,7 @@ namespace karri {
 
             costLowerBound.setIf(DistanceLabel(INFTY), ~(distancesToPickups < INFTY));
 
-            return upperBoundCost < costLowerBound;
+            return externalUpperBoundCost < costLowerBound;
         }
 
     private:
@@ -197,7 +196,6 @@ namespace karri {
             totalNumEntriesScanned = 0;
             
             curReqState = &requestState;
-            upperBoundCost = std::min(requestState.getBestCost(), externalUpperBoundCost);
             externalUpperBoundCost = INFTY;
 
             stationsSeen.clear();
@@ -262,7 +260,6 @@ namespace karri {
         DistanceLabel currentPickupWalkingDists;
 
         int externalUpperBoundCost;
-        int upperBoundCost;
         RequestState const * curReqState;
 
         LightweightSubset stationsSeen;

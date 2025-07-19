@@ -175,7 +175,7 @@ namespace karri {
                                     stats::PalsAssignmentsPerformanceStats& stats,
                                     FirstTaxiLegResult &firstTaxiLegResult) {
             minDistanceToAnyStation = stationDistances.getMinDistanceToAnyStation();
-            runBchSearches(requestState, stationDistances, pdLocs, stats);
+            runBchSearches(requestState, stationDistances, pdLocs, stats, firstTaxiLegResult);
             enumerateAssignments(requestState, stationDistances, pdLocs, stations, stats, firstTaxiLegResult);
         }
 
@@ -187,10 +187,14 @@ namespace karri {
     private:
 
         // Run BCH searches that find distances from last stops to pickups
-        void runBchSearches(RequestState& requestState, StationDistancesT& stationDistances, const PDLocs& pdLocs, stats::PalsAssignmentsPerformanceStats& stats) {
+        void runBchSearches(RequestState& requestState, 
+                            StationDistancesT& stationDistances, 
+                            const PDLocs& pdLocs, 
+                            stats::PalsAssignmentsPerformanceStats& stats,
+                            FirstTaxiLegResult &firstTaxiLegResult) {
             KaRRiTimer timer;
 
-            initPickupSearches(requestState, pdLocs);
+            initPickupSearches(requestState, pdLocs, firstTaxiLegResult);
             for (int i = 0; i < pdLocs.numPickups(); i += K)
                 runSearchesForPickupBatch(i, requestState, stationDistances, pdLocs);
 
@@ -245,7 +249,7 @@ namespace karri {
                                                                                              asgn.pickup.walkingDist,
                                                                                              0,
                                                                                              requestState);
-                    if (minCost > requestState.getBestCost())
+                    if (minCost > firstTaxiLegResult.getBestCostForAllStations())
                         continue;
 
                     for (const auto &station: stations) {
@@ -277,7 +281,7 @@ namespace karri {
             return distances.getDistance(vehId, pickupId);
         }
 
-        void initPickupSearches(const RequestState& requestState, const PDLocs& pdLocs) {
+        void initPickupSearches(const RequestState& requestState, const PDLocs& pdLocs, FirstTaxiLegResult &firstTaxiLegResult) {
             totalNumEdgeRelaxations = 0;
             totalNumVerticesSettled = 0;
             totalNumEntriesScanned = 0;
@@ -285,7 +289,7 @@ namespace karri {
             // Set request state to allow callbacks from within Dijkstra searches.
             curReqState = &requestState;
 
-            upperBoundCost = std::min(requestState.getBestCost(), externalUpperBoundCost);
+            upperBoundCost = std::min(firstTaxiLegResult.getBestCostForAllStations(), externalUpperBoundCost);
             externalUpperBoundCost = INFTY;
             vehiclesSeenForPickups.clear();
             const int numPickupBatches = pdLocs.numPickups() / K + (pdLocs.numPickups() % K != 0);
