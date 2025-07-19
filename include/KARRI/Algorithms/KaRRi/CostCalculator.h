@@ -621,6 +621,13 @@ namespace karri {
             return tripCost + transferCost + transferPenalty;
         }
 
+        template<typename LabelSet>
+        typename LabelSet::DistanceLabel
+        calcLowerBoundCostForKTaxiTrips(
+                const typename LabelSet::DistanceLabel &distances) const {
+            return F::calcLowerBoundKTripCosts(distances);
+        }
+
 
     private:
 

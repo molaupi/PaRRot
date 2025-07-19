@@ -42,6 +42,7 @@
 #include "../PTaxi/PBNSToStations.h"
 #include "../PTaxi/StationBucketsEnvironment.h"
 #include "../PTaxi/StationsInEllipse.h"
+#include "../PTaxi/TaxiLegApproximation.h"
 
 
 #include <ULTRA/Algorithms/RAPTOR/ULTRARAPTOR.h>
@@ -726,6 +727,8 @@ int main(int argc, char *argv[]) {
         // PBNS for stations
         using PBNSToStationsImpl = PBNSToStations<CurVehLocToPickupSearchesImpl, StationsInEllipseImpl, StationBCH::StationDistances>;
         PBNSToStationsImpl pbnsToStations(curVehLocToPickupSearches, fleet, routeState);
+
+        using TaxiLegApproximationImpl = TaxiLegApproximation<VehicleInputGraph, VehCHEnv, StationBucketsEnv>;
         
         // -> pass ULTRA algorithm instance and stationBucketsEnv, palsToStations to PTAndTaxiTripFinder
         using PTAndTaxiTripFinderImpl = PTAndTaxiTripFinder<
@@ -751,7 +754,8 @@ int main(int argc, char *argv[]) {
                 OrdinaryToStationsImpl,
                 DALSToStationsImpl,
                 PBNSToStationsImpl,
-                PTAlgorithm>;
+                PTAlgorithm,
+                TaxiLegApproximationImpl>;
         PTAndTaxiTripFinderImpl ptAndTaxiTripFinder(requestStateInitializer, pdLocsFinder, pdLocsAtExistingStops,
                                                     feasibleEllipticPickups, feasibleEllipticDropoffs, ellipticSearches, 
                                                     ffPDDistanceQuery, ordinaryInsertionsFinder, pbnsInsertionsFinder, 

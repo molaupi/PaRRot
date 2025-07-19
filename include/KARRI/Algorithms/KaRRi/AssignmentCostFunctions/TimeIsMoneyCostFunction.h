@@ -94,6 +94,15 @@ namespace karri {
             return cost;
         }
 
+        template<typename DistanceLabel>
+        static inline DistanceLabel calcLowerBoundKTripCosts(const DistanceLabel &tripTime) {
+
+            DistanceLabel regularCost = tripTime;
+            regularCost.multiplyWithScalar(PASSENGER_COST_SCALE);
+
+            return regularCost;
+        }
+
         static constexpr inline int calcWalkingCost(const int walkingDist, const int) {
             // Time is money => walking time is part of passengers trip time so do not count it again
             return WALKING_COST_SCALE * walkingDist;

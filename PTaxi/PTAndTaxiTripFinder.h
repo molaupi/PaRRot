@@ -35,7 +35,8 @@ namespace karri {
             typename OrdinaryToStationsT,
             typename DALSToStationsT,
             typename PBNSToStationsT,
-            typename PTAlgorithmT
+            typename PTAlgorithmT,
+            typename TaxiLegApproximationT
     >
     class PTAndTaxiTripFinder {
     using PDDistancesT = FfPdDistanceSearchesT::PDDistancesT;
@@ -96,6 +97,7 @@ namespace karri {
                   dalsToStations(dalsToStations),
                   pbnsToStations(pbnsToStations),
                   ptAlgorithm(ptAlgorithm),
+                  taxiLegApproximation(vehInputGraph, vehChEnv, routeState, stationBucketsEnv, stations.size()),
                   chOrder(order),
                   curRelOrdinaryPickups(fleet.size()),
                   curRelPickupsBns(fleet.size()), 
@@ -118,6 +120,9 @@ namespace karri {
             bestCost = taxiOnlyHasBestCost ? taxiOnlyResponse.getBestCost() : ptOnlyResponse.getBestCost();
 
             auto firstTaxiLeg = runFirstTaxiSharingLeg(req);
+
+            taxiLegApproximation.findDistancesFromStationsToDest(req.destination);
+            const auto &distFromStations = taxiLegApproximation.getDistancesFromStations();
             
             // Return the combined results
             if (taxiOnlyHasBestCost) {
@@ -290,6 +295,8 @@ namespace karri {
         PBNSToStationsT &pbnsToStations;
 
         PTAlgorithmT &ptAlgorithm;
+
+        TaxiLegApproximationT taxiLegApproximation;
         
         RequestState curReqState;
         int bestCost;
