@@ -156,6 +156,8 @@ namespace karri {
             curRelOrdinaryPickups = &relevantOrdinaryPickups;
             curRelPickupsBns = &relevantPickupsBeforeNextStop;
 
+            initLastStopSearches(requestState);
+
             const int64_t pbnsTimeBefore = curVehLocToPickupSearches.getTotalLocatingVehiclesTimeForRequest() +
                                            curVehLocToPickupSearches.getTotalVehicleToPickupSearchTimeForRequest();
 
@@ -206,13 +208,9 @@ namespace karri {
             totalNumVerticesSettled = 0;
             totalNumEntriesScanned = 0;
             
-            curReqState = &requestState;
             upperBoundCost = std::min(requestState.getBestCost(), externalUpperBoundCost);
             externalUpperBoundCost = INFTY;
-
-            const int numBatches = fleet.size() / K + (fleet.size() % K != 0);
-            currentLastStopDistances.clear();
-            currentLastStopDistances.resize(ptStations.size(), DistanceLabel(INFTY));
+            std::fill(currentLastStopDistances.begin(), currentLastStopDistances.end(), DistanceLabel(INFTY));
         }
 
         void runSearchesForVehicleBatch(const int firstVehId, stats::DalsAssignmentsPerformanceStats& stats) {
