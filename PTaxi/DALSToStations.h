@@ -212,10 +212,7 @@ namespace karri {
             curReqState = &requestState;
             upperBoundCost = std::min(firstTaxiLegResult.getBestCostForAllStations(), externalUpperBoundCost);
             externalUpperBoundCost = INFTY;
-
-            const int numBatches = fleet.size() / K + (fleet.size() % K != 0);
-            currentLastStopDistances.clear();
-            currentLastStopDistances.resize(stations.size(), DistanceLabel(INFTY));
+            std::fill(currentLastStopDistances.begin(), currentLastStopDistances.end(), DistanceLabel(INFTY));
         }
 
         void runSearchesForVehicleBatch(const int firstVehId, stats::DalsAssignmentsPerformanceStats& stats) {
