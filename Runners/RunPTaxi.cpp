@@ -44,8 +44,8 @@
 #include "../PTaxi/StationsInEllipse.h"
 #include "../PTaxi/TaxiLegApproximation.h"
 
-
 #include <ULTRA/Algorithms/RAPTOR/ULTRARAPTOR.h>
+#include <ULTRA/Algorithms/RAPTOR/MultiSourceULTRARAPTOR.h>
 
 #include <KARRI/Algorithms/CH/CH.h>
 #include <KARRI/Tools/custom_assertion_levels.h>
@@ -698,7 +698,11 @@ int main(int argc, char *argv[]) {
         using PTAlgorithm = RAPTOR::ULTRARAPTOR<RAPTOR::AggregateProfiler, false>;
 
         PTAlgorithm ptAlgorithm(raptor, psgCh, bucketGraphFileName);
-        
+
+        using PTAlgorithmWithTaxi = RAPTOR::MultiSourceULTRARAPTOR<RAPTOR::AggregateProfiler, false>;
+
+        PTAlgorithmWithTaxi ptAlgorithmWithTaxi(raptor, psgCh, bucketGraphFileName);
+
         // Buckets for PT stations
         using StationBucketsEnv = StationBucketsEnvironment<VehicleInputGraph, VehCHEnv>;
         
@@ -755,6 +759,7 @@ int main(int argc, char *argv[]) {
                 DALSToStationsImpl,
                 PBNSToStationsImpl,
                 PTAlgorithm,
+                PTAlgorithmWithTaxi,
                 TaxiLegApproximationImpl>;
         PTAndTaxiTripFinderImpl ptAndTaxiTripFinder(requestStateInitializer, pdLocsFinder, pdLocsAtExistingStops,
                                                     feasibleEllipticPickups, feasibleEllipticDropoffs, ellipticSearches, 
@@ -762,7 +767,7 @@ int main(int argc, char *argv[]) {
                                                     palsInsertionsFinder, dalsInsertionsFinder, relevantPdLocsFilter, 
                                                     vehicleInputGraph, *vehChEnv, psgInputGraph, *psgChEnv, fleet, routeState,
                                                     stations, stationBucketsEnv, palsToStations, stationsInEllipse, dalsToStations, pbnsToStations,
-                                                    ptAlgorithm, order);
+                                                    ptAlgorithm, order, ptAlgorithmWithTaxi);
 
 
 

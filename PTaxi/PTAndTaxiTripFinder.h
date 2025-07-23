@@ -36,6 +36,7 @@ namespace karri {
             typename DALSToStationsT,
             typename PBNSToStationsT,
             typename PTAlgorithmT,
+            typename PTAlgorithmWithTaxiT,
             typename TaxiLegApproximationT
     >
     class PTAndTaxiTripFinder {
@@ -69,7 +70,8 @@ namespace karri {
                             DALSToStationsT &dalsToStations,
                             PBNSToStationsT &pbnsToStations,
                             PTAlgorithmT &ptAlgorithm,
-                            Order &order)
+                            Order &order,
+                            PTAlgorithmWithTaxiT &ptAlgorithmWithTaxi)
                 : feasibleEllipticPickups(feasibleEllipticPickups),
                   feasibleEllipticDropoffs(feasibleEllipticDropoffs),
                   requestStateInitializer(requestStateInitializer),
@@ -97,6 +99,7 @@ namespace karri {
                   dalsToStations(dalsToStations),
                   pbnsToStations(pbnsToStations),
                   ptAlgorithm(ptAlgorithm),
+                  ptAlgorithmWithTaxi(ptAlgorithmWithTaxi),
                   taxiLegApproximation(vehInputGraph, vehChEnv, routeState, stationBucketsEnv, stations.size()),
                   chOrder(order),
                   curRelOrdinaryPickups(fleet.size()),
@@ -295,6 +298,7 @@ namespace karri {
         PBNSToStationsT &pbnsToStations;
 
         PTAlgorithmT &ptAlgorithm;
+        PTAlgorithmWithTaxiT &ptAlgorithmWithTaxi;
 
         TaxiLegApproximationT taxiLegApproximation;
         

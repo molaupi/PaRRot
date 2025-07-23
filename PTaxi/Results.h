@@ -102,6 +102,11 @@ public:
         return bestCostForAllStations;
     }
 
+    const StationCost &getStationCost(const int stationId) const {
+        assert(stationId >= 0 && stationId < results.size());
+        return results[stationId];
+    }
+
 private:
     int calcArrivalTime(const Assignment &asgn) {
         using namespace time_utils;
