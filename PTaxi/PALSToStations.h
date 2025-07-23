@@ -249,7 +249,7 @@ namespace karri {
                                                                                              asgn.pickup.walkingDist,
                                                                                              0,
                                                                                              requestState);
-                    if (minCost > firstTaxiLegResult.getBestCostForAllStations())
+                    if (minCost > upperBoundCost)
                         continue;
 
                     for (const auto &station: stations) {
@@ -289,7 +289,7 @@ namespace karri {
             // Set request state to allow callbacks from within Dijkstra searches.
             curReqState = &requestState;
 
-            upperBoundCost = std::min(firstTaxiLegResult.getBestCostForAllStations(), externalUpperBoundCost);
+            upperBoundCost = std::min(firstTaxiLegResult.getWorstCostForAllStations(), externalUpperBoundCost);
             externalUpperBoundCost = INFTY;
             vehiclesSeenForPickups.clear();
             const int numPickupBatches = pdLocs.numPickups() / K + (pdLocs.numPickups() % K != 0);

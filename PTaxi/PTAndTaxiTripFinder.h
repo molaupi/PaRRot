@@ -234,6 +234,7 @@ namespace karri {
         }
 
         void runPBNS(RequestState &rs, stats::PbnsAssignmentsPerformanceStats &stats, FirstTaxiLegResult &firstTaxiLegResult) {
+            pbnsToStations.setExternalCostUpperBound(bestCost);
             pbnsToStations.findAssignments(curRelPickupsBns, stations, stationsInEllipse, stationBCH.getTentativeDistances(), rs, curPdLocs, stats, firstTaxiLegResult);
         }
 

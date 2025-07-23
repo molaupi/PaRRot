@@ -174,7 +174,7 @@ namespace karri {
 
         LabelMask exceedsGlobalBestCost(const DistanceLabel &dist) const {
             const auto tripCost = calc.template calcLowerBoundCostForKTaxiTrips<LabelSetT>(dist);
-            return dist > upperBoundCost;
+            return tripCost > upperBoundCost;
         }
 
         typename CHEnvT::template UpwardSearch<ScanSourceBucket, StopSearch, LabelSetT> reverseUpwardSearch;

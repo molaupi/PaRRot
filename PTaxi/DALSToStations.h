@@ -183,7 +183,7 @@ namespace karri {
                                          curRelPickupsBns->getVehiclesWithRelevantPDLocs().size();
         }
 
-         // Sets a known upper bound on the cost of a PALS insertion.
+        // Sets a known upper bound on the cost of a PALS insertion.
         void setExternalCostUpperBound(const int c) {
             externalUpperBoundCost = c;
         }
@@ -210,7 +210,7 @@ namespace karri {
             totalNumEntriesScanned = 0;
             
             curReqState = &requestState;
-            upperBoundCost = std::min(firstTaxiLegResult.getBestCostForAllStations(), externalUpperBoundCost);
+            upperBoundCost = std::min(firstTaxiLegResult.getWorstCostForAllStations(), externalUpperBoundCost);
             externalUpperBoundCost = INFTY;
             std::fill(currentLastStopDistances.begin(), currentLastStopDistances.end(), DistanceLabel(INFTY));
         }
@@ -342,7 +342,7 @@ namespace karri {
 
                             const auto minCostFromHere = calculator.calcVehicleIndependentCostLowerBoundForDALSWithKnownMinDistToDropoff(
                                     asgn.dropoff.walkingDist, asgn.distToDropoff, minTripTimeToLastStop, requestState);
-                            if (minCostFromHere > firstTaxiLegResult.getBestCostForAllStations())
+                            if (minCostFromHere > upperBoundCost)
                                 break;
 
                             curPickupIndex = entry.stopIndex;
@@ -433,9 +433,9 @@ namespace karri {
                         } else {
                             asgn.distToPickup = entry.distToPDLoc;
                             const auto lowerBoundCost = calculator.calc(asgn, requestState);
-                            if (lowerBoundCost < firstTaxiLegResult.getBestCostForAllStations() ||
-                                (lowerBoundCost == firstTaxiLegResult.getBestCostForAllStations() &&
-                                 breakCostTie(asgn, firstTaxiLegResult.getBestAssignmentForAllStations()))) {
+                            if (lowerBoundCost < upperBoundCost ||
+                                (lowerBoundCost == firstTaxiLegResult.getWorstCostForAllStations() &&
+                                 breakCostTie(asgn, firstTaxiLegResult.getWorstAssignmentForAllStations()))) {
                                 // In this case, we need the exact distance to the pickup via the current location of the
                                 // vehicle. We postpone computation of that distance to be able to bundle it with the
                                 // computation of distances to other pickups via the vehicle location. Then all remaining
