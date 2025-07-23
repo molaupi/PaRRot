@@ -144,7 +144,7 @@ namespace karri {
                   curVehLocToPickupSearches(curVehLocToPickupSearchesT),
                   routeState(routeState),
                   checkPBNSForVehicle(fleet.size()),
-                  bucketContainer(stationBucketsEnv.getBuckets()),
+                  bucketContainer(stationBucketsEnv.getTargetBuckets()),
                   ptStations(ptStations),
                   currentLastStopDistances(ptStations.size(), DistanceLabel(INFTY)) {}
 
@@ -219,18 +219,16 @@ namespace karri {
             assert(firstVehId % K == 0 && firstVehId < fleet.size());
 
             std::array<int, K> lastStopTails;
-            std::array<int, K> travelTimes;
             for (int i = 0; i < K; ++i) {
                 const auto &veh =
                         firstVehId + i < fleet.size() ? fleet[firstVehId + i]
                                                                       : fleet[firstVehId];
                 const int lastStopIndex = routeState.numStopsOf(veh.vehicleId) - 1;
                 const int lastStopLocation = routeState.stopLocationsFor(veh.vehicleId)[lastStopIndex];
-                lastStopTails[i] = inputGraph.edgeTail(lastStopLocation);
-                travelTimes[i] = inputGraph.travelTime(lastStopLocation);
+                lastStopTails[i] = inputGraph.edgeHead(lastStopLocation);
             }
             
-            run(lastStopTails, travelTimes);
+            run(lastStopTails);
             const int64_t searchTime = timer.elapsed<std::chrono::nanoseconds>();
 
             stats.searchTime += searchTime;

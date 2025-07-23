@@ -65,7 +65,7 @@ namespace karri {
                 int numEntriesScannedHere = 0;
 
                 if constexpr (!StationBucketsEnvT::SORTED) {
-                    auto bucket = search.stationbucketContainer.getBucketOf(v);
+                    auto bucket = search.stationSourceBucketContainer.getBucketOf(v);
                     for (const auto &entry: bucket) {
                         ++numEntriesScannedHere;
 
@@ -74,7 +74,7 @@ namespace karri {
                         tryUpdatingDistance(stationId, distViaV);
                     }
                 } else {
-                    auto bucket = search.stationbucketContainer.getBucketOf(v);
+                    auto bucket = search.stationSourceBucketContainer.getBucketOf(v);
 
                     for (const auto &entry: bucket) {
                         ++numEntriesScannedHere;
@@ -132,7 +132,7 @@ namespace karri {
                 int numEntriesScannedHere = 0;
 
                 if constexpr (!StationBucketsEnvT::SORTED) {
-                    auto bucket = search.stationbucketContainer.getBucketOf(v);
+                    auto bucket = search.stationTargetBucketContainer.getBucketOf(v);
                     for (const auto &entry: bucket) {
                         ++numEntriesScannedHere;
 
@@ -142,7 +142,7 @@ namespace karri {
                     }
                 } else {
 
-                    auto bucket = search.stationbucketContainer.getBucketOf(v);
+                    auto bucket = search.stationTargetBucketContainer.getBucketOf(v);
 
                     for (const auto &entry: bucket) {
                         ++numEntriesScannedHere;
@@ -214,7 +214,8 @@ namespace karri {
                                ScanSourceBucket(*this), StopEllipseSearch(*this))),
                   ch(chEnv.getCH()),
                   routeState(routeState),
-                  stationbucketContainer(stationBucketsEnv.getBuckets()),
+                  stationSourceBucketContainer(stationBucketsEnv.getSourceBuckets()),
+                  stationTargetBucketContainer(stationBucketsEnv.getTargetBuckets()),
                   stopBucketContainer(routeState.getMaxStopId()),
                   stationsSeen(numberOfStations),
                   distFromStopToStations(numberOfStations, DistanceLabel(INFTY)),
@@ -314,8 +315,9 @@ namespace karri {
         const InputGraphT &inputGraph;
         const CH &ch;
         const RouteState &routeState;
-        
-        const StationBucketContainer &stationbucketContainer;
+
+        const StationBucketContainer &stationSourceBucketContainer;
+        const StationBucketContainer &stationTargetBucketContainer;
         StopBucketContainer stopBucketContainer;
 
         LightweightSubset stationsSeen;
