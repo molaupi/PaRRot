@@ -16,7 +16,7 @@ namespace RAPTOR {
 
 template <typename PROFILER = NoProfiler, bool PREVENT_DIRECT_WALKING = false,
     typename INITIAL_TRANSFERS = BucketCHInitialTransfers>
-class MultiSourceULTRARAPTOR {
+class TaxiULTRARAPTOR {
 public:
     using Profiler = PROFILER;
     static constexpr bool PreventDirectWalking = PREVENT_DIRECT_WALKING;
@@ -25,32 +25,8 @@ public:
     static constexpr bool SeparateRouteAndTransferEntries = PreventDirectWalking;
     static constexpr int RoundFactor = SeparateRouteAndTransferEntries ? 2 : 1;
     using ArrivalTime = EarliestArrivalTime<SeparateRouteAndTransferEntries>;
-    using Type = MultiSourceULTRARAPTOR<Profiler, PreventDirectWalking, InitialTransferType>;
+    using Type = TaxiULTRARAPTOR<Profiler, PreventDirectWalking, InitialTransferType>;
     using SourceType = Vertex;
-
-    struct TaxiSource {
-        Vertex originVertex;        // Original pickup location
-        StopId ptStopId;           // PT stop reached by taxi
-        int arrivalTime;           // Time to reach PT stop via taxi
-        int taxiCost;              // Cost of taxi leg
-        int taxiDistance;          // Distance of taxi leg
-        int taxiId;                // Taxi vehicle identifier
-        
-        TaxiSource(Vertex origin, StopId stop, int time, int cost = 0, int distance = 0, int id = -1) :
-            originVertex(origin), ptStopId(stop), arrivalTime(time), taxiCost(cost), 
-            taxiDistance(distance), taxiId(id) {}
-    };
-
-    struct TaxiTarget {
-        Vertex destinationVertex; // Final destination
-        int travelTime;           // Time from PT stop to destination
-        int directDistance;       // Distance of final taxi leg
-        StopId fromStopId;        // Specific PT stop (noStop means all stops)
-        
-        TaxiTarget(Vertex destination, int time, int distance = 0, StopId fromStop = noStop) :
-            destinationVertex(destination), travelTime(time),
-            directDistance(distance), fromStopId(fromStop) {}
-    };
 
 private:
     struct EarliestArrivalLabel {
@@ -60,11 +36,6 @@ private:
             , parent(noVertex)
             , usesRoute(false)
             , routeId(noRouteId)
-            , sourceTaxiId(-1)
-            , targetTaxiId(-1)
-            , totalTaxiCost(0)
-            , isFromTaxi(false)
-            , isToTaxi(false)
         {
         }
         int arrivalTime;
@@ -75,19 +46,11 @@ private:
             RouteId routeId;
             Edge transferId;
         };
-
-        // Taxi-specific extensions
-        int sourceTaxiId;          // Which taxi brought us to this stop
-        int targetTaxiId;          // Which taxi will take us to destination
-        int totalTaxiCost;         // Total cost so far
-        bool isFromTaxi;           // Whether this leg came from taxi
-        bool isToTaxi;           // Whether this leg came from taxi
     };
-
     using Round = std::vector<EarliestArrivalLabel>;
 
 public:
-    MultiSourceULTRARAPTOR(const Data& data, const InitialTransferType initialTransfers,
+    TaxiULTRARAPTOR(const Data& data, const InitialTransferType initialTransfers,
         const Profiler& profilerTemplate = Profiler())
         : data(data)
         , initialTransfers(initialTransfers)
@@ -114,10 +77,10 @@ public:
     }
 
     template <typename ATTRIBUTE>
-    MultiSourceULTRARAPTOR(const Data& data, const InitialTransferGraph& forwardGraph,
+    TaxiULTRARAPTOR(const Data& data, const InitialTransferGraph& forwardGraph,
         const InitialTransferGraph& backwardGraph, const ATTRIBUTE weight,
         const std::string& fileName = "", const Profiler& profilerTemplate = Profiler())
-        : MultiSourceULTRARAPTOR(data,
+        : TaxiULTRARAPTOR(data,
             InitialTransferType(forwardGraph, backwardGraph,
                 data.numberOfStops(), weight, fileName),
             profilerTemplate)
@@ -125,9 +88,9 @@ public:
     }
 
     template <typename T = CHGraph, typename = std::enable_if_t<Meta::Equals<T, CHGraph>() && Meta::Equals<T, InitialTransferGraph>()>>
-    MultiSourceULTRARAPTOR(const Data& data, const ULTRACH::CH& chData,
+    TaxiULTRARAPTOR(const Data& data, const ULTRACH::CH& chData,
         const std::string& fileName = "", const Profiler& profilerTemplate = Profiler())
-        : MultiSourceULTRARAPTOR(data, chData.forward, chData.backward, Weight,
+        : TaxiULTRARAPTOR(data, chData.forward, chData.backward, Weight,
             fileName, profilerTemplate)
     {
     }
@@ -135,10 +98,10 @@ public:
     template <
         typename T = TransferGraph,
         typename = std::enable_if_t<Meta::Equals<T, TransferGraph>() && Meta::Equals<T, InitialTransferGraph>()>>
-    MultiSourceULTRARAPTOR(const Data& data, const TransferGraph& forwardGraph,
+    TaxiULTRARAPTOR(const Data& data, const TransferGraph& forwardGraph,
         const TransferGraph& backwardGraph,
         const Profiler& profilerTemplate = Profiler())
-        : MultiSourceULTRARAPTOR(data, forwardGraph, backwardGraph, TravelTime,
+        : TaxiULTRARAPTOR(data, forwardGraph, backwardGraph, TravelTime,
             profilerTemplate)
     {
     }
@@ -370,78 +333,6 @@ private:
             startNewRound();
     }
 
-    inline void initializeMultiSourceTaxi(
-        const std::vector<TaxiSource>& taxiSources,
-        const std::vector<TaxiTarget>& taxiTargets,
-        const std::vector<Vertex>& targets
-    ) noexcept {
-
-        // Store taxi information
-        activeTaxiSources = taxiSources;
-        activeTaxiTargets = taxiTargets;
-        targetVertices = targets;
-        
-        // Build lookup maps for efficiency
-        stopToTaxiSourceMap.clear();
-        destinationToTaxiTargetMap.clear();
-        
-        for (size_t i = 0; i < taxiSources.size(); ++i) {
-            stopToTaxiSourceMap[taxiSources[i].ptStopId].push_back(i);
-        }
-        
-        for (size_t i = 0; i < taxiTargets.size(); ++i) {
-            destinationToTaxiTargetMap[taxiTargets[i].destinationVertex] = i;
-        }
-        
-        for (const Vertex target : targets) {
-            if (data.isStop(target)) {
-                targetStops.push_back(StopId(target));
-            } else {
-                // For non-PT targets, we need special handling
-                // Could use extended stop space or different approach
-                targetStops.push_back(StopId(data.numberOfStops() + targetStops.size()));
-            }
-        }
-
-        // Extend earliestArrival array if needed
-        size_t requiredSize = data.numberOfStops() + 1 + targetStops.size();
-        if (earliestArrival.size() < requiredSize) {
-            earliestArrival.resize(requiredSize);
-        }
-        
-        // Initialize first round
-        startNewRound();
-        
-        // Set arrival times at all taxi-reachable PT stops
-        for (const TaxiSource& source : taxiSources) {
-            Assert(data.isStop(source.ptStopId), "Taxi source " << source.ptStopId << " is not a valid PT stop!");
-            
-            if (arrivalByRoute(source.ptStopId, source.arrivalTime)) {
-                EarliestArrivalLabel& label =
-                    static_cast<EarliestArrivalLabel&>(currentRound()[source.ptStopId]);
-
-                // Set basic arrival information
-                label.parent = source.originVertex;
-                label.parentDepartureTime = source.arrivalTime; // Taxi departure time would be earlier
-                label.usesRoute = false;
-                label.transferId = noEdge;
-                
-                // Set taxi-specific information
-                label.sourceTaxiId = source.taxiVehicleId;
-                label.totalTaxiCost = source.taxiCost;
-                label.isFromTaxi = true;
-                
-                // Mark for processing in next round
-                if constexpr (!SeparateRouteAndTransferEntries) {
-                    stopsUpdatedByTransfer.insert(source.ptStopId);
-                }
-            }
-        }
-        
-        // Initialize second round if needed
-        if constexpr (SeparateRouteAndTransferEntries) startNewRound();
-    }
-
     inline void collectRoutesServingUpdatedStops() noexcept
     {
         for (const StopId stop : stopsUpdatedByTransfer) {
@@ -529,7 +420,7 @@ private:
                 label.transferId = noEdge;
             }
         }
-        // walk to destination
+        // taxi (if = then walk)
         if constexpr (!PreventDirectWalking) {
             if (initialTransfers.getDistance() != INFTY) {
                 const int arrivalTime = sourceDepartureTime + initialTransfers.getDistance();
@@ -539,84 +430,6 @@ private:
                     label.parentDepartureTime = sourceDepartureTime;
                     label.usesRoute = false;
                     label.transferId = noEdge;
-                }
-            }
-        }
-    }
-
-    inline void relaxMultiSourceInitialTransfers(const int sourceDepartureTime) noexcept {
-        // For each taxi origin point, also allow direct walking to PT stations
-        
-        std::set<Vertex> processedOrigins; // Avoid duplicate computation
-        
-        for (const TaxiSource& taxiSource : activeTaxiSources) {
-            if (processedOrigins.find(taxiSource.originVertex) != processedOrigins.end()) {
-                continue;
-            }
-            processedOrigins.insert(taxiSource.originVertex);
-            
-            Vertex referenceTarget = targetVertices.empty() ? noVertex : targetVertices[0];
-            initialTransfers.template run<!PreventDirectWalking>(taxiSource.originVertex, referenceTarget);
-            
-            // Process all reachable PT stops by walking
-            for (const Vertex stop : initialTransfers.getForwardPOIs()) {
-                // Skip target stops - handle them separately
-                bool isTarget = false;
-                for (const Vertex target : targetVertices) {
-                    if (stop == target) {
-                        isTarget = true;
-                        break;
-                    }
-                }
-                if (isTarget) continue;
-                
-                Assert(data.isStop(stop), "Reached POI " << stop << " is not a stop!");
-                Assert(initialTransfers.getForwardDistance(stop) != INFTY, "Vertex " << stop << " was not reached!");
-                
-                const int walkingTime = initialTransfers.getForwardDistance(stop);
-                const int walkingArrivalTime = sourceDepartureTime + walkingTime;
-                
-                if (arrivalByTransfer(StopId(stop), walkingArrivalTime)) {
-                    EarliestArrivalLabel& label = currentRound()[stop];
-                    label.parent = taxiSource.originVertex;
-                    label.parentDepartureTime = sourceDepartureTime;
-                    label.usesRoute = false;
-                    label.transferId = noEdge;
-                    
-                    // This is walking, not taxi - no taxi cost involved
-                    label.sourceTaxiId = -1;
-                    label.totalTaxiCost = 0;
-                    label.isFromTaxi = false;
-                    label.isToTaxi = false;
-                }
-            }
-            
-            // Handle direct walking to target destinations 
-            if constexpr (!PreventDirectWalking) {
-                for (size_t targetIdx = 0; targetIdx < targetVertices.size(); ++targetIdx) {
-                    const Vertex targetVertex = targetVertices[targetIdx];
-                    
-                    // Check if target is directly reachable by walking
-                    if (initialTransfers.getDistance(targetVertex) != INFTY) {
-                        const int walkingTime = initialTransfers.getDistance(targetVertex);
-                        const int walkingDepartureTime = taxiSource.arrivalTime;
-                        const int walkingArrivalTime = walkingDepartureTime + walkingTime;
-                        
-                        const StopId targetStopId = targetStops[targetIdx];
-                        if (arrivalByTransfer(targetStopId, walkingArrivalTime)) {
-                            EarliestArrivalLabel& label = currentRound()[targetStopId];
-                            label.parent = taxiSource.originVertex;
-                            label.parentDepartureTime = walkingDepartureTime;
-                            label.usesRoute = false;
-                            label.transferId = noEdge;
-                            
-                            // Pure walking solution - no taxi cost
-                            label.sourceTaxiId = -1;
-                            label.totalTaxiCost = 0;
-                            label.isFromTaxi = false;
-                            label.isToTaxi = false;
-                        }
-                    }
                 }
             }
         }
@@ -646,8 +459,6 @@ private:
                     label.transferId = edge;
                 }
             }
-            // Final Transfer
-            // Approximation for taxi distances from all stations
             if (initialTransfers.getBackwardDistance(stop) != INFTY) {
                 const int arrivalTime = earliestArrivalTime + initialTransfers.getBackwardDistance(stop);
                 if (arrivalByTransfer(targetStop, arrivalTime)) {
@@ -658,6 +469,7 @@ private:
                     label.transferId = noEdge;
                 }
             }
+            // taxi
             if constexpr (SeparateRouteAndTransferEntries) {
                 if (arrivalByTransfer(stop, earliestArrivalTime)) {
                     EarliestArrivalLabel& label = currentRound()[stop];
@@ -794,16 +606,6 @@ private:
     int sourceDepartureTime;
 
     Profiler profiler;
-
-    // Additional storage for taxi information
-    std::vector<TaxiSource> activeTaxiSources;
-    std::vector<TaxiTarget> activeTaxiTargets;
-    std::unordered_map<StopId, std::vector<size_t>> stopToTaxiSourceMap;
-    std::unordered_map<Vertex, size_t> destinationToTaxiTargetMap;
-    
-    // Track multiple potential target vertices
-    std::vector<Vertex> targetVertices;
-    std::vector<StopId> targetStops;
 };
 
 } // namespace RAPTOR

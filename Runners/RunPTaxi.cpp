@@ -45,7 +45,7 @@
 #include "../PTaxi/TaxiLegApproximation.h"
 
 #include <ULTRA/Algorithms/RAPTOR/ULTRARAPTOR.h>
-#include <ULTRA/Algorithms/RAPTOR/MultiSourceULTRARAPTOR.h>
+#include <ULTRA/Algorithms/RAPTOR/TaxiULTRARAPTOR.h>
 
 #include <KARRI/Algorithms/CH/CH.h>
 #include <KARRI/Tools/custom_assertion_levels.h>
@@ -699,7 +699,7 @@ int main(int argc, char *argv[]) {
 
         PTAlgorithm ptAlgorithm(raptor, psgCh, bucketGraphFileName);
 
-        using PTAlgorithmWithTaxi = RAPTOR::MultiSourceULTRARAPTOR<RAPTOR::AggregateProfiler, false>;
+        using PTAlgorithmWithTaxi = RAPTOR::TaxiULTRARAPTOR<RAPTOR::AggregateProfiler, false>;
 
         PTAlgorithmWithTaxi ptAlgorithmWithTaxi(raptor, psgCh, bucketGraphFileName);
 
