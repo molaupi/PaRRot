@@ -142,7 +142,7 @@ namespace karri {
                   ch(chEnv.getCH()),
                   routeState(routeState),
                   calc(routeState),
-                  stationbucketContainer(stationBucketsEnv.getBuckets()),
+                  stationbucketContainer(stationBucketsEnv.getSourceBuckets()),
                   distFromStations(numberOfStations, DistanceLabel(INFTY)),
                   upperBoundCost(INFTY) {}
 

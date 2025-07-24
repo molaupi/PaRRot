@@ -134,7 +134,7 @@ namespace karri {
                               CurVehLocToPickupSearchesT &curVehLocToPickupSearchesT,
                               const RouteState &routeState,
                               const StationBucketsEnvT &stationBucketsEnv,
-                              PTStations &stations)
+                              PTStations &ptStations)
                 : inputGraph(inputGraph),
                   ch(chEnv.getCH()),
                   fleet(fleet),
@@ -144,9 +144,9 @@ namespace karri {
                   curVehLocToPickupSearches(curVehLocToPickupSearchesT),
                   routeState(routeState),
                   checkPBNSForVehicle(fleet.size()),
-                  bucketContainer(stationBucketsEnv.getBuckets()),
-                  stations(stations),
-                  currentLastStopDistances(stations.size(), DistanceLabel(INFTY)) {}
+                  bucketContainer(stationBucketsEnv.getTargetBuckets()),
+                  ptStations(ptStations),
+                  currentLastStopDistances(ptStations.size(), DistanceLabel(INFTY)) {}
 
         void tryDropoffAfterLastStop(const RelevantPDLocs &relevantOrdinaryPickups,
                                      const RelevantPDLocs &relevantPickupsBeforeNextStop,
@@ -221,18 +221,16 @@ namespace karri {
             assert(firstVehId % K == 0 && firstVehId < fleet.size());
 
             std::array<int, K> lastStopTails;
-            std::array<int, K> travelTimes;
             for (int i = 0; i < K; ++i) {
                 const auto &veh =
                         firstVehId + i < fleet.size() ? fleet[firstVehId + i]
                                                                       : fleet[firstVehId];
                 const int lastStopIndex = routeState.numStopsOf(veh.vehicleId) - 1;
                 const int lastStopLocation = routeState.stopLocationsFor(veh.vehicleId)[lastStopIndex];
-                lastStopTails[i] = inputGraph.edgeTail(lastStopLocation);
-                travelTimes[i] = inputGraph.travelTime(lastStopLocation);
+                lastStopTails[i] = inputGraph.edgeHead(lastStopLocation);
             }
             
-            run(lastStopTails, travelTimes);
+            run(lastStopTails);
             const int64_t searchTime = timer.elapsed<std::chrono::nanoseconds>();
 
             stats.searchTime += searchTime;
@@ -310,7 +308,7 @@ namespace karri {
                 asgn.vehicle = &fleet[vehId];
                 asgn.dropoffStopIdx = numStops - 1;
 
-                for (const auto &station: stations) {
+                for (const auto &station: ptStations) {
                     asgn.dropoff = {
                         station.stationId, // PDLoc ID
                         station.vehEdgeId, // Location in road network
@@ -407,7 +405,7 @@ namespace karri {
                 for (auto &entry: relevantPickupsBeforeNextStop.relevantSpotsFor(vehId)) {
                     asgn.pickup = pdLocs.pickups[entry.pdId];
                     asgn.distFromPickup = entry.distFromPDLocToNextStop;
-                    for (const auto &station: stations) {
+                    for (const auto &station: ptStations) {
                         asgn.dropoff = {
                             station.stationId, // PDLoc ID
                             station.vehEdgeId, // Location in road network
@@ -452,7 +450,7 @@ namespace karri {
                 curVehLocToPickupSearches.computeExactDistancesVia(fleet[vehId], pdLocs);
                 for (const auto &continuation: pbnsContinuations) {
                     assert(continuation.pickupID >= 0 && continuation.pickupID < pdLocs.numPickups());
-                    assert(continuation.fromStationID >= 0 && continuation.fromStationID < stations.size());
+                    assert(continuation.fromStationID >= 0 && continuation.fromStationID < ptStations.size());
                     asgn.pickup = pdLocs.pickups[continuation.pickupID];
 
                     asgn.distToPickup = curVehLocToPickupSearches.getDistance(vehId,
@@ -462,8 +460,8 @@ namespace karri {
 
                     asgn.distFromPickup = continuation.distFromPickup;
                     for (int stationId = continuation.fromStationID;
-                         stationId < stations.size(); ++stationId) {
-                        const auto &station = stations[stationId];
+                         stationId < ptStations.size(); ++stationId) {
+                        const auto &station = ptStations[stationId];
                         asgn.dropoff = {
                             stationId, // PDLoc ID
                             station.vehEdgeId, // Location in road network
@@ -500,8 +498,7 @@ namespace karri {
         CurVehLocToPickupSearchesT &curVehLocToPickupSearches;
         const RouteState &routeState;
 
-        // Stations
-        PTStations &stations;
+        PTStations &ptStations;
 
         // Flag per vehicle that tells us if we still have to consider a pickup before the next stop of the vehicle.
         FastResetFlagArray<> checkPBNSForVehicle;
