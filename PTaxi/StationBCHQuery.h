@@ -149,7 +149,7 @@ namespace karri {
                   calc(CostCalculator(routeState)),
                   upwardSearch(chEnv.template getForwardSearch<ScanBucket, StopStationBCH, LabelSetT>(
                                ScanBucket(*this), StopStationBCH(*this))),
-                  bucketContainer(stationBucketsEnv.getBuckets()),
+                  bucketContainer(stationBucketsEnv.getTargetBuckets()),
                   tentativeDistances(numberOfStations),
                   stationsSeen(numberOfStations),
                   numVerticesSettled(0),
@@ -213,13 +213,12 @@ namespace karri {
                 const auto &pickup =
                         firstPickupId + i < pdLocs.numPickups() ? pdLocs.pickups[firstPickupId + i]
                                                                       : pdLocs.pickups[firstPickupId];
-                pickupTails[i] = inputGraph.edgeTail(pickup.loc);
-                travelTimes[i] = inputGraph.travelTime(pickup.loc);
+                pickupTails[i] = inputGraph.edgeHead(pickup.loc);
                 currentPickupWalkingDists[i] = pickup.walkingDist;
             }
 
             tentativeDistances.setCurBatchIdx(firstPickupId / K);
-            run(pickupTails, travelTimes);
+            run(pickupTails);
 
             totalNumEdgeRelaxations += getNumEdgeRelaxations();
             totalNumVerticesSettled += getNumVerticesSettled();

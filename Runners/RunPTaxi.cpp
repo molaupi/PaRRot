@@ -35,7 +35,6 @@
 
 #include "../PTaxi/PTAndTaxiTripFinder.h"
 #include "../PTaxi/StationBCHQuery.h"
-#include "../PTaxi/LastStopToStationBCHQuery.h"
 #include "../PTaxi/PALSToStations.h"
 #include "../PTaxi/DALSToStations.h"
 #include "../PTaxi/OrdinaryToStations.h"

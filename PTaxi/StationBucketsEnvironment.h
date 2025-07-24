@@ -37,10 +37,8 @@ namespace karri {
     template<typename InputGraphT, typename CHEnvT>
     class StationBucketsEnvironment {
 
-        
         public:
         static constexpr bool SORTED = true;
-        
         
         struct CompareEntries {
             bool operator()(const BucketEntry &e1, const BucketEntry &e2) const {
@@ -66,22 +64,38 @@ namespace karri {
             const int &maxDist;
         };
 
-        struct GenerateEntry {
-            explicit GenerateEntry(BucketContainer &bucketContainer, int &curStationId, int &verticesVisited)
-                    : bucketContainer(bucketContainer), curStationId(curStationId), verticesVisited(verticesVisited) {}
+        struct GenerateTargetEntry {
+            explicit GenerateTargetEntry(BucketContainer &targetBucketContainer, int &curStationId, int &verticesVisited)
+                    : targetBucketContainer(targetBucketContainer), curStationId(curStationId), verticesVisited(verticesVisited) {}
 
             template<typename DistLabelT, typename DistLabelContT>
             bool operator()(const int v, DistLabelT &distToV, const DistLabelContT &) {
                 auto entry = BucketEntry(curStationId, distToV[0]);
-                bucketContainer.insert(v, entry);
+                targetBucketContainer.insert(v, entry);
                 ++verticesVisited;
                 return false;
             }
 
-            BucketContainer &bucketContainer;
+            BucketContainer &targetBucketContainer;
             int &curStationId;
             int &verticesVisited;
+        };
 
+        struct GenerateSourceEntry {
+            explicit GenerateSourceEntry(BucketContainer &sourceBucketContainer, int &curStationId, int &verticesVisited)
+                    : sourceBucketContainer(sourceBucketContainer), curStationId(curStationId), verticesVisited(verticesVisited) {}
+
+            template<typename DistLabelT, typename DistLabelContT>
+            bool operator()(const int v, DistLabelT &distToV, const DistLabelContT &) {
+                auto entry = BucketEntry(curStationId, distToV[0]);
+                sourceBucketContainer.insert(v, entry);
+                ++verticesVisited;
+                return false;
+            }
+
+            BucketContainer &sourceBucketContainer;
+            int &curStationId;
+            int &verticesVisited;
         };
         
     public:
@@ -90,50 +104,64 @@ namespace karri {
                 : inputGraph(inputGraph),
                   ch(chEnv.getCH()),
                   searchGraph(ch.downwardGraph()),
-                  bucketContainer(searchGraph.numVertices()),
-                  entryGenSearch(
-                          chEnv.getReverseSearch(GenerateEntry(bucketContainer, stationId, verticesVisitedInSearch),
+                  sourceBucketContainer(searchGraph.numVertices()),
+                  targetBucketContainer(searchGraph.numVertices()),
+                  sourceEntryGenSearch(
+                          chEnv.getForwardSearch(GenerateSourceEntry(sourceBucketContainer, stationId, verticesVisitedInSearch),
+                                                 StopWhenDistanceExceeded(INFTY))),
+                  targetEntryGenSearch(
+                          chEnv.getReverseSearch(GenerateTargetEntry(targetBucketContainer, stationId, verticesVisitedInSearch),
                                                  StopWhenDistanceExceeded(INFTY)))
                 {}
 
 
-        const BucketContainer &getBuckets() const {
-            return bucketContainer;
+        const BucketContainer &getSourceBuckets() const {
+            return sourceBucketContainer;
+        }
+
+        const BucketContainer &getTargetBuckets() const {
+            return targetBucketContainer;
         }
 
         void generateBucketEntries(const Station &station) {
             verticesVisitedInSearch = 0;
             stationId = station.stationId;
-            const auto stationVertex = inputGraph.edgeHead(station.vehEdgeId);
+            const auto stationHead = inputGraph.edgeHead(station.vehEdgeId);
+            const auto stationTail = inputGraph.edgeTail(station.vehEdgeId);
+            const auto stationEdge = inputGraph.travelTime(station.vehEdgeId);
 
-            entryGenSearch.run(ch.rank(stationVertex));
+            sourceEntryGenSearch.run(ch.rank(stationHead));
+            targetEntryGenSearch.runWithOffset(ch.rank(stationTail), stationEdge);
         }
 
         // Reads the bucket container from a binary file. 
         void readBucketsFrom(std::ifstream &in) {
-            bucketContainer.readFrom(in);
+            sourceBucketContainer.readFrom(in);
+            targetBucketContainer.readFrom(in);
         }
 
         // Writes the bucket container to a binary file
         void writeBucketsTo(std::ofstream &out) const {
-            bucketContainer.writeTo(out);
+            sourceBucketContainer.writeTo(out);
+            targetBucketContainer.writeTo(out);
         }
 
     private:
-        // no DownwardSearch in CH
-        using GenerateEntriesSearch = typename CHEnvT::template UpwardSearch<GenerateEntry, StopWhenDistanceExceeded>;
-
+        using GenerateSourceEntriesSearch = typename CHEnvT::template UpwardSearch<GenerateSourceEntry, StopWhenDistanceExceeded>;
+        using GenerateTargetEntriesSearch = typename CHEnvT::template UpwardSearch<GenerateTargetEntry, StopWhenDistanceExceeded>;
 
         const InputGraphT &inputGraph;
         const CH &ch;
         const CH::SearchGraph &searchGraph;
 
-        BucketContainer bucketContainer;
+        BucketContainer sourceBucketContainer;
+        BucketContainer targetBucketContainer;
 
         int stationId;
         int verticesVisitedInSearch;
 
-        GenerateEntriesSearch entryGenSearch;
+        GenerateSourceEntriesSearch sourceEntryGenSearch;
+        GenerateTargetEntriesSearch targetEntryGenSearch;
 
     };
 }
