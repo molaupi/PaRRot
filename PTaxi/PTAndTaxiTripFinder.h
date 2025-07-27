@@ -121,7 +121,7 @@ namespace karri {
 
             auto firstTaxiLeg = runFirstTaxiSharingLeg(req);
 
-            taxiLegApproximation.findDistancesFromStationsToDest(req.destination);
+            taxiLegApproximation.findDistancesFromStationsToDest(req.destination, taxiOnlyResponse.getOriginalReqMaxTripTime());
             const auto &distFromStations = taxiLegApproximation.getDistancesFromStations();
             
             // Return the combined results

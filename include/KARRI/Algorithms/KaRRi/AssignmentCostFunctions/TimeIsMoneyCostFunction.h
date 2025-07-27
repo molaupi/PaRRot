@@ -95,12 +95,17 @@ namespace karri {
         }
 
         template<typename DistanceLabel>
-        static inline DistanceLabel calcLowerBoundKTripCosts(const DistanceLabel &tripTime) {
+        static inline DistanceLabel calcLowerBoundKTripCosts(const DistanceLabel &tripTime, const int maxTripTime) {
 
             DistanceLabel regularCost = tripTime;
             regularCost.multiplyWithScalar(PASSENGER_COST_SCALE);
 
-            return regularCost;
+            const DistanceLabel maxTripTimeLabel = DistanceLabel(maxTripTime);
+            DistanceLabel violationCost = tripTime - DistanceLabel(maxTripTimeLabel);
+            violationCost.max(0);
+            violationCost.multiplyWithScalar(TRIP_TIME_VIOLATION_WEIGHT);
+
+            return regularCost + violationCost;
         }
 
         static constexpr inline int calcWalkingCost(const int walkingDist, const int) {
