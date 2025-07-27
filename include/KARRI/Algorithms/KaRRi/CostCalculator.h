@@ -624,8 +624,8 @@ namespace karri {
         template<typename LabelSet>
         typename LabelSet::DistanceLabel
         calcLowerBoundCostForKTaxiTrips(
-                const typename LabelSet::DistanceLabel &distances) const {
-            return F::calcLowerBoundKTripCosts(distances);
+                const typename LabelSet::DistanceLabel &distances, const int maxTripTime) const {
+            return F::calcLowerBoundKTripCosts(distances, maxTripTime);
         }
 
 

@@ -124,7 +124,7 @@ namespace karri {
 
             auto firstTaxiLeg = runFirstTaxiSharingLeg(req);
 
-            taxiLegApproximation.findDistancesFromStationsToDest(req.destination);
+            taxiLegApproximation.findDistancesFromStationsToDest(req.destination, taxiOnlyResponse.getOriginalReqMaxTripTime());
             const auto &distFromStations = taxiLegApproximation.getDistancesFromStations();
             
             // Return the combined results
@@ -237,6 +237,7 @@ namespace karri {
         }
 
         void runPBNS(RequestState &rs, stats::PbnsAssignmentsPerformanceStats &stats, FirstTaxiLegResult &firstTaxiLegResult) {
+            pbnsToStations.setExternalCostUpperBound(bestCost);
             pbnsToStations.findAssignments(curRelPickupsBns, stations, stationsInEllipse, stationBCH.getTentativeDistances(), rs, curPdLocs, stats, firstTaxiLegResult);
         }
 

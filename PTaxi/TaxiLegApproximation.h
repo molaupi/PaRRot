@@ -146,11 +146,12 @@ namespace karri {
                   distFromStations(numberOfStations, DistanceLabel(INFTY)),
                   upperBoundCost(INFTY) {}
 
-        void findDistancesFromStationsToDest(const int destination) {
-            const int rank = ch.rank(destination);
+        void findDistancesFromStationsToDest(const int destination, const int maxTripTime) {
+            init(maxTripTime);
+
+            const int destinationVertex = inputGraph.edgeTail(destination);
+            const int rank = ch.rank(destinationVertex);
             const int offset = inputGraph.travelTime(destination);
-            
-            init();
 
             // Run the reverse upward search from the second stop vertex
             // This will compute the distances from all stations to the next stop
@@ -168,13 +169,14 @@ namespace karri {
 
     private:
 
-        void init() {
+        void init(const int maxTripTime) {
+            curMaxTripTime = maxTripTime;
             std::fill(distFromStations.begin(), distFromStations.end(), INFTY);
         }
 
         LabelMask exceedsGlobalBestCost(const DistanceLabel &dist) const {
-            const auto tripCost = calc.template calcLowerBoundCostForKTaxiTrips<LabelSetT>(dist);
-            return dist > upperBoundCost;
+            const auto tripCost = calc.template calcLowerBoundCostForKTaxiTrips<LabelSetT>(dist, curMaxTripTime);
+            return tripCost > upperBoundCost;
         }
 
         typename CHEnvT::template UpwardSearch<ScanSourceBucket, StopSearch, LabelSetT> reverseUpwardSearch;
@@ -185,6 +187,7 @@ namespace karri {
         CostCalculator calc;
 
         int upperBoundCost;
+        int curMaxTripTime;
         
         const StationBucketContainer &stationbucketContainer;
 

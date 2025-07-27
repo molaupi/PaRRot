@@ -67,6 +67,7 @@ namespace karri {
                              FirstTaxiLegResult &firstTaxiLegResult) {
             
             numAssignmentsTriedWithPickupBeforeNextStop = 0;
+            init(requestState, pdLocs, stats, firstTaxiLegResult);
             KaRRiTimer timer;
 
             int numCandidateVehicles = 0;
@@ -98,12 +99,20 @@ namespace karri {
         }
 
         // Initialize for new request.
-        void init(const RequestState& requestState, const PDLocs& pdLocs, stats::PbnsAssignmentsPerformanceStats& stats) {
+        void init(const RequestState& requestState, const PDLocs& pdLocs, stats::PbnsAssignmentsPerformanceStats& stats, FirstTaxiLegResult &firstTaxiLegResult) {
             KaRRiTimer timer;
             curVehLocToPickupSearches.initialize(requestState.now(), pdLocs);
+            upperBoundCost = std::min(firstTaxiLegResult.getWorstCostForAllStations(), externalUpperBoundCost);
+            externalUpperBoundCost = INFTY;
             const auto time = timer.elapsed<std::chrono::nanoseconds>();
             stats.initializationTime += time;
         }
+
+        // Sets a known upper bound on the cost of a PALS insertion.
+        void setExternalCostUpperBound(const int c) {
+            externalUpperBoundCost = c;
+        }
+
     private:
 
 
@@ -130,7 +139,7 @@ namespace karri {
                 const auto lowerBoundCostPairedAssignment = calculator.calcCostLowerBoundForPairedAssignmentBeforeNextStop(
                         veh, asgn.pickup, asgn.distToPickup, stationDistances.getMinDistanceForPDLoc(asgn.pickup.id),
                         distFromPickup, requestState);
-                if (lowerBoundCostPairedAssignment < firstTaxiLegResult.getBestCostForAllStations()) {
+                if (lowerBoundCostPairedAssignment < upperBoundCost) {
                     const auto requireExactDistance = tryLowerBoundsForPaired(asgn, stations, stationsInEllipse, stationDistances, requestState, pdLocs, firstTaxiLegResult);
                     if (requireExactDistance) {
                         // In this case some paired assignment before the next stop needs the exact distance to pickup via
@@ -204,8 +213,8 @@ namespace karri {
                 asgn.distToDropoff = stationDistances.getDistance(asgn.dropoff.id, asgn.pickup.id);
                 asgn.distFromDropoff = entry.distFromStationToStop;
                 const auto cost = calculator.calc(asgn, requestState);
-                if (cost < firstTaxiLegResult.getBestCostForAllStations() || (cost == firstTaxiLegResult.getBestCostForAllStations() &&
-                                                          breakCostTie(asgn, firstTaxiLegResult.getBestAssignmentForAllStations()))) {
+                if (cost < upperBoundCost || (cost == firstTaxiLegResult.getWorstCostForAllStations() &&
+                                                          breakCostTie(asgn, firstTaxiLegResult.getWorstAssignmentForAllStations()))) {
                     // Lower bound is better than best known cost => We need the exact distance to pickup.
                     // Return and postpone remaining combinations.
 
@@ -259,8 +268,8 @@ namespace karri {
 
                     ++numAssignmentsTriedWithPickupBeforeNextStop;
                     const auto cost = calculator.calc(asgn, requestState);
-                    if (cost < firstTaxiLegResult.getBestCostForAllStations() || (cost == firstTaxiLegResult.getBestCostForAllStations() &&
-                                                              breakCostTie(asgn, firstTaxiLegResult.getBestAssignmentForAllStations()))) {
+                    if (cost < upperBoundCost || (cost == firstTaxiLegResult.getWorstCostForAllStations() &&
+                                                              breakCostTie(asgn, firstTaxiLegResult.getWorstAssignmentForAllStations()))) {
                         // Lower bound is better than best known cost => We need the exact distance to pickup.
                         // Return and postpone remaining combinations.
 
@@ -373,6 +382,9 @@ namespace karri {
                 }
             }
         }
+
+        int upperBoundCost;
+        int externalUpperBoundCost;
 
         CurVehLocToPickupSearchesT &curVehLocToPickupSearches;
         const Fleet &fleet;
