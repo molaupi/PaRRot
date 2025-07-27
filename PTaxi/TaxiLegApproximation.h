@@ -149,7 +149,8 @@ namespace karri {
         void findDistancesFromStationsToDest(const int destination, const int maxTripTime) {
             init(maxTripTime);
 
-            const int rank = ch.rank(destination);
+            const int destinationVertex = inputGraph.edgeTail(destination);
+            const int rank = ch.rank(destinationVertex);
             const int offset = inputGraph.travelTime(destination);
 
             // Run the reverse upward search from the second stop vertex
