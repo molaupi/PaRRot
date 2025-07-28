@@ -126,6 +126,8 @@ namespace karri {
 
             taxiLegApproximation.findDistancesFromStationsToDest(req.destination, taxiOnlyResponse.getOriginalReqMaxTripTime());
             const auto &distFromStations = taxiLegApproximation.getDistancesFromStations();
+
+            ptAlgorithmWithTaxi.run(query.source, query.departureTime, query.target, firstTaxiLeg, distFromStations);
             
             // Return the combined results
             if (taxiOnlyHasBestCost) {

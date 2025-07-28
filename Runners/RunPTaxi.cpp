@@ -42,9 +42,9 @@
 #include "../PTaxi/StationBucketsEnvironment.h"
 #include "../PTaxi/StationsInEllipse.h"
 #include "../PTaxi/TaxiLegApproximation.h"
+#include "../PTaxi/TaxiULTRARAPTOR.h"
 
 #include <ULTRA/Algorithms/RAPTOR/ULTRARAPTOR.h>
-#include <ULTRA/Algorithms/RAPTOR/TaxiULTRARAPTOR.h>
 
 #include <KARRI/Algorithms/CH/CH.h>
 #include <KARRI/Tools/custom_assertion_levels.h>
@@ -698,9 +698,9 @@ int main(int argc, char *argv[]) {
 
         PTAlgorithm ptAlgorithm(raptor, psgCh, bucketGraphFileName);
 
-        using PTAlgorithmWithTaxi = RAPTOR::TaxiULTRARAPTOR<RAPTOR::AggregateProfiler, false>;
+        using PTAlgorithmWithTaxi = RAPTOR::TaxiULTRARAPTOR<BasicLabelSet<0, ParentInfo::FULL_PARENT_INFO>>;
 
-        PTAlgorithmWithTaxi ptAlgorithmWithTaxi(raptor, psgCh, bucketGraphFileName);
+        PTAlgorithmWithTaxi ptAlgorithmWithTaxi(raptor, psgCh, stations, bucketGraphFileName);
 
         // Buckets for PT stations
         using StationBucketsEnv = StationBucketsEnvironment<VehicleInputGraph, VehCHEnv>;
