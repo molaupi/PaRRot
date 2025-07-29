@@ -209,18 +209,17 @@ namespace karri {
             assert(firstPickupId % K == 0 && firstPickupId < pdLocs.numPickups());
 
 
-            std::array<int, K> pickupTails;
-            std::array<int, K> travelTimes;
+            std::array<int, K> pickupHeads;
             for (int i = 0; i < K; ++i) {
                 const auto &pickup =
                         firstPickupId + i < pdLocs.numPickups() ? pdLocs.pickups[firstPickupId + i]
                                                                       : pdLocs.pickups[firstPickupId];
-                pickupTails[i] = inputGraph.edgeHead(pickup.loc);
+                pickupHeads[i] = inputGraph.edgeHead(pickup.loc);
                 currentPickupWalkingDists[i] = pickup.walkingDist;
             }
 
             tentativeDistances.setCurBatchIdx(firstPickupId / K);
-            run(pickupTails);
+            run(pickupHeads);
 
             totalNumEdgeRelaxations += getNumEdgeRelaxations();
             totalNumVerticesSettled += getNumVerticesSettled();
