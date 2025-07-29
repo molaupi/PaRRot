@@ -109,6 +109,8 @@ public:
 
 public:
     inline size_t numberOfStops() const noexcept { return stopData.size(); }
+    inline size_t numberOfVertices() const noexcept { return transferGraph.numVertices(); }
+
     inline bool isStop(const Vertex stop) const noexcept
     {
         return stop < numberOfStops();

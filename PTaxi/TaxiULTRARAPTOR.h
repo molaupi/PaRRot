@@ -71,6 +71,7 @@ public:
         , sourceDepartureTime(never)
         , profiler(profilerTemplate)
         , stations(stations)
+        , stopIdToStationId(data.numberOfVertices(), INVALID_ID)
     {
         AssertMsg(data.hasImplicitBufferTimes(),
             "Departure buffer times have to be implicit!");
@@ -432,17 +433,21 @@ private:
                 label.transferId = noEdge;
             }
         }
-        // taxi (if = then walk)
+        // Extension for first taxi leg
         for (const auto &station : stations) {
             const Vertex targetStop = Vertex(station.psgChOrder);
             const int stationId = station.stationId;
+            const StopId targetStopId = StopId(targetStop);
+
+            stopIdToStationId[targetStopId] = stationId;
+
             if (targetStop == sourceVertex || targetStop == targetVertex)
                 continue;
             AssertMsg(data.isStop(targetStop), "Taxi station " << targetStop << " is not a stop!");
             AssertMsg(firstTaxiLeg.getStationCost(stationId).bestCost != INFTY,
                 "Station " << stationId << " was not reached by taxi!");
             const int arrivalTime = firstTaxiLeg.getStationCost(stationId).arrivalTime;
-            if (arrivalByTransfer(StopId(targetStop), arrivalTime)) {
+            if (arrivalByTransfer(targetStopId, arrivalTime)) {
                 EarliestArrivalLabel& label = currentRound()[targetStop];
                 label.parent = sourceVertex;
                 label.parentDepartureTime = sourceDepartureTime;
@@ -502,7 +507,21 @@ private:
                     label.transferId = noEdge;
                 }
             }
-            // taxi
+            // Extension for second taxi leg
+            const int stationId = stopIdToStationId[stop];
+            if (stationId != INVALID_ID) {
+                const int arrivalTime = earliestArrivalTime + distFromStations[stationId][0];
+                if (arrivalByTransfer(targetStop, arrivalTime)) {
+                    EarliestArrivalLabel& label = currentRound()[targetStop];
+                    label.parent = stop;
+                    label.parentDepartureTime = earliestArrivalTime;
+                    label.usesRoute = false;
+                    label.usesTaxi = true;
+                    label.transferId = noEdge;
+
+                }
+            }
+            
             if constexpr (SeparateRouteAndTransferEntries) {
                 if (arrivalByTransfer(stop, earliestArrivalTime)) {
                     EarliestArrivalLabel& label = currentRound()[stop];
@@ -630,6 +649,8 @@ private:
     std::vector<Round> rounds;
 
     std::vector<ArrivalTime> earliestArrival;
+
+    std::vector<int> stopIdToStationId;
 
     IndexedSet<false, StopId> stopsUpdatedByRoute;
     IndexedSet<false, StopId> stopsUpdatedByTransfer;
