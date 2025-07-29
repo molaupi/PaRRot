@@ -220,17 +220,17 @@ namespace karri {
 
             assert(firstVehId % K == 0 && firstVehId < fleet.size());
 
-            std::array<int, K> lastStopTails;
+            std::array<int, K> lastStopHeads;
             for (int i = 0; i < K; ++i) {
                 const auto &veh =
                         firstVehId + i < fleet.size() ? fleet[firstVehId + i]
                                                                       : fleet[firstVehId];
                 const int lastStopIndex = routeState.numStopsOf(veh.vehicleId) - 1;
                 const int lastStopLocation = routeState.stopLocationsFor(veh.vehicleId)[lastStopIndex];
-                lastStopTails[i] = inputGraph.edgeHead(lastStopLocation);
+                lastStopHeads[i] = inputGraph.edgeHead(lastStopLocation);
             }
             
-            run(lastStopTails);
+            run(lastStopHeads);
             const int64_t searchTime = timer.elapsed<std::chrono::nanoseconds>();
 
             stats.searchTime += searchTime;
