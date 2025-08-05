@@ -11,7 +11,7 @@ class PTResult {
 public:
     PTResult() : valid(false), bestCost(INFTY) {}
 
-    PTResult(std::vector<Journey> &journeyParetoFront, RequestState &firstTaxiLeg) 
+    PTResult(std::vector<Journey> &journeyParetoFront, RequestState &curReqState) 
         : bestCost(INFTY), valid(true) {
             int cost;
             for (Journey &journey: journeyParetoFront) {
@@ -19,7 +19,7 @@ public:
                                                 getTotalTripTime(journey), 
                                                 getTotalTransferTime(journey), 
                                                 getNumberOfTransfers(journey),
-                                                firstTaxiLeg);
+                                                curReqState);
                 if (cost < bestCost) {
                     bestCost = cost;
                     bestJourney = journey;
@@ -36,6 +36,22 @@ public:
     // Best cost from the pareto front
     const Journey &getBestJourney() const {
         return bestJourney;
+    }
+
+    const int getFirstStation() const {
+        return bestJourney.front().to.value();
+    }
+
+    const int getLastStation() const {
+        return bestJourney.back().from.value();
+    }
+
+    const bool isInitialTransferByTaxi() const {
+        return bestJourney.front().usesTaxi;
+    }
+
+    const bool isFinalTransferByTaxi() const {
+        return bestJourney.back().usesTaxi;
     }
 
     inline const int getTotalTransferTime(Journey journey) const {
@@ -57,19 +73,17 @@ private:
 };
 
 class FirstTaxiLegResult {
+public:
     struct StationCost {
         StationCost() noexcept = default;
-        StationCost(const int stationId, const int cost, const int arrivalTime, const Assignment &asgn) noexcept
-            : stationId(stationId), bestCost(cost), arrivalTime(arrivalTime), bestAssignment(asgn) {}
+        StationCost(const int cost, const int arrivalTime, const Assignment &asgn) noexcept
+            : bestCost(cost), arrivalTime(arrivalTime), bestAssignment(asgn) {}
 
-        int stationId = INVALID_ID;
         int bestCost = INFTY;
         int arrivalTime = INFTY;
         Assignment bestAssignment;
     };
 
-
-public:
     explicit FirstTaxiLegResult(const RouteState &routeState, const RequestState &requestState, const int numStations)
             : results(numStations), routeState(routeState), requestState(requestState), worstCostForAllStations(INFTY), worstAssignmentForAllStations() {
                 assert(numStations >= 0);
@@ -85,7 +99,7 @@ public:
             stationCost.bestAssignment = asgn;
             stationCost.bestCost = cost;
             stationCost.arrivalTime = calcArrivalTime(asgn);
-            if (stationCost.bestCost > worstCostForAllStations) {
+            if (worstCostForAllStations == INFTY || stationCost.bestCost > worstCostForAllStations) {
                 worstCostForAllStations = stationCost.bestCost;
                 worstAssignmentForAllStations = stationCost.bestAssignment;
             }
@@ -121,6 +135,26 @@ private:
     std::vector<StationCost> results;
     int worstCostForAllStations;
     Assignment worstAssignmentForAllStations;
+};
+
+class PreliminaryResult {
+    using FirstTaxiLeg = FirstTaxiLegResult::StationCost;
+public:
+    PreliminaryResult(FirstTaxiLegResult &firstTaxiLegResult, PTResult &ptLeg)
+        : ptLeg(ptLeg), firstStationId(ptLeg.getFirstStation()), lastStationId(ptLeg.getLastStation()), isFinalTransferByTaxi(ptLeg.isFinalTransferByTaxi()) {
+            if (ptLeg.isInitialTransferByTaxi()) {
+                firstTaxiLegCost = firstTaxiLegResult.getStationCost(ptLeg.getFirstStation());
+            } else {
+                firstTaxiLegCost = FirstTaxiLeg();
+            }
+        }
+
+private:
+    FirstTaxiLeg firstTaxiLegCost;
+    PTResult ptLeg;
+    int firstStationId;
+    int lastStationId;
+    bool isFinalTransferByTaxi;
 };
 
 } // namespace karri

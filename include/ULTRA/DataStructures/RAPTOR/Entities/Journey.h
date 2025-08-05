@@ -12,12 +12,13 @@ class JourneyLeg {
 public:
     JourneyLeg(const Vertex from = noVertex, const Vertex to = noVertex,
         const int departureTime = never, const int arrivalTime = never,
-        const bool usesRoute = false, const RouteId routeId = noRouteId)
+        const bool usesRoute = false, const RouteId routeId = noRouteId, const bool usesTaxi = false)
         : from(from)
         , to(to)
         , departureTime(departureTime)
         , arrivalTime(arrivalTime)
         , usesRoute(usesRoute)
+        , usesTaxi(usesTaxi)
         , routeId(routeId)
     {
     }
@@ -29,6 +30,7 @@ public:
         , departureTime(departureTime)
         , arrivalTime(arrivalTime)
         , usesRoute(false)
+        , usesTaxi(false)
         , transferId(edge)
     {
     }
@@ -53,6 +55,7 @@ public:
     int departureTime;
     int arrivalTime;
     bool usesRoute;
+    bool usesTaxi;
     union {
         RouteId routeId;
         Edge transferId;

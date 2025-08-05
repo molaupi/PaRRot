@@ -115,19 +115,24 @@ namespace karri {
             ptAlgorithm.run(query.source, query.departureTime, query.target);
             
             // PT only leg and invalid PT leg
-            auto paretoFront = ptAlgorithm.getJourneys();
-            PTResult ptOnlyResponse(paretoFront, taxiOnlyResponse);
+            auto ptOnlyParetoFront = ptAlgorithm.getJourneys();
+            PTResult ptOnlyResponse(ptOnlyParetoFront, curReqState);
             PTResult invalidPTResponse;
 
             const bool taxiOnlyHasBestCost = taxiOnlyResponse.getBestCost() < ptOnlyResponse.getBestCost();
             bestCost = taxiOnlyHasBestCost ? taxiOnlyResponse.getBestCost() : ptOnlyResponse.getBestCost();
 
-            auto firstTaxiLeg = runFirstTaxiSharingLeg(req);
+            const auto &firstTaxiLeg = runFirstTaxiSharingLeg(req);
 
             taxiLegApproximation.findDistancesFromStationsToDest(req.destination, taxiOnlyResponse.getOriginalReqMaxTripTime());
             const auto &distFromStations = taxiLegApproximation.getDistancesFromStations();
 
             ptAlgorithmWithTaxi.run(query.source, query.departureTime, query.target, firstTaxiLeg, distFromStations);
+            auto ptLegParetoFront = ptAlgorithmWithTaxi.getJourneys();
+            PTResult ptLegResponse(ptLegParetoFront, curReqState);
+
+            // preliminary results
+            
             
             // Return the combined results
             if (taxiOnlyHasBestCost) {

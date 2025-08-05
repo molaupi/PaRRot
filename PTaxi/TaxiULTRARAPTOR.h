@@ -71,7 +71,6 @@ public:
         , sourceDepartureTime(never)
         , profiler(profilerTemplate)
         , stations(stations)
-        , stopIdToStationId(data.numberOfVertices(), INVALID_ID)
     {
         AssertMsg(data.hasImplicitBufferTimes(),
             "Departure buffer times have to be implicit!");
@@ -435,11 +434,12 @@ private:
         }
         // Extension for first taxi leg
         for (const auto &station : stations) {
-            const Vertex targetStop = Vertex(station.psgChOrder);
+            if (firstTaxiLeg.getWorstCostForAllStations() == INFTY) 
+                break; // no stations reached by taxi
+            
             const int stationId = station.stationId;
+            const Vertex targetStop = Vertex(stationId);
             const StopId targetStopId = StopId(targetStop);
-
-            stopIdToStationId[targetStopId] = stationId;
 
             if (targetStop == sourceVertex || targetStop == targetVertex)
                 continue;
@@ -508,7 +508,7 @@ private:
                 }
             }
             // Extension for second taxi leg
-            const int stationId = stopIdToStationId[stop];
+            const int stationId = stop.value();
             if (stationId != INVALID_ID) {
                 const int arrivalTime = earliestArrivalTime + distFromStations[stationId][0];
                 if (arrivalByTransfer(targetStop, arrivalTime)) {
@@ -602,7 +602,7 @@ private:
                 "Backtracking parent pointers did not pass through the source stop!");
             const EarliestArrivalLabel& label = rounds[round][stop];
             journey.emplace_back(label.parent, stop, label.parentDepartureTime,
-                label.arrivalTime, label.usesRoute, label.routeId);
+                label.arrivalTime, label.usesRoute, label.routeId, label.usesTaxi);
             AssertMsg(data.isStop(label.parent) || label.parent == sourceVertex,
                 "Backtracking parent pointers reached a vertex ("
                     << label.parent << ")!");
@@ -649,8 +649,6 @@ private:
     std::vector<Round> rounds;
 
     std::vector<ArrivalTime> earliestArrival;
-
-    std::vector<int> stopIdToStationId;
 
     IndexedSet<false, StopId> stopsUpdatedByRoute;
     IndexedSet<false, StopId> stopsUpdatedByTransfer;
