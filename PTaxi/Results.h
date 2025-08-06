@@ -31,7 +31,7 @@ public:
     bool isValid() const { return valid; }
     void setValid(bool isValid) { valid = isValid; }
 
-    const int &getBestCost() const { return bestCost;}
+    const int &getBestCost() const { return bestCost; }
 
     // Best cost from the pareto front
     const Journey &getBestJourney() const {
@@ -72,17 +72,18 @@ private:
     Journey bestJourney;
 };
 
+struct TaxiResult {
+    TaxiResult() noexcept = default;
+    TaxiResult(const int cost, const int arrivalTime, const Assignment &asgn) noexcept
+        : bestCost(cost), arrivalTime(arrivalTime), bestAssignment(asgn) {}
+
+    int bestCost = INFTY;
+    int arrivalTime = INFTY;
+    Assignment bestAssignment;
+};
+
 class FirstTaxiLegResult {
 public:
-    struct StationCost {
-        StationCost() noexcept = default;
-        StationCost(const int cost, const int arrivalTime, const Assignment &asgn) noexcept
-            : bestCost(cost), arrivalTime(arrivalTime), bestAssignment(asgn) {}
-
-        int bestCost = INFTY;
-        int arrivalTime = INFTY;
-        Assignment bestAssignment;
-    };
 
     explicit FirstTaxiLegResult(const RouteState &routeState, const RequestState &requestState, const int numStations)
             : results(numStations), routeState(routeState), requestState(requestState), worstCostForAllStations(INFTY), worstAssignmentForAllStations() {
@@ -91,17 +92,17 @@ public:
 
     bool tryAssignmentWithKnownCostForStation(const int stationId, const Assignment &asgn, const int cost) {
         if (stationId < 0 || stationId >= results.size()) return false;
-        StationCost &stationCost = results[stationId];
+        TaxiResult &taxiResult = results[stationId];
 
-        if (cost < INFTY && (cost < stationCost.bestCost || (cost == stationCost.bestCost &&
-                                breakCostTie(asgn, stationCost.bestAssignment)))) {
+        if (cost < INFTY && (cost < taxiResult.bestCost || (cost == taxiResult.bestCost &&
+                                breakCostTie(asgn, taxiResult.bestAssignment)))) {
 
-            stationCost.bestAssignment = asgn;
-            stationCost.bestCost = cost;
-            stationCost.arrivalTime = calcArrivalTime(asgn);
-            if (worstCostForAllStations == INFTY || stationCost.bestCost > worstCostForAllStations) {
-                worstCostForAllStations = stationCost.bestCost;
-                worstAssignmentForAllStations = stationCost.bestAssignment;
+            taxiResult.bestAssignment = asgn;
+            taxiResult.bestCost = cost;
+            taxiResult.arrivalTime = calcArrivalTime(asgn);
+            if (worstCostForAllStations == INFTY || taxiResult.bestCost > worstCostForAllStations) {
+                worstCostForAllStations = taxiResult.bestCost;
+                worstAssignmentForAllStations = taxiResult.bestAssignment;
             }
             return true;
         }
@@ -116,7 +117,7 @@ public:
         return worstCostForAllStations;
     }
 
-    const StationCost &getStationCost(const int stationId) const {
+    const TaxiResult &getResultForStation(const int stationId) const {
         assert(stationId >= 0 && stationId < results.size());
         return results[stationId];
     }
@@ -132,29 +133,44 @@ private:
 
     const RouteState &routeState;
     const RequestState &requestState;
-    std::vector<StationCost> results;
+    std::vector<TaxiResult> results;
     int worstCostForAllStations;
     Assignment worstAssignmentForAllStations;
 };
 
-class PreliminaryResult {
-    using FirstTaxiLeg = FirstTaxiLegResult::StationCost;
+template<typename TaxiLegApproximationT>
+class IntermediateResult {
 public:
-    PreliminaryResult(FirstTaxiLegResult &firstTaxiLegResult, PTResult &ptLeg)
-        : ptLeg(ptLeg), firstStationId(ptLeg.getFirstStation()), lastStationId(ptLeg.getLastStation()), isFinalTransferByTaxi(ptLeg.isFinalTransferByTaxi()) {
-            if (ptLeg.isInitialTransferByTaxi()) {
-                firstTaxiLegCost = firstTaxiLegResult.getStationCost(ptLeg.getFirstStation());
-            } else {
-                firstTaxiLegCost = FirstTaxiLeg();
+    IntermediateResult(const FirstTaxiLegResult &firstTaxiLegResult, const PTResult &ptLeg, const TaxiLegApproximationT &taxiLegApproximation)
+        : firstTaxiLeg(), ptLeg(ptLeg), secondTaxiLeg(), firstStationId(ptLeg.getFirstStation()), lastStationId(ptLeg.getLastStation()), bestCost(ptLeg.getBestCost()) {
+
+            if (isInitialTransferByTaxi()) {
+                firstTaxiLeg = firstTaxiLegResult.getResultForStation(ptLeg.getFirstStation());
+                bestCost += firstTaxiLeg.bestCost;
+            }
+
+            if (isFinalTransferByTaxi()) {
+                bestCost += taxiLegApproximation.getCostForStation(lastStationId);
             }
         }
 
+    const bool isInitialTransferByTaxi() const {
+        return ptLeg.isInitialTransferByTaxi();
+    }
+        
+    const bool isFinalTransferByTaxi() const {
+        return ptLeg.isFinalTransferByTaxi();
+    }
+
+    const int &getBestCost() const { return bestCost; }
+
 private:
-    FirstTaxiLeg firstTaxiLegCost;
+    TaxiResult firstTaxiLeg;
     PTResult ptLeg;
+    TaxiResult secondTaxiLeg;
     int firstStationId;
     int lastStationId;
-    bool isFinalTransferByTaxi;
+    int bestCost;
 };
 
 } // namespace karri

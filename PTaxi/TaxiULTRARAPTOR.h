@@ -444,9 +444,9 @@ private:
             if (targetStop == sourceVertex || targetStop == targetVertex)
                 continue;
             AssertMsg(data.isStop(targetStop), "Taxi station " << targetStop << " is not a stop!");
-            AssertMsg(firstTaxiLeg.getStationCost(stationId).bestCost != INFTY,
+            AssertMsg(firstTaxiLeg.getResultForStation(stationId).bestCost != INFTY,
                 "Station " << stationId << " was not reached by taxi!");
-            const int arrivalTime = firstTaxiLeg.getStationCost(stationId).arrivalTime;
+            const int arrivalTime = firstTaxiLeg.getResultForStation(stationId).arrivalTime;
             if (arrivalByTransfer(targetStopId, arrivalTime)) {
                 EarliestArrivalLabel& label = currentRound()[targetStop];
                 label.parent = sourceVertex;

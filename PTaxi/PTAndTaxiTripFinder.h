@@ -119,8 +119,8 @@ namespace karri {
             PTResult ptOnlyResponse(ptOnlyParetoFront, curReqState);
             PTResult invalidPTResponse;
 
-            const bool taxiOnlyHasBestCost = taxiOnlyResponse.getBestCost() < ptOnlyResponse.getBestCost();
-            bestCost = taxiOnlyHasBestCost ? taxiOnlyResponse.getBestCost() : ptOnlyResponse.getBestCost();
+            const bool taxiOnlyHasBetterCost = taxiOnlyResponse.getBestCost() < ptOnlyResponse.getBestCost();
+            bestCost = taxiOnlyHasBetterCost ? taxiOnlyResponse.getBestCost() : ptOnlyResponse.getBestCost();
 
             const auto &firstTaxiLeg = runFirstTaxiSharingLeg(req);
 
@@ -131,11 +131,13 @@ namespace karri {
             auto ptLegParetoFront = ptAlgorithmWithTaxi.getJourneys();
             PTResult ptLegResponse(ptLegParetoFront, curReqState);
 
-            // preliminary results
-            
+            // first taxi leg + PT journey + 2nd taxi leg approximation
+            IntermediateResult<TaxiLegApproximationT> intermediateResult(firstTaxiLeg, ptLegResponse, taxiLegApproximation);
+
+            const bool combinationIsBestCost = intermediateResult.getBestCost() < bestCost;
             
             // Return the combined results
-            if (taxiOnlyHasBestCost) {
+            if (taxiOnlyHasBetterCost) {
                 return PTAndTaxiTriple(taxiOnlyResponse, invalidPTResponse, invalidTaxiResponse);
             } else {
                 return PTAndTaxiTriple(invalidTaxiResponse, ptOnlyResponse, invalidTaxiResponse);

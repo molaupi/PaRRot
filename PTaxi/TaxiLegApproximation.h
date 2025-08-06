@@ -167,6 +167,13 @@ namespace karri {
             return distFromStations;
         }
 
+        const int getCostForStation(const int stationId) const {
+            assert(stationId >= 0 && stationId < distFromStations.size());
+            const DistanceLabel &dist = distFromStations[stationId];
+            const auto tripCost = calc.template calcLowerBoundCostForKTaxiTrips<LabelSetT>(dist, curMaxTripTime);
+            return tripCost[0];
+        }
+
     private:
 
         void init(const int maxTripTime) {
