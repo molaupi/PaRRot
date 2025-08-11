@@ -34,6 +34,10 @@ namespace karri::stats {
         OsmRoadCategoryStats() : counts() {
             counts.fill(0);
         }
+        
+        void reset() {
+            counts.fill(0);
+        }
 
         void incCountForCat(const OsmRoadCategory& cat) {
             ++counts[static_cast<unsigned long>(cat)];

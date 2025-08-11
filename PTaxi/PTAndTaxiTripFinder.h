@@ -110,6 +110,7 @@ namespace karri {
             // Taxi only leg and invalid taxi leg
             auto taxiOnlyResponse = findBestTaxiAssignment(req);
             RequestState invalidTaxiResponse;
+            std::pair<RequestState, stats::DispatchingPerformanceStats> invalidTaxiResponseWithStats{invalidTaxiResponse, stats::DispatchingPerformanceStats()};
             
             VertexQuery query = convertKARRIRequestToULTRAQuery(req);
             ptAlgorithm.run(query.source, query.departureTime, query.target);
@@ -119,12 +120,12 @@ namespace karri {
             PTResult ptOnlyResponse(ptOnlyParetoFront, curReqState);
             PTResult invalidPTResponse;
 
-            const bool taxiOnlyHasBetterCost = taxiOnlyResponse.getBestCost() < ptOnlyResponse.getBestCost();
-            bestCost = taxiOnlyHasBetterCost ? taxiOnlyResponse.getBestCost() : ptOnlyResponse.getBestCost();
+            const bool taxiOnlyHasBetterCost = taxiOnlyResponse.first.getBestCost() < ptOnlyResponse.getBestCost();
+            bestCost = taxiOnlyHasBetterCost ? taxiOnlyResponse.first.getBestCost() : ptOnlyResponse.getBestCost();
 
             const auto &firstTaxiLeg = runFirstTaxiSharingLeg(req);
 
-            taxiLegApproximation.findDistancesFromStationsToDest(req.destination, taxiOnlyResponse.getOriginalReqMaxTripTime());
+            taxiLegApproximation.findDistancesFromStationsToDest(req.destination, taxiOnlyResponse.first.getOriginalReqMaxTripTime());
             const auto &distFromStations = taxiLegApproximation.getDistancesFromStations();
 
             ptAlgorithmWithTaxi.run(query.source, query.departureTime, query.target, firstTaxiLeg, distFromStations);
@@ -134,21 +135,25 @@ namespace karri {
             // first taxi leg + PT journey + 2nd taxi leg approximation
             IntermediateResult<TaxiLegApproximationT> intermediateResult(firstTaxiLeg, ptLegResponse, taxiLegApproximation);
 
+            // evaluate the combined results
+            // LOGS: Cost of taxi, PT, combined; arrivalTimes
+
             const bool combinationIsBestCost = intermediateResult.getBestCost() < bestCost;
             
             // Return the combined results
             if (taxiOnlyHasBetterCost) {
                 return PTAndTaxiTriple(taxiOnlyResponse, invalidPTResponse, invalidTaxiResponse);
             } else {
-                return PTAndTaxiTriple(invalidTaxiResponse, ptOnlyResponse, invalidTaxiResponse);
+                return PTAndTaxiTriple(invalidTaxiResponseWithStats, ptOnlyResponse, invalidTaxiResponse);
             }
         }
 
-        RequestState findBestTaxiAssignment(const Request &req) {
+        std::pair<RequestState, stats::DispatchingPerformanceStats> findBestTaxiAssignment(const Request &req) {
 
             // Initialize finder for this request, find PD locations:
-            RequestState rs = requestStateInitializer.initializeRequestState(req);
-            stats::DispatchingPerformanceStats& stats = rs.stats();
+            std::pair<RequestState, stats::DispatchingPerformanceStats> initRequestState = requestStateInitializer.initializeRequestState(req);
+            RequestState& rs = initRequestState.first;
+            stats::DispatchingPerformanceStats& stats = initRequestState.second;
             PDLocs pdLocs = pdLocsFinder.findPDLocs(req.origin, req.destination, stats.initializationStats);
             stats.numPickups = pdLocs.numPickups();
             stats.numDropoffs = pdLocs.numDropoffs();
@@ -156,6 +161,7 @@ namespace karri {
 
             curPdLocs = pdLocs;
             curReqState = rs;
+            curStats = stats;
 
             // Compute PD distances:
             const auto ffPdDistances = ffPDDistanceSearches.run(rs, pdLocs, stats.pdDistancesStats);
@@ -195,7 +201,7 @@ namespace karri {
             pbnsAssignments.findAssignments(relPickupsBeforeNextStop, relOrdinaryDropoffs, relDropoffsBeforeNextStop,
                                             rs, ffPdDistances, pdLocs, stats.pbnsAssignmentsStats);
 
-            return rs;
+            return {rs, stats};
         }
 
     private:
@@ -212,7 +218,7 @@ namespace karri {
         FirstTaxiLegResult runFirstTaxiSharingLeg(const Request &req) {
             RequestState rs = curReqState;
             FirstTaxiLegResult firstTaxiLegResult(routeState, rs, stations.size());
-            stats::DispatchingPerformanceStats& stats = rs.stats();
+            stats::DispatchingPerformanceStats& stats = curStats;
 
             runPALS(rs, stats.palsAssignmentsStats, firstTaxiLegResult);
             runOrdinary(rs, stats.ordAssignmentsStats, firstTaxiLegResult);
@@ -313,6 +319,7 @@ namespace karri {
         TaxiLegApproximationT taxiLegApproximation;
         
         RequestState curReqState;
+        stats::DispatchingPerformanceStats curStats;
         int bestCost;
     };
 }

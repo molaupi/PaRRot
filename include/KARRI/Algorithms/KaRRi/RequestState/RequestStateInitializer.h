@@ -41,11 +41,12 @@ namespace karri {
                   vehChQuery(vehChEnv.template getFullCHQuery<>()), psgChQuery(psgChEnv.template getFullCHQuery<>()) {}
 
 
-        RequestState initializeRequestState(const Request &req) {
+        std::pair<RequestState, stats::DispatchingPerformanceStats> initializeRequestState(const Request &req) {
             KaRRiTimer timer;
 
             RequestState requestState;
             requestState.originalRequest = req;
+            stats::DispatchingPerformanceStats stats;
 
             // Calculate the direct distance between the requests origin and destination
             timer.restart();
@@ -55,7 +56,7 @@ namespace karri {
             requestState.originalReqDirectDist = vehChQuery.getDistance() + vehInputGraph.travelTime(req.destination);
 
             const auto directSearchTime = timer.elapsed<std::chrono::nanoseconds>();
-            requestState.stats().initializationStats.computeODDistanceTime = directSearchTime;
+            stats.initializationStats.computeODDistanceTime = directSearchTime;
 
 
             if (!InputConfig::getInstance().alwaysUseVehicle) {
@@ -76,10 +77,10 @@ namespace karri {
                 requestState.tryNotUsingVehicleAssignment(totalDist, destOffset);
 
                 const auto notUsingVehiclesTime = timer.elapsed<std::chrono::nanoseconds>();
-                requestState.stats().initializationStats.notUsingVehicleTime = notUsingVehiclesTime;
+                stats.initializationStats.notUsingVehicleTime = notUsingVehiclesTime;
             }
 
-            return requestState;
+            return {requestState, stats};
         }
 
 

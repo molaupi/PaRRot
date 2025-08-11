@@ -117,10 +117,13 @@ namespace karri {
                   updatePerfLogger(LogManager<LoggerT>::getLogger(stats::UpdatePerformanceStats::LOGGER_NAME,
                                                                   "request_id, " +
                                                                   std::string(
-                                                                          stats::UpdatePerformanceStats::LOGGER_COLS))) {}
+                                                                          stats::UpdatePerformanceStats::LOGGER_COLS))),
+                  roadCatLogger(LogManager<LoggerT>::getLogger(karri::stats::OsmRoadCategoryStats::LOGGER_NAME,
+                                                               "type," +
+                                                               karri::stats::OsmRoadCategoryStats::getLoggerCols())) {}
 
 
-        void insertBestAssignment(RequestState &requestState) {
+        void insertBestAssignment(RequestState &requestState, stats::DispatchingPerformanceStats &stats) {
             KaRRiTimer timer;
 
             if (requestState.isNotUsingVehicleBest()) {
@@ -128,8 +131,8 @@ namespace karri {
             }
 
             const auto &asgn = requestState.getBestAssignment();
-            requestState.chosenPDLocsRoadCategoryStats().incCountForCat(inputGraph.osmRoadCategory(asgn.pickup.loc));
-            requestState.chosenPDLocsRoadCategoryStats().incCountForCat(inputGraph.osmRoadCategory(asgn.dropoff.loc));
+            chosenPDLocsRoadCatStats.incCountForCat(inputGraph.osmRoadCategory(asgn.pickup.loc));
+            chosenPDLocsRoadCatStats.incCountForCat(inputGraph.osmRoadCategory(asgn.dropoff.loc));
             assert(asgn.vehicle != nullptr);
 
             const auto vehId = asgn.vehicle->vehicleId;
@@ -139,16 +142,16 @@ namespace karri {
             timer.restart();
             auto [pickupIndex, dropoffIndex] = routeState.insert(asgn, requestState);
             const auto routeUpdateTime = timer.elapsed<std::chrono::nanoseconds>();
-            requestState.stats().updateStats.updateRoutesTime += routeUpdateTime;
+            stats.updateStats.updateRoutesTime += routeUpdateTime;
 
-            updateBucketState(asgn, pickupIndex, dropoffIndex, depTimeAtLastStopBefore, requestState.stats().updateStats);
+            updateBucketState(asgn, pickupIndex, dropoffIndex, depTimeAtLastStopBefore, stats.updateStats);
 
             // If the vehicle has to be rerouted at its current location for a PBNS assignment, we introduce an
             // intermediate stop at its current location representing the rerouting.
             if (asgn.pickupStopIdx == 0 && numStopsBefore > 1 && routeState.schedDepTimesFor(vehId)[0] < requestState.now()) {
                 createIntermediateStopStopAtCurrentLocationForReroute(*asgn.vehicle,
                                                                       requestState.now(),
-                                                                      requestState.stats().updateStats
+                                                                      stats.updateStats
                                                                     );
                 ++pickupIndex;
                 ++dropoffIndex;
@@ -240,25 +243,32 @@ namespace karri {
                     << requestState.getBestCost() << "\n";
         }
 
-        void writePerformanceLogs(const RequestState &requestState) {
+        void writePerformanceLogs(const RequestState &requestState, const stats::DispatchingPerformanceStats &stats) {
             overallPerfLogger << requestState.originalRequest.requestId << ", "
-                              << requestState.stats().getLoggerRow() << "\n";
+                              << stats.getLoggerRow() << "\n";
             initializationPerfLogger << requestState.originalRequest.requestId << ", "
-                                     << requestState.stats().initializationStats.getLoggerRow() << "\n";
+                                     << stats.initializationStats.getLoggerRow() << "\n";
             ellipticBchPerfLogger << requestState.originalRequest.requestId << ", "
-                                  << requestState.stats().ellipticBchStats.getLoggerRow() << "\n";
+                                  << stats.ellipticBchStats.getLoggerRow() << "\n";
             pdDistancesPerfLogger << requestState.originalRequest.requestId << ", "
-                                  << requestState.stats().pdDistancesStats.getLoggerRow() << "\n";
+                                  << stats.pdDistancesStats.getLoggerRow() << "\n";
             ordPerfLogger << requestState.originalRequest.requestId << ", "
-                          << requestState.stats().ordAssignmentsStats.getLoggerRow() << "\n";
+                          << stats.ordAssignmentsStats.getLoggerRow() << "\n";
             pbnsPerfLogger << requestState.originalRequest.requestId << ", "
-                           << requestState.stats().pbnsAssignmentsStats.getLoggerRow() << "\n";
+                           << stats.pbnsAssignmentsStats.getLoggerRow() << "\n";
             palsPerfLogger << requestState.originalRequest.requestId << ", "
-                           << requestState.stats().palsAssignmentsStats.getLoggerRow() << "\n";
+                           << stats.palsAssignmentsStats.getLoggerRow() << "\n";
             dalsPerfLogger << requestState.originalRequest.requestId << ", "
-                           << requestState.stats().dalsAssignmentsStats.getLoggerRow() << "\n";
+                           << stats.dalsAssignmentsStats.getLoggerRow() << "\n";
             updatePerfLogger << requestState.originalRequest.requestId << ", "
-                             << requestState.stats().updateStats.getLoggerRow() << "\n";
+                             << stats.updateStats.getLoggerRow() << "\n";
+        }
+
+        void writeRoadCatLogs() {
+            roadCatLogger << "all_pd_locs, " << allPDLocsRoadCatStats.getLoggerRow() << "\n";
+            roadCatLogger << "chosen_pd_locs, " << chosenPDLocsRoadCatStats.getLoggerRow() << "\n";
+            allPDLocsRoadCatStats.reset();
+            chosenPDLocsRoadCatStats.reset();
         }
 
     private:
@@ -378,6 +388,10 @@ namespace karri {
         LoggerT &palsPerfLogger;
         LoggerT &dalsPerfLogger;
         LoggerT &updatePerfLogger;
+        LoggerT &roadCatLogger;
 
+        // Road Category Stats
+        stats::OsmRoadCategoryStats allPDLocsRoadCatStats;
+        stats::OsmRoadCategoryStats chosenPDLocsRoadCatStats;
     };
 }

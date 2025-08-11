@@ -11,22 +11,22 @@ class PTAndTaxiTriple {
 public:
     PTAndTaxiTriple() = default;
     
-    PTAndTaxiTriple(RequestState &firstTaxiLeg, PTResult &ptLeg, RequestState &secondTaxiLeg)
+    PTAndTaxiTriple(std::pair<RequestState, stats::DispatchingPerformanceStats> &firstTaxiLeg, PTResult &ptLeg, RequestState &secondTaxiLeg)
         : firstTaxiLeg(firstTaxiLeg), 
           ptLeg(ptLeg), 
           secondTaxiLeg(secondTaxiLeg) {}
     
-    RequestState& getFirstTaxiLeg() { return firstTaxiLeg; }
+    std::pair<RequestState, stats::DispatchingPerformanceStats>& getFirstTaxiLeg() { return firstTaxiLeg; }
     PTResult& getPTLeg() { return ptLeg; }
     RequestState& getSecondTaxiLeg() { return secondTaxiLeg; }
 
     const int getTotalCost() const {
-        return firstTaxiLeg.getBestCost() + ptLeg.getBestCost() + secondTaxiLeg.getBestCost();
+        return firstTaxiLeg.first.getBestCost() + ptLeg.getBestCost() + secondTaxiLeg.getBestCost();
     }
     
     bool hasValidFirstTaxiLeg() const { 
         // check whether vehicle is set
-        return firstTaxiLeg.getBestAssignment().vehicle != nullptr || firstTaxiLeg.isNotUsingVehicleBest(); 
+        return firstTaxiLeg.first.getBestAssignment().vehicle != nullptr || firstTaxiLeg.first.isNotUsingVehicleBest(); 
     }
     
     bool hasValidPTLeg() const { 
@@ -54,7 +54,7 @@ public:
     }
 
 private:
-    RequestState firstTaxiLeg;  // First taxi leg result
+    std::pair<RequestState, stats::DispatchingPerformanceStats> firstTaxiLeg;  // First taxi leg result
     PTResult ptLeg;             // Public transit leg result
     RequestState secondTaxiLeg; // Second taxi leg result
 };

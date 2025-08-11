@@ -54,15 +54,6 @@ namespace karri {
                   notUsingVehicleDist(INFTY) {}
 
 
-        ~RequestState() {
-            auto &roadCatLogger = LogManager<std::ofstream>::getLogger(karri::stats::OsmRoadCategoryStats::LOGGER_NAME,
-                                                                       "type," +
-                                                                       karri::stats::OsmRoadCategoryStats::getLoggerCols());
-            roadCatLogger << "all_pd_locs, " << allPDLocsRoadCatStats.getLoggerRow() << "\n";
-            roadCatLogger << "chosen_pd_locs, " << chosenPDLocsRoadCatStats.getLoggerRow() << "\n";
-        }
-
-
         // Information about current request itself
         Request originalRequest;
         int originalReqDirectDist;
@@ -145,25 +136,7 @@ namespace karri {
             }
         }
 
-        stats::DispatchingPerformanceStats &stats() {
-            return perfStats;
-        }
-
-        const stats::DispatchingPerformanceStats &stats() const {
-            return perfStats;
-        }
-
-        stats::OsmRoadCategoryStats &allPDLocsRoadCategoryStats() {
-            return allPDLocsRoadCatStats;
-        }
-
-        stats::OsmRoadCategoryStats &chosenPDLocsRoadCategoryStats() {
-            return chosenPDLocsRoadCatStats;
-        }
-
         void reset() {
-            perfStats.clear();
-
             originalRequest = {};
             originalReqDirectDist = INFTY;
             minDirectPDDist = INFTY;
@@ -183,10 +156,6 @@ namespace karri {
         const bool dropoffAtExistingStop = isDropoffAtExistingStop(asgn, routeState);
         return getArrTimeAtDropoff(actualDepTimeAtPickup, asgn, initialPickupDetour, dropoffAtExistingStop, routeState);
         }
-
-        stats::DispatchingPerformanceStats perfStats;
-        stats::OsmRoadCategoryStats allPDLocsRoadCatStats;
-        stats::OsmRoadCategoryStats chosenPDLocsRoadCatStats;
 
         // Information about best known assignment for current request
         Assignment bestAssignment;

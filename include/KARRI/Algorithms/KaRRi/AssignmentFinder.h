@@ -83,8 +83,9 @@ namespace karri {
         RequestState findBestAssignment(const Request &req) {
 
             // Initialize finder for this request, find PD locations:
-            RequestState rs = requestStateInitializer.initializeRequestState(req);
-            stats::DispatchingPerformanceStats& stats = rs.stats();
+            std::pair<RequestState, stats::DispatchingPerformanceStats> initRequestState = requestStateInitializer.initializeRequestState(req);
+            RequestState rs = initRequestState.first;
+            stats::DispatchingPerformanceStats& stats = initRequestState.second;
             PDLocs pdLocs = pdLocsFinder.findPDLocs(req.origin, req.destination, stats.initializationStats);
             stats.numPickups = pdLocs.numPickups();
             stats.numDropoffs = pdLocs.numDropoffs();
