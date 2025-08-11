@@ -2,6 +2,7 @@
 
 #include "PTAndTaxiTriple.h"
 #include "Station.h"
+#include "IntermediateResultStats.h"
 #include <KARRI/Algorithms/CH/CH.h>
 #include <KARRI/Algorithms/KaRRi/RequestState/RelevantPDLocs.h>
 #include <ULTRA/DataStructures/Queries/Queries.h>
@@ -137,6 +138,16 @@ namespace karri {
 
             // evaluate the combined results
             // LOGS: Cost of taxi, PT, combined; arrivalTimes
+            LogManager<NullLogger>::getLogger(stats::IntermediateResultStats::LOGGER_NAME,
+                                                "request_id, " +
+                                                std::string(stats::IntermediateResultStats::LOGGER_COLS))
+                    << req.requestId << ", "
+                    << taxiOnlyResponse.first.getBestCost() << ", "
+                    << ptOnlyResponse.getBestCost() << ", "
+                    << intermediateResult.getBestCost() << ", "
+                    << taxiOnlyResponse.first.getArrivalTime(routeState) << ", "
+                    << ptOnlyResponse.getArrivalTime() << ", "
+                    << intermediateResult.getArrivalTime() << "\n";
 
             const bool combinationIsBestCost = intermediateResult.getBestCost() < bestCost;
             

@@ -167,6 +167,11 @@ namespace karri {
             return distFromStations;
         }
 
+        const int getDistanceFromStation(const int stationId) const {
+            assert(stationId >= 0 && stationId < distFromStations.size());
+            return distFromStations[stationId][0];
+        }
+
         const int getCostForStation(const int stationId) const {
             assert(stationId >= 0 && stationId < distFromStations.size());
             const DistanceLabel &dist = distFromStations[stationId];

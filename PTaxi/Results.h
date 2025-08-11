@@ -38,6 +38,10 @@ public:
         return bestJourney;
     }
 
+    const int &getArrivalTime() const {
+        return bestJourney.back().arrivalTime;
+    }
+
     const int getFirstStation() const {
         return bestJourney.front().to.value();
     }
@@ -143,7 +147,7 @@ class IntermediateResult {
 public:
     IntermediateResult(const FirstTaxiLegResult &firstTaxiLegResult, const PTResult &ptLeg, const TaxiLegApproximationT &taxiLegApproximation)
         : firstTaxiLeg(), ptLeg(ptLeg), secondTaxiLeg(), firstStationId(ptLeg.getFirstStation()), lastStationId(ptLeg.getLastStation()), bestCost(ptLeg.getBestCost()) {
-
+            arrivalTime = ptLeg.getArrivalTime();
             if (isInitialTransferByTaxi()) {
                 firstTaxiLeg = firstTaxiLegResult.getResultForStation(ptLeg.getFirstStation());
                 bestCost += firstTaxiLeg.bestCost;
@@ -151,6 +155,7 @@ public:
 
             if (isFinalTransferByTaxi()) {
                 bestCost += taxiLegApproximation.getCostForStation(lastStationId);
+                arrivalTime += taxiLegApproximation.getDistanceFromStation(lastStationId);
             }
         }
 
@@ -164,6 +169,10 @@ public:
 
     const int &getBestCost() const { return bestCost; }
 
+    const int &getArrivalTime() const {
+        return arrivalTime;
+    }
+
 private:
     TaxiResult firstTaxiLeg;
     PTResult ptLeg;
@@ -171,6 +180,7 @@ private:
     int firstStationId;
     int lastStationId;
     int bestCost;
+    int arrivalTime;
 };
 
 } // namespace karri

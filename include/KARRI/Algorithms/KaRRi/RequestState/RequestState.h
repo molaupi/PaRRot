@@ -99,6 +99,10 @@ namespace karri {
             return notUsingVehicleDist;
         }
 
+        int getArrivalTime(RouteState &routeState) {
+            return calcArrivalTime(bestAssignment, routeState);
+        }
+
         bool tryAssignmentWithKnownCost(const Assignment &asgn, const int cost) {         
             if (cost < INFTY && (cost < bestCost || (cost == bestCost &&
                                     breakCostTie(asgn, bestAssignment)))) {
