@@ -2,7 +2,7 @@
 
 # Script to run PTaxi on compute servers.
 # Usage: sbatch --partition=<server-name> run_ptaxi.sh <source-dir> <instance-name> <output-base-dir> [timeout]
-# Example: sbatch --partition=dijkstra run_ptaxi.sh /nfs/home/hnguyen/PdF/PARROT/ Berlin-1pct /nfs/home/hnguyen/PdF/PARROT/Outputs/ 120m
+# Example: sbatch --partition=dijkstra run_ptaxi.sh /nfs/home/hnguyen/PdF/PARROT Berlin-1pct /nfs/home/hnguyen/PdF/PARROT/Outputs 120m
 #   - <server-name> : name of the server to run the script on, e.g., dijkstra, backus,..
 #   - <source-dir> : absolute path to the lowest folder of your repository, so probably something like /nfs/home/hnguyen/KaRRi/karri/
 #   - <instance-name> : either Berlin-1pct or Berlin-10pct
@@ -23,9 +23,9 @@ if ! [ -d "$outputBaseDir" ]; then
 	exit 1
 fi
 
-# Set timeout of 90 minutes, if not given
+# Set timeout of 300 minutes, if not given
 if [ -z ${timeout} ]; then 
-	timeout="90m"
+	timeout="300m"
 fi
 echo "Using timeout of ${timeout}."
 
@@ -35,7 +35,8 @@ vehName=${name}_veh
 psgName=${name}_psg
 
 # Hard-coded paths for inputs
-karriInputDir=/nfs/work/karri/Inputs
+parrotInputDir=/nfs/home/hnguyen/PdF/PARROT/Networks/Berlin
+karriInputDir=$parrotInputDir/KARRI
 vehGraph=$karriInputDir/Graphs/${vehName}.gr.bin
 psgGraph=$karriInputDir/Graphs/${psgName}.gr.bin
 vehicles=$karriInputDir/Vehicles/${name}.csv
@@ -43,7 +44,6 @@ requests=$karriInputDir/Requests/${name}.csv
 vehCh=$karriInputDir/CHs/${vehName}_time.ch.bin
 psgCh=$karriInputDir/CHs/${psgName}_time.ch.bin
 
-parrotInputDir=/nfs/home/hnguyen/PdF/PARROT/Networks/Berlin
 raptor=$parrotInputDir/ULTRA/raptor.binary
 stationMapping=$parrotInputDir/Preprocessing/PT/stations.mapped.csv
 bucketGraph=$parrotInputDir/Preprocessing/PT/bucket
@@ -58,19 +58,9 @@ mkdir -p $outputDir
 # Build PTaxi
 binaryDir=$sourceDir/Build/Release
 cmake -DCMAKE_BUILD_TYPE=Release -S $sourceDir -B $binaryDir
-cmake --build $binaryDir --target PTaxi
+cmake --build $binaryDir --target PTaxi -j
 
-
-# Let PTaxi run 5 times
-for i in {1..5}
-do
-
-# Run PTaxi with ID to differentiate between 5 runs
-run_id=PTaxi_intermediate_$i
-timeout $timeout $binaryDir/Runners/PTaxi -veh-g $vehGraph -psg-g $psgGraph -v $vehicles -r $requests -veh-h $vehCh -psg-h $psgCh -o $outputDir/$run_id -raptor-data $raptor -station-mapping $stationMapping -bucket-graph $bucketGraph --station-buckets $stationBuckets -psg-ch $ptPsgCh
-
-
-done
+timeout $timeout $binaryDir/Runners/PTaxi -veh-g $vehGraph -psg-g $psgGraph -v $vehicles -r $requests -veh-h $vehCh -psg-h $psgCh -o $outputDir -raptor-data $raptor -station-mapping $stationMapping -bucket-graph $bucketGraph --station-buckets $stationBuckets -psg-ch $ptPsgCh
 
 # Remark:
 # The prefix "timeout $timeout" aborts the process as soon as the timeout is reached, which is specified in the variable $timeout.
