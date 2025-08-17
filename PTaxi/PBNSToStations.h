@@ -67,7 +67,6 @@ namespace karri {
                              FirstTaxiLegResult &firstTaxiLegResult) {
             
             numAssignmentsTriedWithPickupBeforeNextStop = 0;
-            init(requestState, pdLocs, stats, firstTaxiLegResult);
             KaRRiTimer timer;
 
             int numCandidateVehicles = 0;
@@ -99,22 +98,20 @@ namespace karri {
         }
 
         // Initialize for new request.
-        void init(const RequestState& requestState, const PDLocs& pdLocs, stats::PbnsAssignmentsPerformanceStats& stats, FirstTaxiLegResult &firstTaxiLegResult) {
+        void init(const RequestState& requestState, const PDLocs& pdLocs, stats::PbnsAssignmentsPerformanceStats& stats) {
             KaRRiTimer timer;
             curVehLocToPickupSearches.initialize(requestState.now(), pdLocs);
-            upperBoundCost = std::min(firstTaxiLegResult.getWorstCostForAllStations(), externalUpperBoundCost);
-            externalUpperBoundCost = INFTY;
             const auto time = timer.elapsed<std::chrono::nanoseconds>();
             stats.initializationTime += time;
         }
 
         // Sets a known upper bound on the cost of a PALS insertion.
-        void setExternalCostUpperBound(const int c) {
+        void setExternalCostUpperBound(const int c, FirstTaxiLegResult &firstTaxiLegResult) {
             externalUpperBoundCost = c;
+            upperBoundCost = std::min(firstTaxiLegResult.getWorstCostForAllStations(), externalUpperBoundCost);
         }
 
     private:
-
 
         // Filters combinations of pickups and dropoffs using a cost lower bound.
         // If a combination is found for a pickup that cannot be filtered, we need the exact distance from the vehicle

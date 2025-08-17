@@ -34,8 +34,8 @@ name=${instanceName}_${passengerMode}
 vehName=${name}_veh
 psgName=${name}_psg
 
-# Hard-coded paths for inputs
-parrotInputDir=/nfs/home/hnguyen/PdF/PARROT/Networks/Berlin
+# Paths for inputs
+parrotInputDir=$sourceDir/Networks/Berlin
 karriInputDir=$parrotInputDir/KARRI
 vehGraph=$karriInputDir/Graphs/${vehName}.gr.bin
 psgGraph=$karriInputDir/Graphs/${psgName}.gr.bin
@@ -66,6 +66,3 @@ timeout $timeout $binaryDir/Runners/PTaxi -veh-g $vehGraph -psg-g $psgGraph -v $
 # The prefix "timeout $timeout" aborts the process as soon as the timeout is reached, which is specified in the variable $timeout.
 # $timeout is by default specified in seconds, but other units are also possible, for example, "90m" is 90 minutes.
 # See also man timeout.
-#
-# The prefix "taskset 0x1" pins the process to the first processor. This means the operating system cannot freely move the process between processors; 
-# instead, the process will remain on a single processor. This helps to get clean time measurements.

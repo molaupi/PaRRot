@@ -231,6 +231,8 @@ namespace karri {
             FirstTaxiLegResult firstTaxiLegResult(routeState, rs, stations.size());
             stats::DispatchingPerformanceStats& stats = curStats;
 
+            pbnsToStations.init(rs, curPdLocs, stats.pbnsAssignmentsStats);
+
             runPALS(rs, stats.palsAssignmentsStats, firstTaxiLegResult);
             runOrdinary(rs, stats.ordAssignmentsStats, firstTaxiLegResult);
             runDALS(rs, stats.dalsAssignmentsStats, firstTaxiLegResult);
@@ -263,7 +265,7 @@ namespace karri {
         }
 
         void runPBNS(RequestState &rs, stats::PbnsAssignmentsPerformanceStats &stats, FirstTaxiLegResult &firstTaxiLegResult) {
-            pbnsToStations.setExternalCostUpperBound(bestCost);
+            pbnsToStations.setExternalCostUpperBound(bestCost, firstTaxiLegResult);
             pbnsToStations.findAssignments(curRelPickupsBns, stations, stationsInEllipse, stationBCH.getTentativeDistances(), rs, curPdLocs, stats, firstTaxiLegResult);
         }
 
