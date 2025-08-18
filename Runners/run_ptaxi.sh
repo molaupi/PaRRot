@@ -2,7 +2,7 @@
 
 # Script to run PTaxi on compute servers.
 # Usage: sbatch --partition=<server-name> run_ptaxi.sh <source-dir> <instance-name> <output-base-dir> [timeout]
-# Example: sbatch --partition=dijkstra run_ptaxi.sh /nfs/home/hnguyen/PdF/PARROT Berlin-1pct /nfs/home/hnguyen/PdF/PARROT/Outputs 120m
+# Example: sbatch --partition=backus run_ptaxi.sh /nfs/home/hnguyen/PdF/PARROT Berlin-1pct /nfs/home/hnguyen/PdF/PARROT/Outputs 500m
 #   - <server-name> : name of the server to run the script on, e.g., dijkstra, backus,..
 #   - <source-dir> : absolute path to the lowest folder of your repository, so probably something like /nfs/home/hnguyen/KaRRi/karri/
 #   - <instance-name> : either Berlin-1pct or Berlin-10pct

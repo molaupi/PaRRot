@@ -138,7 +138,7 @@ namespace karri {
 
             // evaluate the combined results
             // LOGS: Cost of taxi, PT, combined; arrivalTimes
-            LogManager<NullLogger>::getLogger(stats::IntermediateResultStats::LOGGER_NAME,
+            LogManager<std::ofstream>::getLogger(stats::IntermediateResultStats::LOGGER_NAME,
                                                 "request_id, " +
                                                 std::string(stats::IntermediateResultStats::LOGGER_COLS))
                     << req.requestId << ", "
