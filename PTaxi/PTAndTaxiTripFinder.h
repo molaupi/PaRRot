@@ -231,8 +231,6 @@ namespace karri {
             FirstTaxiLegResult firstTaxiLegResult(routeState, rs, stations.size());
             stats::DispatchingPerformanceStats& stats = curStats;
 
-            pbnsToStations.init(rs, curPdLocs, stats.pbnsAssignmentsStats);
-
             runPALS(rs, stats.palsAssignmentsStats, firstTaxiLegResult);
             runOrdinary(rs, stats.ordAssignmentsStats, firstTaxiLegResult);
             runDALS(rs, stats.dalsAssignmentsStats, firstTaxiLegResult);

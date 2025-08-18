@@ -51,7 +51,8 @@ namespace karri {
                   bestCost(INFTY),
                   bestArrivalTime(INFTY),
                   notUsingVehicleIsBest(false),
-                  notUsingVehicleDist(INFTY) {}
+                  notUsingVehicleDist(INFTY),
+                  earliestDepartureTime(INFTY) {}
 
 
         // Information about current request itself
@@ -62,6 +63,14 @@ namespace karri {
         // Shorthand for requestTime
         int now() const {
             return originalRequest.requestTime;
+        }
+
+        int earliestDeparture() const {
+            return earliestDepartureTime;
+        }
+
+        void setEarliestDeparture(const int earliestDeparture) {
+            earliestDepartureTime = earliestDeparture;
         }
 
         int getOriginalReqMaxTripTime() const {
@@ -100,6 +109,7 @@ namespace karri {
         }
 
         int getArrivalTime(RouteState &routeState) {
+            if (notUsingVehicleIsBest) return originalRequest.requestTime + notUsingVehicleDist;
             return calcArrivalTime(bestAssignment, routeState);
         }
 
@@ -167,5 +177,6 @@ namespace karri {
         int bestArrivalTime;
         bool notUsingVehicleIsBest;
         int notUsingVehicleDist;
+        int earliestDepartureTime;
     };
 }

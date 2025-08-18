@@ -46,6 +46,7 @@ namespace karri {
 
             RequestState requestState;
             requestState.originalRequest = req;
+            requestState.setEarliestDeparture(req.requestTime);
             stats::DispatchingPerformanceStats stats;
 
             // Calculate the direct distance between the requests origin and destination

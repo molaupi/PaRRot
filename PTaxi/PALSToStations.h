@@ -241,7 +241,7 @@ namespace karri {
                                                             getVehDepTimeAtStopForRequest(vehId, numStops - 1,
                                                                                           requestState, routeState);
                     const auto psgTimeTillDepAtThisPickup =
-                            depTimeAtThisPickup - requestState.originalRequest.requestTime;
+                            depTimeAtThisPickup - requestState.now();
                     const auto minDirectDistForThisPickup = stationDistances.getMinDistanceForPDLoc(asgn.pickup.id);
                     const auto minCost = calculator.calcCostForPairedAssignmentAfterLastStop(vehTimeTillDepAtThisPickup,
                                                                                              psgTimeTillDepAtThisPickup,

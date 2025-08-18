@@ -97,14 +97,6 @@ namespace karri {
             stats.directCHSearchTime += curVehLocToPickupSearches.getTotalVehicleToPickupSearchTimeForRequest();
         }
 
-        // Initialize for new request.
-        void init(const RequestState& requestState, const PDLocs& pdLocs, stats::PbnsAssignmentsPerformanceStats& stats) {
-            KaRRiTimer timer;
-            curVehLocToPickupSearches.initialize(requestState.now(), pdLocs);
-            const auto time = timer.elapsed<std::chrono::nanoseconds>();
-            stats.initializationTime += time;
-        }
-
         // Sets a known upper bound on the cost of a PALS insertion.
         void setExternalCostUpperBound(const int c, FirstTaxiLegResult &firstTaxiLegResult) {
             externalUpperBoundCost = c;
