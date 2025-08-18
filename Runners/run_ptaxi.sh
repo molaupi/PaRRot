@@ -60,7 +60,7 @@ binaryDir=$sourceDir/Build/Release
 cmake -DCMAKE_BUILD_TYPE=Release -S $sourceDir -B $binaryDir
 cmake --build $binaryDir --target PTaxi -j
 
-timeout $timeout $binaryDir/Runners/PTaxi -veh-g $vehGraph -psg-g $psgGraph -v $vehicles -r $requests -veh-h $vehCh -psg-h $psgCh -o $outputDir -raptor-data $raptor -station-mapping $stationMapping -bucket-graph $bucketGraph --station-buckets $stationBuckets -psg-ch $ptPsgCh
+timeout $timeout $binaryDir/Runners/PTaxi -veh-g $vehGraph -psg-g $psgGraph -v $vehicles -r $requests -veh-h $vehCh -psg-h $psgCh -o $outputDir/ptaxi -raptor-data $raptor -station-mapping $stationMapping -bucket-graph $bucketGraph --station-buckets $stationBuckets -psg-ch $ptPsgCh
 
 # Remark:
 # The prefix "timeout $timeout" aborts the process as soon as the timeout is reached, which is specified in the variable $timeout.

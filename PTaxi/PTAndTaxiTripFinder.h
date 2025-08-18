@@ -150,6 +150,9 @@ namespace karri {
                     << intermediateResult.getArrivalTime() << "\n";
 
             const bool combinationIsBestCost = intermediateResult.getBestCost() < bestCost;
+
+            // TODO: IntermediateResult -> PTAndTaxiTriple
+            if (combinationIsBestCost) return PTAndTaxiTriple();
             
             // Return the combined results
             if (taxiOnlyHasBetterCost) {

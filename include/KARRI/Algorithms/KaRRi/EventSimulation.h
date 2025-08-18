@@ -50,6 +50,7 @@ namespace karri {
         enum RequestState {
             NOT_RECEIVED,
             ASSIGNED_TO_VEH,
+            BEFORE_PT_ARRIVED,
             WALKING_TO_DEST,
             FINISHED
         };
@@ -82,6 +83,7 @@ namespace karri {
                   vehicleState(fleet.size(), OUT_OF_SERVICE),
                   requestState(requests.size(), NOT_RECEIVED),
                   requestData(requests.size(), RequestData()),
+                  ptStationsForSecondTaxiLeg(requests.size(), INVALID_ID),
                   eventSimulationStatsLogger(LogManager<std::ofstream>::getLogger("eventsimulationstats.csv",
                                                                                   "occurrence_time,"
                                                                                   "type,"
@@ -170,6 +172,9 @@ namespace karri {
                     // When assigned to a vehicle, there should be no request event until the dropoff.
                     // At that point the request state becomes WALKING_TO_DEST.
                     assert(false);
+                    break;
+                case BEFORE_PT_ARRIVED:
+                    handleSecondTaxiLeg(reqId, occTime);
                     break;
                 case WALKING_TO_DEST:
                     handleWalkingArrivalAtDest(reqId, occTime);
@@ -290,11 +295,14 @@ namespace karri {
             
             if (ptAndTaxiTripFinderResponse.isValidTaxiOnlyTrip()) {
                 systemStateUpdater.writeBestAssignmentToLogger(firstTaxiLeg.first);
-    
                 applyAssignment(firstTaxiLeg, reqId, occTime);
     
             } else if (ptAndTaxiTripFinderResponse.isValidPTOnlyTrip()) {
                 applyJourney(ptLeg, reqId, occTime);
+    
+            } else {
+                applyCombinedTrip(firstTaxiLeg, ptLeg, reqId, occTime);
+    
             }
 
             // PT und taxi leg einzeln betrachten
@@ -368,6 +376,33 @@ namespace karri {
 
         }
 
+        template<typename AssignmentFinderResponseT, typename JourneyResponseT>
+        void applyCombinedTrip(AssignmentFinderResponseT &asgnFinderResponse, JourneyResponseT &ptResponse, const int reqId, const int occTime) {
+            // TODO: apply first taxi leg assignment
+
+            // insert request event for second taxi leg 15 minutes before arrival
+            if (ptResponse.isFinalTransferByTaxi()) {
+                requestState[reqId] = BEFORE_PT_ARRIVED;
+                requestEvents.insert(reqId, ptResponse.getArrivalTime() - 900);
+                ptStationsForSecondTaxiLeg[reqId] = ptResponse.getLastStation();
+            } else {
+                const auto &reqData = requestData[reqId];
+                requestState[reqId] = WALKING_TO_DEST;
+                requestEvents.insert(reqId, ptResponse.getArrivalTime() + reqData.walkingTimeFromDropoff);
+            }
+        }
+
+        void handleSecondTaxiLeg(const int reqId, const int occTime) {
+            assert(requestState[reqId] == BEFORE_PT_ARRIVED);
+            int id, key;
+            requestEvents.deleteMin(id, key); 
+            assert(id == reqId && key == occTime);
+
+            // TODO: route second taxi leg from ptStationsForSecondTaxiLeg[reqId] to dest
+            
+            requestState[reqId] = FINISHED;
+        }
+
         void handleWalkingArrivalAtDest(const int reqId, const int occTime) {
             assert(requestState[reqId] == WALKING_TO_DEST);
             KaRRiTimer timer;
@@ -410,6 +445,7 @@ namespace karri {
         std::vector<RequestState> requestState;
 
         std::vector<RequestData> requestData;
+        std::vector<int> ptStationsForSecondTaxiLeg;
 
         std::ofstream &eventSimulationStatsLogger;
         std::ofstream &assignmentQualityStats;
