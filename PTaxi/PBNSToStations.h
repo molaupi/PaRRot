@@ -323,7 +323,7 @@ namespace karri {
                         asgn.distFromDropoff = entry.distFromStationToStop;
 
                         // requestState.tryAssignmentWithKnownCost(asgn, calculator.calc(asgn, requestState));
-                        firstTaxiLegResult.tryAssignmentWithKnownCostForStation(station.stationId, asgn, calculator.calc(asgn, requestState));
+                        firstTaxiLegResult.tryAssignmentWithKnownCostForStation(station.stationId, asgn, calculator.calc(asgn, requestState), InsertionType::PBNS);
 
                         if (stopIndex > continuation.continueStopIndex) { // Do not count assignment at continuation twice
                             ++numAssignmentsTriedWithPickupBeforeNextStop;
@@ -367,7 +367,7 @@ namespace karri {
 
                     asgn.distToDropoff = stationDistances.getDistance(asgn.dropoff.id, asgn.pickup.id);
                     // requestState.tryAssignmentWithKnownCost(asgn, calculator.calc(asgn, requestState));
-                    firstTaxiLegResult.tryAssignmentWithKnownCostForStation(station.stationId, asgn, calculator.calc(asgn, requestState));
+                    firstTaxiLegResult.tryAssignmentWithKnownCostForStation(station.stationId, asgn, calculator.calc(asgn, requestState), InsertionType::PBNS);
                 }
             }
         }

@@ -51,7 +51,7 @@ stationBuckets=$parrotInputDir/Preprocessing/Taxi/stations
 ptPsgCh=$parrotInputDir/Preprocessing/PT/psgCh
 
 # Create concrete output directory, whose name consists of instanceName + current timestamp.
-currentTime=$(date "+%Y.%m.%d-%H:%M")
+currentTime=$(date "+%Y.%m.%d-%H.%M")
 outputDir=$outputBaseDir/${instanceName}_${currentTime}
 mkdir -p $outputDir
 

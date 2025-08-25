@@ -64,6 +64,8 @@ namespace karri {
             int assignmentCost;
         };
 
+        const int TRIGGER_TAXI_TIME = 9000;
+
     public:
 
 
@@ -383,12 +385,12 @@ namespace karri {
             // insert request event for second taxi leg 15 minutes before arrival
             if (ptResponse.isFinalTransferByTaxi()) {
                 requestState[reqId] = BEFORE_PT_ARRIVED;
-                requestEvents.insert(reqId, ptResponse.getArrivalTime() - 900);
+                requestEvents.insert(reqId, ptResponse.getArrivalTimeAtLastStation() - TRIGGER_TAXI_TIME);
                 ptStationsForSecondTaxiLeg[reqId] = ptResponse.getLastStation();
             } else {
                 const auto &reqData = requestData[reqId];
                 requestState[reqId] = WALKING_TO_DEST;
-                requestEvents.insert(reqId, ptResponse.getArrivalTime() + reqData.walkingTimeFromDropoff);
+                requestEvents.insert(reqId, ptResponse.getArrivalTime());
             }
         }
 
@@ -399,8 +401,8 @@ namespace karri {
             assert(id == reqId && key == occTime);
 
             // TODO: route second taxi leg from ptStationsForSecondTaxiLeg[reqId] to dest
-            
-            requestState[reqId] = FINISHED;
+            // handleRequestReceipt(newReq) 
+            // applyAssignment (forbid only walking)
         }
 
         void handleWalkingArrivalAtDest(const int reqId, const int occTime) {

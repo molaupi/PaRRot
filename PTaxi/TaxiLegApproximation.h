@@ -172,6 +172,7 @@ namespace karri {
             return distFromStations[stationId][0];
         }
 
+        // trip time to the station
         const int getCostForStation(const int stationId) const {
             assert(stationId >= 0 && stationId < distFromStations.size());
             const DistanceLabel &dist = distFromStations[stationId];
