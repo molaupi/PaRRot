@@ -90,18 +90,19 @@ enum InsertionType {
     DALS,
     DALS_PBNS,
     ORDINARY,
-    PBNS
+    PBNS,
+    UNDEFINED
 };
 
 struct TaxiResult {    
     TaxiResult() noexcept = default;
-    TaxiResult(const int cost, const int arrivalTime, const Assignment &asgn) noexcept
-        : bestCost(cost), arrivalTime(arrivalTime), bestAssignment(asgn) {}
+    TaxiResult(const int cost, const int arrivalTime, const Assignment &asgn, InsertionType insertionType) noexcept
+        : bestCost(cost), arrivalTime(arrivalTime), bestAssignment(asgn), insertionType(insertionType) {}
 
     int bestCost = INFTY;
     int arrivalTime = INFTY;
     Assignment bestAssignment;
-    InsertionType insertionType;
+    InsertionType insertionType = UNDEFINED;
 };
 
 class FirstTaxiLegResult {
@@ -120,10 +121,7 @@ public:
         if (cost < INFTY && (cost < taxiResult.bestCost || (cost == taxiResult.bestCost &&
                                 breakCostTie(asgn, taxiResult.bestAssignment)))) {
 
-            taxiResult.bestAssignment = asgn;
-            taxiResult.bestCost = cost;
-            taxiResult.arrivalTime = calcArrivalTime(asgn);
-            taxiResult.insertionType = insertionType;
+            taxiResult = TaxiResult(cost, calcArrivalTime(asgn), asgn, insertionType);
             if (worstCostForAllStations == INFTY || taxiResult.bestCost > worstCostForAllStations) {
                 worstCostForAllStations = taxiResult.bestCost;
                 worstAssignmentForAllStations = taxiResult.bestAssignment;

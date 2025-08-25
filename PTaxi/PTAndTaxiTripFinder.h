@@ -143,11 +143,10 @@ namespace karri {
                                                                         taxiLegApproximation
                                                                     );
 
-            constexpr const char* InsertionTypes[] = {"PALS", "DALS", "DALS_PBNS", "ORDINARY", "PBNS"};
-            // evaluate the combined results
+            constexpr const char* InsertionTypes[] = {"PALS", "DALS", "DALS_PBNS", "ORDINARY", "PBNS", "UNDEFINED"};
             // LOGS: Cost of taxi, PT, combined; arrivalTimes
             LogManager<std::ofstream>::getLogger(stats::IntermediateResultStats::LOGGER_NAME,
-                                                "request_id, " +
+                                                "request_id," +
                                                 std::string(stats::IntermediateResultStats::LOGGER_COLS))
                     << req.requestId << ", "
                     << taxiOnlyResponse.first.getBestCost() << ", "
