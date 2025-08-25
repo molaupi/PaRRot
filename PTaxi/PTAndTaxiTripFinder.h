@@ -101,7 +101,7 @@ namespace karri {
                   pbnsToStations(pbnsToStations),
                   ptAlgorithm(ptAlgorithm),
                   ptAlgorithmWithTaxi(ptAlgorithmWithTaxi),
-                  taxiLegApproximation(vehInputGraph, vehChEnv, routeState, stationBucketsEnv, stations.size()),
+                  taxiLegApproximation(vehInputGraph, vehChEnv, stationBucketsEnv, stations.size()),
                   chOrder(order),
                   curRelOrdinaryPickups(fleet.size()),
                   curRelPickupsBns(fleet.size()), 
@@ -126,7 +126,9 @@ namespace karri {
 
             const auto &firstTaxiLeg = runFirstTaxiSharingLeg(req);
 
-            taxiLegApproximation.findDistancesFromStationsToDest(req.destination, taxiOnlyResponse.first.getOriginalReqMaxTripTime());
+            const int maxTripTime = taxiOnlyResponse.first.getOriginalReqMaxTripTime();
+
+            taxiLegApproximation.findDistancesFromStationsToDest(req.destination, maxTripTime);
             const auto &distFromStations = taxiLegApproximation.getDistancesFromStations();
 
             ptAlgorithmWithTaxi.run(query.source, query.departureTime, query.target, firstTaxiLeg, distFromStations);
@@ -134,8 +136,14 @@ namespace karri {
             PTResult ptLegResponse(ptLegParetoFront, curReqState);
 
             // first taxi leg + PT journey + 2nd taxi leg approximation
-            IntermediateResult<TaxiLegApproximationT> intermediateResult(firstTaxiLeg, ptLegResponse, taxiLegApproximation);
+            IntermediateResult<TaxiLegApproximationT> intermediateResult(req.requestTime, 
+                                                                        maxTripTime, 
+                                                                        firstTaxiLeg, 
+                                                                        ptLegResponse, 
+                                                                        taxiLegApproximation
+                                                                    );
 
+            constexpr const char* InsertionTypes[] = {"PALS", "DALS", "DALS_PBNS", "ORDINARY", "PBNS"};
             // evaluate the combined results
             // LOGS: Cost of taxi, PT, combined; arrivalTimes
             LogManager<std::ofstream>::getLogger(stats::IntermediateResultStats::LOGGER_NAME,
@@ -146,7 +154,7 @@ namespace karri {
                     << ptOnlyResponse.getBestCost() << ", "
                     << intermediateResult.getBestCost() << ", "
                     << intermediateResult.getFirstTaxiLegCost() << ", "
-                    << intermediateResult.getFirstTaxiLegInsertionType() << ", "
+                    << InsertionTypes[intermediateResult.getFirstTaxiLegInsertionType()] << ", "
                     << intermediateResult.getPTLegCost() << ", "
                     << intermediateResult.getSecondTaxiLegCost() << ", "
                     << taxiOnlyResponse.first.getArrivalTime(routeState) << ", "
@@ -156,7 +164,7 @@ namespace karri {
             const bool combinationIsBestCost = intermediateResult.getBestCost() < bestCost;
 
             // TODO: IntermediateResult -> PTAndTaxiTriple
-            if (combinationIsBestCost) return PTAndTaxiTriple();
+            // if (combinationIsBestCost) return PTAndTaxiTriple();
             
             // Return the combined results
             if (taxiOnlyHasBetterCost) {

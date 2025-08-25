@@ -54,8 +54,8 @@ namespace karri {
                   stopTime(InputConfig::getInstance().stopTime) {}
 
         template<typename RequestContext>
-        int calc(const Assignment &asgn, const RequestContext &context) const {
-            return calcBase<true>(asgn, context);
+        int calc(const Assignment &asgn, const RequestContext &context, const bool excludeTripTime = false) const {
+            return calcBase<true>(asgn, context, excludeTripTime);
         }
 
         template<typename RequestContext>
@@ -65,7 +65,7 @@ namespace karri {
 
         // Calculates the objective value for a given assignment.
         template<bool checkHardConstraints, typename RequestContext>
-        int calcBase(const Assignment &asgn, const RequestContext &context) const {
+        int calcBase(const Assignment &asgn, const RequestContext &context, const bool excludeTripTime = false) const {
             using namespace time_utils;
             assert(asgn.vehicle && asgn.pickup.id != INVALID_ID && asgn.dropoff.id != INVALID_ID);
             if (!asgn.vehicle || asgn.pickup.id == INVALID_ID || asgn.dropoff.id == INVALID_ID)
@@ -100,7 +100,7 @@ namespace karri {
             addedTripTime += calcAddedTripTimeAffectedByPickupAndDropoff(asgn, detourRightAfterDropoff, routeState);
 
             return calcCost(asgn, context, initialPickupDetour, residualDetourAtEnd,
-                            actualDepTimeAtPickup, dropoffAtExistingStop, addedTripTime);
+                            actualDepTimeAtPickup, dropoffAtExistingStop, addedTripTime, excludeTripTime);
         }
 
         // Calculate the cost for a passenger moving to their destination independently without using a vehicle.
@@ -621,13 +621,16 @@ namespace karri {
             return tripCost + transferCost + transferPenalty;
         }
 
-        template<typename LabelSet>
-        typename LabelSet::DistanceLabel
-        calcLowerBoundCostForKTaxiTrips(
-                const typename LabelSet::DistanceLabel &distances, const int maxTripTime) const {
-            return F::calcLowerBoundKTripCosts(distances, maxTripTime);
+        static int calcPTJourneyCostWithoutTripTime(const int totalTransferTime, const int numberOfTransfers) {
+            const int transferCost = F::calcTransferCost(totalTransferTime);
+            const int transferPenalty = F::calcTransferPenalty(numberOfTransfers);
+
+            return transferCost + transferPenalty;
         }
 
+        static int calcTripCost(const int totalTripTime, const int maxTripTime) {
+            return F::calcTripCost(totalTripTime, maxTripTime);
+        }
 
     private:
 
@@ -635,7 +638,8 @@ namespace karri {
         int calcCost(const Assignment &asgn,
                      const RequestContext &context, const int initialPickupDetour,
                      const int residualDetourAtEnd, const int depTimeAtPickup,
-                     const bool dropoffAtExistingStop, const int addedTripTimeForExistingPassengers) const {
+                     const bool dropoffAtExistingStop, const int addedTripTimeForExistingPassengers,
+                     const bool excludeTripTime = false) const {
             if (!asgn.vehicle || asgn.pickup.id == INVALID_ID || asgn.dropoff.id == INVALID_ID)
                 return INFTY;
 
@@ -647,7 +651,7 @@ namespace karri {
             const auto walkingCost =
                     F::calcWalkingCost(asgn.pickup.walkingDist, InputConfig::getInstance().pickupRadius) +
                     F::calcWalkingCost(asgn.dropoff.walkingDist, InputConfig::getInstance().dropoffRadius);
-            const auto tripCost = F::calcTripCost(tripTime, context);
+            const auto tripCost = excludeTripTime ? 0 : F::calcTripCost(tripTime, context);
             const auto waitTimeViolationCost = F::calcWaitViolationCost(depTimeAtPickup, context);
             const auto changeInTripCostsOfOthers = F::calcChangeInTripCostsOfExistingPassengers(
                     addedTripTimeForExistingPassengers);

@@ -29,7 +29,7 @@ namespace karri {
 
 
     template<int PASSENGER_COST_SCALE = 1, int WALKING_COST_SCALE = 0, int VEHICLE_COST_SCALE = 1, int WAIT_TIME_VIOLATION_WEIGHT = 1, int TRIP_TIME_VIOLATION_WEIGHT = 10, 
-             int TRANSFER_COST_SCALE = 1, int TRANSFER_INCONVENIENCE_WEIGHT = 10>
+             int TRANSFER_COST_SCALE = 0, int TRANSFER_INCONVENIENCE_WEIGHT = 10>
     struct TimeIsMoneyCostFunction {
 
         static constexpr int PSG_WEIGHT = PASSENGER_COST_SCALE;
@@ -79,6 +79,14 @@ namespace karri {
             return regularCost + violationPenalty;
         }
 
+        static inline int calcTripCost(const int tripTime, const int maxTripTime) {
+
+            const auto regularCost = PASSENGER_COST_SCALE * tripTime;
+            const auto violationPenalty = TRIP_TIME_VIOLATION_WEIGHT * std::max(tripTime - maxTripTime, 0);
+
+            return regularCost + violationPenalty;
+        }
+
         template<typename DistanceLabel, typename RequestContext>
         static inline DistanceLabel calcKTripCosts(const DistanceLabel &tripTime, const RequestContext &context) {
 
@@ -92,20 +100,6 @@ namespace karri {
 
             const DistanceLabel cost = regularCost + violationCost;
             return cost;
-        }
-
-        template<typename DistanceLabel>
-        static inline DistanceLabel calcLowerBoundKTripCosts(const DistanceLabel &tripTime, const int maxTripTime) {
-
-            DistanceLabel regularCost = tripTime;
-            regularCost.multiplyWithScalar(PASSENGER_COST_SCALE);
-
-            const DistanceLabel maxTripTimeLabel = DistanceLabel(maxTripTime);
-            DistanceLabel violationCost = tripTime - DistanceLabel(maxTripTimeLabel);
-            violationCost.max(0);
-            violationCost.multiplyWithScalar(TRIP_TIME_VIOLATION_WEIGHT);
-
-            return regularCost + violationCost;
         }
 
         static constexpr inline int calcWalkingCost(const int walkingDist, const int) {

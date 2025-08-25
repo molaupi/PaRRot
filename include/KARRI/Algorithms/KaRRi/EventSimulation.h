@@ -303,11 +303,11 @@ namespace karri {
                 applyJourney(ptLeg, reqId, occTime);
     
             } else {
-                applyCombinedTrip(firstTaxiLeg, ptLeg, reqId, occTime);
-    
+                // applyCombinedTrip(firstTaxiLeg, ptLeg, reqId, occTime);
+
             }
 
-            // PT und taxi leg einzeln betrachten
+            // consider PT und taxi leg individually
             // insert into the request queue 
 
             const auto time = timer.elapsed<std::chrono::nanoseconds>();

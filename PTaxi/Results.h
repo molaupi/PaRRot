@@ -33,6 +33,10 @@ public:
 
     const int &getBestCost() const { return bestCost; }
 
+    const int getCostWithoutTripTime() const { 
+        return CostCalculator::calcPTJourneyCostWithoutTripTime(getTotalTransferTime(bestJourney), getNumberOfTransfers(bestJourney)); 
+    }
+
     // Best cost from the pareto front
     const Journey &getBestJourney() const {
         return bestJourney;
@@ -104,7 +108,8 @@ class FirstTaxiLegResult {
 public:
 
     explicit FirstTaxiLegResult(const RouteState &routeState, const RequestState &requestState, const int numStations)
-            : results(numStations), routeState(routeState), requestState(requestState), worstCostForAllStations(INFTY), worstAssignmentForAllStations() {
+            : results(numStations), routeState(routeState), requestState(requestState), calculator(routeState), 
+              worstCostForAllStations(INFTY), worstAssignmentForAllStations() {
                 assert(numStations >= 0);
             }
 
@@ -141,6 +146,12 @@ public:
         return results[stationId];
     }
 
+    const int getCostWithoutTripTimeForStation(const int stationId) const {
+        assert(stationId >= 0 && stationId < results.size());
+        auto result = results[stationId];
+        return calculator.calc(result.bestAssignment, requestState, true);
+    }
+
 private:
     int calcArrivalTime(const Assignment &asgn) {
         using namespace time_utils;
@@ -152,6 +163,7 @@ private:
 
     const RouteState &routeState;
     const RequestState &requestState;
+    CostCalculator calculator;
     std::vector<TaxiResult> results;
     int worstCostForAllStations;
     Assignment worstAssignmentForAllStations;
@@ -160,27 +172,35 @@ private:
 template<typename TaxiLegApproximationT>
 class IntermediateResult {
 public:
-    IntermediateResult(const FirstTaxiLegResult &firstTaxiLegResult, const PTResult &ptLeg, const TaxiLegApproximationT &taxiLegApproximation)
-                        : firstTaxiLeg(), 
+    IntermediateResult(const int requestTime, const int maxTripTime, const FirstTaxiLegResult &firstTaxiLegResult, 
+                       const PTResult &ptLeg, const TaxiLegApproximationT &taxiLegApproximation)
+                        : requestTime(requestTime),
+                        maxTripTime(maxTripTime),
+                        firstTaxiLeg(), 
                         ptLeg(ptLeg), 
                         firstStationId(ptLeg.getFirstStation()), 
                         lastStationId(ptLeg.getLastStation()), 
                         firstTaxiLegCost(),
                         secondTaxiLegCost(),
-                        ptLegCost(ptLeg.getBestCost()) {
+                        ptLegCost(ptLeg.getBestCost()),
+                        arrivalTime(ptLeg.getArrivalTime()),
+                        bestCost() {
 
-        arrivalTime = ptLeg.getArrivalTime();
         if (isInitialTransferByTaxi()) {
             firstTaxiLeg = firstTaxiLegResult.getResultForStation(ptLeg.getFirstStation());
             firstTaxiLegCost = firstTaxiLeg.bestCost;
+            bestCost += firstTaxiLegResult.getCostWithoutTripTimeForStation(ptLeg.getFirstStation()); 
         }
+
+        bestCost += ptLeg.getCostWithoutTripTime();
 
         if (isFinalTransferByTaxi()) {
             secondTaxiLegCost = taxiLegApproximation.getCostForStation(lastStationId);
             arrivalTime += taxiLegApproximation.getDistanceFromStation(lastStationId);
         }
 
-        bestCost = firstTaxiLegCost + ptLegCost + secondTaxiLegCost;
+        int totalTripCost = CostCalculator::calcTripCost(arrivalTime - requestTime, maxTripTime);
+        bestCost += totalTripCost;
     }
 
     const bool isInitialTransferByTaxi() const {
@@ -208,6 +228,9 @@ public:
     }
 
 private:
+    const int requestTime;
+    const int maxTripTime;
+
     TaxiResult firstTaxiLeg;
     PTResult ptLeg;
     int firstStationId;

@@ -133,15 +133,12 @@ namespace karri {
         TaxiLegApproximation(
                 const InputGraphT &inputGraph,
                 const CHEnvT &chEnv,
-                const RouteState &routeState, 
                 const StationBucketsEnvT &stationBucketsEnv,
                 const int numberOfStations)
                 : inputGraph(inputGraph),
                   reverseUpwardSearch(chEnv.template getReverseSearch<ScanSourceBucket, StopSearch, LabelSetT>(
                                ScanSourceBucket(*this), StopSearch(*this))),
                   ch(chEnv.getCH()),
-                  routeState(routeState),
-                  calc(routeState),
                   stationbucketContainer(stationBucketsEnv.getSourceBuckets()),
                   distFromStations(numberOfStations, DistanceLabel(INFTY)),
                   upperBoundCost(INFTY) {}
@@ -176,8 +173,7 @@ namespace karri {
         const int getCostForStation(const int stationId) const {
             assert(stationId >= 0 && stationId < distFromStations.size());
             const DistanceLabel &dist = distFromStations[stationId];
-            const auto tripCost = calc.template calcLowerBoundCostForKTaxiTrips<LabelSetT>(dist, curMaxTripTime);
-            return tripCost[0];
+            return CostCalculator::calcTripCost(dist[0], curMaxTripTime);
         }
 
     private:
@@ -188,7 +184,7 @@ namespace karri {
         }
 
         LabelMask exceedsGlobalBestCost(const DistanceLabel &dist) const {
-            const auto tripCost = calc.template calcLowerBoundCostForKTaxiTrips<LabelSetT>(dist, curMaxTripTime);
+            const auto tripCost = CostCalculator::calcTripCost(dist[0], curMaxTripTime);
             return tripCost > upperBoundCost;
         }
 
@@ -196,8 +192,6 @@ namespace karri {
 
         const InputGraphT &inputGraph;
         const CH &ch;
-        const RouteState &routeState;
-        CostCalculator calc;
 
         int upperBoundCost;
         int curMaxTripTime;
