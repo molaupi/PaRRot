@@ -148,16 +148,16 @@ namespace karri {
                   ptStations(ptStations),
                   currentLastStopDistances(ptStations.size(), DistanceLabel(INFTY)) {}
 
-        void tryDropoffAfterLastStop(const RelevantPDLocs &relevantOrdinaryPickups,
+        void tryDropoffAfterLastStop(RequestState& requestState, const PDLocs& pdLocs,
+                                     const RelevantPDLocs &relevantOrdinaryPickups,
                                      const RelevantPDLocs &relevantPickupsBeforeNextStop,
-                                     RequestState& requestState,
-                                     const PDLocs& pdLocs, stats::DalsAssignmentsPerformanceStats& stats,
+                                     stats::DalsAssignmentsPerformanceStats& stats,
                                      FirstTaxiLegResult &firstTaxiLegResult) {
             curReqState = &requestState;
             curRelOrdinaryPickups = &relevantOrdinaryPickups;
             curRelPickupsBns = &relevantPickupsBeforeNextStop;
 
-            initLastStopSearches(requestState, firstTaxiLegResult);
+            initLastStopSearches(requestState);
 
             const int64_t pbnsTimeBefore = curVehLocToPickupSearches.getTotalLocatingVehiclesTimeForRequest() +
                                            curVehLocToPickupSearches.getTotalVehicleToPickupSearchTimeForRequest();
@@ -183,9 +183,9 @@ namespace karri {
                                          curRelPickupsBns->getVehiclesWithRelevantPDLocs().size();
         }
 
-        // Sets a known upper bound on the cost of a PALS insertion.
-        void setExternalCostUpperBound(const int c) {
-            externalUpperBoundCost = c;
+        void setExternalCostUpperBound(const int bestCost, const int worstCostForAllStations) {
+            externalUpperBoundCost = bestCost;
+            upperBoundCost = std::min(worstCostForAllStations, externalUpperBoundCost);
         }
 
         LabelMask canPrune(const DistanceLabel &distancesToDropoffs) const {
@@ -203,15 +203,13 @@ namespace karri {
 
     private:
 
-        void initLastStopSearches(const RequestState& requestState, FirstTaxiLegResult &firstTaxiLegResult) {
+        void initLastStopSearches(const RequestState& requestState) {
             totalNumberOfCandidateDropoffs = 0;
             totalNumEdgeRelaxations = 0;
             totalNumVerticesSettled = 0;
             totalNumEntriesScanned = 0;
             
             curReqState = &requestState;
-            upperBoundCost = std::min(firstTaxiLegResult.getWorstCostForAllStations(), externalUpperBoundCost);
-            externalUpperBoundCost = INFTY;
             std::fill(currentLastStopDistances.begin(), currentLastStopDistances.end(), DistanceLabel(INFTY));
         }
 

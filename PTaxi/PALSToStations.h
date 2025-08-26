@@ -169,9 +169,9 @@ namespace karri {
                          PickupAfterLastStopPruner(*this, CostCalculator(routeState))),
                   vehiclesSeenForPickups(fleet.size()) {}
 
-        void tryPickupAfterLastStop(RequestState& requestState, 
+        void tryPickupAfterLastStop(RequestState& requestState, const PDLocs& pdLocs,
                                     StationDistancesT& stationDistances, 
-                                    const PDLocs& pdLocs, const PTStations& stations, 
+                                    const PTStations& stations, 
                                     stats::PalsAssignmentsPerformanceStats& stats,
                                     FirstTaxiLegResult &firstTaxiLegResult) {
             minDistanceToAnyStation = stationDistances.getMinDistanceToAnyStation();
@@ -179,9 +179,9 @@ namespace karri {
             enumerateAssignments(requestState, stationDistances, pdLocs, stations, stats, firstTaxiLegResult);
         }
 
-        // Sets a known upper bound on the cost of a PALS insertion.
-        void setExternalCostUpperBound(const int c) {
-            externalUpperBoundCost = c;
+        void setExternalCostUpperBound(const int bestCost, const int worstCostForAllStations) {
+            externalUpperBoundCost = bestCost;
+            upperBoundCost = std::min(worstCostForAllStations, externalUpperBoundCost);
         }
 
     private:
@@ -194,7 +194,7 @@ namespace karri {
                             FirstTaxiLegResult &firstTaxiLegResult) {
             KaRRiTimer timer;
 
-            initPickupSearches(requestState, pdLocs, firstTaxiLegResult);
+            initPickupSearches(requestState, pdLocs);
             for (int i = 0; i < pdLocs.numPickups(); i += K)
                 runSearchesForPickupBatch(i, requestState, stationDistances, pdLocs);
 
@@ -281,7 +281,7 @@ namespace karri {
             return distances.getDistance(vehId, pickupId);
         }
 
-        void initPickupSearches(const RequestState& requestState, const PDLocs& pdLocs, FirstTaxiLegResult &firstTaxiLegResult) {
+        void initPickupSearches(const RequestState& requestState, const PDLocs& pdLocs) {
             totalNumEdgeRelaxations = 0;
             totalNumVerticesSettled = 0;
             totalNumEntriesScanned = 0;
@@ -289,8 +289,6 @@ namespace karri {
             // Set request state to allow callbacks from within Dijkstra searches.
             curReqState = &requestState;
 
-            upperBoundCost = std::min(firstTaxiLegResult.getWorstCostForAllStations(), externalUpperBoundCost);
-            externalUpperBoundCost = INFTY;
             vehiclesSeenForPickups.clear();
             const int numPickupBatches = pdLocs.numPickups() / K + (pdLocs.numPickups() % K != 0);
             distances.init(numPickupBatches);

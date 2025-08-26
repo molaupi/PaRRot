@@ -60,9 +60,9 @@ namespace karri {
                   calculator(routeState),
                   routeState(routeState) {}
 
-        void findAssignments(const RelevantPDLocs &relPickupsBns, 
+        void findAssignments(RequestState& requestState, const PDLocs& pdLocs, 
+                             const RelevantPDLocs &relPickupsBns, 
                              const PTStations& stations, StationsInEllipseT &stationsInEllipse, StationDistancesT &stationDistances,
-                             RequestState& requestState, const PDLocs& pdLocs, 
                              stats::PbnsAssignmentsPerformanceStats& stats,
                              FirstTaxiLegResult &firstTaxiLegResult) {
             
@@ -97,10 +97,9 @@ namespace karri {
             stats.directCHSearchTime += curVehLocToPickupSearches.getTotalVehicleToPickupSearchTimeForRequest();
         }
 
-        // Sets a known upper bound on the cost of a PALS insertion.
-        void setExternalCostUpperBound(const int c, FirstTaxiLegResult &firstTaxiLegResult) {
-            externalUpperBoundCost = c;
-            upperBoundCost = std::min(firstTaxiLegResult.getWorstCostForAllStations(), externalUpperBoundCost);
+        void setExternalCostUpperBound(const int bestCost, const int worstCostForAllStations) {
+            externalUpperBoundCost = bestCost;
+            upperBoundCost = std::min(worstCostForAllStations, externalUpperBoundCost);
         }
 
     private:

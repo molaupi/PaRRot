@@ -157,7 +157,7 @@ namespace karri {
                   externalUpperBoundCost(INFTY) {}
 
         // Run BCH queries that obtain distances from pickups to stations
-        void runBchQueries(const PDLocs& pdLocs, const RequestState& requestState) {
+        void runBchQueries(const RequestState& requestState, const PDLocs& pdLocs) {
 
             initPickupSearches(pdLocs, requestState);
             for (unsigned int i = 0; i < pdLocs.numPickups(); i += K)
@@ -196,7 +196,6 @@ namespace karri {
             totalNumEntriesScanned = 0;
             
             curReqState = &requestState;
-            externalUpperBoundCost = INFTY;
 
             stationsSeen.clear();
             const int numPickupBatches = pdLocs.numPickups() / K + (pdLocs.numPickups() % K != 0);

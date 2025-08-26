@@ -258,13 +258,12 @@ namespace karri {
             // Run BCH queries from origin to all stations
             // reachable pickups from origin from KaRRi
             stationBCH.setExternalCostUpperBound(bestCost);
-            stationBCH.runBchQueries(curPdLocs, rs);
+            stationBCH.runBchQueries(rs, curPdLocs);
                         
             // last stop -> pickups
             // PALS Individual BCH
-            // neu laufen lassen mit eigenen pruning für alle stations
-            palsToStations.setExternalCostUpperBound(bestCost);
-            palsToStations.tryPickupAfterLastStop(rs, stationBCH.getTentativeDistances(), curPdLocs, stations, stats, firstTaxiLegResult);
+            palsToStations.setExternalCostUpperBound(bestCost, firstTaxiLegResult.getWorstCostForAllStations());
+            palsToStations.tryPickupAfterLastStop(rs, curPdLocs, stationBCH.getTentativeDistances(), stations, stats, firstTaxiLegResult);
         }
 
         void runOrdinary(RequestState &rs, stats::OrdAssignmentsPerformanceStats &stats, FirstTaxiLegResult &firstTaxiLegResult) {
@@ -272,13 +271,13 @@ namespace karri {
         }
 
         void runDALS(RequestState &rs, stats::DalsAssignmentsPerformanceStats &stats, FirstTaxiLegResult &firstTaxiLegResult) {
-            dalsToStations.setExternalCostUpperBound(bestCost);
-            dalsToStations.tryDropoffAfterLastStop(curRelOrdinaryPickups, curRelPickupsBns, rs, curPdLocs, stats, firstTaxiLegResult);
+            dalsToStations.setExternalCostUpperBound(bestCost, firstTaxiLegResult.getWorstCostForAllStations());
+            dalsToStations.tryDropoffAfterLastStop(rs, curPdLocs, curRelOrdinaryPickups, curRelPickupsBns, stats, firstTaxiLegResult);
         }
 
         void runPBNS(RequestState &rs, stats::PbnsAssignmentsPerformanceStats &stats, FirstTaxiLegResult &firstTaxiLegResult) {
-            pbnsToStations.setExternalCostUpperBound(bestCost, firstTaxiLegResult);
-            pbnsToStations.findAssignments(curRelPickupsBns, stations, stationsInEllipse, stationBCH.getTentativeDistances(), rs, curPdLocs, stats, firstTaxiLegResult);
+            pbnsToStations.setExternalCostUpperBound(bestCost, firstTaxiLegResult.getWorstCostForAllStations());
+            pbnsToStations.findAssignments(rs, curPdLocs, curRelPickupsBns, stations, stationsInEllipse, stationBCH.getTentativeDistances(), stats, firstTaxiLegResult);
         }
 
         void initializeComponentsForRequest(const RequestState& requestState, const PDLocs &pdLocs, stats::DispatchingPerformanceStats& stats) {
