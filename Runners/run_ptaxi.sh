@@ -57,8 +57,22 @@ mkdir -p $outputDir
 
 # Build PTaxi
 binaryDir=$sourceDir/Build/Release
-cmake -DCMAKE_BUILD_TYPE=Release -S $sourceDir -B $binaryDir
+
+# Fix clock skew by touching all source files to current time
+echo "Fixing potential clock skew issues..."
+find $sourceDir -name "*.cpp" -o -name "*.hpp" -o -name "*.h" -o -name "*.c" -o -name "CMakeLists.txt" -o -name "*.cmake" | xargs touch
+
+echo "Building PTaxi..."
+cmake -DCMAKE_BUILD_TYPE=Release -DKASSERT_ASSERTION_LEVEL=1 -S $sourceDir -B $binaryDir
 cmake --build $binaryDir --target PTaxi -j
+
+# Check if binary was built successfully
+if [ ! -f "$binaryDir/Runners/PTaxi" ]; then
+    echo "Error: PTaxi binary not found after build. Build may have failed."
+    exit 1
+fi
+
+echo "Build completed successfully."
 
 timeout $timeout $binaryDir/Runners/PTaxi -veh-g $vehGraph -psg-g $psgGraph -v $vehicles -r $requests -veh-h $vehCh -psg-h $psgCh -o $outputDir/ptaxi -raptor-data $raptor -station-mapping $stationMapping -bucket-graph $bucketGraph --station-buckets $stationBuckets -psg-ch $ptPsgCh
 
