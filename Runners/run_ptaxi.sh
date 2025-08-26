@@ -58,12 +58,23 @@ mkdir -p $outputDir
 # Build PTaxi
 binaryDir=$sourceDir/Build/Release
 
+# Remove build directory to ensure clean build
+echo "Cleaning build directory..."
+rm -rf $binaryDir
+
 # Fix clock skew by touching all source files to current time
 echo "Fixing potential clock skew issues..."
 find $sourceDir -name "*.cpp" -o -name "*.hpp" -o -name "*.h" -o -name "*.c" -o -name "CMakeLists.txt" -o -name "*.cmake" | xargs touch
 
 echo "Building PTaxi..."
 cmake -DCMAKE_BUILD_TYPE=Release -DKASSERT_ASSERTION_LEVEL=1 -S $sourceDir -B $binaryDir
+
+# Fix clock skew in the build directory as well
+if [ -d "$binaryDir" ]; then
+    echo "Fixing potential clock skew in build directory..."
+    find $binaryDir -exec touch {} +
+fi
+
 cmake --build $binaryDir --target PTaxi -j
 
 # Check if binary was built successfully
