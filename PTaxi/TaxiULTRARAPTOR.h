@@ -440,13 +440,12 @@ private:
             const int stationId = station.stationId;
             const Vertex targetStop = Vertex(stationId);
             const StopId targetStopId = StopId(targetStop);
+            const auto taxiResult = firstTaxiLeg.getResultForStation(stationId);
 
-            if (targetStop == sourceVertex || targetStop == targetVertex)
+            if (targetStop == sourceVertex || targetStop == targetVertex || taxiResult.bestCost == INFTY)
                 continue;
             AssertMsg(data.isStop(targetStop), "Taxi station " << targetStop << " is not a stop!");
-            AssertMsg(firstTaxiLeg.getResultForStation(stationId).bestCost != INFTY,
-                "Station " << stationId << " was not reached by taxi!");
-            const int arrivalTime = firstTaxiLeg.getResultForStation(stationId).arrivalTime;
+            const int arrivalTime = taxiResult.arrivalTime;
             if (arrivalByTransfer(targetStopId, arrivalTime)) {
                 EarliestArrivalLabel& label = currentRound()[targetStop];
                 label.parent = sourceVertex;
