@@ -1,12 +1,12 @@
 # PARROT
  ULTRA + KARRI
 
-`./RawData/TransformLocations -tar-g Networks/Berlin/KARRI/Graphs/Berlin-1pct_pedestrian_veh.gr.bin -v Networks/Berlin/CSV/modified_stops.csv -l-col-name latlon -in-repr lat-lng -out-repr edge-id -psg -o Networks/Berlin/Preprocessing/PT/stations.mapped`
-
 ## GTFS Reading and CSV
 Einfach in `ULTRA/Runnables` die Network executable bauen mit `make NetworkRelease`. Dann `downloadBerlinGTFS.sh` ausführen. Das downloaded die aktuelle VBB GTFS Instanz (VBB = Verkehrsverbund Berlin-Brandenburg) und speichert es in `Networks/Berlin/GTFS/`. Dann kann man `./Network` ausführen, und einfach `runScript GTFSToRAPTOR.script` ausführen. Das erzeugt die RAPTOR binaries und die CSV Dateien.
 Mit dem python script `python3 prepare_stops.py --csv Networks/Berlin/CSV/` wird dann die von KARRI lesbare `modified_stops.csv` erzeugt.
 
+In KaRRi: run the Transform Locations executable to get the mapped stations with the following command (note that paths are relative)
+`./RawData/TransformLocations -tar-g Networks/Berlin/KARRI/Graphs/Berlin-1pct_pedestrian_veh.gr.bin -v Networks/Berlin/CSV/modified_stops.csv -l-col-name latlon -in-repr lat-lng -out-repr edge-id -psg -o Networks/Berlin/Preprocessing/PT/stations.mapped`
 
 ## Prerequisites
 

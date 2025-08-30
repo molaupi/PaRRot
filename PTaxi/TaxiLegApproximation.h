@@ -160,7 +160,7 @@ namespace karri {
             upperBoundCost = c;
         }
 
-        std::vector<DistanceLabel> &getDistancesFromStations() const {
+        std::vector<DistanceLabel> getDistancesFromStations() const {
             return distFromStations;
         }
 
