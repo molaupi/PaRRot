@@ -44,11 +44,11 @@ public:
 
     // at Destination
     const int getArrivalTime() const {
-        return bestJourney.back().arrivalTime / 10;
+        return convertToKaRRiTime(bestJourney.back().arrivalTime);
     }
 
     const int getArrivalTimeAtLastStation() const {
-        return bestJourney[bestJourney.size() - 2].arrivalTime / 10;
+        return convertToKaRRiTime(bestJourney[bestJourney.size() - 2].arrivalTime);
     }
 
     const int getFirstStation() const {
@@ -68,11 +68,11 @@ public:
     }
 
     inline const int getTotalTransferTime(Journey journey) const {
-        return valid ? RAPTOR::totalTransferTime(journey) / 10 : 0;
+        return valid ? convertToKaRRiTime(RAPTOR::totalTransferTime(journey)) : 0;
     }
 
     inline const int getTotalTripTime(Journey journey) const {
-        return valid ? (journey.back().arrivalTime - journey.front().departureTime) / 10 : 0;
+        return valid ? convertToKaRRiTime(journey.back().arrivalTime - journey.front().departureTime) : 0;
     }
 
     inline const int getNumberOfTransfers(Journey journey) const {
@@ -80,6 +80,10 @@ public:
     }
     
 private:
+    const int convertToKaRRiTime(const int timeInSeconds) const {
+        return timeInSeconds * 10;
+    }
+
     bool valid;
     int bestCost;
     Journey bestJourney;
