@@ -234,7 +234,7 @@ namespace karri {
         VertexQuery convertKARRIRequestToULTRAQuery(const Request &req) {
             const auto origin = psgCh.rank(psgInputGraph.edgeHead(vehInputGraph.toPsgEdge(req.origin)));
             const auto destination = psgCh.rank(psgInputGraph.edgeHead(vehInputGraph.toPsgEdge(req.destination)));
-            const auto requestTime = req.requestTime / 10;
+            const auto requestTime = req.requestTime * 10;
             const Vertex originVertex = Vertex(chOrder[origin]);
             const Vertex destinationVertex = Vertex(chOrder[destination]);
             return VertexQuery(originVertex, destinationVertex, requestTime);

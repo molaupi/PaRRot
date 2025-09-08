@@ -1,5 +1,5 @@
 parseGTFS ../Networks/Berlin/GTFS/ ../Networks/Berlin/GTFS.binary
-gtfsToIntermediate ../Networks/Berlin/GTFS.binary 20250211 20250213 false true ../Networks/Berlin/intermediate.binary
+gtfsToIntermediate ../Networks/Berlin/GTFS.binary 20250520 20250521 false true ../Networks/Berlin/intermediate.binary
 reduceGraph ../Networks/Berlin/intermediate.binary ../Networks/Berlin/intermediate.binary
 reduceToMaximumConnectedComponent ../Networks/Berlin/intermediate.binary ../Networks/Berlin/intermediate.binary
 reduceGraph ../Networks/Berlin/intermediate.binary ../Networks/Berlin/intermediate.binary
