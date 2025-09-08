@@ -29,3 +29,10 @@ type the following commands at the top-level directory of the framework:
 $ git submodule update --init
 $ make -C External/RoutingKit lib/libroutingkit.so
 ```
+
+## Build Static Buckets for PTaxi
+You must run the executables BuildStaticBuckets to generate required input data for PTaxi.
+These includes:
+- Bucket graph for ULTRA
+- Converted passenger graph for ULTRA
+- Station buckets for KaRRi
