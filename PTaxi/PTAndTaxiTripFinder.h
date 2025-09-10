@@ -161,20 +161,21 @@ namespace karri {
                     << ptOnlyResponse.getArrivalTime() << ", "
                     << intermediateResult.getArrivalTime() << "\n";
             
-             LogManager<std::ofstream>::getLogger("first_taxi_leg_results.csv",
-                                                  "request_id,"
-                                                  "insertion_type,"
-                                                  "valid_results_count\n")
+            LogManager<std::ofstream>::getLogger(stats::FirstTaxiLegResultStats::LOGGER_NAME,
+                                                "request_id," +
+                                                std::string(stats::FirstTaxiLegResultStats::LOGGER_COLS))
                     << req.requestId << ", "
+                    << intermediateResult.getFirstTaxiLegCost() << ", "
                     << InsertionTypes[intermediateResult.getFirstTaxiLegInsertionType()] << ", "
                     << firstTaxiLeg.countValidResults() << "\n";
 
-            LogManager<std::ofstream>::getLogger("pt_results.csv",
-                                                 "request_id,"
-                                                 "pt_only_leg_count,"
-                                                 "pt_and_taxi_leg_count\n")
+            LogManager<std::ofstream>::getLogger(stats::PTResultStats::LOGGER_NAME,
+                                                "request_id," +
+                                                std::string(stats::PTResultStats::LOGGER_COLS))
                     << req.requestId << ", "
+                    << ptOnlyResponse.getBestCost() << ", "
                     << ptOnlyLegCount << ", "
+                    << intermediateResult.getPTLegCost() << ", "
                     << ptLegCount << "\n";
 
             const bool combinationIsBestCost = intermediateResult.getBestCost() < bestCost;

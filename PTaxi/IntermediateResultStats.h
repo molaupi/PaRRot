@@ -43,4 +43,24 @@ namespace karri::stats {
             "pt_arrival_time," 
             "combined_arrival_time\n";
     };
+
+    
+    struct FirstTaxiLegResultStats {
+
+        static constexpr auto LOGGER_NAME = "first_taxi_leg_results.csv";
+        static constexpr auto LOGGER_COLS = 
+            "first_taxi_leg_cost," 
+            "insertion_type," 
+            "valid_results_count\n";
+    };
+
+    struct PTResultStats {
+
+        static constexpr auto LOGGER_NAME = "pt_results.csv";
+        static constexpr auto LOGGER_COLS = 
+            "pt_only_cost," 
+            "pt_only_leg_count," 
+            "pt_with_taxi_cost," 
+            "pt_with_taxi_leg_count\n";
+    };
 }
