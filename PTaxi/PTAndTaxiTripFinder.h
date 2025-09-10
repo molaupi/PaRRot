@@ -162,13 +162,17 @@ namespace karri {
                     << intermediateResult.getArrivalTime() << "\n";
             
              LogManager<std::ofstream>::getLogger("first_taxi_leg_results.csv",
-                                                "request_id,insertion_type,valid_results_count\n")
+                                                  "request_id,"
+                                                  "insertion_type,"
+                                                  "valid_results_count\n")
                     << req.requestId << ", "
                     << InsertionTypes[intermediateResult.getFirstTaxiLegInsertionType()] << ", "
                     << firstTaxiLeg.countValidResults() << "\n";
 
             LogManager<std::ofstream>::getLogger("pt_results.csv",
-                                                "request_id,pt_only_leg_count,pt_and_taxi_leg_count\n")
+                                                 "request_id,"
+                                                 "pt_only_leg_count,"
+                                                 "pt_and_taxi_leg_count\n")
                     << req.requestId << ", "
                     << ptOnlyLegCount << ", "
                     << ptLegCount << "\n";

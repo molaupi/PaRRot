@@ -41,8 +41,6 @@ namespace karri::stats {
             "combined_cost_2nd_taxi_leg," 
             "taxi_arrival_time," 
             "pt_arrival_time," 
-            "combined_arrival_time," 
-            "pt_only_leg_count," 
-            "combined_pt_leg_count\n";
+            "combined_arrival_time\n";
     };
 }
