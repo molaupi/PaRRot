@@ -164,20 +164,6 @@ public:
         }
         return count;
     }
-    
-    void printResultsSummary() const {
-        int validCount = 0;
-        std::cout << "=== FirstTaxiLegResult Summary ===" << std::endl;
-        for (size_t i = 0; i < results.size(); ++i) {
-            if (results[i].bestCost != INFTY) {
-                validCount++;
-                std::cout << "Station " << i << ": cost=" << results[i].bestCost 
-                         << ", arrivalTime=" << results[i].arrivalTime << std::endl;
-            }
-        }
-        std::cout << "Total valid results: " << validCount << "/" << results.size() << std::endl;
-        std::cout << "Worst cost for all stations: " << worstCostForAllStations << std::endl;
-    }
 
 private:
     int calcArrivalTime(const Assignment &asgn) {

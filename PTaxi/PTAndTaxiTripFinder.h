@@ -115,11 +115,11 @@ namespace karri {
             
             VertexQuery query = convertKARRIRequestToULTRAQuery(req);
             ptAlgorithm.run(query.source, query.departureTime, query.target);
-            
-            // PT only leg and invalid PT leg
             auto ptOnlyParetoFront = ptAlgorithm.getJourneys();
             PTResult ptOnlyResponse(ptOnlyParetoFront, curReqState);
             PTResult invalidPTResponse;
+
+            size_t ptOnlyLegCount = ptOnlyResponse.getBestJourney().size();
 
             const bool taxiOnlyHasBetterCost = taxiOnlyResponse.first.getBestCost() < ptOnlyResponse.getBestCost();
             bestCost = taxiOnlyHasBetterCost ? taxiOnlyResponse.first.getBestCost() : ptOnlyResponse.getBestCost();
@@ -134,6 +134,8 @@ namespace karri {
             ptAlgorithmWithTaxi.run(query.source, query.departureTime, query.target, firstTaxiLeg, distFromStations);
             auto ptLegParetoFront = ptAlgorithmWithTaxi.getJourneys();
             PTResult ptLegResponse(ptLegParetoFront, curReqState);
+
+            size_t ptLegCount = ptLegResponse.getBestJourney().size();
 
             // first taxi leg + PT journey + 2nd taxi leg approximation
             IntermediateResult<TaxiLegApproximationT> intermediateResult(req.requestTime, 
@@ -153,12 +155,23 @@ namespace karri {
                     << ptOnlyResponse.getBestCost() << ", "
                     << intermediateResult.getBestCost() << ", "
                     << intermediateResult.getFirstTaxiLegCost() << ", "
-                    << InsertionTypes[intermediateResult.getFirstTaxiLegInsertionType()] << ", "
                     << intermediateResult.getPTLegCost() << ", "
                     << intermediateResult.getSecondTaxiLegCost() << ", "
                     << taxiOnlyResponse.first.getArrivalTime(routeState) << ", "
                     << ptOnlyResponse.getArrivalTime() << ", "
                     << intermediateResult.getArrivalTime() << "\n";
+            
+             LogManager<std::ofstream>::getLogger("first_taxi_leg_results.csv",
+                                                "request_id,insertion_type,valid_results_count\n")
+                    << req.requestId << ", "
+                    << InsertionTypes[intermediateResult.getFirstTaxiLegInsertionType()] << ", "
+                    << firstTaxiLeg.countValidResults() << "\n";
+
+            LogManager<std::ofstream>::getLogger("pt_results.csv",
+                                                "request_id,pt_only_leg_count,pt_and_taxi_leg_count\n")
+                    << req.requestId << ", "
+                    << ptOnlyLegCount << ", "
+                    << ptLegCount << "\n";
 
             const bool combinationIsBestCost = intermediateResult.getBestCost() < bestCost;
 

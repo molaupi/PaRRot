@@ -694,11 +694,11 @@ int main(int argc, char *argv[]) {
 
 
         // Use ULTRA CH to build ULTRA algorithm instance
-        using PTAlgorithm = RAPTOR::ULTRARAPTOR<RAPTOR::AggregateProfiler, false>;
+        using PTAlgorithm = RAPTOR::ULTRARAPTOR<RAPTOR::NoProfiler, true>;
 
         PTAlgorithm ptAlgorithm(raptor, psgCh, bucketGraphFileName);
 
-        using PTAlgorithmWithTaxi = RAPTOR::TaxiULTRARAPTOR<BasicLabelSet<0, ParentInfo::FULL_PARENT_INFO>>;
+        using PTAlgorithmWithTaxi = RAPTOR::TaxiULTRARAPTOR<BasicLabelSet<0, ParentInfo::FULL_PARENT_INFO>, RAPTOR::NoProfiler, true>;
 
         PTAlgorithmWithTaxi ptAlgorithmWithTaxi(raptor, psgCh, stations, bucketGraphFileName);
 
@@ -795,8 +795,6 @@ int main(int argc, char *argv[]) {
         EventSimulationImpl eventSimulation(fleet, requests, ptAndTaxiTripFinder, systemStateUpdater,
                                             routeState, true);
         eventSimulation.run();
-
-        ptAlgorithm.getProfiler().printStatistics();
 
     } catch (std::exception &e) {
         std::cerr << "KaRRi error: " << e.what() << '\n';
