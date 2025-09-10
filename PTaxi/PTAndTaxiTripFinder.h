@@ -105,7 +105,16 @@ namespace karri {
                   chOrder(order),
                   curRelOrdinaryPickups(fleet.size()),
                   curRelPickupsBns(fleet.size()), 
-                  bestCost(INFTY) {}
+                  bestCost(INFTY),
+                  intermediateLogger(LogManager<std::ofstream>::getLogger(stats::IntermediateResultStats::LOGGER_NAME,
+                                                "request_id," +
+                                                std::string(stats::IntermediateResultStats::LOGGER_COLS))),
+                  firstTaxiLegLogger(LogManager<std::ofstream>::getLogger(stats::FirstTaxiLegResultStats::LOGGER_NAME,
+                                                "request_id," +
+                                                std::string(stats::FirstTaxiLegResultStats::LOGGER_COLS))),
+                  ptLogger(LogManager<std::ofstream>::getLogger(stats::PTResultStats::LOGGER_NAME,
+                                                "request_id," +
+                                                std::string(stats::PTResultStats::LOGGER_COLS))) {}
 
         PTAndTaxiTriple findBestAssignment(const Request &req) {
             // Taxi only leg and invalid taxi leg
@@ -147,10 +156,8 @@ namespace karri {
 
             constexpr const char* InsertionTypes[] = {"PALS", "DALS", "DALS_PBNS", "ORDINARY", "PBNS", "UNDEFINED"};
             // LOGS: Cost of taxi, PT, combined; arrivalTimes
-            LogManager<std::ofstream>::getLogger(stats::IntermediateResultStats::LOGGER_NAME,
-                                                "request_id," +
-                                                std::string(stats::IntermediateResultStats::LOGGER_COLS))
-                    << req.requestId << ", "
+
+            intermediateLogger << req.requestId << ", "
                     << taxiOnlyResponse.first.getBestCost() << ", "
                     << ptOnlyResponse.getBestCost() << ", "
                     << intermediateResult.getBestCost() << ", "
@@ -160,19 +167,13 @@ namespace karri {
                     << taxiOnlyResponse.first.getArrivalTime(routeState) << ", "
                     << ptOnlyResponse.getArrivalTime() << ", "
                     << intermediateResult.getArrivalTime() << "\n";
-            
-            LogManager<std::ofstream>::getLogger(stats::FirstTaxiLegResultStats::LOGGER_NAME,
-                                                "request_id," +
-                                                std::string(stats::FirstTaxiLegResultStats::LOGGER_COLS))
-                    << req.requestId << ", "
+
+            firstTaxiLegLogger << req.requestId << ", "
                     << intermediateResult.getFirstTaxiLegCost() << ", "
                     << InsertionTypes[intermediateResult.getFirstTaxiLegInsertionType()] << ", "
                     << firstTaxiLeg.countValidResults() << "\n";
 
-            LogManager<std::ofstream>::getLogger(stats::PTResultStats::LOGGER_NAME,
-                                                "request_id," +
-                                                std::string(stats::PTResultStats::LOGGER_COLS))
-                    << req.requestId << ", "
+            ptLogger << req.requestId << ", "
                     << ptOnlyResponse.getBestCost() << ", "
                     << ptOnlyLegCount << ", "
                     << intermediateResult.getPTLegCost() << ", "
@@ -363,5 +364,9 @@ namespace karri {
         RequestState curReqState;
         stats::DispatchingPerformanceStats curStats;
         int bestCost;
+
+        std::ofstream &intermediateLogger;
+        std::ofstream &firstTaxiLegLogger;
+        std::ofstream &ptLogger;
     };
 }

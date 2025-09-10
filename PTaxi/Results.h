@@ -12,9 +12,10 @@ public:
     PTResult() : valid(false), bestCost(INFTY) {}
 
     PTResult(std::vector<Journey> &journeyParetoFront, RequestState &curReqState) 
-        : bestCost(INFTY), valid(true) {
+        : bestCost(INFTY), valid(false) {
             int cost;
             for (Journey &journey: journeyParetoFront) {
+                valid = true;
                 cost = CostCalculator::calcPTJourneyCost(
                                                 getTotalTripTime(journey), 
                                                 getTotalTransferTime(journey), 
@@ -34,7 +35,7 @@ public:
     const int &getBestCost() const { return bestCost; }
 
     const int getCostWithoutTripTime() const { 
-        return CostCalculator::calcPTJourneyCostWithoutTripTime(getTotalTransferTime(bestJourney), getNumberOfTransfers(bestJourney)); 
+        return valid ? CostCalculator::calcPTJourneyCostWithoutTripTime(getTotalTransferTime(bestJourney), getNumberOfTransfers(bestJourney)) : 0;
     }
 
     // Best cost from the pareto front
@@ -44,11 +45,11 @@ public:
 
     // at Destination
     const int getArrivalTime() const {
-        return convertToKaRRiTime(bestJourney.back().arrivalTime);
+        return valid ? convertToKaRRiTime(bestJourney.back().arrivalTime) : INFTY;
     }
 
     const int getArrivalTimeAtLastStation() const {
-        return convertToKaRRiTime(bestJourney[bestJourney.size() - 2].arrivalTime);
+        return valid ? convertToKaRRiTime(bestJourney[bestJourney.size() - 2].arrivalTime) : INFTY;
     }
 
     const int getFirstStation() const {
@@ -68,15 +69,15 @@ public:
     }
 
     inline const int getTotalTransferTime(Journey journey) const {
-        return valid ? convertToKaRRiTime(RAPTOR::totalTransferTime(journey)) : 0;
+        return convertToKaRRiTime(RAPTOR::totalTransferTime(journey));
     }
 
     inline const int getTotalTripTime(Journey journey) const {
-        return valid ? convertToKaRRiTime(journey.back().arrivalTime - journey.front().departureTime) : 0;
+        return convertToKaRRiTime(journey.back().arrivalTime - journey.front().departureTime);
     }
 
     inline const int getNumberOfTransfers(Journey journey) const {
-        return valid ? RAPTOR::countTrips(journey) - 1 : 0;
+        return RAPTOR::countTrips(journey) - 1;
     }
     
 private:
@@ -198,6 +199,11 @@ public:
                         ptLegCost(ptLeg.getBestCost()),
                         arrivalTime(ptLeg.getArrivalTime()),
                         bestCost() {
+
+        if (!ptLeg.isValid()) {
+            bestCost = INFTY;
+            return;
+        }
 
         if (isInitialTransferByTaxi()) {
             firstTaxiLeg = firstTaxiLegResult.getResultForStation(ptLeg.getFirstStation());
