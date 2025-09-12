@@ -1,6 +1,7 @@
 #include "../include/ULTRA/Helpers/Console/CommandLineParser.h"
 #include "../include/ULTRA/Helpers/MultiThreading.h"
 #include "../include/ULTRA/Shell/Shell.h"
+#include "../include/Common/Constants.h"
 #include "Commands/BenchmarkULTRAPHAST.h"
 using namespace Shell;
 
