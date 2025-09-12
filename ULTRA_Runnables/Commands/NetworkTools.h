@@ -280,7 +280,7 @@ public:
     {
         addParameter("Intermediate binary");
         addParameter("Bounding box",
-            { "germany", "deutschland", "switzerland", "bern", "london" });
+            { "germany", "deutschland", "switzerland", "bern", "london", "berlin" });
         addParameter("Output file");
     }
 
@@ -300,6 +300,11 @@ public:
             inter.applyBoundingBox(London);
         } else if (boundingBox == "bern") {
             inter.applyBoundingBox(Bern);
+        } else if (boundingBox == "berlin") {
+            inter.applyBoundingBox(Berlin);
+        } else {
+            error("Unknown bounding box: " + boundingBox);
+            return;
         }
         inter.printInfo();
         inter.serialize(outputFile);
@@ -318,6 +323,9 @@ private:
     const Geometry::Rectangle London = Geometry::Rectangle::BoundingBox(
         Geometry::Point(Construct::XY, -0.612, 51.233),
         Geometry::Point(Construct::XY, 0.715, 51.707));
+    const Geometry::Rectangle Berlin = Geometry::Rectangle::BoundingBox(
+        Geometry::Point(Construct::XY, 13.088345, 52.338245),
+        Geometry::Point(Construct::XY, 13.761161, 52.675509));
 };
 
 class ApplyCustomBoundingBox : public ParameterizedCommand {
