@@ -157,6 +157,7 @@ inline void printUsage() {
               "  -o <file>                generate output files at name <file> (specify name without file suffix).\n"
               "  -raptor-data <file>      file with the precomputed RAPTOR data.\n"
               "  -station-mapping <file>  file which maps the station used in RAPTOR to vertices in the given passenger road graph.\n"
+              "  -ch <file>                 contraction hierarchy for the transfer graph of ULTRA in binary format.\n"
               "  -bucket-graph <file>     precomputed bucket graph for use in ULTRA in binary format.\n"
               "  -psg-ch <file>           converted passenger graph for use in ULTRA in binary format.\n"
               "  -station-buckets <file>  precomputed station buckets for use in KaRRi in binary format.\n"
@@ -198,6 +199,7 @@ int main(int argc, char *argv[]) {
         // new
         const auto raptorFileName = clp.getValue<std::string>("raptor-data");
         const auto stationMappingFileName = clp.getValue<std::string>("station-mapping");
+        const auto chFileName = clp.getValue<std::string>("ch");
         const auto bucketGraphFileName = clp.getValue<std::string>("bucket-graph");
         const auto psgChFileName = clp.getValue<std::string>("psg-ch");
         auto stationBucketsFilename = clp.getValue<std::string>("station-buckets");
@@ -611,96 +613,19 @@ int main(int argc, char *argv[]) {
         }
         std::cout << "done.\n";
 
-        // Convert CH
-        std::cout << "Convert the karri::CH to ULTRA::CH... " << std::flush;
-        std::cout << "[Vehicle CH]... " << std::flush;
 
-        // convert from KARRI:CH to ULTRA::CH
-        auto& karriVehCH = vehChEnv->getCH();
-        auto& karriUpCHGraph = karriVehCH.upwardGraph();
-        auto& karriDownCHGraph = karriVehCH.downwardGraph();
-
-        CHConstructionGraph upCHGraph;
-        CHConstructionGraph downCHGraph;
-
-        upCHGraph.addVertices(karriUpCHGraph.numVertices());
-        upCHGraph.reserve(karriUpCHGraph.numVertices(), karriUpCHGraph.numEdges());
-
-        FORALL_VALID_EDGES(karriUpCHGraph, v, e)
-        {
-            auto edgeHandle = upCHGraph.addEdge(Vertex(v), Vertex(karriUpCHGraph.edgeHead(e)));
-            edgeHandle.set(Weight, karriUpCHGraph.traversalCost(e));
-            // since UnpackingInfoAttribute is defined a little weird (via the two edges directly, rather than the ViaVertex itself), we need to get the Vertex
-            auto& unpackingInfoOfEdge = karriUpCHGraph.unpackingInfo(e);
-            if (unpackingInfoOfEdge.second == INVALID_EDGE) {
-                // this case, the edge was an input edge => set invalid vertex as viavertex
-                edgeHandle.set(ViaVertex, noVertex);
-            } else {
-                // otherwise take the FromVertex / edgeTail from the first edge
-                edgeHandle.set(ViaVertex, Vertex(karriDownCHGraph.edgeHead(unpackingInfoOfEdge.first)));
-            }
-        }
-
-        downCHGraph.addVertices(karriDownCHGraph.numVertices());
-        downCHGraph.reserve(karriDownCHGraph.numVertices(), karriDownCHGraph.numEdges());
-
-        FORALL_VALID_EDGES(karriDownCHGraph, v, e)
-        {
-            auto edgeHandle = downCHGraph.addEdge(Vertex(v), Vertex(karriDownCHGraph.edgeHead(e)));
-            edgeHandle.set(Weight, karriDownCHGraph.traversalCost(e));
-            // since UnpackingInfoAttribute is defined a little weird (via the two edges directly, rather than the ViaVertex itself), we need to get the Vertex
-            auto& unpackingInfoOfEdge = karriDownCHGraph.unpackingInfo(e);
-            if (unpackingInfoOfEdge.second == INVALID_EDGE) {
-                // this case, the edge was an input edge => set invalid vertex as viavertex
-                edgeHandle.set(ViaVertex, noVertex);
-            } else {
-                // otherwise take the FromVertex / edgeTail from the first edge
-                edgeHandle.set(ViaVertex, Vertex(karriDownCHGraph.edgeHead(unpackingInfoOfEdge.first)));
-            }
-        }
-
-        ULTRACH::CH vehicleCh(std::move(upCHGraph), std::move(downCHGraph));
-
-        /* std::cout << "## Psg FORWARD ##" << std::endl; */
-        /* vehicleCh.getGraph(FORWARD).printAnalysis(); */
-        /* std::cout << "## Psg BACKWARD ##" << std::endl; */
-        /* vehicleCh.getGraph(BACKWARD).printAnalysis(); */
-
-
-        ULTRACH::CH psgCh;
-        psgCh.readBinary(psgChFileName);
+        std::cout << "Reading ULTRA CH from file... " << std::flush;
+        ULTRACH::CH ch(chFileName);
         std::cout << "done.\n";
-        
-        std::cout << "## Psg FORWARD ##" << std::endl;
-        psgCh.getGraph(FORWARD).printAnalysis();
-        std::cout << "## Psg BACKWARD ##" << std::endl;
-        psgCh.getGraph(BACKWARD).printAnalysis();
-
-        // Order of the vertices in the passenger CH
-        Order order(Construct::Id, psgCh.numVertices());
-        std::vector<bool> swapped(psgCh.numVertices(), false);
-        for (const StopId stop : raptor.stops()) {
-            const auto newStopId = stations[stop].psgChOrder;
-            assert(newStopId < order.size());
-
-            if (swapped[stop] || swapped[newStopId]) {
-                continue;
-            }
-            order[stop] = newStopId;
-            order[newStopId] = stop;
-            swapped[stop] = true;
-            swapped[newStopId] = true;
-        }
-
 
         // Use ULTRA CH to build ULTRA algorithm instance
         using PTAlgorithm = RAPTOR::ULTRARAPTOR<RAPTOR::NoProfiler, true>;
 
-        PTAlgorithm ptAlgorithm(raptor, psgCh, bucketGraphFileName);
+        PTAlgorithm ptAlgorithm(raptor, ch, bucketGraphFileName);
 
         using PTAlgorithmWithTaxi = RAPTOR::TaxiULTRARAPTOR<BasicLabelSet<0, ParentInfo::FULL_PARENT_INFO>, RAPTOR::NoProfiler, true>;
 
-        PTAlgorithmWithTaxi ptAlgorithmWithTaxi(raptor, psgCh, stations, bucketGraphFileName);
+        PTAlgorithmWithTaxi ptAlgorithmWithTaxi(raptor, ch, stations, bucketGraphFileName);
 
         // Buckets for PT stations
         using StationBucketsEnv = StationBucketsEnvironment<VehicleInputGraph, VehCHEnv>;
@@ -766,7 +691,7 @@ int main(int argc, char *argv[]) {
                                                     palsInsertionsFinder, dalsInsertionsFinder, relevantPdLocsFilter, 
                                                     vehicleInputGraph, *vehChEnv, psgInputGraph, *psgChEnv, fleet, routeState,
                                                     stations, stationBucketsEnv, palsToStations, stationsInEllipse, dalsToStations, pbnsToStations,
-                                                    ptAlgorithm, order, ptAlgorithmWithTaxi);
+                                                    ptAlgorithm, ptAlgorithmWithTaxi);
 
 
 

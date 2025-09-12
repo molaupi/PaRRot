@@ -71,7 +71,6 @@ namespace karri {
                             DALSToStationsT &dalsToStations,
                             PBNSToStationsT &pbnsToStations,
                             PTAlgorithmT &ptAlgorithm,
-                            Order &order,
                             PTAlgorithmWithTaxiT &ptAlgorithmWithTaxi)
                 : feasibleEllipticPickups(feasibleEllipticPickups),
                   feasibleEllipticDropoffs(feasibleEllipticDropoffs),
@@ -102,7 +101,6 @@ namespace karri {
                   ptAlgorithm(ptAlgorithm),
                   ptAlgorithmWithTaxi(ptAlgorithmWithTaxi),
                   taxiLegApproximation(vehInputGraph, vehChEnv, stationBucketsEnv, stations.size()),
-                  chOrder(order),
                   curRelOrdinaryPickups(fleet.size()),
                   curRelPickupsBns(fleet.size()), 
                   bestCost(INFTY),
@@ -254,8 +252,8 @@ namespace karri {
             const auto origin = psgCh.rank(psgInputGraph.edgeHead(vehInputGraph.toPsgEdge(req.origin)));
             const auto destination = psgCh.rank(psgInputGraph.edgeHead(vehInputGraph.toPsgEdge(req.destination)));
             const auto requestTime = req.requestTime / 10;
-            const Vertex originVertex = Vertex(chOrder[origin]);
-            const Vertex destinationVertex = Vertex(chOrder[destination]);
+            const Vertex originVertex = Vertex(origin);
+            const Vertex destinationVertex = Vertex(destination);
             return VertexQuery(originVertex, destinationVertex, requestTime);
         }
 
@@ -340,7 +338,6 @@ namespace karri {
         const Fleet &fleet;
         RouteState &routeState;
 
-        Order &chOrder;
         RelevantPDLocs curRelOrdinaryPickups;
         RelevantPDLocs curRelPickupsBns;
         PDLocs curPdLocs;

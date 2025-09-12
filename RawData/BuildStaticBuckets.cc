@@ -44,8 +44,8 @@ inline void printUsage() {
               "  -psg-h <file>              contraction hierarchy for the passenger network in binary format.\n"
               "  -raptor-data <file>        file with the precomputed RAPTOR data.\n"
               "  -station-mapping <file>    file which maps the station used in RAPTOR to edges in the given road graph.\n"
+              "  -ch <file>                 contraction hierarchy for the transfer graph of ULTRA in binary format.\n"
               "  -o-bucket-graph <file>     bucket graph for ULTRA in <file>.\n"
-              "  -o-psg-ch <file>           converted passenger graph for ULTRA in <file>.\n"
               "  -o-station-buckets <file>  station buckets for KaRRi in <file>.\n"
               "  -help                      display this help and exit.\n";
 }
@@ -67,7 +67,7 @@ int main(int argc, char *argv[]) {
         const auto psgHierarchyFileName = clp.getValue<std::string>("psg-h");
         const auto raptorFileName = clp.getValue<std::string>("raptor-data");
         const auto stationMappingFileName = clp.getValue<std::string>("station-mapping");
-        const auto psgChOutputFileName = clp.getValue<std::string>("o-psg-ch");
+        const auto chFileName = clp.getValue<std::string>("ch");
         const auto bucketGraphOutputFileName = clp.getValue<std::string>("o-bucket-graph");
         auto stationBucketsOutputFilename = clp.getValue<std::string>("o-station-buckets");
         if (!endsWith(stationBucketsOutputFilename, ".bucket.bin")) stationBucketsOutputFilename += ".bucket.bin";
@@ -211,92 +211,11 @@ int main(int argc, char *argv[]) {
             stationId++;
         }
         std::cout << "done.\n";
-
-
-        std::cout << "Convert the karri::CH to ULTRA::CH... " << std::flush;
-        std::cout << "[Passenger CH]... " << std::flush;
-        // convert from KARRI:CH to ULTRA::CH
-        auto& karriPsgCH = psgChEnv->getCH();
-        auto& karriPsgUpCHGraph = karriPsgCH.upwardGraph();
-        auto& karriPsgDownCHGraph = karriPsgCH.downwardGraph();
-
-        assert(karriPsgUpCHGraph.numVertices() == karriPsgDownCHGraph.numVertices());
-
-        CHConstructionGraph upPsgCHGraph;
-        CHConstructionGraph downPsgCHGraph;
-
-        upPsgCHGraph.addVertices(karriPsgUpCHGraph.numVertices());
-        upPsgCHGraph.reserve(karriPsgUpCHGraph.numVertices(), karriPsgUpCHGraph.numEdges());
-
-        FORALL_VALID_EDGES(karriPsgUpCHGraph, v, e)
-        {
-            auto edgeHandle = upPsgCHGraph.addEdge(Vertex(v), Vertex(karriPsgUpCHGraph.edgeHead(e)));
-            edgeHandle.set(Weight, karriPsgUpCHGraph.traversalCost(e));
-            // since UnpackingInfoAttribute is defined a little weird (via the two edges directly, rather than the ViaVertex itself), we need to get the Vertex
-            auto& unpackingInfoOfEdge = karriPsgUpCHGraph.unpackingInfo(e);
-            if (unpackingInfoOfEdge.second == INVALID_EDGE) {
-                // this case, the edge was an input edge => set invalid vertex as viavertex
-                edgeHandle.set(ViaVertex, noVertex);
-            } else {
-                // otherwise take the FromVertex / edgeTail from the first edge
-                assert(unpackingInfoOfEdge.first < karriPsgDownCHGraph.numEdges());
-                edgeHandle.set(ViaVertex, Vertex(karriPsgDownCHGraph.edgeHead(unpackingInfoOfEdge.first)));
-            }
-        }
-
-        downPsgCHGraph.addVertices(karriPsgDownCHGraph.numVertices());
-        downPsgCHGraph.reserve(karriPsgDownCHGraph.numVertices(), karriPsgDownCHGraph.numEdges());
-
-        FORALL_VALID_EDGES(karriPsgDownCHGraph, v, e)
-        {
-            auto edgeHandle = downPsgCHGraph.addEdge(Vertex(v), Vertex(karriPsgDownCHGraph.edgeHead(e)));
-            edgeHandle.set(Weight, karriPsgDownCHGraph.traversalCost(e));
-            // TODO
-            edgeHandle.set(ViaVertex, noVertex);
-            /* // since UnpackingInfoAttribute is defined a little weird (via the two edges directly, rather than the ViaVertex itself), we need to get the Vertex */
-            /* auto& unpackingInfoOfEdge = karriPsgDownCHGraph.unpackingInfo(e); */
-            /* if (unpackingInfoOfEdge.second == INVALID_EDGE) { */
-            /*     // this case, the edge was an input edge => set invalid vertex as viavertex */
-            /*     edgeHandle.set(ViaVertex, noVertex); */
-            /* } else { */
-            /*     // otherwise take the FromVertex / edgeTail from the first edge */
-            /*     assert(unpackingInfoOfEdge.first < karriPsgUpCHGraph.numEdges()); */
-            /*     edgeHandle.set(ViaVertex, Vertex(karriPsgUpCHGraph.edgeHead(unpackingInfoOfEdge.first))); */
-            /* } */
-        }
-
-        ULTRACH::CH psgCh(std::move(upPsgCHGraph), std::move(downPsgCHGraph));
         
-        // Reorder the vertices in the passenger CH
-        Order order(Construct::Id, psgCh.numVertices());
-        std::vector<bool> swapped(psgCh.numVertices(), false);
-        for (const StopId stop : raptor.stops()) {
-            const auto newStopId = stations[stop].psgChOrder;
-            assert(newStopId < order.size());
-
-            if (swapped[stop] || swapped[newStopId]) {
-                continue;
-            }
-            order[stop] = newStopId;
-            order[newStopId] = stop;
-            swapped[stop] = true;
-            swapped[newStopId] = true;
-        }
-        psgCh.applyVertexOrder(order);
-
-        std::cout << "## Psg FORWARD ##" << std::endl;
-        psgCh.getGraph(FORWARD).printAnalysis();
-        std::cout << "## Psg BACKWARD ##" << std::endl;
-        psgCh.getGraph(BACKWARD).printAnalysis();
-
-        std::cout << "done.\n";
-        
+        std::cout << "Reading ULTRA CH from file... " << std::flush;
+        ULTRACH::CH ch(chFileName);
         std::cout << "Building bucket graph... " << std::flush;
-        ULTRACH::BucketQuery bucketGraph(psgCh, FORWARD, raptor.numberOfStops());
-        std::cout << "done.\n";
-
-        std::cout << "Writing UTLRA reordered passenger CH to file... " << std::flush;
-        psgCh.writeBinary(psgChOutputFileName);
+        ULTRACH::BucketQuery bucketGraph(ch, FORWARD, raptor.numberOfStops());
         std::cout << "done.\n";
 
         std::cout << "Writing bucket graph to file... " << std::flush;
