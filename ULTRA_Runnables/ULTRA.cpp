@@ -63,6 +63,7 @@ int main(int argc, char** argv)
 
     // Output
     new RAPTORToCSV(shell);
+    new RandomVertexQuery(shell);
 
     shell.run();
     return 0;
