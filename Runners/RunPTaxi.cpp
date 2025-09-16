@@ -45,6 +45,7 @@
 #include "../PTaxi/TaxiULTRARAPTOR.h"
 
 #include <ULTRA/Algorithms/RAPTOR/ULTRARAPTOR.h>
+#include <ULTRA/DataStructures/Queries/Queries.h>
 
 #include <KARRI/Algorithms/CH/CH.h>
 #include <KARRI/Tools/custom_assertion_levels.h>
@@ -324,18 +325,19 @@ int main(int argc, char *argv[]) {
         // Read the request data from file.
         std::cout << "Reading request data from file... " << std::flush;
         std::vector<Request> requests;
-        int origin, destination, requestTime, numRiders;
-        io::CSVReader<4, io::trim_chars<' '>> reqFileReader(requestFileName);
+        std::vector<VertexQuery> queries;
+        int origin, destination, requestTime, numRiders, source, target;
+        io::CSVReader<6, io::trim_chars<' '>> reqFileReader(requestFileName);
 
         if (csvFilesInLoudFormat) {
             reqFileReader.read_header(io::ignore_missing_column, "pickup_spot", "dropoff_spot", "min_dep_time",
-                                      "num_riders");
+                                      "num_riders", "sourceId", "targetId");
         } else {
-            reqFileReader.read_header(io::ignore_missing_column, "origin", "destination", "req_time", "num_riders");
+            reqFileReader.read_header(io::ignore_missing_column, "origin", "destination", "req_time", "num_riders", "sourceId", "targetId");
         }
 
         numRiders = -1;
-        while (reqFileReader.read_row(origin, destination, requestTime, numRiders)) {
+        while (reqFileReader.read_row(origin, destination, requestTime, numRiders, source, target)) {
             if (origin < 0 || origin >= vehGraphOrigIdToSeqId.size() || vehGraphOrigIdToSeqId[origin] == INVALID_ID)
                 throw std::invalid_argument("invalid location -- '" + std::to_string(origin) + "'");
             if (destination < 0 || destination >= vehGraphOrigIdToSeqId.size() ||
@@ -353,6 +355,8 @@ int main(int argc, char *argv[]) {
             if (numRiders == -1) // If number of riders was not specified, assume one rider
                 numRiders = 1;
             requests.push_back({requestId, originSeqId, destSeqId, requestTime * 10, numRiders});
+            if (reqFileReader.has_column("sourceId") && reqFileReader.has_column("targetId"))
+                queries.push_back(VertexQuery(Vertex(source), Vertex(target), requestTime));
             numRiders = -1;
         }
         std::cout << "done.\n";
@@ -682,6 +686,7 @@ int main(int argc, char *argv[]) {
                 OrdinaryToStationsImpl,
                 DALSToStationsImpl,
                 PBNSToStationsImpl,
+                VertexQuery,
                 PTAlgorithm,
                 PTAlgorithmWithTaxi,
                 TaxiLegApproximationImpl>;
@@ -690,7 +695,7 @@ int main(int argc, char *argv[]) {
                                                     ffPDDistanceQuery, ordinaryInsertionsFinder, pbnsInsertionsFinder, 
                                                     palsInsertionsFinder, dalsInsertionsFinder, relevantPdLocsFilter, 
                                                     vehicleInputGraph, *vehChEnv, psgInputGraph, *psgChEnv, fleet, routeState,
-                                                    stations, stationBucketsEnv, palsToStations, stationsInEllipse, dalsToStations, pbnsToStations,
+                                                    stations, queries, stationBucketsEnv, palsToStations, stationsInEllipse, dalsToStations, pbnsToStations,
                                                     ptAlgorithm, ptAlgorithmWithTaxi);
 
 

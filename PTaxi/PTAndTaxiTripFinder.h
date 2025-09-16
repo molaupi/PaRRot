@@ -5,8 +5,6 @@
 #include "IntermediateResultStats.h"
 #include <KARRI/Algorithms/CH/CH.h>
 #include <KARRI/Algorithms/KaRRi/RequestState/RelevantPDLocs.h>
-#include <ULTRA/DataStructures/Queries/Queries.h>
-#include <ULTRA/Helpers/Vector/Permutation.h>
 
 namespace karri {
 
@@ -36,6 +34,7 @@ namespace karri {
             typename OrdinaryToStationsT,
             typename DALSToStationsT,
             typename PBNSToStationsT,
+            typename PTQueryT,
             typename PTAlgorithmT,
             typename PTAlgorithmWithTaxiT,
             typename TaxiLegApproximationT
@@ -65,6 +64,7 @@ namespace karri {
                             const Fleet &fleet,
                             RouteState &routeState,
                             PTStations stations,
+                            const std::vector<PTQueryT> &queries,
                             StationBucketsEnvT &stationBucketsEnv,
                             PALSToStationsT &palsToStations,
                             StationsInEllipseT &stationsInEllipse,
@@ -91,6 +91,7 @@ namespace karri {
                   routeState(routeState),
                   fleet(fleet),
                   stations(stations),
+                  queries(queries),
                   stationBucketsEnv(stationBucketsEnv),
                   stationBCH(vehInputGraph, vehChEnv, routeState, stationBucketsEnv, stations.size()),
                   palsToStations(palsToStations),
@@ -120,7 +121,7 @@ namespace karri {
             RequestState invalidTaxiResponse;
             std::pair<RequestState, stats::DispatchingPerformanceStats> invalidTaxiResponseWithStats{invalidTaxiResponse, stats::DispatchingPerformanceStats()};
             
-            VertexQuery query = convertKARRIRequestToULTRAQuery(req);
+            const auto query = queries[req.requestId];
             ptAlgorithm.run(query.source, query.departureTime, query.target);
             auto ptOnlyParetoFront = ptAlgorithm.getJourneys();
             PTResult ptOnlyResponse(ptOnlyParetoFront, curReqState);
@@ -248,15 +249,6 @@ namespace karri {
 
     private:
 
-        VertexQuery convertKARRIRequestToULTRAQuery(const Request &req) {
-            const auto origin = psgCh.rank(psgInputGraph.edgeHead(vehInputGraph.toPsgEdge(req.origin)));
-            const auto destination = psgCh.rank(psgInputGraph.edgeHead(vehInputGraph.toPsgEdge(req.destination)));
-            const auto requestTime = req.requestTime / 10;
-            const Vertex originVertex = Vertex(origin);
-            const Vertex destinationVertex = Vertex(destination);
-            return VertexQuery(originVertex, destinationVertex, requestTime);
-        }
-
         FirstTaxiLegResult runFirstTaxiSharingLeg(const Request &req) {
             RequestState rs = curReqState;
             FirstTaxiLegResult firstTaxiLegResult(routeState, rs, stations.size());
@@ -353,6 +345,7 @@ namespace karri {
         DALSToStationsT &dalsToStations;
         PBNSToStationsT &pbnsToStations;
 
+        const std::vector<PTQueryT> &queries;
         PTAlgorithmT &ptAlgorithm;
         PTAlgorithmWithTaxiT &ptAlgorithmWithTaxi;
 
