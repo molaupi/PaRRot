@@ -44,7 +44,7 @@ requests=$karriInputDir/Requests/${instanceName}_random.csv
 vehCh=$karriInputDir/CHs/${vehName}_time.ch.bin
 psgCh=$karriInputDir/CHs/${psgName}_time.ch.bin
 
-raptor=$parrotInputDir/ULTRA/raptor.binary
+raptor=$parrotInputDir/ULTRA/raptor-shortcuts.binary
 stationMapping=$parrotInputDir/Preprocessing/PT/stations.mapped.csv
 bucketGraph=$parrotInputDir/Preprocessing/PT/bucket
 stationBuckets=$parrotInputDir/Preprocessing/Taxi/stations

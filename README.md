@@ -10,13 +10,14 @@ With the python script `python3 prepare_csv.py --mode modify_stops --csv_directo
 In KaRRi: run the Transform Locations executable to get the mapped stations with the following command (note that paths are relative)
 `./RawData/TransformLocations -tar-g Networks/Berlin/KARRI/Graphs/Berlin-1pct_pedestrian_veh.gr.bin -v Networks/Berlin/CSV/modified_stops.csv -l-col-name latlon -in-repr lat-lng -out-repr edge-id -psg -o Networks/Berlin/Preprocessing/PT/stations.mapped`
 
-## Build Core CH and normal CH
+## Build CH, build core CH and compute shortcuts for ULTRA
 In `ULTRA_Runnables`: build the executables with `make ULTRARelease`.
 Run the executable `./ULTRA`.
 Within the interactive shell:
-- Run `buildCH ../Networks/Berlin/ULTRA/raptor.binary.graph ../Networks/Berlin/ULTRA/chOrder ../Networks/Berlin/ULTRA/CH`
+- Run `buildCH ../Networks/Berlin/ULTRA/OSM/graph ../Networks/Berlin/ULTRA/chOrder ../Networks/Berlin/ULTRA/CH`
 - Run `buildCoreCH ../Networks/Berlin/ULTRA/raptor.binary ../Networks/Berlin/ULTRA/coreCHOrder ../Networks/Berlin/ULTRA/coreCH ../Networks/Berlin/ULTRA/raptor-core.binary`
-As a result, you will obtain the CH files required to run the ULTRARAPTOR algorithm, while the Core CH is automatically incorporated into the raptor.binary.
+- Run `computeStopToStopShortcuts ../Networks/Berlin/ULTRA/raptor-core.binary ../Networks/Berlin/ULTRA/raptor-shortcuts.binary 15`
+As a result, you will obtain the CH files and raptor binary required to run the ULTRARAPTOR algorithm.
 
 ## Generate requests in ULTRA and transform into requests for KaRRi
 In ULTRA: run `randomVertexQueries ../Networks/Berlin/ULTRA/raptor.binary ../Networks/Berlin/ULTRA/CH 16569 ../Networks/Berlin/CSV/requests.csv` to generate random requests with latitude and longtitude for the origin and destination.
