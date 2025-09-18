@@ -14,9 +14,9 @@ In KaRRi: run the Transform Locations executable to get the mapped stations with
 In `ULTRA_Runnables`: build the executables with `make ULTRARelease`.
 Run the executable `./ULTRA`.
 Within the interactive shell:
-- Run `buildCH ../Networks/Berlin/ULTRA/OSM/graph ../Networks/Berlin/ULTRA/chOrder ../Networks/Berlin/ULTRA/CH`
+- Run `buildCH ../Networks/Berlin/ULTRA/OSM/raptor.binary.graph ../Networks/Berlin/ULTRA/chOrder ../Networks/Berlin/ULTRA/CH`
 - Run `buildCoreCH ../Networks/Berlin/ULTRA/raptor.binary ../Networks/Berlin/ULTRA/coreCHOrder ../Networks/Berlin/ULTRA/coreCH ../Networks/Berlin/ULTRA/raptor-core.binary`
-- Run `computeStopToStopShortcuts ../Networks/Berlin/ULTRA/raptor-core.binary ../Networks/Berlin/ULTRA/raptor-shortcuts.binary 15`
+- Run `computeStopToStopShortcuts ../Networks/Berlin/ULTRA/raptor-core.binary ../Networks/Berlin/ULTRA/raptor-shortcuts.binary 0`
 As a result, you will obtain the CH files and raptor binary required to run the ULTRARAPTOR algorithm.
 
 ## Generate requests in ULTRA and transform into requests for KaRRi
@@ -32,6 +32,7 @@ You must run the executables BuildStaticBuckets to generate required input data 
 These includes:
 - Bucket graph for ULTRA
 - Station buckets for KaRRi
+`BuildStaticBuckets -veh-g ../../../Networks/Berlin/KARRI/Graphs/Berlin-1pct_pedestrian_veh.gr.bin -psg-g ../../../Networks/Berlin/KARRI/Graphs/Berlin-1pct_pedestrian_psg.gr.bin -veh-h ../../../Networks/Berlin/KARRI/CHs/Berlin-1pct_pedestrian_veh_time.ch.bin -psg-h ../../../Networks/Berlin/KARRI/CHs/Berlin-1pct_pedestrian_psg_time.ch.bin -raptor-data ../../../Networks/Berlin/ULTRA/raptor-shortcuts.binary -station-mapping ../../../Networks/Berlin/Preprocessing/PT/stations.mapped.csv -ch ../../../Networks/Berlin/ULTRA/CH -o-bucket-graph ../../../Networks/Berlin/Preprocessing/PT/bucket -o-station-buckets ../../../Networks/Berlin/Preprocessing/Taxi/stations`
 
 
 ## Prerequisites
