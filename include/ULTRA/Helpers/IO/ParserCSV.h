@@ -124,7 +124,7 @@ private:
             dataBegin = 3;
 
         if (dataEnd == 2 * BLOCK_LENGTH) {
-            bytesRead = std::async(std::launch::async, [=, this]() -> int {
+            bytesRead = std::async(std::launch::async, [=]() -> int {
                 return std::fread(buffer + 2 * BLOCK_LENGTH, 1, BLOCK_LENGTH, file);
             });
         }
@@ -198,7 +198,7 @@ public:
                 dataEnd += bytesRead.get();
                 std::memcpy(buffer + BLOCK_LENGTH, buffer + 2 * BLOCK_LENGTH,
                     BLOCK_LENGTH);
-                bytesRead = std::async(std::launch::async, [=, this]() -> int {
+                bytesRead = std::async(std::launch::async, [=]() -> int {
                     return std::fread(buffer + 2 * BLOCK_LENGTH, 1, BLOCK_LENGTH, file);
                 });
             }
