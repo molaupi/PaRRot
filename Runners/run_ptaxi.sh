@@ -48,7 +48,7 @@ raptor=$parrotInputDir/ULTRA/raptor-shortcuts.binary
 stationMapping=$parrotInputDir/Preprocessing/PT/stations.mapped.csv
 bucketGraph=$parrotInputDir/Preprocessing/PT/bucket
 stationBuckets=$parrotInputDir/Preprocessing/Taxi/stations
-ptPsgCh=$parrotInputDir/ULTRA/CH
+ptCh=$parrotInputDir/ULTRA/CH
 
 # Create concrete output directory, whose name consists of instanceName + current timestamp.
 currentTime=$(date "+%Y.%m.%d-%H.%M")
@@ -85,7 +85,7 @@ fi
 
 echo "Build completed successfully."
 
-timeout $timeout $binaryDir/Runners/PTaxi -veh-g $vehGraph -psg-g $psgGraph -v $vehicles -r $requests -veh-h $vehCh -psg-h $psgCh -o $outputDir/ptaxi -raptor-data $raptor -station-mapping $stationMapping -bucket-graph $bucketGraph --station-buckets $stationBuckets -ch $ptCh
+timeout $timeout $binaryDir/Runners/PTaxi -veh-g $vehGraph -psg-g $psgGraph -v $vehicles -r $requests -veh-h $vehCh -psg-h $psgCh -o $outputDir/ptaxi -raptor-data $raptor -station-mapping $stationMapping -bucket-graph $bucketGraph -station-buckets $stationBuckets -ch $ptCh
 
 # Remark:
 # The prefix "timeout $timeout" aborts the process as soon as the timeout is reached, which is specified in the variable $timeout.
