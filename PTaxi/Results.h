@@ -53,19 +53,19 @@ public:
     }
 
     const int getFirstStation() const {
-        return bestJourney.front().to.value();
+        return bestJourney.empty() ? INVALID_ID : bestJourney.front().to.value();
     }
 
     const int getLastStation() const {
-        return bestJourney.back().from.value();
+        return bestJourney.empty() ? INVALID_ID : bestJourney.back().from.value();
     }
 
     const bool isInitialTransferByTaxi() const {
-        return bestJourney.front().usesTaxi;
+        return bestJourney.empty() ? false : bestJourney.front().usesTaxi;
     }
 
     const bool isFinalTransferByTaxi() const {
-        return bestJourney.back().usesTaxi;
+        return bestJourney.empty() ? false : bestJourney.back().usesTaxi;
     }
 
     inline const int getTotalTransferTime(Journey journey) const {
