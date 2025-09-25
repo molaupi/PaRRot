@@ -54,6 +54,15 @@ namespace karri::stats {
             "valid_results_count\n";
     };
 
+    struct FirstTaxiLegDetailedResultStats {
+
+        static constexpr auto LOGGER_NAME = "first_taxi_leg_results_detailed.csv";
+        static constexpr auto LOGGER_COLS = 
+            "cost," 
+            "arrival_time," 
+            "insertion_type\n";
+    };
+
     struct PTResultStats {
 
         static constexpr auto LOGGER_NAME = "pt_results.csv";

@@ -40,7 +40,7 @@ karriInputDir=$parrotInputDir/KARRI
 vehGraph=$karriInputDir/Graphs/${vehName}.gr.bin
 psgGraph=$karriInputDir/Graphs/${psgName}.gr.bin
 vehicles=$karriInputDir/Vehicles/${name}.csv
-requests=$karriInputDir/Requests/${instanceName}_random.csv
+requests=$karriInputDir/Requests/${name}.csv
 vehCh=$karriInputDir/CHs/${vehName}_time.ch.bin
 psgCh=$karriInputDir/CHs/${psgName}_time.ch.bin
 

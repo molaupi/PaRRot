@@ -155,15 +155,14 @@ public:
         return calculator.calc(result.bestAssignment, requestState, true);
     }
 
-    // Add these debugging methods
-    int countValidResults() const {
-        int count = 0;
+    std::vector<TaxiResult> getValidResults() const {
+        std::vector<TaxiResult> validResults;
         for (const auto& result : results) {
             if (result.bestCost != INFTY) {
-                count++;
+                validResults.push_back(result);
             }
         }
-        return count;
+        return validResults;
     }
 
 private:
