@@ -15,13 +15,13 @@ public:
         : bestCost(INFTY), valid(false) {
             int cost;
             for (Journey &journey: journeyParetoFront) {
-                valid = true;
                 cost = CostCalculator::calcPTJourneyCost(
                                                 getTotalTripTime(journey), 
                                                 getTotalTransferTime(journey), 
                                                 getNumberOfTransfers(journey),
                                                 curReqState);
                 if (cost < bestCost) {
+                    valid = true;
                     bestCost = cost;
                     bestJourney = journey;
                 };
@@ -35,7 +35,7 @@ public:
     const int &getBestCost() const { return bestCost; }
 
     const int getCostWithoutTripTime() const { 
-        return valid ? CostCalculator::calcPTJourneyCostWithoutTripTime(getTotalTransferTime(bestJourney), getNumberOfTransfers(bestJourney)) : 0;
+        return valid && !bestJourney.empty() ? CostCalculator::calcPTJourneyCostWithoutTripTime(getTotalTransferTime(bestJourney), getNumberOfTransfers(bestJourney)) : 0;
     }
 
     // Best cost from the pareto front
@@ -45,11 +45,11 @@ public:
 
     // at Destination
     const int getArrivalTime() const {
-        return valid ? convertToKaRRiTime(bestJourney.back().arrivalTime) : INFTY;
+        return valid && !bestJourney.empty() ? convertToKaRRiTime(bestJourney.back().arrivalTime) : INFTY;
     }
 
     const int getArrivalTimeAtLastStation() const {
-        return valid ? convertToKaRRiTime(bestJourney[bestJourney.size() - 2].arrivalTime) : INFTY;
+        return valid && bestJourney.size() >= 2 ? convertToKaRRiTime(bestJourney[bestJourney.size() - 2].arrivalTime) : INFTY;
     }
 
     const int getFirstStation() const {
