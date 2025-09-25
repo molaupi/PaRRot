@@ -14,7 +14,7 @@ In KaRRi: run the Transform Locations executable to get the mapped stations with
 In `ULTRA_Runnables`: build the executables with `make ULTRARelease`.
 Run the executable `./ULTRA`.
 Within the interactive shell:
-- Run `buildCH ../Networks/Berlin/ULTRA/OSM/raptor.binary.graph ../Networks/Berlin/ULTRA/chOrder ../Networks/Berlin/ULTRA/CH`
+- Run `buildCH ../Networks/Berlin/ULTRA/raptor.binary.graph ../Networks/Berlin/ULTRA/chOrder ../Networks/Berlin/ULTRA/CH`
 - Run `buildCoreCH ../Networks/Berlin/ULTRA/raptor.binary ../Networks/Berlin/ULTRA/coreCHOrder ../Networks/Berlin/ULTRA/coreCH ../Networks/Berlin/ULTRA/raptor-core.binary`
 - Run `computeStopToStopShortcuts ../Networks/Berlin/ULTRA/raptor-core.binary ../Networks/Berlin/ULTRA/raptor-shortcuts.binary 0`
 As a result, you will obtain the CH files and raptor binary required to run the ULTRARAPTOR algorithm.
