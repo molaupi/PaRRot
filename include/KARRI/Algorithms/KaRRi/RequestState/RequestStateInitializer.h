@@ -45,9 +45,11 @@ namespace karri {
             KaRRiTimer timer;
 
             RequestState requestState;
+            stats::DispatchingPerformanceStats stats;
+            requestState.reset();
+            stats.clear();
             requestState.originalRequest = req;
             requestState.setEarliestDeparture(req.requestTime);
-            stats::DispatchingPerformanceStats stats;
 
             // Calculate the direct distance between the requests origin and destination
             timer.restart();

@@ -111,9 +111,6 @@ namespace karri {
                   firstTaxiLegLogger(LogManager<std::ofstream>::getLogger(stats::FirstTaxiLegResultStats::LOGGER_NAME,
                                                 "request_id," +
                                                 std::string(stats::FirstTaxiLegResultStats::LOGGER_COLS))),
-                  firstTaxiResultsLogger(LogManager<std::ofstream>::getLogger(stats::FirstTaxiLegDetailedResultStats::LOGGER_NAME,
-                                                "request_id," +
-                                                std::string(stats::FirstTaxiLegDetailedResultStats::LOGGER_COLS))),
                   ptLogger(LogManager<std::ofstream>::getLogger(stats::PTResultStats::LOGGER_NAME,
                                                 "request_id," +
                                                 std::string(stats::PTResultStats::LOGGER_COLS))) {}
@@ -124,10 +121,10 @@ namespace karri {
             RequestState invalidTaxiResponse;
             std::pair<RequestState, stats::DispatchingPerformanceStats> invalidTaxiResponseWithStats{invalidTaxiResponse, stats::DispatchingPerformanceStats()};
             
-            const auto query = queries[req.requestId];
-            ptAlgorithm.run(query.source, query.departureTime, query.target);
-            auto ptOnlyParetoFront = ptAlgorithm.getJourneys();
-            PTResult ptOnlyResponse(ptOnlyParetoFront, curReqState);
+            // const auto query = queries[req.requestId];
+            // ptAlgorithm.run(query.source, query.departureTime, query.target);
+            // auto ptOnlyParetoFront = ptAlgorithm.getJourneys();
+            PTResult ptOnlyResponse;
             PTResult invalidPTResponse;
 
             size_t ptOnlyLegCount = ptOnlyResponse.getBestJourney().size();
@@ -142,9 +139,9 @@ namespace karri {
             taxiLegApproximation.findDistancesFromStationsToDest(req.destination, maxTripTime);
             const auto &distFromStations = taxiLegApproximation.getDistancesFromStations();
 
-            ptAlgorithmWithTaxi.run(query.source, query.departureTime, query.target, firstTaxiLeg, distFromStations);
-            auto ptLegParetoFront = ptAlgorithmWithTaxi.getJourneys();
-            PTResult ptLegResponse(ptLegParetoFront, curReqState);
+            // ptAlgorithmWithTaxi.run(query.source, query.departureTime, query.target, firstTaxiLeg, distFromStations);
+            // auto ptLegParetoFront = ptAlgorithmWithTaxi.getJourneys();
+            PTResult ptLegResponse;
 
             size_t ptLegCount = ptLegResponse.getBestJourney().size();
 
@@ -159,38 +156,48 @@ namespace karri {
             constexpr const char* InsertionTypes[] = {"PALS", "DALS", "DALS_PBNS", "ORDINARY", "PBNS", "UNDEFINED"};
             // LOGS: Cost of taxi, PT, combined; arrivalTimes
 
-            intermediateLogger << req.requestId << ", "
-                    << taxiOnlyResponse.first.getBestCost() << ", "
-                    << ptOnlyResponse.getBestCost() << ", "
-                    << intermediateResult.getBestCost() << ", "
-                    << intermediateResult.getFirstTaxiLegCost() << ", "
-                    << intermediateResult.getPTLegCost() << ", "
-                    << intermediateResult.getSecondTaxiLegCost() << ", "
-                    << taxiOnlyResponse.first.getArrivalTime(routeState) << ", "
-                    << ptOnlyResponse.getArrivalTime() << ", "
-                    << intermediateResult.getArrivalTime() << "\n";
+            // intermediateLogger << req.requestId << ", "
+            //         << taxiOnlyResponse.first.getBestCost() << ", "
+            //         << ptOnlyResponse.getBestCost() << ", "
+            //         << intermediateResult.getBestCost() << ", "
+            //         << intermediateResult.getFirstTaxiLegCost() << ", "
+            //         << intermediateResult.getPTLegCost() << ", "
+            //         << intermediateResult.getSecondTaxiLegCost() << ", "
+            //         << taxiOnlyResponse.first.getArrivalTime(routeState) << ", "
+            //         << ptOnlyResponse.getArrivalTime() << ", "
+            //         << intermediateResult.getArrivalTime() << "\n";
 
             const auto firstTaxiLegResults = firstTaxiLeg.getValidResults();
+            const size_t validResultsCount = firstTaxiLegResults.size();
+
+            int sumCost = 0, sumArrivalTime = 0;
+            int insertionTypeCounts[] = {0, 0, 0, 0, 0, 0}; // PALS, DALS, DALS_PBNS, ORDINARY, PBNS, UNDEFINED
 
             for (const auto& result : firstTaxiLegResults) {
-                firstTaxiResultsLogger << req.requestId << ", "
-                                    << result.bestCost << ", "
-                                    << result.arrivalTime << ", "
-                                    << InsertionTypes[result.insertionType] << "\n";
+                sumCost += result.bestCost;
+                sumArrivalTime += result.arrivalTime;
+                insertionTypeCounts[result.insertionType]++;
             }
 
+            const double averageCost = firstTaxiLegResults.empty() ? 0.0 : static_cast<double>(sumCost) / validResultsCount;
+            const double averageArrivalTime = firstTaxiLegResults.empty() ? 0.0 : static_cast<double>(sumArrivalTime) / validResultsCount;
+            
             firstTaxiLegLogger << req.requestId << ", "
-                    << intermediateResult.getFirstTaxiLegCost() << ", "
-                    << InsertionTypes[intermediateResult.getFirstTaxiLegInsertionType()] << ", "
-                    << firstTaxiLegResults.size() << "\n";
+                               << averageCost << ", "
+                               << averageArrivalTime << ", "
+                               << insertionTypeCounts[0] << ", "
+                               << insertionTypeCounts[1] << ", "
+                               << insertionTypeCounts[2] << ", "
+                               << insertionTypeCounts[3] << ", "
+                               << insertionTypeCounts[4] << ", "
+                               << insertionTypeCounts[5] << ", "
+                               << validResultsCount << "\n";
 
-            ptLogger << req.requestId << ", "
-                    << ptOnlyResponse.getBestCost() << ", "
-                    << ptOnlyLegCount << ", "
-                    << intermediateResult.getPTLegCost() << ", "
-                    << ptLegCount << "\n";
-
-            const bool combinationIsBestCost = intermediateResult.getBestCost() < bestCost;
+            // ptLogger << req.requestId << ", "
+            //         << ptOnlyResponse.getBestCost() << ", "
+            //         << ptOnlyLegCount << ", "
+            //         << intermediateResult.getPTLegCost() << ", "
+            //         << ptLegCount << "\n";
 
             // TODO: IntermediateResult -> PTAndTaxiTriple
             // if (combinationIsBestCost) return PTAndTaxiTriple();
@@ -367,7 +374,6 @@ namespace karri {
 
         std::ofstream &intermediateLogger;
         std::ofstream &firstTaxiLegLogger;
-        std::ofstream &firstTaxiResultsLogger;
         std::ofstream &ptLogger;
     };
 }
