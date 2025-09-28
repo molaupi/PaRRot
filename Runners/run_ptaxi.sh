@@ -46,8 +46,8 @@ psgCh=$karriInputDir/CHs/${psgName}_time.ch.bin
 
 raptor=$parrotInputDir/ULTRA/raptor-shortcuts.binary
 stationMapping=$parrotInputDir/Preprocessing/PT/stations.mapped.csv
-bucketGraph=$parrotInputDir/Preprocessing/PT/bucket
-stationBuckets=$parrotInputDir/Preprocessing/Taxi/stations
+bucketGraph=$parrotInputDir/Preprocessing/PT/${instanceName}_bucket
+stationBuckets=$parrotInputDir/Preprocessing/Taxi/${instanceName}_stations
 ptCh=$parrotInputDir/ULTRA/CH
 
 # Create concrete output directory, whose name consists of instanceName + current timestamp.
