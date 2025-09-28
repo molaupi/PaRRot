@@ -44,11 +44,11 @@ requests=$karriInputDir/Requests/${name}.csv
 vehCh=$karriInputDir/CHs/${vehName}_time.ch.bin
 psgCh=$karriInputDir/CHs/${psgName}_time.ch.bin
 
-raptor=$parrotInputDir/ULTRA/raptor-shortcuts.binary
-stationMapping=$parrotInputDir/Preprocessing/PT/stations.mapped.csv
+raptor=$parrotInputDir/ULTRA/${instanceName}_raptor-shortcuts.binary
+stationMapping=$parrotInputDir/Preprocessing/PT/${instanceName}_stations.mapped.csv
 bucketGraph=$parrotInputDir/Preprocessing/PT/${instanceName}_bucket
 stationBuckets=$parrotInputDir/Preprocessing/Taxi/${instanceName}_stations
-ptCh=$parrotInputDir/ULTRA/CH
+ptCh=$parrotInputDir/ULTRA/${instanceName}_CH
 
 # Create concrete output directory, whose name consists of instanceName + current timestamp.
 currentTime=$(date "+%Y.%m.%d-%H.%M")
