@@ -156,16 +156,16 @@ namespace karri {
             constexpr const char* InsertionTypes[] = {"PALS", "DALS", "DALS_PBNS", "ORDINARY", "PBNS", "UNDEFINED"};
             // LOGS: Cost of taxi, PT, combined; arrivalTimes
 
-            // intermediateLogger << req.requestId << ", "
-            //         << taxiOnlyResponse.first.getBestCost() << ", "
-            //         << ptOnlyResponse.getBestCost() << ", "
-            //         << intermediateResult.getBestCost() << ", "
-            //         << intermediateResult.getFirstTaxiLegCost() << ", "
-            //         << intermediateResult.getPTLegCost() << ", "
-            //         << intermediateResult.getSecondTaxiLegCost() << ", "
-            //         << taxiOnlyResponse.first.getArrivalTime(routeState) << ", "
-            //         << ptOnlyResponse.getArrivalTime() << ", "
-            //         << intermediateResult.getArrivalTime() << "\n";
+            intermediateLogger << req.requestId << ", "
+                    << taxiOnlyResponse.first.getBestCost() << ", "
+                    << ptOnlyResponse.getBestCost() << ", "
+                    << intermediateResult.getBestCost() << ", "
+                    << intermediateResult.getFirstTaxiLegCost() << ", "
+                    << intermediateResult.getPTLegCost() << ", "
+                    << intermediateResult.getSecondTaxiLegCost() << ", "
+                    << taxiOnlyResponse.first.getArrivalTime(routeState) << ", "
+                    << ptOnlyResponse.getArrivalTime() << ", "
+                    << intermediateResult.getArrivalTime() << "\n";
 
             const auto firstTaxiLegResults = firstTaxiLeg.getValidResults();
             const size_t validResultsCount = firstTaxiLegResults.size();
@@ -202,12 +202,11 @@ namespace karri {
             // TODO: IntermediateResult -> PTAndTaxiTriple
             // if (combinationIsBestCost) return PTAndTaxiTriple();
             
-            // Return the combined results
-            if (taxiOnlyHasBetterCost) {
+            // if (taxiOnlyHasBetterCost) {
                 return PTAndTaxiTriple(taxiOnlyResponse, invalidPTResponse, invalidTaxiResponse);
-            } else {
-                return PTAndTaxiTriple(invalidTaxiResponseWithStats, ptOnlyResponse, invalidTaxiResponse);
-            }
+            // } else {
+            //     return PTAndTaxiTriple(invalidTaxiResponseWithStats, ptOnlyResponse, invalidTaxiResponse);
+            // }
         }
 
         std::pair<RequestState, stats::DispatchingPerformanceStats> findBestTaxiAssignment(const Request &req) {
