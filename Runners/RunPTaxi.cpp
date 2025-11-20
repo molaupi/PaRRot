@@ -34,15 +34,15 @@
 #include <Common/Constants.h>
 
 #include "../PTaxi/PTAndTaxiTripFinder.h"
-#include "../PTaxi/StationBCHQuery.h"
-#include "../PTaxi/PALSToStations.h"
-#include "../PTaxi/DALSToStations.h"
-#include "../PTaxi/OrdinaryToStations.h"
-#include "../PTaxi/PBNSToStations.h"
-#include "../PTaxi/StationBucketsEnvironment.h"
-#include "../PTaxi/StationsInEllipse.h"
-#include "../PTaxi/TaxiLegApproximation.h"
-#include "../PTaxi/TaxiULTRARAPTOR.h"
+#include "../PTaxi/FirstTaxiLeg/StationBCHQuery.h"
+#include "../PTaxi/FirstTaxiLeg/PALSToStations.h"
+#include "../PTaxi/FirstTaxiLeg/DALSToStations.h"
+#include "../PTaxi/FirstTaxiLeg/OrdinaryToStations.h"
+#include "../PTaxi/FirstTaxiLeg/PBNSToStations.h"
+#include "../PTaxi/Station/StationBucketsEnvironment.h"
+#include "../PTaxi/Station/StationsInEllipse.h"
+#include "../PTaxi/SecondTaxiLeg/TaxiLegApproximation.h"
+#include "../PTaxi/PTLeg/TaxiULTRARAPTOR.h"
 
 #include <ULTRA/Algorithms/RAPTOR/ULTRARAPTOR.h>
 #include <ULTRA/DataStructures/Queries/Queries.h>

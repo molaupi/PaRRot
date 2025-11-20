@@ -12,8 +12,8 @@
 #include <ULTRA/Algorithms/RAPTOR/InitialTransfers.h>
 #include <ULTRA/Algorithms/RAPTOR/Profiler.h>
 
-#include "Results.h"
-#include "Station.h"
+#include "../Results.h"
+#include "../Station/Station.h"
 
 namespace RAPTOR {
 

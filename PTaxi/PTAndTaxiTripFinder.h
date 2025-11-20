@@ -1,8 +1,8 @@
 #pragma once
 
 #include "PTAndTaxiTriple.h"
-#include "Station.h"
-#include "IntermediateResultStats.h"
+#include "Station/Station.h"
+#include "Stats/IntermediateResultStats.h"
 #include <KARRI/Algorithms/CH/CH.h>
 #include <KARRI/Algorithms/KaRRi/RequestState/RelevantPDLocs.h>
 

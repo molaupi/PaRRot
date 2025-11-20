@@ -27,8 +27,8 @@
 
 #include <cassert>
 #include <vector>
-#include "KARRI/Tools/Constants.h"
-#include "KARRI/DataStructures/Containers/TimestampedVector.h"
+#include <KARRI/Tools/Constants.h>
+#include <KARRI/DataStructures/Containers/TimestampedVector.h>
 
 namespace karri {
 

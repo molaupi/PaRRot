@@ -25,12 +25,12 @@
 
 #pragma once
 
-#include "KARRI/Algorithms/CH/CH.h"
-#include "KARRI/Algorithms/KaRRi/LastStopSearches/TentativeLastStopDistances.h"
-#include "KARRI/DataStructures/Labels/BasicLabelSet.h"
-#include "KARRI/DataStructures/Containers/LightweightSubset.h"
-#include "KARRI/Tools/Constants.h"
-#include "TentativeStationDistances.h"
+#include <KARRI/Algorithms/CH/CH.h>
+#include <KARRI/Algorithms/KaRRi/LastStopSearches/TentativeLastStopDistances.h>
+#include <KARRI/DataStructures/Labels/BasicLabelSet.h>
+#include <KARRI/DataStructures/Containers/LightweightSubset.h>
+#include <KARRI/Tools/Constants.h>
+#include "../Station/TentativeStationDistances.h"
 
 namespace karri {
 

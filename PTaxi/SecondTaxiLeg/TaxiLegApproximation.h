@@ -25,12 +25,12 @@
 
 #pragma once
 
-#include "KARRI/Algorithms/CH/CH.h"
-#include "KARRI/Algorithms/Buckets/DynamicBucketContainer.h"
-#include "KARRI/DataStructures/Labels/BasicLabelSet.h"
-#include "KARRI/DataStructures/Containers/LightweightSubset.h"
-#include "KARRI/Tools/Constants.h"
-#include "StationEntry.h"
+#include <KARRI/Algorithms/CH/CH.h>
+#include <KARRI/Algorithms/Buckets/DynamicBucketContainer.h>
+#include <KARRI/DataStructures/Labels/BasicLabelSet.h>
+#include <KARRI/DataStructures/Containers/LightweightSubset.h>
+#include <KARRI/Tools/Constants.h>
+#include "../Station/StationEntry.h"
 
 namespace karri {
 
