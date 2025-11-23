@@ -290,6 +290,138 @@ public:
     }
 };
 
+class RunULTRARAPTORWithGivenQueries : public ParameterizedCommand {
+
+public:
+    RunULTRARAPTORWithGivenQueries(BasicShell &shell) :
+            ParameterizedCommand(shell, "runULTRARAPTORWithGivenQueries", "Runs ULTRA-RAPTOR for the given queries.") {
+        addParameter("RAPTOR input file");
+        addParameter("CH data");
+        addParameter("Transfer graph");
+        addParameter("KaRRi requests");
+        addParameter("Journey output file");
+        addParameter("Prevent Walking", "true", {"true", "false"});
+    }
+
+    virtual void execute() noexcept {
+        const TransferGraph graph(getParameter("Transfer graph"));
+        const std::string karriRequestsFileName = getParameter("KaRRi requests");
+
+        ULTRAGraph::printInfo(graph);
+        graph.printAnalysis();
+
+        Geometry::Rectangle boundingBox = Geometry::Rectangle::BoundingBox(graph[Coordinates]);
+        Geometry::GeoMetricAproximation metric = Geometry::GeoMetricAproximation::ComputeCorrection(boundingBox.center());
+        CoordinateTree<Geometry::GeoMetricAproximation> ct(metric, graph[Coordinates]);
+        std::vector<VertexQuery> queries;
+        std::vector<int> distances;
+
+
+        static constexpr IO::IgnoreColumn ReadMode = IO::IGNORE_NO_COLUMN;
+        IO::CSVReader<5, IO::TrimChars<>, IO::DoubleQuoteEscape<',','"'>> in(karriRequestsFileName);
+        in.readHeader(ReadMode, "lat_origin", "lon_origin", "lat_destination", "lon_destination", "req_time");
+        double latitudeOrigin = 0.0;
+        double longitudeOrigin = 0.0;
+        double latitudeDestination = 0.0;
+        double longitudeDestination = 0.0;
+        int requestTime = 0;
+        while (in.readRow(latitudeOrigin, longitudeOrigin, latitudeDestination, longitudeDestination, requestTime)) {
+            const auto pointOrigin = Geometry::Point(Construct::LatLong, latitudeOrigin, longitudeOrigin);
+            const auto pointDestination = Geometry::Point(Construct::LatLong, latitudeDestination, longitudeDestination);
+            const Vertex originVertex = ct.getNearestNeighbor(pointOrigin);
+            const double originDistance = Geometry::geoDistanceInCM(pointOrigin, graph.get(Coordinates, originVertex));
+            const Vertex destinationVertex = ct.getNearestNeighbor(pointDestination);
+            const double destinationDistance = Geometry::geoDistanceInCM(pointDestination, graph.get(Coordinates, destinationVertex));
+            distances.push_back(originDistance);
+            distances.push_back(destinationDistance);
+            const VertexQuery query(Vertex(originVertex), Vertex(destinationVertex), requestTime);
+            queries.push_back(query);
+        }
+        
+
+        RAPTOR::Data raptorData = RAPTOR::Data::FromBinary(getParameter("RAPTOR input file"));
+        raptorData.useImplicitDepartureBufferTimes();
+        raptorData.printInfo();
+        ULTRACH::CH ch(getParameter("CH data"));
+
+        const bool preventWalking = getParameter<bool>("Prevent Walking");
+        const std::string outFileName = getParameter("Journey output file");
+        if (preventWalking) {
+            RAPTOR::ULTRARAPTOR<RAPTOR::AggregateProfiler, true> algorithm(raptorData, ch);
+            runQueriesAndWriteJourneyStats(algorithm, queries, outFileName);
+        } else {
+            RAPTOR::ULTRARAPTOR<RAPTOR::AggregateProfiler, false> algorithm(raptorData, ch);
+            runQueriesAndWriteJourneyStats(algorithm, queries, outFileName);
+        }
+    }
+
+private:
+
+    template<typename Algorithm>
+    void runQueriesAndWriteJourneyStats(Algorithm &algorithm, const std::vector<VertexQuery> &queries,
+                                        const std::string &outFileName) noexcept {
+        const size_t n = queries.size();
+        std::cout << "Running queries ..." << std::flush;
+        ULTRAProgressBar progressBar(n);
+        progressBar.SetDotOutputStep(1);
+        progressBar.SetPercentOutputStep(5);
+        double numJourneys = 0;
+        std::ofstream out(outFileName);
+        if (!out.good()) {
+            std::cerr << "Could not open output file " << outFileName << " for writing journeys.";
+            return;
+        }
+        out << "request_id,departure_time,arrival_time,num_trips,"
+               "accegr_transfer_time,intermediate_transfer_time,wait_time,in_vehicle_time\n";
+        size_t requestId = 0;
+        for (const VertexQuery &query: queries) {
+            algorithm.run(query.source, query.departureTime, query.target);
+            numJourneys += algorithm.getJourneys().size();
+            const auto journeys = algorithm.getJourneys();
+            const auto arrivals = algorithm.getArrivals();
+            Assert(journeys.size() == arrivals.size());
+            for (size_t i = 0; i < journeys.size(); ++i) {
+                const RAPTOR::Journey &journey = journeys[i];
+                const auto &arrival = arrivals[i];
+                const int accEgrTransferTime = RAPTOR::initialTransferTime(journey);
+                const int intermediateTransferTime = RAPTOR::intermediateTransferTime(journey);
+                int inVehicleTime = 0;
+                for (const auto &leg: journey) {
+                    if (leg.usesRoute) {
+                        inVehicleTime += leg.arrivalTime - leg.departureTime;
+                    }
+                }
+                const int waitTime = arrival.arrivalTime - query.departureTime - inVehicleTime - accEgrTransferTime -
+                                     intermediateTransferTime;
+                out << requestId << "," << query.departureTime << "," << arrival.arrivalTime << ","
+                    << arrival.numberOfTrips << "," << accEgrTransferTime << ","
+                    << intermediateTransferTime << "," << waitTime << "," << inVehicleTime << "\n";
+
+//                // print coordinates of path for debug
+//                const auto path = RAPTOR::journeyToPath(journey);
+//                std::cout << "Path for request " << requestId << ", journey" << i << ": ";
+//                for (size_t j = 1; j < path.size() - 1; ++j) {
+//                    const auto coord = transferGraph.get(Coordinates, path[j]);
+//                    std::cout << "(" << path[j].value() << "," << coord.latitude << "," << coord.longitude << ")";
+//                    if (j + 1 < path.size() - 1) {
+//                        std::cout << ", ";
+//                    } else {
+//                        std::cout << std::endl;
+//                    }
+//                }
+
+            }
+            ++requestId;
+            ++progressBar;
+        }
+        out.close();
+        std::cout << " done." << std::endl;
+        algorithm.getProfiler().printStatistics();
+        std::cout << "Avg. journeys: " << String::prettyDouble(numJourneys / n) << std::endl;
+    }
+};
+
+
 class RunTransitiveTBQueries : public ParameterizedCommand {
 public:
     RunTransitiveTBQueries(BasicShell& shell)

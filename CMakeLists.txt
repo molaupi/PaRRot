@@ -78,7 +78,7 @@ endif ()
 set(PARROT_INCLUDE_DIR ${CMAKE_SOURCE_DIR}/include ${CMAKE_SOURCE_DIR}/External/kassert/include)
 
 # Directories containing .cc source files.
-set(SOURCE_DIRECTORIES Runners RawData)
+set(SOURCE_DIRECTORIES Runners RawData ULTRA_Runnables)
 
 foreach(SRC_DIR ${SOURCE_DIRECTORIES})
   add_subdirectory(${SRC_DIR})

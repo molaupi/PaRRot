@@ -20,13 +20,12 @@ Within the interactive shell:
 As a result, you will obtain the CH files and raptor binary required to run the ULTRARAPTOR algorithm.
 `runULTRARAPTORQueries ../Networks/Berlin/ULTRA/Berlin-1pct_raptor-shortcuts.binary ../Networks/Berlin/ULTRA/Berlin-1pct_CH 10`
 
-## Generate requests in ULTRA and transform into requests for KaRRi
-In ULTRA: run `randomVertexQueries ../Networks/Berlin/ULTRA/raptor.binary ../Networks/Berlin/ULTRA/CH 16569 ../Networks/Berlin/CSV/requests.csv` to generate random requests with latitude and longtitude for the origin and destination.
+## Transform KaRRi Requests to LatLng to run in ULTRA
 
 In KaRRi: 
-- Run `./RawData/TransformLocations -tar-g Networks/Berlin/KARRI/Graphs/Berlin-1pct_pedestrian_veh.gr.bin -p Networks/Berlin/CSV/requests.csv -in-repr lat-lng -out-repr edge-id -psg -o Networks/Berlin/Preprocessing/Taxi/requests.mapped` to map the latitude and longtitude to KaRRi edge ids for requests.
+- Run `./RawData/TransformRequestsToLatLng` to map the requests from edge_id to latitude and longtitude.
 
-With the python script `python3 prepare_csv.py --mode merge_files --karri_requests Networks/Berlin/KARRI/Requests/Berlin-1pct_pedestrian.csv --ultra_requests Networks/Berlin/CSV/requests.csv --transformed_requests Networks/Berlin/Preprocessing/Taxi/requests.mapped.csv --output Networks/Berlin/KARRI/Requests/Berlin-1pct_random.csv`, the request file `Berlin-1pct_random.csv` will be created, which is a combined request file, including valid edge ids and vertex ids for KaRRi and ULTRA, respectively.
+In ULTRA: run `runULTRARAPTORWithGivenQueries /home/nghalinh2711/PARROT/Networks/Berlin/ULTRA/Berlin-1pct_raptor-shortcuts.binary /home/nghalinh2711/PARROT/Networks/Berlin/ULTRA/Berlin-1pct_CH /home/nghalinh2711/PARROT/Networks/Berlin/ULTRA/Berlin-1pct_raptor.binary.graph /home/nghalinh2711/PARROT/Networks/Berlin/KARRI/Requests/Berlin-1pct_pedestrian_latlng.csv /home/nghalinh2711/PARROT/Networks/Berlin/Outputs/Berlin-1pct_journeys.csv false` to run ULTRARAPTOR algorithm with KaRRi requests.
 
 ## Build Static Buckets for PTaxi
 You must run the executables BuildStaticBuckets to generate required input data for PTaxi.
