@@ -28,17 +28,15 @@ namespace karri {
 
 // Initializes the request state for a new request.
     template<typename VehInputGraphT,
-            typename PsgInputGraphT,
-            typename VehCHEnvT,
-            typename PsgCHEnvT>
+            typename VehCHEnvT>
     class RequestStateInitializer {
 
     public:
-        RequestStateInitializer(const VehInputGraphT &vehInputGraph, const PsgInputGraphT &psgInputGraph,
-            const VehCHEnvT &vehChEnv, const PsgCHEnvT &psgChEnv)
-                : vehInputGraph(vehInputGraph), psgInputGraph(psgInputGraph),
-                  vehCh(vehChEnv.getCH()), psgCh(psgChEnv.getCH()),
-                  vehChQuery(vehChEnv.template getFullCHQuery<>()), psgChQuery(psgChEnv.template getFullCHQuery<>()) {}
+        RequestStateInitializer(const VehInputGraphT &vehInputGraph,
+            const VehCHEnvT &vehChEnv)
+                : vehInputGraph(vehInputGraph),
+                  vehCh(vehChEnv.getCH()),
+                  vehChQuery(vehChEnv.template getFullCHQuery<>()) {}
 
 
         std::pair<RequestState, stats::DispatchingPerformanceStats> initializeRequestState(const Request &req) {
@@ -61,28 +59,6 @@ namespace karri {
             const auto directSearchTime = timer.elapsed<std::chrono::nanoseconds>();
             stats.initializationStats.computeODDistanceTime = directSearchTime;
 
-
-            if (!InputConfig::getInstance().alwaysUseVehicle) {
-                // Try pseudo-assignment for passenger walking to destination without using vehicle
-                timer.restart();
-                
-                KASSERT(psgInputGraph.toCarEdge(vehInputGraph.toPsgEdge(req.origin)) == req.origin);
-                const auto originInPsgGraph = vehInputGraph.toPsgEdge(req.origin);
-                const int originHeadRank = psgCh.rank(psgInputGraph.edgeHead(originInPsgGraph));
-
-                KASSERT(psgInputGraph.toCarEdge(vehInputGraph.toPsgEdge(req.destination)) == req.destination);
-                const auto destInPsgGraph = vehInputGraph.toPsgEdge(req.destination);
-                const int destTailRank = psgCh.rank(psgInputGraph.edgeTail(destInPsgGraph));
-                const int destOffset = psgInputGraph.travelTime(destInPsgGraph);
-
-                psgChQuery.run(originHeadRank, destTailRank);
-                const auto totalDist = psgChQuery.getDistance() + destOffset;
-                requestState.tryNotUsingVehicleAssignment(totalDist, destOffset);
-
-                const auto notUsingVehiclesTime = timer.elapsed<std::chrono::nanoseconds>();
-                stats.initializationStats.notUsingVehicleTime = notUsingVehiclesTime;
-            }
-
             return {requestState, stats};
         }
 
@@ -90,14 +66,10 @@ namespace karri {
     private:
 
         using VehCHQuery = typename VehCHEnvT::template FullCHQuery<>;
-        using PsgCHQuery = typename PsgCHEnvT::template FullCHQuery<>;
 
         const VehInputGraphT &vehInputGraph;
-        const PsgInputGraphT &psgInputGraph;
         const CH &vehCh;
-        const CH &psgCh;
         VehCHQuery vehChQuery;
-        PsgCHQuery psgChQuery;
 
     };
 }

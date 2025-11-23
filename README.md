@@ -18,6 +18,7 @@ Within the interactive shell:
 - Run `buildCoreCH ../Networks/Berlin/ULTRA/Berlin-1pct_raptor.binary ../Networks/Berlin/ULTRA/Berlin-1pct_coreCHOrder ../Networks/Berlin/ULTRA/Berlin-1pct_coreCH ../Networks/Berlin/ULTRA/Berlin-1pct_raptor-core.binary`
 - Run `computeStopToStopShortcuts ../Networks/Berlin/ULTRA/Berlin-1pct_raptor-core.binary ../Networks/Berlin/ULTRA/Berlin-1pct_raptor-shortcuts.binary 0`
 As a result, you will obtain the CH files and raptor binary required to run the ULTRARAPTOR algorithm.
+`runULTRARAPTORQueries ../Networks/Berlin/ULTRA/Berlin-1pct_raptor-shortcuts.binary ../Networks/Berlin/ULTRA/Berlin-1pct_CH 10`
 
 ## Generate requests in ULTRA and transform into requests for KaRRi
 In ULTRA: run `randomVertexQueries ../Networks/Berlin/ULTRA/raptor.binary ../Networks/Berlin/ULTRA/CH 16569 ../Networks/Berlin/CSV/requests.csv` to generate random requests with latitude and longtitude for the origin and destination.

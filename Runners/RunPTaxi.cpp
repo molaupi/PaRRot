@@ -576,8 +576,8 @@ int main(int argc, char *argv[]) {
         using DALSInsertionsFinderImpl = DALSAssignmentsFinder<DALSStrategy>;
         DALSInsertionsFinderImpl dalsInsertionsFinder(dalsStrategy);
 
-        using RequestStateInitializerImpl = RequestStateInitializer<VehicleInputGraph, PsgInputGraph, VehCHEnv, PsgCHEnv>;
-        RequestStateInitializerImpl requestStateInitializer(vehicleInputGraph, psgInputGraph, *vehChEnv, *psgChEnv);
+        using RequestStateInitializerImpl = RequestStateInitializer<VehicleInputGraph, VehCHEnv>;
+        RequestStateInitializerImpl requestStateInitializer(vehicleInputGraph, *vehChEnv);
 
         using PDLocsFinderImpl = PDLocsFinder<VehicleInputGraph, PsgInputGraph, VehicleToPDLocQueryImpl>;
         PDLocsFinderImpl pdLocsFinder(vehicleInputGraph, psgInputGraph, revPsgGraph, vehicleToPdLocQuery);
@@ -610,9 +610,7 @@ int main(int argc, char *argv[]) {
 
             // edge id in the station mapping file is the edge id in the road network
             int psgEdgeId = vehicleInputGraph.toPsgEdge(edgeId);
-            int psgVertexId = psgInputGraph.edgeHead(psgEdgeId);
-            int psgChOrder = psgChEnv->getCH().rank(psgVertexId);
-            stations.push_back({stationId, psgEdgeId, psgChOrder, edgeId});
+            stations.push_back({stationId, psgEdgeId, edgeId});
             stationId++;
         }
         std::cout << "done.\n";
@@ -677,8 +675,6 @@ int main(int argc, char *argv[]) {
                 RelevantPDLocsFilterImpl, 
                 VehicleInputGraph, 
                 VehCHEnv, 
-                PsgInputGraph, 
-                PsgCHEnv, 
                 StationBucketsEnv,
                 StationBCH,
                 PALSToStationsImpl,
@@ -694,7 +690,7 @@ int main(int argc, char *argv[]) {
                                                     feasibleEllipticPickups, feasibleEllipticDropoffs, ellipticSearches, 
                                                     ffPDDistanceQuery, ordinaryInsertionsFinder, pbnsInsertionsFinder, 
                                                     palsInsertionsFinder, dalsInsertionsFinder, relevantPdLocsFilter, 
-                                                    vehicleInputGraph, *vehChEnv, psgInputGraph, *psgChEnv, fleet, routeState,
+                                                    vehicleInputGraph, *vehChEnv, fleet, routeState,
                                                     stations, queries, stationBucketsEnv, palsToStations, stationsInEllipse, dalsToStations, pbnsToStations,
                                                     ptAlgorithm, ptAlgorithmWithTaxi);
 

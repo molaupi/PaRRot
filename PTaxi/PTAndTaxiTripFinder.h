@@ -25,8 +25,6 @@ namespace karri {
             typename RelevantPdLocsFilterT,
             typename VehicleInputGraphT,
             typename VehCHEnvT,
-            typename PsgInputGraphT,
-            typename PsgCHEnvT,
             typename StationBucketsEnvT,
             typename StationBCHQueryT,
             typename PALSToStationsT,
@@ -59,8 +57,6 @@ namespace karri {
                             RelevantPdLocsFilterT &relevantPdLocsFilter,
                             const VehicleInputGraphT &vehInputGraph,
                             const VehCHEnvT &vehChEnv,
-                            const PsgInputGraphT &psgInputGraph,
-                            const PsgCHEnvT &psgChEnv,
                             const Fleet &fleet,
                             RouteState &routeState,
                             PTStations stations,
@@ -85,8 +81,6 @@ namespace karri {
                   dalsAssignments(dalsAssignments),
                   relevantPdLocsFilter(relevantPdLocsFilter),
                   vehInputGraph(vehInputGraph),
-                  psgInputGraph(psgInputGraph),
-                  psgCh(psgChEnv.getCH()),
                   vehCh(vehChEnv.getCH()),
                   routeState(routeState),
                   fleet(fleet),
@@ -340,8 +334,6 @@ namespace karri {
         RelevantPdLocsFilterT &relevantPdLocsFilter; // Additionally filters feasible pickups/dropoffs found by elliptic BCH searches.
 
         const VehicleInputGraphT &vehInputGraph;
-        const PsgInputGraphT &psgInputGraph;
-        const CH &psgCh;
         const CH &vehCh;
 
         const Fleet &fleet;

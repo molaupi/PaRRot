@@ -30,7 +30,6 @@
 struct Station {
     int stationId;
     int psgEdgeId; // edge ID in the passenger road network
-    int psgChOrder; // order in the passenger CH
     int vehEdgeId; // edge ID in the vehicle road network
 };
 
