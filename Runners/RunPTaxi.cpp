@@ -331,9 +331,9 @@ int main(int argc, char *argv[]) {
 
         if (csvFilesInLoudFormat) {
             reqFileReader.read_header(io::ignore_missing_column, "pickup_spot", "dropoff_spot", "min_dep_time",
-                                      "num_riders", "sourceId", "targetId");
+                                      "num_riders", "source", "target");
         } else {
-            reqFileReader.read_header(io::ignore_missing_column, "origin", "destination", "req_time", "num_riders", "sourceId", "targetId");
+            reqFileReader.read_header(io::ignore_missing_column, "origin", "destination", "req_time", "num_riders", "source", "target");
         }
 
         numRiders = -1;
@@ -355,7 +355,7 @@ int main(int argc, char *argv[]) {
             if (numRiders == -1) // If number of riders was not specified, assume one rider
                 numRiders = 1;
             requests.push_back({requestId, originSeqId, destSeqId, requestTime * 10, numRiders});
-            if (reqFileReader.has_column("sourceId") && reqFileReader.has_column("targetId"))
+            if (reqFileReader.has_column("source") && reqFileReader.has_column("target"))
                 queries.push_back(VertexQuery(Vertex(source), Vertex(target), requestTime));
             numRiders = -1;
         }
@@ -621,11 +621,11 @@ int main(int argc, char *argv[]) {
         std::cout << "done.\n";
 
         // Use ULTRA CH to build ULTRA algorithm instance
-        using PTAlgorithm = RAPTOR::ULTRARAPTOR<RAPTOR::NoProfiler, true>;
+        using PTAlgorithm = RAPTOR::ULTRARAPTOR<RAPTOR::NoProfiler>;
 
         PTAlgorithm ptAlgorithm(raptor, ch, bucketGraphFileName);
 
-        using PTAlgorithmWithTaxi = RAPTOR::TaxiULTRARAPTOR<BasicLabelSet<0, ParentInfo::FULL_PARENT_INFO>, RAPTOR::NoProfiler, true>;
+        using PTAlgorithmWithTaxi = RAPTOR::TaxiULTRARAPTOR<BasicLabelSet<0, ParentInfo::FULL_PARENT_INFO>, RAPTOR::NoProfiler>;
 
         PTAlgorithmWithTaxi ptAlgorithmWithTaxi(raptor, ch, stations, bucketGraphFileName);
 

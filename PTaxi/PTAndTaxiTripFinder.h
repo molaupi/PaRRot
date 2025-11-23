@@ -115,10 +115,11 @@ namespace karri {
             RequestState invalidTaxiResponse;
             std::pair<RequestState, stats::DispatchingPerformanceStats> invalidTaxiResponseWithStats{invalidTaxiResponse, stats::DispatchingPerformanceStats()};
             
-            // const auto query = queries[req.requestId];
-            // ptAlgorithm.run(query.source, query.departureTime, query.target);
-            // auto ptOnlyParetoFront = ptAlgorithm.getJourneys();
-            PTResult ptOnlyResponse;
+            const auto query = queries[req.requestId];
+            ptAlgorithm.run(query.source, query.departureTime, query.target);
+            auto ptOnlyParetoFront = ptAlgorithm.getJourneys();
+
+            PTResult ptOnlyResponse(ptOnlyParetoFront, curReqState);
             PTResult invalidPTResponse;
 
             size_t ptOnlyLegCount = ptOnlyResponse.getBestJourney().size();
@@ -133,9 +134,9 @@ namespace karri {
             taxiLegApproximation.findDistancesFromStationsToDest(req.destination, maxTripTime);
             const auto &distFromStations = taxiLegApproximation.getDistancesFromStations();
 
-            // ptAlgorithmWithTaxi.run(query.source, query.departureTime, query.target, firstTaxiLeg, distFromStations);
-            // auto ptLegParetoFront = ptAlgorithmWithTaxi.getJourneys();
-            PTResult ptLegResponse;
+            ptAlgorithmWithTaxi.run(query.source, query.departureTime, query.target, firstTaxiLeg, distFromStations);
+            auto ptLegParetoFront = ptAlgorithmWithTaxi.getJourneys();
+            PTResult ptLegResponse(ptLegParetoFront, curReqState);
 
             size_t ptLegCount = ptLegResponse.getBestJourney().size();
 
@@ -187,11 +188,11 @@ namespace karri {
                                << insertionTypeCounts[5] << ", "
                                << validResultsCount << "\n";
 
-            // ptLogger << req.requestId << ", "
-            //         << ptOnlyResponse.getBestCost() << ", "
-            //         << ptOnlyLegCount << ", "
-            //         << intermediateResult.getPTLegCost() << ", "
-            //         << ptLegCount << "\n";
+            ptLogger << req.requestId << ", "
+                    << ptOnlyResponse.getBestCost() << ", "
+                    << ptOnlyLegCount << ", "
+                    << intermediateResult.getPTLegCost() << ", "
+                    << ptLegCount << "\n";
 
             // TODO: IntermediateResult -> PTAndTaxiTriple
             // if (combinationIsBestCost) return PTAndTaxiTriple();

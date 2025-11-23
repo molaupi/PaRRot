@@ -27,6 +27,8 @@ In KaRRi:
 
 In ULTRA: run `runULTRARAPTORWithGivenQueries /home/nghalinh2711/PARROT/Networks/Berlin/ULTRA/Berlin-1pct_raptor-shortcuts.binary /home/nghalinh2711/PARROT/Networks/Berlin/ULTRA/Berlin-1pct_CH /home/nghalinh2711/PARROT/Networks/Berlin/ULTRA/Berlin-1pct_raptor.binary.graph /home/nghalinh2711/PARROT/Networks/Berlin/KARRI/Requests/Berlin-1pct_pedestrian_latlng.csv /home/nghalinh2711/PARROT/Networks/Berlin/Outputs/Berlin-1pct_journeys.csv false` to run ULTRARAPTOR algorithm with KaRRi requests.
 
+With the python script `python3 prepare_csv.py --mode merge_files --karri_requests Networks/Berlin/KARRI/Requests/Berlin-1pct_pedestrian.csv --ultra_requests Networks/Berlin/KARRI/Requests/Berlin-1pct_ULTRA_requests.csv --output Networks/Berlin/KARRI/Requests/Berlin-1pct_merged.csv` will be created, which is a combined request file, including valid edge ids and vertex ids for KaRRi and ULTRA, respectively.
+
 ## Build Static Buckets for PTaxi
 You must run the executables BuildStaticBuckets to generate required input data for PTaxi.
 These includes:
