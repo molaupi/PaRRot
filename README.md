@@ -25,7 +25,7 @@ As a result, you will obtain the CH files and raptor binary required to run the 
 In KaRRi: 
 - Run `./RawData/TransformRequestsToLatLng` to map the requests from edge_id to latitude and longtitude.
 
-In ULTRA: run `runULTRARAPTORWithGivenQueries /home/nghalinh2711/PARROT/Networks/Berlin/ULTRA/Berlin-1pct_raptor-shortcuts.binary /home/nghalinh2711/PARROT/Networks/Berlin/ULTRA/Berlin-1pct_CH /home/nghalinh2711/PARROT/Networks/Berlin/ULTRA/Berlin-1pct_raptor.binary.graph /home/nghalinh2711/PARROT/Networks/Berlin/KARRI/Requests/Berlin-1pct_pedestrian_latlng.csv /home/nghalinh2711/PARROT/Networks/Berlin/Outputs/Berlin-1pct_journeys.csv false` to run ULTRARAPTOR algorithm with KaRRi requests.
+In ULTRA: run `runULTRARAPTORWithGivenQueries ../Networks/Berlin/ULTRA/Berlin-1pct_raptor-shortcuts.binary ../Networks/Berlin/ULTRA/Berlin-1pct_CH ../Networks/Berlin/ULTRA/Berlin-1pct_raptor.binary.graph ../Networks/Berlin/KARRI/Requests/Berlin-1pct_pedestrian_latlng.csv ../Networks/Berlin/Outputs/Berlin-1pct_journeys_withWalking.csv false` to run ULTRARAPTOR algorithm with KaRRi requests.
 
 With the python script `python3 prepare_csv.py --mode merge_files --karri_requests Networks/Berlin/KARRI/Requests/Berlin-1pct_pedestrian.csv --ultra_requests Networks/Berlin/KARRI/Requests/Berlin-1pct_ULTRA_requests.csv --output Networks/Berlin/KARRI/Requests/Berlin-1pct_merged.csv` will be created, which is a combined request file, including valid edge ids and vertex ids for KaRRi and ULTRA, respectively.
 

@@ -1,13 +1,13 @@
 parseGTFS ../Networks/Berlin/GTFS/ ../Networks/Berlin/ULTRA/GTFS.binary
-loadDimacsGraph ../Networks/Berlin/ULTRA/OSM/Berlin-1pct_pedestrian_psg ../Networks/Berlin/ULTRA/OSM/Berlin-1pct_pedestrian_psg_graph
+loadDimacsGraph ../Networks/Berlin/KARRI/Graphs/Berlin_pedestrian_psg ../Networks/Berlin/ULTRA/OSM/Berlin_pedestrian_psg_graph
 gtfsToIntermediate ../Networks/Berlin/ULTRA/GTFS.binary 20250520 20250521 true true ../Networks/Berlin/ULTRA/intermediate.binary
 applyBoundingBox ../Networks/Berlin/ULTRA/intermediate.binary berlin ../Networks/Berlin/ULTRA/intermediate.binary
 reduceToMaximumConnectedComponent ../Networks/Berlin/ULTRA/intermediate.binary ../Networks/Berlin/ULTRA/intermediate.binary
 reduceGraph ../Networks/Berlin/ULTRA/intermediate.binary ../Networks/Berlin/ULTRA/intermediate.binary
 makeOneHopTransfers ../Networks/Berlin/ULTRA/intermediate.binary 86400 ../Networks/Berlin/ULTRA/intermediate.binary true
-addGraph ../Networks/Berlin/ULTRA/intermediate.binary ../Networks/Berlin/ULTRA/OSM/Berlin-1pct_pedestrian_psg_graph ../Networks/Berlin/ULTRA/intermediate.binary
+addGraph ../Networks/Berlin/ULTRA/intermediate.binary ../Networks/Berlin/ULTRA/OSM/Berlin_pedestrian_psg_graph ../Networks/Berlin/ULTRA/intermediate.binary
 reduceToMaximumConnectedComponent ../Networks/Berlin/ULTRA/intermediate.binary ../Networks/Berlin/ULTRA/intermediate.binary
-applyMaxTransferSpeed ../Networks/Berlin/ULTRA/intermediate.binary 4.5 ../Networks/Berlin/ULTRA/intermediate.binary
+applyConstantTransferSpeed ../Networks/Berlin/ULTRA/intermediate.binary 5 false ../Networks/Berlin/ULTRA/intermediate.binary
 reduceGraph ../Networks/Berlin/ULTRA/intermediate.binary ../Networks/Berlin/ULTRA/intermediate.binary
 intermediateToRAPTOR ../Networks/Berlin/ULTRA/intermediate.binary ../Networks/Berlin/ULTRA/Berlin-1pct_raptor.binary
 raptorToCSV ../Networks/Berlin/ULTRA/Berlin-1pct_raptor.binary ../Networks/Berlin/CSV/1pct/
