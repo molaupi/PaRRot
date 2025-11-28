@@ -81,3 +81,8 @@ add_executable(BuildStaticBuckets BuildStaticBuckets.cc)
 target_compile_definitions(BuildStaticBuckets PRIVATE CSV_IO_NO_THREAD)
 target_link_libraries(BuildStaticBuckets routingkit vectorclass fast_cpp_csv_parser kassert)
 target_include_directories(BuildStaticBuckets PUBLIC ${PARROT_INCLUDE_DIR})
+
+add_executable(TransformRequests TransformRequests.cc)
+target_compile_definitions(TransformRequests PRIVATE CSV_IO_NO_THREAD)
+target_link_libraries(TransformRequests fast_cpp_csv_parser)
+target_include_directories(TransformRequests PUBLIC ${PARROT_INCLUDE_DIR})

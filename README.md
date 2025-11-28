@@ -7,7 +7,7 @@ In `ULTRA_Runnables`: build the executables with `make NetworkRelease`.
 Run the executable `./Network` and within the interactive shell `runScript BuildBerlinNetwork.script`. This creates the RAPTOR binaries and the CSV files.
 With the python script `python3 prepare_csv.py --mode modify_stops --csv_directory Networks/Berlin/CSV/1pct`, the file `modified_stops.csv` will be created, which can be read by KaRRi to calculate the edge ids of the PT stations.
 
-In KaRRi: run the Transform Locations executable to get the mapped stations with the following command (note that paths are relative)
+In KaRRi: run the Transform Locations executable to get the mapped stations with the following command 
 `./RawData/TransformLocations -tar-g Networks/Berlin/KARRI/Graphs/Berlin-1pct_pedestrian_veh.gr.bin -v Networks/Berlin/CSV/1pct/modified_stops.csv -l-col-name latlon -in-repr lat-lng -out-repr edge-id -psg -o Networks/Berlin/Preprocessing/PT/Berlin-1pct_stations.mapped`
 
 ## Build CH, build core CH and compute shortcuts for ULTRA
@@ -20,14 +20,11 @@ Within the interactive shell:
 As a result, you will obtain the CH files and raptor binary required to run the ULTRARAPTOR algorithm.
 `runULTRARAPTORQueries ../Networks/Berlin/ULTRA/Berlin-1pct_raptor-shortcuts.binary ../Networks/Berlin/ULTRA/Berlin-1pct_CH 10`
 
-## Transform KaRRi Requests to LatLng to run in ULTRA
-
-In KaRRi: 
-- Run `./RawData/TransformRequestsToLatLng` to map the requests from edge_id to latitude and longtitude.
+## Transform KaRRi Requests to ULTRA Requests (via LatLng)
+Run `./RawData/TransformRequests -veh-g /home/nghalinh2711/PARROT/Networks/Berlin/KARRI/Graphs/Berlin-1pct_pedestrian_veh.gr.bin -psg-g /home/nghalinh2711/PARROT/Networks/Berlin/KARRI/Graphs/Berlin-1pct_pedestrian_psg.gr.bin -r /home/nghalinh2711/PARROT/Networks/Berlin/KARRI/Requests/Berlin-1pct_pedestrian.csv -transfer-graph /home/nghalinh2711/PARROT/Networks/Berlin/ULTRA/Berlin-1pct_raptor.binary.graph -o /home/nghalinh2711/PARROT/Networks/Berlin/KARRI/Requests/Berlin-1pct_transformed2.csv` to obtain a requests file with both KaRRi edge ids and ULTRA vertex ids.
 
 In ULTRA: run `runULTRARAPTORWithGivenQueries ../Networks/Berlin/ULTRA/Berlin-1pct_raptor-shortcuts.binary ../Networks/Berlin/ULTRA/Berlin-1pct_CH ../Networks/Berlin/ULTRA/Berlin-1pct_raptor.binary.graph ../Networks/Berlin/KARRI/Requests/Berlin-1pct_pedestrian_latlng.csv ../Networks/Berlin/Outputs/Berlin-1pct_journeys_withWalking.csv false` to run ULTRARAPTOR algorithm with KaRRi requests.
 
-With the python script `python3 prepare_csv.py --mode merge_files --karri_requests Networks/Berlin/KARRI/Requests/Berlin-1pct_pedestrian.csv --ultra_requests Networks/Berlin/KARRI/Requests/Berlin-1pct_ULTRA_requests.csv --output Networks/Berlin/KARRI/Requests/Berlin-1pct_merged.csv` will be created, which is a combined request file, including valid edge ids and vertex ids for KaRRi and ULTRA, respectively.
 
 ## Build Static Buckets for PTaxi
 You must run the executables BuildStaticBuckets to generate required input data for PTaxi.
