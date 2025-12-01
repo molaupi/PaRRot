@@ -21,9 +21,9 @@ As a result, you will obtain the CH files and raptor binary required to run the 
 `runULTRARAPTORQueries ../Networks/Berlin/ULTRA/Berlin-1pct_raptor-shortcuts.binary ../Networks/Berlin/ULTRA/Berlin-1pct_CH 10`
 
 ## Transform KaRRi Requests to ULTRA Requests (via LatLng)
-Run `./RawData/TransformRequests -veh-g /home/nghalinh2711/PARROT/Networks/Berlin/KARRI/Graphs/Berlin-1pct_pedestrian_veh.gr.bin -psg-g /home/nghalinh2711/PARROT/Networks/Berlin/KARRI/Graphs/Berlin-1pct_pedestrian_psg.gr.bin -r /home/nghalinh2711/PARROT/Networks/Berlin/KARRI/Requests/Berlin-1pct_pedestrian.csv -transfer-graph /home/nghalinh2711/PARROT/Networks/Berlin/ULTRA/Berlin-1pct_raptor.binary.graph -o /home/nghalinh2711/PARROT/Networks/Berlin/KARRI/Requests/Berlin-1pct_transformed2.csv` to obtain a requests file with both KaRRi edge ids and ULTRA vertex ids.
+Run `./RawData/TransformRequests -veh-g /home/nghalinh2711/PARROT/Networks/Berlin/KARRI/Graphs/Berlin-1pct_pedestrian_veh.gr.bin -psg-g /home/nghalinh2711/PARROT/Networks/Berlin/KARRI/Graphs/Berlin-1pct_pedestrian_psg.gr.bin -r /home/nghalinh2711/PARROT/Networks/Berlin/KARRI/Requests/Berlin-1pct_pedestrian.csv -transfer-graph /home/nghalinh2711/PARROT/Networks/Berlin/ULTRA/Berlin-1pct_raptor.binary.graph -o /home/nghalinh2711/PARROT/Networks/Berlin/KARRI/Requests/Berlin-1pct_transformed.csv` to obtain a requests file with both KaRRi edge ids and ULTRA vertex ids.
 
-In ULTRA: run `runULTRARAPTORWithGivenQueries ../Networks/Berlin/ULTRA/Berlin-1pct_raptor-shortcuts.binary ../Networks/Berlin/ULTRA/Berlin-1pct_CH ../Networks/Berlin/ULTRA/Berlin-1pct_raptor.binary.graph ../Networks/Berlin/KARRI/Requests/Berlin-1pct_pedestrian_latlng.csv ../Networks/Berlin/Outputs/Berlin-1pct_journeys_withWalking.csv false` to run ULTRARAPTOR algorithm with KaRRi requests.
+In ULTRA: run `runULTRARAPTORWithGivenQueries ../Networks/Berlin/ULTRA/Berlin-1pct_raptor-shortcuts.binary ../Networks/Berlin/ULTRA/Berlin-1pct_CH ../Networks/Berlin/ULTRA/Berlin-1pct_raptor.binary.graph ../Networks/Berlin/KARRI/Requests/Berlin-1pct_pedestrian_latlng.csv ../Networks/Berlin/ULTRA/Outputs/Berlin-1pct_journeys_withWalking.csv false` to run ULTRARAPTOR algorithm with KaRRi requests.
 
 
 ## Build Static Buckets for PTaxi
@@ -31,7 +31,7 @@ You must run the executables BuildStaticBuckets to generate required input data 
 These includes:
 - Bucket graph for ULTRA
 - Station buckets for KaRRi
-`BuildStaticBuckets -veh-g ../../../Networks/Berlin/KARRI/Graphs/Berlin-1pct_pedestrian_veh.gr.bin -psg-g ../../../Networks/Berlin/KARRI/Graphs/Berlin-1pct_pedestrian_psg.gr.bin -veh-h ../../../Networks/Berlin/KARRI/CHs/Berlin-1pct_pedestrian_veh_time.ch.bin -psg-h ../../../Networks/Berlin/KARRI/CHs/Berlin-1pct_pedestrian_psg_time.ch.bin -raptor-data ../../../Networks/Berlin/ULTRA/raptor-shortcuts.binary -station-mapping ../../../Networks/Berlin/Preprocessing/PT/stations.mapped.csv -ch ../../../Networks/Berlin/ULTRA/CH -o-bucket-graph ../../../Networks/Berlin/Preprocessing/PT/bucket -o-station-buckets ../../../Networks/Berlin/Preprocessing/Taxi/stations`
+`BuildStaticBuckets -veh-g ../../../Networks/Berlin/KARRI/Graphs/Berlin-1pct_pedestrian_veh.gr.bin -veh-h ../../../Networks/Berlin/KARRI/CHs/Berlin-1pct_pedestrian_veh_time.ch.bin -raptor-data ../../../Networks/Berlin/ULTRA/raptor-shortcuts.binary -station-mapping ../../../Networks/Berlin/Preprocessing/PT/Berlin-1pct_stations.mapped.csv -ch ../../../Networks/Berlin/ULTRA/CH -o-bucket-graph ../../../Networks/Berlin/Preprocessing/PT/bucket -o-station-buckets ../../../Networks/Berlin/Preprocessing/Taxi/stations`
 
 
 ## Prerequisites

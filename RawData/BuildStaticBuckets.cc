@@ -26,8 +26,8 @@
 #include <ULTRA/Algorithms/CH/Query/BucketQuery.h>
 #include <ULTRA/DataStructures/RAPTOR/Data.h>
 
-#include "../PTaxi/Station.h"
-#include "../PTaxi/StationBucketsEnvironment.h"
+#include "../PTaxi/Station/Station.h"
+#include "../PTaxi/Station/StationBucketsEnvironment.h"
 
 
 inline void printUsage() {
@@ -39,9 +39,7 @@ inline void printUsage() {
               "1. Build the bucket graph for the passenger network for use in ULTRA algorithm.\n"
               "2. Build the buckets for the stations in the vehicle network for use in KaRRi.\n"
               "  -veh-g <file>              vehicle road network in binary format.\n"
-              "  -psg-g <file>              passenger road (and path) network in binary format.\n"
               "  -veh-h <file>              contraction hierarchy for the vehicle network in binary format.\n"
-              "  -psg-h <file>              contraction hierarchy for the passenger network in binary format.\n"
               "  -raptor-data <file>        file with the precomputed RAPTOR data.\n"
               "  -station-mapping <file>    file which maps the station used in RAPTOR to edges in the given road graph.\n"
               "  -ch <file>                 contraction hierarchy for the transfer graph of ULTRA in binary format.\n"
@@ -62,9 +60,7 @@ int main(int argc, char *argv[]) {
 
         // Parse the command-line options.
         const auto vehicleNetworkFileName = clp.getValue<std::string>("veh-g");
-        const auto passengerNetworkFileName = clp.getValue<std::string>("psg-g");
         const auto vehHierarchyFileName = clp.getValue<std::string>("veh-h");
-        const auto psgHierarchyFileName = clp.getValue<std::string>("psg-h");
         const auto raptorFileName = clp.getValue<std::string>("raptor-data");
         const auto stationMappingFileName = clp.getValue<std::string>("station-mapping");
         const auto chFileName = clp.getValue<std::string>("ch");
@@ -108,41 +104,6 @@ int main(int argc, char *argv[]) {
         }
         std::cout << "done.\n";
 
-        // Read the passenger network from file.
-        std::cout << "Reading passenger network from file... " << std::flush;
-        using PsgVertexAttributes = VertexAttrs<LatLngAttribute, OsmNodeIdAttribute>;
-        using PsgEdgeAttributes = EdgeAttrs<EdgeIdAttribute, EdgeTailAttribute, PsgEdgeToCarEdgeAttribute, TravelTimeAttribute>;
-        using PsgInputGraph = KaRRiStaticGraph<PsgVertexAttributes, PsgEdgeAttributes>;
-        std::ifstream psgNetworkFile(passengerNetworkFileName, std::ios::binary);
-        if (!psgNetworkFile.good())
-            throw std::invalid_argument("file not found -- '" + passengerNetworkFileName + "'");
-        PsgInputGraph psgInputGraph(psgNetworkFile);
-        psgNetworkFile.close();
-        assert(psgInputGraph.numEdges() > 0 && psgInputGraph.edgeId(0) == INVALID_ID);
-        int numEdgesWithMappingToCar = 0;
-        FORALL_VALID_EDGES(psgInputGraph, v, e) {
-                assert(psgInputGraph.edgeId(e) == INVALID_ID);
-                psgInputGraph.edgeTail(e) = v;
-                psgInputGraph.edgeId(e) = e;
-
-                const int eInVehGraph = psgInputGraph.toCarEdge(e);
-                if (eInVehGraph != PsgEdgeToCarEdgeAttribute::defaultValue()) {
-                    ++numEdgesWithMappingToCar;
-                    assert(eInVehGraph < vehGraphOrigIdToSeqId.size());
-                    psgInputGraph.toCarEdge(e) = vehGraphOrigIdToSeqId[eInVehGraph];
-                    assert(psgInputGraph.toCarEdge(e) < vehicleInputGraph.numEdges());
-                    vehicleInputGraph.toPsgEdge(psgInputGraph.toCarEdge(e)) = e;
-
-                    assert(psgInputGraph.latLng(psgInputGraph.edgeHead(e)).latitude() ==
-                           vehicleInputGraph.latLng(vehicleInputGraph.edgeHead(psgInputGraph.toCarEdge(e))).latitude());
-                    assert(psgInputGraph.latLng(psgInputGraph.edgeHead(e)).longitude() == vehicleInputGraph.latLng(
-                            vehicleInputGraph.edgeHead(psgInputGraph.toCarEdge(e))).longitude());
-                }
-            }
-        unused(numEdgesWithMappingToCar);
-        assert(numEdgesWithMappingToCar > 0);
-        std::cout << "done.\n";
-
         // Prepare vehicle CH environment
         using VehCHEnv = karri::CHEnvironment<VehicleInputGraph, TravelTimeAttribute>;
         std::unique_ptr<VehCHEnv> vehChEnv;
@@ -160,25 +121,6 @@ int main(int argc, char *argv[]) {
             vehHierarchyFile.close();
             std::cout << "done.\n";
             vehChEnv = std::make_unique<VehCHEnv>(std::move(vehCh));
-        }
-
-        // Prepare passenger CH environment
-        using PsgCHEnv = karri::CHEnvironment<PsgInputGraph, TravelTimeAttribute>;
-        std::unique_ptr<PsgCHEnv> psgChEnv;
-        if (psgHierarchyFileName.empty()) {
-            std::cout << "Building passenger CH... " << std::flush;
-            psgChEnv = std::make_unique<PsgCHEnv>(psgInputGraph);
-            std::cout << "done.\n";
-        } else {
-            // Read the passenger CH from file.
-            std::cout << "Reading passenger CH from file... " << std::flush;
-            std::ifstream psgHierarchyFile(psgHierarchyFileName, std::ios::binary);
-            if (!psgHierarchyFile.good())
-                throw std::invalid_argument("file not found -- '" + psgHierarchyFileName + "'");
-            CH psgCh(psgHierarchyFile);
-            psgHierarchyFile.close();
-            std::cout << "done.\n";
-            psgChEnv = std::make_unique<PsgCHEnv>(std::move(psgCh));
         }
 
         // Read the RAPTOR data
@@ -205,9 +147,7 @@ int main(int argc, char *argv[]) {
 
             // edge id in the station mapping file is the edge id in the road network
             int psgEdgeId = vehicleInputGraph.toPsgEdge(edgeId);
-            int psgVertexId = psgInputGraph.edgeHead(psgEdgeId);
-            int psgChOrder = psgChEnv->getCH().rank(psgVertexId);
-            stations.push_back({stationId, psgEdgeId, psgChOrder, edgeId});
+            stations.push_back({stationId, psgEdgeId, edgeId});
             stationId++;
         }
         std::cout << "done.\n";
