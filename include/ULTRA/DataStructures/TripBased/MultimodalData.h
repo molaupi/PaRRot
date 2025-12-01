@@ -1,84 +1,72 @@
 #pragma once
 
-#include "../RAPTOR/TransferModes.h"
 #include "Data.h"
+#include "../RAPTOR/TransferModes.h"
 
 namespace TripBased {
 
 using TransferGraph = ::TransferGraph;
 
 class MultimodalData {
-public:
-    MultimodalData(const std::string& fileName) { deserialize(fileName); }
 
-    MultimodalData(const Data& data)
-        : tripData(data)
-    {
+public:
+    MultimodalData(const std::string& fileName) {
+        deserialize(fileName);
     }
 
+    MultimodalData(const Data& data) : tripData(data) {}
+
 public:
-    inline void serialize(const std::string& fileName) const noexcept
-    {
+    inline void serialize(const std::string& fileName) const noexcept {
         IO::serialize(fileName, modes);
         tripData.serialize(fileName + ".trip");
         for (const size_t mode : modes) {
-            stopEventGraphs[mode].writeBinary(
-                fileName + "." + RAPTOR::TransferModeNames[mode] + ".graph");
+            stopEventGraphs[mode].writeBinary(fileName + "." + RAPTOR::TransferModeNames[mode] + ".graph");
         }
     }
 
-    inline void deserialize(const std::string& fileName) noexcept
-    {
+    inline void deserialize(const std::string& fileName) noexcept {
         IO::deserialize(fileName, modes);
         tripData.deserialize(fileName + ".trip");
         for (const size_t mode : modes) {
-            stopEventGraphs[mode].readBinary(
-                fileName + "." + RAPTOR::TransferModeNames[mode] + ".graph");
+            stopEventGraphs[mode].readBinary(fileName + "." + RAPTOR::TransferModeNames[mode] + ".graph");
         }
     }
 
-    inline void printInfo() const noexcept
-    {
+    inline void printInfo() const noexcept {
         std::cout << "Trip-Based data:" << std::endl;
         tripData.printInfo();
         for (const size_t mode : modes) {
-            std::cout << "Graph for " << RAPTOR::TransferModeNames[mode] << ":"
-                      << std::endl;
+            std::cout << "Graph for " << RAPTOR::TransferModeNames[mode] << ":" << std::endl;
             ULTRAGraph::printInfo(stopEventGraphs[mode]);
         }
     }
 
-    inline void addTransferGraph(const size_t mode,
-        const TransferGraph& graph) noexcept
-    {
-        AssertMsg(mode < RAPTOR::NUM_TRANSFER_MODES, "Mode is not supported!");
+    inline void addTransferGraph(const size_t mode, const TransferGraph& graph) noexcept {
+        Assert(mode < RAPTOR::NUM_TRANSFER_MODES, "Mode is not supported!");
         if (!Vector::contains(modes, mode)) {
             modes.emplace_back(mode);
         }
         stopEventGraphs[mode] = graph;
     }
 
-    inline const TransferGraph& getTransferGraph(
-        const size_t mode) const noexcept
-    {
-        AssertMsg(Vector::contains(modes, mode), "Mode is not supported!");
+    inline const TransferGraph& getTransferGraph(const size_t mode) const noexcept {
+        Assert(Vector::contains(modes, mode), "Mode is not supported!");
         return stopEventGraphs[mode];
     }
 
-    inline Data getBimodalData(const size_t mode) const noexcept
-    {
+    inline Data getBimodalData(const size_t mode) const noexcept {
         Data resultData(tripData);
         resultData.stopEventGraph = getTransferGraph(mode);
         return resultData;
     }
 
-    inline Data getPruningData() const noexcept { return getPruningData(modes); }
+    inline Data getPruningData() const noexcept {
+        return getPruningData(modes);
+    }
 
-    inline Data getPruningData(
-        const std::vector<size_t>& pruningModes) const noexcept
-    {
-        AssertMsg(!pruningModes.empty(),
-            "Cannot build pruning data without transfer modes!");
+    inline Data getPruningData(const std::vector<size_t>& pruningModes) const noexcept {
+        Assert(!pruningModes.empty(), "Cannot build pruning data without transfer modes!");
         Data resultData(tripData);
         DynamicTransferGraph temp;
         ULTRAGraph::copy(tripData.stopEventGraph, temp);
@@ -93,8 +81,7 @@ public:
                     } else {
                         const int travelTime = graph.get(TravelTime, edge);
                         const int originalTravelTime = temp.get(TravelTime, originalEdge);
-                        temp.set(TravelTime, originalEdge,
-                            std::min(travelTime, originalTravelTime));
+                        temp.set(TravelTime, originalEdge, std::min(travelTime, originalTravelTime));
                     }
                 }
             }
@@ -109,4 +96,4 @@ public:
     TransferGraph stopEventGraphs[RAPTOR::NUM_TRANSFER_MODES];
 };
 
-} // namespace TripBased
+}

@@ -1,12 +1,13 @@
-#include "../include/ULTRA/Helpers/Console/CommandLineParser.h"
-#include "../include/ULTRA/Helpers/MultiThreading.h"
-#include "../include/ULTRA/Shell/Shell.h"
 #include "../include/Common/Constants.h"
 #include "Commands/BenchmarkULTRAPHAST.h"
+
+#include "../include/ULTRA/Helpers/Console/CommandLineParser.h"
+#include "../include/ULTRA/Helpers/MultiThreading.h"
+
+#include "../include/ULTRA/Shell/Shell.h"
 using namespace Shell;
 
-int main(int argc, char** argv)
-{
+int main(int argc, char** argv) {
     CommandLineParser clp(argc, argv);
     pinThreadToCoreId(clp.value<int>("core", 1));
     checkAsserts();

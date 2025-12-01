@@ -3,23 +3,19 @@
 #include <vector>
 
 #include "../../Algorithms/CH/CH.h"
+#include "../Container/IndexedSet.h"
+#include "../Graph/Graph.h"
 #include "../../Helpers/Vector/Permutation.h"
 #include "../../Helpers/Vector/Vector.h"
-#include "../Container/Set.h"
-#include "../Graph/Graph.h"
 
 namespace ULTRACH {
 
-template <typename GRAPH_TYPE, typename EXCLUDE>
-inline std::vector<bool> targetSelection(const GRAPH_TYPE& graph,
-    const std::vector<Vertex>& targets,
-    const EXCLUDE& exclude) noexcept
-{
+template<typename GRAPH_TYPE, typename EXCLUDE>
+inline std::vector<bool> targetSelection(const GRAPH_TYPE& graph, const std::vector<Vertex>& targets, const EXCLUDE& exclude) noexcept {
     std::vector<bool> isRequired(graph.numVertices(), false);
     std::vector<Vertex> stack;
     for (const Vertex v : targets) {
-        if (exclude(v))
-            continue;
+        if (exclude(v)) continue;
         stack.emplace_back(v);
         isRequired[v] = true;
     }
@@ -28,31 +24,26 @@ inline std::vector<bool> targetSelection(const GRAPH_TYPE& graph,
         stack.pop_back();
         for (const Edge e : graph.edgesFrom(u)) {
             const Vertex v = graph.get(ToVertex, e);
-            if (isRequired[v])
-                continue;
+            if (isRequired[v]) continue;
             isRequired[v] = true;
-            if (!exclude(v))
-                stack.emplace_back(v);
+            if (!exclude(v)) stack.emplace_back(v);
         }
     }
     return isRequired;
 }
 
-template <typename GRAPH_TYPE>
-inline std::vector<bool> targetSelection(
-    const GRAPH_TYPE& graph, const std::vector<Vertex>& targets) noexcept
-{
-    return targetSelection(graph, targets, [&](const Vertex) { return false; });
+template<typename GRAPH_TYPE>
+inline std::vector<bool> targetSelection(const GRAPH_TYPE& graph, const std::vector<Vertex>& targets) noexcept {
+    return targetSelection(graph, targets, [&](const Vertex) {
+        return false;
+    });
 }
 
 struct SweepGraph {
     SweepGraph() { }
 
-    template <typename GRAPH_TYPE>
-    inline void build(const GRAPH_TYPE& originalGraph,
-        const std::vector<Vertex>& targets, const bool invertOrder,
-        const bool revertEdges) noexcept
-    {
+    template<typename GRAPH_TYPE>
+    inline void build(const GRAPH_TYPE& originalGraph, const std::vector<Vertex>& targets, const bool invertOrder, const bool revertEdges) noexcept {
         std::vector<bool> isRequired = targetSelection(originalGraph, targets);
         Order nonRequiredOrder;
         for (const Vertex vertex : originalGraph.vertices()) {
@@ -68,7 +59,7 @@ struct SweepGraph {
         }
         const size_t numRequiredVertices = order.size();
         order += nonRequiredOrder;
-        permutation = ULTRAPermutation(Construct::Invert, order);
+        permutation = Permutation(Construct::Invert, order);
 
         CHConstructionGraph constructionGraph;
         constructionGraph.addVertices(numRequiredVertices);
@@ -76,12 +67,9 @@ struct SweepGraph {
             const Vertex originalFromVertex(order[fromVertex]);
             for (const Edge edge : originalGraph.edgesFrom(originalFromVertex)) {
                 const Vertex originalToVertex = originalGraph.get(ToVertex, edge);
-                if (!isRequired[originalToVertex])
-                    continue;
+                if (!isRequired[originalToVertex]) continue;
                 const Vertex toVertex(permutation[originalToVertex]);
-                constructionGraph.addEdge(revertEdges ? toVertex : fromVertex,
-                    revertEdges ? fromVertex : toVertex,
-                    originalGraph.edgeRecord(edge));
+                constructionGraph.addEdge(revertEdges ? toVertex : fromVertex, revertEdges ? fromVertex : toVertex, originalGraph.edgeRecord(edge));
             }
         }
         ULTRAGraph::move(std::move(constructionGraph), graph);
@@ -93,42 +81,34 @@ struct SweepGraph {
         }
     }
 
-    inline Vertex externalToInternal(const Vertex vertex) const noexcept
-    {
+    inline Vertex externalToInternal(const Vertex vertex) const noexcept {
         return permutation.permutate(vertex);
     }
 
-    inline Vertex internalToExternal(const Vertex vertex) const noexcept
-    {
+    inline Vertex internalToExternal(const Vertex vertex) const noexcept {
         return Vertex(order[vertex]);
     }
 
     CHGraph graph;
     Order order;
-    ULTRAPermutation permutation;
+    Permutation permutation;
     std::vector<Vertex> toVertex;
 };
 
 struct CompactSweepGraph {
     CompactSweepGraph() { }
 
-    template <typename GRAPH_TYPE>
-    inline void build(const GRAPH_TYPE& originalGraph,
-        const std::vector<Vertex>& targets, const bool invertOrder,
-        const bool revertEdges,
-        const size_t numExcludedVertices) noexcept
-    {
-        std::vector<bool> isRequired = targetSelection(
-            originalGraph, targets,
-            [&](const Vertex v) { return v < numExcludedVertices; });
+    template<typename GRAPH_TYPE>
+    inline void build(const GRAPH_TYPE& originalGraph, const std::vector<Vertex>& targets, const bool invertOrder, const bool revertEdges, const size_t numExcludedVertices) noexcept {
+        std::vector<bool> isRequired = targetSelection(originalGraph, targets, [&](const Vertex v) {
+            return v < numExcludedVertices;
+        });
 
         for (const Vertex vertex : originalGraph.vertices()) {
-            if (!isRequired[vertex])
-                continue;
+            if (!isRequired[vertex]) continue;
             order.emplace_back(vertex);
         }
-        if (invertOrder)
-            Vector::reverse(order);
+        if (invertOrder) Vector::reverse(order);
         std::vector<Vertex> permutation(originalGraph.numVertices(), noVertex);
         for (size_t i = 0; i < order.size(); i++) {
             permutation[order[i]] = Vertex(i);
@@ -140,12 +120,9 @@ struct CompactSweepGraph {
             const Vertex originalFromVertex = order[fromVertex];
             for (const Edge edge : originalGraph.edgesFrom(originalFromVertex)) {
                 const Vertex originalToVertex = originalGraph.get(ToVertex, edge);
-                if (!isRequired[originalToVertex])
-                    continue;
+                if (!isRequired[originalToVertex]) continue;
                 const Vertex toVertex = permutation[originalToVertex];
-                constructionGraph.addEdge(revertEdges ? toVertex : fromVertex,
-                    revertEdges ? fromVertex : toVertex,
-                    originalGraph.edgeRecord(edge));
+                constructionGraph.addEdge(revertEdges ? toVertex : fromVertex, revertEdges ? fromVertex : toVertex, originalGraph.edgeRecord(edge));
             }
         }
         ULTRAGraph::copy(constructionGraph, graph);
@@ -157,8 +134,8 @@ struct CompactSweepGraph {
         }
     }
 
-    inline Vertex internalToExternal(const Vertex vertex) const noexcept
-    {
+
+    inline Vertex internalToExternal(const Vertex vertex) const noexcept {
         return order[vertex];
     }
 
@@ -170,12 +147,11 @@ struct CompactSweepGraph {
 struct BucketGraph {
     BucketGraph() { }
 
-    inline void initialize(CHGraph&& initGraph) noexcept
-    {
+    inline void initialize(CHGraph&& initGraph) noexcept {
         ::ULTRAGraph::move(std::move(initGraph), graph);
         graph.sortEdges(Weight);
     }
 
     CHGraph graph;
 };
-} // namespace ULTRACH
+}

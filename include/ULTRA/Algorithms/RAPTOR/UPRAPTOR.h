@@ -1,31 +1,32 @@
 #pragma once
 
 #include <iostream>
-#include <string>
 #include <vector>
+#include <string>
+#include <type_traits>
 
-#include "../../DataStructures/Container/Map.h"
-#include "../../DataStructures/Container/Set.h"
-#include "../../DataStructures/RAPTOR/Data.h"
 #include "InitialTransfers.h"
+
+#include "../../DataStructures/RAPTOR/Data.h"
+#include "../../DataStructures/Container/IndexedSet.h"
+#include "../../DataStructures/Container/Map.h"
 #include "Profiler.h"
 
 namespace RAPTOR {
 
-template <size_t GROUPED_ROUNDS, typename PROFILER = NoProfiler>
+template<size_t GROUPED_ROUNDS, typename PROFILER = NoProfiler>
 class UPRAPTOR {
+
 public:
     constexpr static size_t GroupedRounds = GROUPED_ROUNDS;
     constexpr static bool GroupSweeps = GroupedRounds != 0;
     using Profiler = PROFILER;
-    constexpr static bool Debug = !Meta::Equals<Profiler, NoProfiler>();
+    constexpr static bool Debug = !std::is_same_v<Profiler, NoProfiler>;
     using Type = UPRAPTOR<GroupedRounds, Profiler>;
     using InitialAndFinalTransfers = ParetoInitialAndFinalTransfers<false, GroupedRounds>;
 
 private:
-    inline static Order vertexOrder(const ULTRACH::CH& chData,
-        const bool useDFSOrder) noexcept
-    {
+    inline static Order vertexOrder(const ULTRACH::CH& chData, const bool useDFSOrder) noexcept {
         if (useDFSOrder) {
             return Order(Vector::reverse(ULTRACH::getOrder(chData)));
         } else {
@@ -34,19 +35,15 @@ private:
     }
 
     struct QueryData {
-        QueryData(const Data& oldData, const TransferGraph& oldTransferGraph,
-            const ULTRACH::CH& oldCHData,
-            const IndexedSet<false, Vertex>& oldTargets, const bool reorder,
-            const bool useDFSOrder)
-            : data(oldData)
-            , transferGraph(oldTransferGraph)
-            , chData(oldCHData)
-            , targets(oldTargets)
-        {
+        QueryData(const Data& oldData, const TransferGraph& oldTransferGraph, const ULTRACH::CH& oldCHData, const IndexedSet<false, Vertex>& oldTargets, const bool reorder, const bool useDFSOrder) :
+            data(oldData),
+            transferGraph(oldTransferGraph),
+            chData(oldCHData),
+            targets(oldTargets) {
             const Order chOrder = vertexOrder(chData, useDFSOrder);
             if (reorder) {
                 internalToExternal = chOrder.splitAt(data.numberOfStops());
-                externalToInternal = ULTRAPermutation(Construct::Invert, internalToExternal);
+                externalToInternal = Permutation(Construct::Invert, internalToExternal);
                 Order stopOrder = internalToExternal;
                 stopOrder.resize(data.numberOfStops());
 
@@ -67,7 +64,7 @@ private:
             } else {
                 phastOrder = chOrder;
                 internalToExternal = Order(Construct::Id, chData.numVertices());
-                externalToInternal = ULTRAPermutation(Construct::Id, chData.numVertices());
+                externalToInternal = Permutation(Construct::Id, chData.numVertices());
             }
         }
 
@@ -75,20 +72,13 @@ private:
         TransferGraph transferGraph;
         ULTRACH::CH chData;
         Order internalToExternal;
-        ULTRAPermutation externalToInternal;
+        Permutation externalToInternal;
         Order phastOrder;
         IndexedSet<false, Vertex> targets;
     };
 
     struct EarliestArrivalLabel {
-        EarliestArrivalLabel()
-            : arrivalTime(never)
-            , parentDepartureTime(never)
-            , parent(noVertex)
-            , usesRoute(false)
-            , routeId(noRouteId)
-        {
-        }
+        EarliestArrivalLabel() : arrivalTime(never), parentDepartureTime(never), parent(noVertex), usesRoute(false), routeId(noRouteId) {}
         int arrivalTime;
         int parentDepartureTime;
         Vertex parent;
@@ -101,46 +91,30 @@ private:
     using Round = std::vector<EarliestArrivalLabel>;
 
 public:
-    UPRAPTOR(const Data& oldData, const TransferGraph& oldTransferGraph,
-        const ULTRACH::CH& oldCHData, const IndexedSet<false, Vertex>& oldTargets,
-        const bool reorder, const bool useDFSOrder,
-        const Profiler& profilerTemplate = Profiler())
-        : queryData(oldData, oldTransferGraph, oldCHData, oldTargets, reorder,
-            useDFSOrder)
-        , data(queryData.data)
-        , initialAndFinalTransfers(queryData.transferGraph, queryData.chData,
-              std::move(queryData.phastOrder),
-              data.numberOfStops(), queryData.targets)
-        , sourceVertex(noVertex)
-        , sourceDepartureTime(never)
-        , targetVertices(queryData.targets)
-        , earliestArrival(data.numberOfStops())
-        , stopsUpdatedByRoute(data.numberOfStops())
-        , stopsUpdatedByTransfer(data.numberOfStops())
-        , routesServingUpdatedStops(data.numberOfRoutes())
-        , profiler(profilerTemplate)
-    {
-        AssertMsg(data.hasImplicitBufferTimes(),
-            "Implicit departure buffer times must be used!");
+    UPRAPTOR(const Data& oldData, const TransferGraph& oldTransferGraph, const ULTRACH::CH& oldCHData, const IndexedSet<false, Vertex>& oldTargets, const bool reorder, const bool useDFSOrder, const Profiler& profilerTemplate = Profiler()) :
+        queryData(oldData, oldTransferGraph, oldCHData, oldTargets, reorder, useDFSOrder),
+        data(queryData.data),
+        initialAndFinalTransfers(queryData.transferGraph, queryData.chData, std::move(queryData.phastOrder), data.numberOfStops(), queryData.targets),
+        sourceVertex(noVertex),
+        sourceDepartureTime(never),
+        targetVertices(queryData.targets),
+        earliestArrival(data.numberOfStops()),
+        stopsUpdatedByRoute(data.numberOfStops()),
+        stopsUpdatedByTransfer(data.numberOfStops()),
+        routesServingUpdatedStops(data.numberOfRoutes()),
+        profiler(profilerTemplate) {
+        Assert(data.hasImplicitBufferTimes(), "Implicit departure buffer times must be used!");
         if constexpr (GroupSweeps) {
-            profiler.registerExtraRounds({ EXTRA_ROUND_CLEAR,
-                EXTRA_ROUND_INITIALIZATION,
-                EXTRA_ROUND_FINAL_TRANSFERS });
+            profiler.registerExtraRounds({EXTRA_ROUND_CLEAR, EXTRA_ROUND_INITIALIZATION, EXTRA_ROUND_FINAL_TRANSFERS});
         } else {
-            profiler.registerExtraRounds(
-                { EXTRA_ROUND_CLEAR, EXTRA_ROUND_INITIALIZATION });
+            profiler.registerExtraRounds({EXTRA_ROUND_CLEAR, EXTRA_ROUND_INITIALIZATION});
         }
-        profiler.registerPhases({ PHASE_INITIALIZATION, PHASE_COLLECT, PHASE_SCAN,
-            PHASE_TRANSFERS, PHASE_FINAL_TRANSFERS });
-        profiler.registerMetrics({ METRIC_ROUTES, METRIC_ROUTE_SEGMENTS,
-            METRIC_EDGES, METRIC_STOPS_BY_TRIP,
-            METRIC_STOPS_BY_TRANSFER });
+        profiler.registerPhases({PHASE_INITIALIZATION, PHASE_COLLECT, PHASE_SCAN, PHASE_TRANSFERS, PHASE_FINAL_TRANSFERS});
+        profiler.registerMetrics({METRIC_ROUTES, METRIC_ROUTE_SEGMENTS, METRIC_EDGES, METRIC_STOPS_BY_TRIP, METRIC_STOPS_BY_TRANSFER});
         profiler.initialize();
     }
 
-    inline void run(const Vertex source, const int departureTime,
-        const size_t maxRounds = INFTY) noexcept
-    {
+    inline void run(const Vertex source, const int departureTime, const size_t maxRounds = INFTY) noexcept {
         profiler.start();
         profiler.startExtraRound(EXTRA_ROUND_CLEAR);
         clear();
@@ -183,11 +157,9 @@ public:
         profiler.done();
     }
 
-    inline std::vector<Journey> getJourneys(const Vertex vertex) noexcept
-    {
+    inline std::vector<Journey> getJourneys(const Vertex vertex) noexcept {
         const Vertex internalVertex(queryData.externalToInternal[vertex]);
-        AssertMsg(targetVertices.contains(internalVertex),
-            "Vertex " << internalVertex << " is not a target!");
+        Assert(targetVertices.contains(internalVertex), "Vertex " << internalVertex << " is not a target!");
         std::vector<Journey> journeys;
         for (size_t i = 0; i < rounds.size(); i++) {
             getJourney(journeys, i, internalVertex);
@@ -195,11 +167,9 @@ public:
         return journeys;
     }
 
-    inline std::vector<ArrivalLabel> getArrivals(const Vertex vertex) noexcept
-    {
+    inline std::vector<ArrivalLabel> getArrivals(const Vertex vertex) noexcept {
         const Vertex internalVertex(queryData.externalToInternal[vertex]);
-        AssertMsg(targetVertices.contains(internalVertex),
-            "Vertex " << internalVertex << " is not a target!");
+        Assert(targetVertices.contains(internalVertex), "Vertex " << internalVertex << " is not a target!");
         std::vector<ArrivalLabel> labels;
         for (size_t i = 0; i < rounds.size(); i++) {
             getArrival(labels, i, internalVertex);
@@ -207,11 +177,9 @@ public:
         return labels;
     }
 
-    inline std::vector<int> getArrivalTimes(const Vertex vertex) noexcept
-    {
+    inline std::vector<int> getArrivalTimes(const Vertex vertex) noexcept {
         const Vertex internalVertex(queryData.externalToInternal[vertex]);
-        AssertMsg(targetVertices.contains(internalVertex),
-            "Vertex " << internalVertex << " is not a target!");
+        Assert(targetVertices.contains(internalVertex), "Vertex " << internalVertex << " is not a target!");
         std::vector<int> arrivalTimes;
         for (size_t i = 0; i < rounds.size(); i++) {
             getArrivalTime(arrivalTimes, i, internalVertex);
@@ -219,75 +187,49 @@ public:
         return arrivalTimes;
     }
 
-    inline bool reachable(const Vertex vertex) noexcept
-    {
+    inline bool reachable(const Vertex vertex) noexcept {
         const Vertex internalVertex(queryData.externalToInternal[vertex]);
-        AssertMsg(targetVertices.contains(internalVertex),
-            "Vertex " << internalVertex << " is not a target!");
+        Assert(targetVertices.contains(internalVertex), "Vertex " << internalVertex << " is not a target!");
         return getEarliestArrivalTime(internalVertex) < never;
     }
 
-    inline int getEarliestArrivalTime(const Vertex vertex) noexcept
-    {
+    inline int getEarliestArrivalTime(const Vertex vertex) noexcept {
         const Vertex internalVertex(queryData.externalToInternal[vertex]);
-        AssertMsg(targetVertices.contains(internalVertex),
-            "Vertex " << internalVertex << " is not a target!");
+        Assert(targetVertices.contains(internalVertex), "Vertex " << internalVertex << " is not a target!");
         return Vector::min(getArrivalTimes(internalVertex));
     }
 
-    inline std::vector<Vertex> getPath(const Vertex vertex) noexcept
-    {
-        const Vertex internalVertex(queryData.externalToInternal[vertex]);
-        AssertMsg(targetVertices.contains(internalVertex),
-            "Vertex " << internalVertex << " is not a target!");
-        return journeyToPath(getJourneys(internalVertex).back());
+    inline const Profiler& getProfiler() const noexcept {
+        return profiler;
     }
 
-    inline std::vector<std::string> getRouteDescription(
-        const Vertex vertex) noexcept
-    {
-        const Vertex internalVertex(queryData.externalToInternal[vertex]);
-        AssertMsg(targetVertices.contains(internalVertex),
-            "Vertex " << internalVertex << " is not a target!");
-        return data.journeyToText(getJourneys(internalVertex).back());
-    }
-
-    inline const Profiler& getProfiler() const noexcept { return profiler; }
-
-    inline long long getUpwardSweepGraphVertices() const noexcept
-    {
+    inline long long getUpwardSweepGraphVertices() const noexcept {
         return initialAndFinalTransfers.getUpwardSweepGraphVertices();
     }
 
-    inline long long getUpwardSweepGraphEdges() const noexcept
-    {
+    inline long long getUpwardSweepGraphEdges() const noexcept {
         return initialAndFinalTransfers.getUpwardSweepGraphEdges();
     }
 
-    inline long long getStopGraphVertices() const noexcept
-    {
+    inline long long getStopGraphVertices() const noexcept {
         return initialAndFinalTransfers.getStopGraphVertices();
     }
 
-    inline long long getStopGraphEdges() const noexcept
-    {
+    inline long long getStopGraphEdges() const noexcept {
         return initialAndFinalTransfers.getStopGraphEdges();
     }
 
-    inline long long getTargetGraphVertices() const noexcept
-    {
+    inline long long getTargetGraphVertices() const noexcept {
         return initialAndFinalTransfers.getTargetGraphVertices();
     }
 
-    inline long long getTargetGraphEdges() const noexcept
-    {
+    inline long long getTargetGraphEdges() const noexcept {
         return initialAndFinalTransfers.getTargetGraphEdges();
     }
 
 private:
-    template <bool RESET_CAPACITIES = false>
-    inline void clear() noexcept
-    {
+    template<bool RESET_CAPACITIES = false>
+    inline void clear() noexcept {
         stopsUpdatedByRoute.clear();
         stopsUpdatedByTransfer.clear();
         routesServingUpdatedStops.clear();
@@ -300,11 +242,11 @@ private:
         }
     }
 
-    inline void reset() noexcept { clear<true>(); }
+    inline void reset() noexcept {
+        clear<true>();
+    }
 
-    inline void initialize(const Vertex source,
-        const int departureTime) noexcept
-    {
+    inline void initialize(const Vertex source, const int departureTime) noexcept {
         sourceVertex = source;
         sourceDepartureTime = departureTime;
         initialAndFinalTransfers.initialize();
@@ -318,24 +260,18 @@ private:
         }
     }
 
-    inline void collectRoutesServingUpdatedStops() noexcept
-    {
+    inline void collectRoutesServingUpdatedStops() noexcept {
         for (const StopId stop : stopsUpdatedByTransfer) {
-            AssertMsg(data.isStop(stop), "Stop " << stop << " is out of range!");
+            Assert(data.isStop(stop), "Stop " << stop << " is out of range!");
             const int arrivalTime = previousRound()[stop].arrivalTime;
-            AssertMsg(arrivalTime < never, "Updated stop has arrival time = never!");
+            Assert(arrivalTime < never, "Updated stop has arrival time = never!");
             for (const RouteSegment& route : data.routesContainingStop(stop)) {
-                AssertMsg(data.isRoute(route.routeId),
-                    "Route " << route.routeId << " is out of range!");
-                AssertMsg(data.stopIds[data.firstStopIdOfRoute[route.routeId] + route.stopIndex] == stop,
-                    "RAPTOR data contains invalid route segments!");
-                if (route.stopIndex + 1 == data.numberOfStopsInRoute(route.routeId))
-                    continue;
-                if (data.lastTripOfRoute(route.routeId)[route.stopIndex].departureTime < arrivalTime)
-                    continue;
+                Assert(data.isRoute(route.routeId), "Route " << route.routeId << " is out of range!");
+                Assert(data.stopIds[data.firstStopIdOfRoute[route.routeId] + route.stopIndex] == stop, "RAPTOR data contains invalid route segments!");
+                if (route.stopIndex + 1 == data.numberOfStopsInRoute(route.routeId)) continue;
+                if (data.lastTripOfRoute(route.routeId)[route.stopIndex].departureTime < arrivalTime) continue;
                 if (routesServingUpdatedStops.contains(route.routeId)) {
-                    routesServingUpdatedStops[route.routeId] = std::min(
-                        routesServingUpdatedStops[route.routeId], route.stopIndex);
+                    routesServingUpdatedStops[route.routeId] = std::min(routesServingUpdatedStops[route.routeId], route.stopIndex);
                 } else {
                     routesServingUpdatedStops.insert(route.routeId, route.stopIndex);
                 }
@@ -343,27 +279,18 @@ private:
         }
     }
 
-    inline void scanRoutes() noexcept
-    {
+    inline void scanRoutes() noexcept {
         stopsUpdatedByRoute.clear();
         for (const RouteId route : routesServingUpdatedStops.getKeys()) {
             profiler.countMetric(METRIC_ROUTES);
             StopIndex stopIndex = routesServingUpdatedStops[route];
             const size_t tripSize = data.numberOfStopsInRoute(route);
-            AssertMsg(stopIndex < tripSize - 1,
-                "Cannot scan a route starting at/after the last stop (Route: "
-                    << route << ", StopIndex: " << stopIndex
-                    << ", TripSize: " << tripSize << ")!");
+            Assert(stopIndex < tripSize - 1, "Cannot scan a route starting at/after the last stop (Route: " << route << ", StopIndex: " << stopIndex << ", TripSize: " << tripSize << ")!");
 
             const StopId* stops = data.stopArrayOfRoute(route);
             const StopEvent* trip = data.lastTripOfRoute(route);
             StopId stop = stops[stopIndex];
-            AssertMsg(
-                trip[stopIndex].departureTime >= previousRound()[stop].arrivalTime,
-                "Cannot scan a route after the last trip has departed (Route: "
-                    << route << ", Stop: " << stop << ", StopIndex: " << stopIndex
-                    << ", Time: " << previousRound()[stop].arrivalTime
-                    << ", LastDeparture: " << trip[stopIndex].departureTime << ")!");
+            Assert(trip[stopIndex].departureTime >= previousRound()[stop].arrivalTime, "Cannot scan a route after the last trip has departed (Route: " << route << ", Stop: " << stop << ", StopIndex: " << stopIndex << ", Time: " << previousRound()[stop].arrivalTime << ", LastDeparture: " << trip[stopIndex].departureTime << ")!");
 
             StopIndex parentIndex = stopIndex;
             const StopEvent* firstTrip = data.firstTripOfRoute(route);
@@ -386,10 +313,8 @@ private:
         }
     }
 
-    inline void relaxInitialTransfers() noexcept
-    {
-        initialAndFinalTransfers.template addSource<false>(
-            sourceVertex, sourceDepartureTime, sourceVertex);
+    inline void relaxInitialTransfers() noexcept {
+        initialAndFinalTransfers.template addSource<false>(sourceVertex, sourceDepartureTime, sourceVertex);
         initialAndFinalTransfers.initialUpwardSearch();
         if constexpr (GroupSweeps) {
             initialAndFinalTransfers.downwardSearchToStops();
@@ -408,8 +333,7 @@ private:
         }
     }
 
-    inline void relaxIntermediateTransfers() noexcept
-    {
+    inline void relaxIntermediateTransfers() noexcept {
         profiler.startPhase();
         stopsUpdatedByTransfer.clear();
         routesServingUpdatedStops.clear();
@@ -419,8 +343,7 @@ private:
                 const StopId toStop = StopId(data.transferGraph.get(ToVertex, edge));
                 profiler.countMetric(METRIC_EDGES);
                 const int arrivalTime = earliestArrivalTime + data.transferGraph.get(TravelTime, edge);
-                AssertMsg(data.isStop(data.transferGraph.get(ToVertex, edge)),
-                    "Graph contains edges to non stop vertices!");
+                Assert(data.isStop(data.transferGraph.get(ToVertex, edge)), "Graph contains edges to non stop vertices!");
                 if (arrivalByTransfer(toStop, arrivalTime)) {
                     EarliestArrivalLabel& label = currentRound()[toStop];
                     label.parent = stop;
@@ -430,8 +353,7 @@ private:
                 }
             }
             stopsUpdatedByTransfer.insert(stop);
-            initialAndFinalTransfers.template addSource<true>(
-                stop, earliestArrivalTime, stop);
+            initialAndFinalTransfers.template addSource<true>(stop, earliestArrivalTime, stop);
         }
         profiler.donePhase(PHASE_TRANSFERS);
         profiler.startPhase();
@@ -439,32 +361,24 @@ private:
         profiler.donePhase(PHASE_FINAL_TRANSFERS);
     }
 
-    inline Round& currentRound() noexcept
-    {
-        AssertMsg(!rounds.empty(),
-            "Cannot return current round, because no round exists!");
+    inline Round& currentRound() noexcept {
+        Assert(!rounds.empty(), "Cannot return current round, because no round exists!");
         return rounds.back();
     }
 
-    inline Round& previousRound() noexcept
-    {
-        AssertMsg(
-            rounds.size() >= 2,
-            "Cannot return previous round, because less than two rounds exist!");
+    inline Round& previousRound() noexcept {
+        Assert(rounds.size() >= 2, "Cannot return previous round, because less than two rounds exist!");
         return rounds[rounds.size() - 2];
     }
 
-    inline void startNewRound() noexcept
-    {
+    inline void startNewRound() noexcept {
         rounds.emplace_back(earliestArrival.size());
         initialAndFinalTransfers.startNewRound();
     }
 
-    inline bool arrivalByRoute(const StopId stop, const int time) noexcept
-    {
-        AssertMsg(data.isStop(stop), "Stop " << stop << " is out of range!");
-        if (earliestArrival[stop] <= time)
-            return false;
+    inline bool arrivalByRoute(const StopId stop, const int time) noexcept {
+        Assert(data.isStop(stop), "Stop " << stop << " is out of range!");
+        if (earliestArrival[stop] <= time) return false;
         profiler.countMetric(METRIC_STOPS_BY_TRIP);
         currentRound()[stop].arrivalTime = time;
         earliestArrival[stop] = time;
@@ -472,11 +386,9 @@ private:
         return true;
     }
 
-    inline bool arrivalByTransfer(const StopId stop, const int time) noexcept
-    {
-        AssertMsg(data.isStop(stop), "Stop " << stop << " is out of range!");
-        if (earliestArrival[stop] <= time)
-            return false;
+    inline bool arrivalByTransfer(const StopId stop, const int time) noexcept {
+        Assert(data.isStop(stop), "Stop " << stop << " is out of range!");
+        if (earliestArrival[stop] <= time) return false;
         profiler.countMetric(METRIC_STOPS_BY_TRANSFER);
         currentRound()[stop].arrivalTime = time;
         earliestArrival[stop] = time;
@@ -484,37 +396,24 @@ private:
         return true;
     }
 
-    inline void getJourney(std::vector<Journey>& journeys, size_t round,
-        Vertex vertex) noexcept
-    {
-        AssertMsg(targetVertices.contains(vertex),
-            "Vertex " << vertex << " is not a target!");
+    inline void getJourney(std::vector<Journey>& journeys, size_t round, Vertex vertex) noexcept {
+        Assert(targetVertices.contains(vertex), "Vertex " << vertex << " is not a target!");
         const int arrivalTime = initialAndFinalTransfers.getTargetDistance(round, vertex);
-        if (arrivalTime >= (journeys.empty() ? never : journeys.back().back().arrivalTime))
-            return;
+        if (arrivalTime >= (journeys.empty() ? never : journeys.back().back().arrivalTime)) return;
         const Vertex parent = initialAndFinalTransfers.getTargetParent(round, vertex);
         Journey journey;
         if (parent != vertex) {
-            const int parentDepartureTime = (parent == sourceVertex)
-                ? sourceDepartureTime
-                : rounds[round][parent].arrivalTime;
-            journey.emplace_back(parent, vertex, parentDepartureTime, arrivalTime,
-                false, noRouteId);
+            const int parentDepartureTime = (parent == sourceVertex) ? sourceDepartureTime : rounds[round][parent].arrivalTime;
+            journey.emplace_back(parent, vertex, parentDepartureTime, arrivalTime, false, noRouteId);
         }
         vertex = parent;
         while (vertex != sourceVertex) {
-            AssertMsg(
-                round != size_t(-1),
-                "Backtracking parent pointers did not pass through the source stop!");
+            Assert(round != size_t(-1), "Backtracking parent pointers did not pass through the source stop!");
             const EarliestArrivalLabel& label = rounds[round][vertex];
-            journey.emplace_back(label.parent, vertex, label.parentDepartureTime,
-                label.arrivalTime, label.usesRoute, label.routeId);
-            AssertMsg(data.isStop(label.parent) || label.parent == sourceVertex,
-                "Backtracking parent pointers reached a vertex ("
-                    << label.parent << ")!");
+            journey.emplace_back(label.parent, vertex, label.parentDepartureTime, label.arrivalTime, label.usesRoute, label.routeId);
+            Assert(data.isStop(label.parent) || label.parent == sourceVertex, "Backtracking parent pointers reached a vertex (" << label.parent << ")!");
             vertex = label.parent;
-            if (label.usesRoute)
-                round--;
+            if (label.usesRoute) round--;
         }
         Vector::reverse(journey);
         for (JourneyLeg& leg : journey) {
@@ -524,25 +423,17 @@ private:
         journeys.emplace_back(journey);
     }
 
-    inline void getArrival(std::vector<ArrivalLabel>& labels, size_t round,
-        const Vertex vertex) noexcept
-    {
-        AssertMsg(targetVertices.contains(vertex),
-            "Vertex " << vertex << " is not a target!");
+    inline void getArrival(std::vector<ArrivalLabel>& labels, size_t round, const Vertex vertex) noexcept {
+        Assert(targetVertices.contains(vertex), "Vertex " << vertex << " is not a target!");
         const int arrivalTime = initialAndFinalTransfers.getTargetDistance(round, vertex);
-        if (arrivalTime >= (labels.empty() ? never : labels.back().arrivalTime))
-            return;
+        if (arrivalTime >= (labels.empty() ? never : labels.back().arrivalTime)) return;
         labels.emplace_back(arrivalTime, round);
     }
 
-    inline void getArrivalTime(std::vector<int>& labels, size_t round,
-        const Vertex vertex) noexcept
-    {
-        AssertMsg(targetVertices.contains(vertex),
-            "Vertex " << vertex << " is not a target!");
+    inline void getArrivalTime(std::vector<int>& labels, size_t round, const Vertex vertex) noexcept {
+        Assert(targetVertices.contains(vertex), "Vertex " << vertex << " is not a target!");
         const int arrivalTime = initialAndFinalTransfers.getTargetDistance(round, vertex);
-        labels.emplace_back(
-            std::min(arrivalTime, (labels.empty() ? never : labels.back())));
+        labels.emplace_back(std::min(arrivalTime, (labels.empty() ? never : labels.back())));
     }
 
 private:
@@ -566,4 +457,4 @@ private:
     Profiler profiler;
 };
 
-} // namespace RAPTOR
+}

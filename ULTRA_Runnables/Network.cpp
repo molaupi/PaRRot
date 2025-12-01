@@ -1,13 +1,14 @@
-#include "../include/ULTRA/Helpers/Console/CommandLineParser.h"
-#include "../include/ULTRA/Helpers/MultiThreading.h"
-#include "../include/ULTRA/Shell/Shell.h"
 #include "../include/Common/Constants.h"
 #include "Commands/NetworkIO.h"
 #include "Commands/NetworkTools.h"
+
+#include "../include/ULTRA/Helpers/Console/CommandLineParser.h"
+#include "../include/ULTRA/Helpers/MultiThreading.h"
+
+#include "../include/ULTRA/Shell/Shell.h"
 using namespace Shell;
 
-int main(int argc, char** argv)
-{
+int main(int argc, char** argv) {
     CommandLineParser clp(argc, argv);
     pinThreadToCoreId(clp.value<int>("core", 1));
     checkAsserts();
@@ -32,7 +33,6 @@ int main(int argc, char** argv)
     new MakeOneHopTransfers(shell);
     new ApplyMaxTransferSpeed(shell);
     new ApplyConstantTransferSpeed(shell);
-    new RAPTORToCSV(shell);
     shell.run();
     return 0;
 }

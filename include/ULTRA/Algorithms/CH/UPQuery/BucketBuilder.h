@@ -1,23 +1,26 @@
 #pragma once
 
 #include <iostream>
-#include <string>
 #include <vector>
+#include <string>
 
-#include "../../../DataStructures/Container/ExternalKHeap.h"
-#include "../../../DataStructures/Container/Set.h"
-#include "../../../Helpers/Console/Progress.h"
-#include "../../../Helpers/String/String.h"
-#include "../../../Helpers/Timer.h"
-#include "../../../Helpers/Types.h"
-#include "../../../Helpers/Vector/Vector.h"
 #include "../CH.h"
 #include "../CHUtils.h"
 
+#include "../../../Helpers/Types.h"
+#include "../../../Helpers/Timer.h"
+#include "../../../Helpers/Console/Progress.h"
+#include "../../../Helpers/String/String.h"
+#include "../../../Helpers/Vector/Vector.h"
+
+#include "../../../DataStructures/Container/ExternalKHeap.h"
+#include "../../../DataStructures/Container/IndexedSet.h"
+
 namespace ULTRACH {
 
-template <bool STALL_ON_DEMAND = true, bool DEBUG = false>
+template<bool STALL_ON_DEMAND = true, bool DEBUG = false>
 class BucketBuilder {
+
 public:
     constexpr static bool StallOnDemand = STALL_ON_DEMAND;
     constexpr static bool Debug = DEBUG;
@@ -25,38 +28,27 @@ public:
 
 private:
     struct Distance : public ExternalKHeapElement {
-        Distance()
-            : ExternalKHeapElement()
-            , distance(INFTY)
-        {
-        }
-        inline bool hasSmallerKey(const Distance* other) const noexcept
-        {
-            return distance < other->distance;
-        }
+        Distance() : ExternalKHeapElement(), distance(INFTY) {}
+        inline bool hasSmallerKey(const Distance* other) const noexcept {return distance < other->distance;}
         int distance;
     };
 
 public:
-    BucketBuilder(const CHGraph& forward, const CHGraph& backward)
-        : graph { &forward, &backward }
-        , Q(graph[FORWARD]->numVertices())
-        , distance(graph[FORWARD]->numVertices())
-        , timestamp(graph[FORWARD]->numVertices())
-        , currentTimestamp(0)
-        , reachedVertices(graph[FORWARD]->numVertices())
-    {
+    BucketBuilder(const CHGraph& forward, const CHGraph& backward) :
+        graph {&forward, &backward},
+        Q(graph[FORWARD]->numVertices()),
+        distance(graph[FORWARD]->numVertices()),
+        timestamp(graph[FORWARD]->numVertices()),
+        currentTimestamp(0),
+        reachedVertices(graph[FORWARD]->numVertices()) {
     }
 
-    BucketBuilder(const CH& ch, const int direction = FORWARD)
-        : BucketBuilder(ch.getGraph(direction), ch.getGraph(!direction))
-    {
+    BucketBuilder(const CH& ch, const int direction = FORWARD) :
+        BucketBuilder(ch.getGraph(direction), ch.getGraph(!direction)) {
     }
 
-    inline CHGraph build(const IndexedSet<false, Vertex>& targets) noexcept
-    {
-        if constexpr (Debug)
-            std::cout << "Building bucket graph" << std::endl;
+    inline CHGraph build(const IndexedSet<false, Vertex>& targets) noexcept {
+        if constexpr (Debug) std::cout << "Building bucket graph" << std::endl;
         CHConstructionGraph temp;
         temp.addVertices(graph[FORWARD]->numVertices());
         Progress progress(targets.size(), Debug);
@@ -69,9 +61,7 @@ public:
                 settle();
             }
             for (const Vertex bucket : reachedVertices) {
-                AssertMsg(!temp.hasEdge(bucket, vertex),
-                    "Bucket graph contains already an edge from "
-                        << bucket << " to " << vertex << "!");
+                Assert(!temp.hasEdge(bucket, vertex), "Bucket graph contains already an edge from " << bucket << " to " << vertex << "!");
                 temp.addEdge(bucket, vertex).set(Weight, distance[bucket].distance);
             }
             progress++;
@@ -88,18 +78,15 @@ public:
     }
 
 private:
-    inline void settle() noexcept
-    {
+    inline void settle() noexcept {
         Distance* distanceU = Q.extractFront();
         const Vertex u = Vertex(distanceU - &(distance[0]));
-        AssertMsg(u < graph[BACKWARD]->numVertices(),
-            u << " is not a valid vertex!");
+        Assert(u < graph[BACKWARD]->numVertices(), u << " is not a valid vertex!");
         if constexpr (StallOnDemand) {
             for (Edge edge : graph[FORWARD]->edgesFrom(u)) {
                 const Vertex v = graph[FORWARD]->get(ToVertex, edge);
                 cleanLabel(v);
-                if (distance[v].distance < distance[u].distance - graph[FORWARD]->get(Weight, edge))
-                    return;
+                if (distance[v].distance < distance[u].distance - graph[FORWARD]->get(Weight, edge)) return;
             }
         }
         for (Edge edge : graph[BACKWARD]->edgesFrom(u)) {
@@ -114,15 +101,13 @@ private:
         reachedVertices.insert(u);
     }
 
-    inline void clear() noexcept
-    {
+    inline void clear() noexcept {
         Q.clear();
         currentTimestamp++;
         reachedVertices.clear();
     }
 
-    inline void cleanLabel(const Vertex vertex) noexcept
-    {
+    inline void cleanLabel(const Vertex vertex) noexcept {
         if (timestamp[vertex] != currentTimestamp) {
             distance[vertex].distance = INFTY;
             timestamp[vertex] = currentTimestamp;
@@ -138,7 +123,7 @@ private:
     int currentTimestamp;
     IndexedSet<false, Vertex> reachedVertices;
 
-    ULTRATimer timer;
+    Timer timer;
 };
 
-} // namespace ULTRACH
+}

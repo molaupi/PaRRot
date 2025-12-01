@@ -1,14 +1,15 @@
 #pragma once
 
 #include <iostream>
-#include <string>
 #include <vector>
+#include <string>
 
 #include "../../../Helpers/Types.h"
 
 namespace RAPTOR {
 
 class JourneyLeg {
+
 public:
     JourneyLeg(const Vertex from = noVertex, const Vertex to = noVertex,
         const int departureTime = never, const int arrivalTime = never,
@@ -35,18 +36,12 @@ public:
     {
     }
 
-    inline int transferTime() const noexcept
-    {
+    inline int transferTime() const noexcept {
         return usesRoute ? 0 : arrivalTime - departureTime;
     }
 
-    inline friend std::ostream& operator<<(std::ostream& out,
-        const JourneyLeg& leg) noexcept
-    {
-        return out << "from: " << leg.from << ", to: " << leg.to
-                   << ", dep-Time: " << leg.departureTime
-                   << ", arr-Time: " << leg.arrivalTime
-                   << (leg.usesRoute ? ", route: " : ", transfer: ") << leg.routeId;
+    inline friend std::ostream& operator<<(std::ostream& out, const JourneyLeg& leg) noexcept {
+        return out << "from: " << leg.from << ", to: " << leg.to << ", dep-Time: " << leg.departureTime << ", arr-Time: " << leg.arrivalTime << (leg.usesRoute ? ", route: " : ", transfer: ") << leg.routeId;
     }
 
 public:
@@ -64,8 +59,7 @@ public:
 
 using Journey = std::vector<JourneyLeg>;
 
-inline std::vector<Vertex> journeyToPath(const Journey& journey) noexcept
-{
+inline std::vector<Vertex> journeyToPath(const Journey& journey) noexcept {
     std::vector<Vertex> path;
     for (const JourneyLeg& leg : journey) {
         path.emplace_back(leg.from);
@@ -74,8 +68,7 @@ inline std::vector<Vertex> journeyToPath(const Journey& journey) noexcept
     return path;
 }
 
-inline int totalTransferTime(const Journey& journey) noexcept
-{
+inline int totalTransferTime(const Journey& journey) noexcept {
     int transferTime = 0;
     for (const JourneyLeg& leg : journey) {
         transferTime += leg.transferTime();
@@ -83,8 +76,7 @@ inline int totalTransferTime(const Journey& journey) noexcept
     return transferTime;
 }
 
-inline int intermediateTransferTime(const Journey& journey) noexcept
-{
+inline int intermediateTransferTime(const Journey& journey) noexcept {
     int transferTime = 0;
     for (size_t i = 1; i < journey.size() - 1; i++) {
         transferTime += journey[i].transferTime();
@@ -92,10 +84,8 @@ inline int intermediateTransferTime(const Journey& journey) noexcept
     return transferTime;
 }
 
-inline int initialTransferTime(const Journey& journey) noexcept
-{
-    if (journey.empty())
-        return 0;
+inline int initialTransferTime(const Journey& journey) noexcept {
+    if (journey.empty()) return 0;
     int transferTime = journey[0].transferTime();
     if (journey.size() > 1) {
         transferTime += journey.back().transferTime();
@@ -103,14 +93,12 @@ inline int initialTransferTime(const Journey& journey) noexcept
     return transferTime;
 }
 
-inline size_t countTrips(const Journey& journey) noexcept
-{
+inline size_t countTrips(const Journey& journey) noexcept {
     size_t numTrips = 0;
     for (const JourneyLeg& leg : journey) {
-        if (leg.usesRoute && leg.routeId != noRouteId)
-            numTrips++;
+        if (leg.usesRoute && leg.routeId != noRouteId) numTrips++;
     }
     return numTrips;
 }
 
-} // namespace RAPTOR
+}
