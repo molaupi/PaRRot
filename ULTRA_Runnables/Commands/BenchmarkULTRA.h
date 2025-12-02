@@ -271,44 +271,26 @@ public:
             ParameterizedCommand(shell, "runULTRARAPTORWithGivenQueries", "Runs ULTRA-RAPTOR for the given queries.") {
         addParameter("RAPTOR input file");
         addParameter("CH data");
-        addParameter("Transfer graph");
-        addParameter("KaRRi requests");
+        addParameter("ULTRA requests");
         addParameter("Journey output file");
         addParameter("Prevent Walking", "true", {"true", "false"});
     }
 
     virtual void execute() noexcept {
-        const TransferGraph graph(getParameter("Transfer graph"));
-        const std::string karriRequestsFileName = getParameter("KaRRi requests");
-
-        ULTRAGraph::printInfo(graph);
-        graph.printAnalysis();
-
-        Geometry::Rectangle boundingBox = Geometry::Rectangle::BoundingBox(graph[Coordinates]);
-        Geometry::GeoMetricAproximation metric = Geometry::GeoMetricAproximation::ComputeCorrection(boundingBox.center());
-        CoordinateTree<Geometry::GeoMetricAproximation> ct(metric, graph[Coordinates]);
+        const std::string ultraRequestsFileName = getParameter("ULTRA requests");
         std::vector<VertexQuery> queries;
-        std::vector<int> distances;
-
 
         static constexpr IO::IgnoreColumn ReadMode = IO::IGNORE_NO_COLUMN;
-        IO::CSVReader<5, IO::TrimChars<>, IO::DoubleQuoteEscape<',','"'>> in(karriRequestsFileName);
-        in.readHeader(ReadMode, "lat_origin", "lon_origin", "lat_destination", "lon_destination", "req_time");
-        double latitudeOrigin = 0.0;
-        double longitudeOrigin = 0.0;
-        double latitudeDestination = 0.0;
-        double longitudeDestination = 0.0;
+        IO::CSVReader<5, IO::TrimChars<>, IO::DoubleQuoteEscape<',','"'>> in(ultraRequestsFileName);
+        in.readHeader(ReadMode, "origin", "destination", "req_time", "source", "target");
+        int origin = 0;
+        int destination = 0;
         int requestTime = 0;
-        while (in.readRow(latitudeOrigin, longitudeOrigin, latitudeDestination, longitudeDestination, requestTime)) {
-            const auto pointOrigin = Geometry::Point(Construct::LatLong, latitudeOrigin, longitudeOrigin);
-            const auto pointDestination = Geometry::Point(Construct::LatLong, latitudeDestination, longitudeDestination);
-            const Vertex originVertex = ct.getNearestNeighbor(pointOrigin);
-            const double originDistance = Geometry::geoDistanceInCM(pointOrigin, graph.get(Coordinates, originVertex));
-            const Vertex destinationVertex = ct.getNearestNeighbor(pointDestination);
-            const double destinationDistance = Geometry::geoDistanceInCM(pointDestination, graph.get(Coordinates, destinationVertex));
-            distances.push_back(originDistance);
-            distances.push_back(destinationDistance);
-            const VertexQuery query(Vertex(originVertex), Vertex(destinationVertex), requestTime);
+        int source = 0;
+        int target = 0;
+
+        while (in.readRow(origin, destination, requestTime, source, target)) {
+            const VertexQuery query(Vertex(source), Vertex(target), requestTime);
             queries.push_back(query);
         }
         

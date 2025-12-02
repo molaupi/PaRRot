@@ -23,7 +23,7 @@ As a result, you will obtain the CH files and raptor binary required to run the 
 ## Transform KaRRi Requests to ULTRA Requests (via LatLng)
 Run `./RawData/TransformRequests -veh-g ../../Networks/Berlin/KARRI/Graphs/Berlin-1pct_pedestrian_veh.gr.bin -psg-g ../../Networks/Berlin/KARRI/Graphs/Berlin-1pct_pedestrian_psg.gr.bin -r ../../Networks/Berlin/KARRI/Requests/Berlin-1pct_pedestrian.csv -transfer-graph ../../Networks/Berlin/ULTRA/Berlin-1pct_raptor.binary.graph -o ../../Networks/Berlin/KARRI/Requests/Berlin-1pct_transformed.csv` to obtain a requests file with both KaRRi edge ids and ULTRA vertex ids.
 
-In ULTRA: run `runULTRARAPTORWithGivenQueries ../Networks/Berlin/ULTRA/Berlin-1pct_raptor-shortcuts.binary ../Networks/Berlin/ULTRA/Berlin-1pct_CH ../Networks/Berlin/ULTRA/Berlin-1pct_raptor.binary.graph ../Networks/Berlin/KARRI/Requests/Berlin-1pct_pedestrian_latlng.csv ../Networks/Berlin/ULTRA/Outputs/Berlin-1pct_journeys_withWalking.csv false` to run ULTRARAPTOR algorithm with KaRRi requests.
+In ULTRA: run `runULTRARAPTORWithGivenQueries ../Networks/Berlin/ULTRA/Berlin-1pct_raptor-shortcuts.binary ../Networks/Berlin/ULTRA/Berlin-1pct_CH ../Networks/Berlin/KARRI/Requests/Berlin-1pct_transformed.csv ../Networks/Berlin/ULTRA/Outputs/Berlin-1pct_journeys_withWalking2.csv false` to run ULTRARAPTOR algorithm with KaRRi requests.
 
 
 ## Build Static Buckets for PTaxi
