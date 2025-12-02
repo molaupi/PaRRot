@@ -33,6 +33,7 @@ int main(int argc, char** argv) {
     new MakeOneHopTransfers(shell);
     new ApplyMaxTransferSpeed(shell);
     new ApplyConstantTransferSpeed(shell);
+    new RAPTORToCSV(shell);
     shell.run();
     return 0;
 }

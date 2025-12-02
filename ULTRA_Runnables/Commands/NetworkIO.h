@@ -226,3 +226,24 @@ private:
         graph.writeBinary(getParameter("Output file"));
     }
 };
+
+class RAPTORToCSV : public ParameterizedCommand {
+public:
+    RAPTORToCSV(BasicShell& shell)
+        : ParameterizedCommand(
+            shell, "raptorToCSV",
+            "Write the given RAPTOR into CSV files.")
+    {
+        addParameter("Input file");
+        addParameter("Output csv file");
+    }
+
+    virtual void execute() noexcept
+    {
+        const std::string inputFile = getParameter("Input file");
+        const std::string outputFile = getParameter("Output csv file");
+
+        RAPTOR::Data raptor(inputFile);
+        raptor.writeCSV(outputFile);
+    }
+};
