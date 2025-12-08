@@ -208,8 +208,8 @@ namespace karri {
 
             // Initialize finder for this request, find PD locations:
             std::pair<RequestState, stats::DispatchingPerformanceStats> initRequestState = requestStateInitializer.initializeRequestState(req);
-            RequestState& rs = initRequestState.first;
-            stats::DispatchingPerformanceStats& stats = initRequestState.second;
+            RequestState rs = std::move(initRequestState.first);
+            stats::DispatchingPerformanceStats stats = std::move(initRequestState.second);
             PDLocs pdLocs = pdLocsFinder.findPDLocs(req.origin, req.destination, stats.initializationStats);
             stats.numPickups = pdLocs.numPickups();
             stats.numDropoffs = pdLocs.numDropoffs();
@@ -263,13 +263,12 @@ namespace karri {
     private:
 
         FirstTaxiLegResult runFirstTaxiSharingLeg(stats::DispatchingPerformanceStats &stats) {
-            RequestState rs = curReqState;
-            FirstTaxiLegResult firstTaxiLegResult(routeState, rs, stations.size());
+            FirstTaxiLegResult firstTaxiLegResult(routeState, curReqState, stations.size());
 
-            runPALS(rs, stats.palsAssignmentsStats, firstTaxiLegResult);
-            runOrdinary(rs, stats.ordAssignmentsStats, firstTaxiLegResult);
-            runDALS(rs, stats.dalsAssignmentsStats, firstTaxiLegResult);
-            runPBNS(rs, stats.pbnsAssignmentsStats, firstTaxiLegResult);
+            runPALS(curReqState, stats.palsAssignmentsStats, firstTaxiLegResult);
+            runOrdinary(curReqState, stats.ordAssignmentsStats, firstTaxiLegResult);
+            runDALS(curReqState, stats.dalsAssignmentsStats, firstTaxiLegResult);
+            runPBNS(curReqState, stats.pbnsAssignmentsStats, firstTaxiLegResult);
 
             // -> assignment with best cost for each PT station
             return firstTaxiLegResult;
