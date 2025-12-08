@@ -435,7 +435,7 @@ private:
             if (targetStop == sourceVertex || targetStop == targetVertex || taxiResult.bestCost == INFTY)
                 continue;
             Assert(data.isStop(targetStop), "Taxi station " << targetStop << " is not a stop!");
-            const int arrivalTime = taxiResult.arrivalTime;
+            const int arrivalTime = convertToULTRATime(taxiResult.arrivalTime);
             if (arrivalByTransfer(targetStopId, arrivalTime)) {
                 EarliestArrivalLabel& label = currentRound()[targetStop];
                 label.parent = sourceVertex;
@@ -499,7 +499,8 @@ private:
             // Extension for second taxi leg
             const int stationId = stop.value();
             if (stationId != INVALID_ID) {
-                const int arrivalTime = earliestArrivalTime + distFromStations[stationId][0];
+                const int taxiTravelDistance = convertToULTRATime(distFromStations[stationId][0]);
+                const int arrivalTime = earliestArrivalTime + taxiTravelDistance;
                 if (arrivalByTransfer(targetStop, arrivalTime)) {
                     EarliestArrivalLabel& label = currentRound()[targetStop];
                     label.parent = stop;
@@ -630,6 +631,11 @@ private:
     }
 
 private:
+
+    const int convertToULTRATime(const int timeInOneTenthSeconds) const {
+        return timeInOneTenthSeconds / 10;
+    }
+
     const Data& data;
     const PTStations &stations;
 

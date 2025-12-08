@@ -40,7 +40,7 @@ karriInputDir=$parrotInputDir/KARRI
 vehGraph=$karriInputDir/Graphs/${vehName}.gr.bin
 psgGraph=$karriInputDir/Graphs/${psgName}.gr.bin
 vehicles=$karriInputDir/Vehicles/${name}.csv
-requests=$karriInputDir/Requests/${name}.csv
+requests=$karriInputDir/Requests/${instanceName}_transformed.csv
 vehCh=$karriInputDir/CHs/${vehName}_time.ch.bin
 psgCh=$karriInputDir/CHs/${psgName}_time.ch.bin
 
@@ -85,14 +85,14 @@ fi
 
 echo "Build completed successfully."
 
-# Lasse PTaxi 5 Mal laufen
-for i in {1..5}
-do
-echo "Running PTaxi, iteration $i ..."
-run_id=PTaxi_$i
-timeout $timeout $binaryDir/Runners/PTaxi -veh-g $vehGraph -psg-g $psgGraph -v $vehicles -r $requests -veh-h $vehCh -psg-h $psgCh -o $outputDir/$run_id -raptor-data $raptor -station-mapping $stationMapping -bucket-graph $bucketGraph -station-buckets $stationBuckets -ch $ptCh
+# # Lasse PTaxi 5 Mal laufen
+# for i in {1..5}
+# do
+# echo "Running PTaxi, iteration $i ..."
+# run_id=PTaxi_$i
+timeout $timeout $binaryDir/Runners/PTaxi -veh-g $vehGraph -psg-g $psgGraph -v $vehicles -r $requests -veh-h $vehCh -psg-h $psgCh -o $outputDir/ptaxi -raptor-data $raptor -station-mapping $stationMapping -bucket-graph $bucketGraph -station-buckets $stationBuckets -ch $ptCh
 
-done
+# done
 # Remark:
 # The prefix "timeout $timeout" aborts the process as soon as the timeout is reached, which is specified in the variable $timeout.
 # $timeout is by default specified in seconds, but other units are also possible, for example, "90m" is 90 minutes.
