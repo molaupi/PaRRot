@@ -2,185 +2,10 @@
 
 #include <vector>
 #include <ULTRA/DataStructures/RAPTOR/Entities/Journey.h>
+#include "FirstTaxiLeg/FirstTaxiLegResult.h"
+#include "PTLeg/PTResult.h"
 
 namespace karri {
-
-// TODO: Define the proper PT result type based ULTRARAPTOR result
-class PTResult {
-    using Journey = RAPTOR::Journey;
-public:
-    PTResult() : valid(false), bestCost(INFTY) {}
-
-    PTResult(std::vector<Journey> &journeyParetoFront, RequestState &curReqState) 
-        : bestCost(INFTY), valid(false) {
-            int cost;
-            for (Journey &journey: journeyParetoFront) {
-                cost = CostCalculator::calcPTJourneyCost(
-                                                getTotalTripTime(journey), 
-                                                getTotalTransferTime(journey), 
-                                                getNumberOfTransfers(journey),
-                                                curReqState);
-                if (cost < bestCost) {
-                    valid = true;
-                    bestCost = cost;
-                    bestJourney = journey;
-                };
-            }
-        }
-    
-    // Flag to indicate if this PT result is valid or not
-    bool isValid() const { return valid; }
-    void setValid(bool isValid) { valid = isValid; }
-
-    const int &getBestCost() const { return bestCost; }
-
-    const int getCostWithoutTripTime() const { 
-        return valid && !bestJourney.empty() ? CostCalculator::calcPTJourneyCostWithoutTripTime(getTotalTransferTime(bestJourney), getNumberOfTransfers(bestJourney)) : 0;
-    }
-
-    // Best cost from the pareto front
-    const Journey &getBestJourney() const {
-        return bestJourney;
-    }
-
-    // at Destination
-    const int getArrivalTime() const {
-        return valid && !bestJourney.empty() ? convertToKaRRiTime(bestJourney.back().arrivalTime) : INFTY;
-    }
-
-    const int getArrivalTimeAtLastStation() const {
-        return valid && bestJourney.size() >= 2 ? convertToKaRRiTime(bestJourney[bestJourney.size() - 2].arrivalTime) : INFTY;
-    }
-
-    const int getFirstStation() const {
-        return bestJourney.empty() ? INVALID_ID : bestJourney.front().to.value();
-    }
-
-    const int getLastStation() const {
-        return bestJourney.empty() ? INVALID_ID : bestJourney.back().from.value();
-    }
-
-    const bool isInitialTransferByTaxi() const {
-        return bestJourney.empty() ? false : bestJourney.front().usesTaxi;
-    }
-
-    const bool isFinalTransferByTaxi() const {
-        return bestJourney.empty() ? false : bestJourney.back().usesTaxi;
-    }
-
-    inline const int getTotalTransferTime(Journey journey) const {
-        return convertToKaRRiTime(RAPTOR::totalTransferTime(journey));
-    }
-
-    inline const int getTotalTripTime(Journey journey) const {
-        return convertToKaRRiTime(journey.back().arrivalTime - journey.front().departureTime);
-    }
-
-    inline const int getNumberOfTransfers(Journey journey) const {
-        return RAPTOR::countTrips(journey) - 1;
-    }
-    
-private:
-    const int convertToKaRRiTime(const int timeInSeconds) const {
-        return timeInSeconds * 10;
-    }
-
-    bool valid;
-    int bestCost;
-    Journey bestJourney;
-};
-
-enum InsertionType {
-    PALS,
-    DALS,
-    DALS_PBNS,
-    ORDINARY,
-    PBNS,
-    UNDEFINED
-};
-
-struct TaxiResult {    
-    TaxiResult() noexcept = default;
-    TaxiResult(const int cost, const int arrivalTime, const Assignment &asgn, InsertionType insertionType) noexcept
-        : bestCost(cost), arrivalTime(arrivalTime), bestAssignment(asgn), insertionType(insertionType) {}
-
-    int bestCost = INFTY;
-    int arrivalTime = INFTY;
-    Assignment bestAssignment;
-    InsertionType insertionType = UNDEFINED;
-};
-
-class FirstTaxiLegResult {
-public:
-
-    explicit FirstTaxiLegResult(const RouteState &routeState, const RequestState &requestState, const int numStations)
-            : results(numStations), routeState(routeState), requestState(requestState), calculator(routeState), 
-              worstCostForAllStations(INFTY), worstAssignmentForAllStations() {
-                assert(numStations >= 0);
-            }
-
-    bool tryAssignmentWithKnownCostForStation(const int stationId, const Assignment &asgn, const int cost, InsertionType insertionType) {
-        if (stationId < 0 || stationId >= results.size()) return false;
-        TaxiResult &taxiResult = results[stationId];
-
-        if (cost < INFTY && (cost < taxiResult.bestCost || (cost == taxiResult.bestCost &&
-                                breakCostTie(asgn, taxiResult.bestAssignment)))) {
-
-            taxiResult = TaxiResult(cost, calcArrivalTime(asgn), asgn, insertionType);
-            if (worstCostForAllStations == INFTY || taxiResult.bestCost > worstCostForAllStations) {
-                worstCostForAllStations = taxiResult.bestCost;
-                worstAssignmentForAllStations = taxiResult.bestAssignment;
-            }
-            return true;
-        }
-        return false;
-    }
-
-    const Assignment &getWorstAssignmentForAllStations() const {
-        return worstAssignmentForAllStations;
-    }
-
-    const int &getWorstCostForAllStations() const {
-        return worstCostForAllStations;
-    }
-
-    const TaxiResult &getResultForStation(const int stationId) const {
-        assert(stationId >= 0 && stationId < results.size());
-        return results[stationId];
-    }
-
-    const int getCostWithoutTripTimeForStation(const int stationId) const {
-        assert(stationId >= 0 && stationId < results.size());
-        auto result = results[stationId];
-        return calculator.calc(result.bestAssignment, requestState, true);
-    }
-
-    std::vector<TaxiResult> getValidResults() const {
-        std::vector<TaxiResult> validResults;
-        for (const auto& result : results) {
-            if (result.bestCost != INFTY) {
-                validResults.push_back(result);
-            }
-        }
-        return validResults;
-    }
-
-private:
-    int calcArrivalTime(const Assignment &asgn) {
-        using namespace time_utils;
-        const int actualDepTimeAtPickup = getActualDepTimeAtPickup(asgn, requestState, routeState);
-        const int initialPickupDetour = calcInitialPickupDetour(asgn, actualDepTimeAtPickup, requestState, routeState);
-        const bool dropoffAtExistingStop = isDropoffAtExistingStop(asgn, routeState);
-        return getArrTimeAtDropoff(actualDepTimeAtPickup, asgn, initialPickupDetour, dropoffAtExistingStop, routeState);
-    }
-
-    const RouteState &routeState;
-    const RequestState &requestState;
-    CostCalculator calculator;
-    std::vector<TaxiResult> results;
-    int worstCostForAllStations;
-    Assignment worstAssignmentForAllStations;
-};
 
 template<typename TaxiLegApproximationT>
 class IntermediateResult {
@@ -205,9 +30,9 @@ public:
         }
 
         if (isInitialTransferByTaxi()) {
-            firstTaxiLeg = firstTaxiLegResult.getResultForStation(ptLeg.getFirstStation());
+            firstTaxiLeg = firstTaxiLegResult.getResultForStation(firstStationId);
             firstTaxiLegCost = firstTaxiLeg.bestCost;
-            bestCost += firstTaxiLegResult.getCostWithoutTripTimeForStation(ptLeg.getFirstStation()); 
+            bestCost += firstTaxiLegResult.getCostWithoutTripTimeForStation(firstStationId); 
         }
 
         bestCost += ptLeg.getCostWithoutTripTime();
@@ -241,9 +66,7 @@ public:
 
     const int &getBestCost() const { return bestCost; }
 
-    const int &getArrivalTime() const {
-        return arrivalTime;
-    }
+    const int &getArrivalTime() const { return arrivalTime; }
 
 private:
     const int requestTime;

@@ -12,7 +12,7 @@
 #include <ULTRA/Algorithms/RAPTOR/InitialTransfers.h>
 #include <ULTRA/Algorithms/RAPTOR/Profiler.h>
 
-#include "../Results.h"
+#include "PTResult.h"
 #include "../Station/Station.h"
 
 namespace RAPTOR {

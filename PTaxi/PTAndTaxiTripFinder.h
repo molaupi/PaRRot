@@ -127,7 +127,7 @@ namespace karri {
             const bool taxiOnlyHasBetterCost = taxiOnlyResponse.first.getBestCost() < ptOnlyResponse.getBestCost();
             bestCost = taxiOnlyHasBetterCost ? taxiOnlyResponse.first.getBestCost() : ptOnlyResponse.getBestCost();
 
-            const auto &firstTaxiLeg = runFirstTaxiSharingLeg(req, taxiOnlyResponse.second);
+            const FirstTaxiLegResult &firstTaxiLeg = runFirstTaxiSharingLeg(taxiOnlyResponse.second);
 
             const int maxTripTime = taxiOnlyResponse.first.getOriginalReqMaxTripTime();
 
@@ -262,7 +262,7 @@ namespace karri {
 
     private:
 
-        FirstTaxiLegResult runFirstTaxiSharingLeg(const Request &req, stats::DispatchingPerformanceStats &stats) {
+        FirstTaxiLegResult runFirstTaxiSharingLeg(stats::DispatchingPerformanceStats &stats) {
             RequestState rs = curReqState;
             FirstTaxiLegResult firstTaxiLegResult(routeState, rs, stations.size());
 
