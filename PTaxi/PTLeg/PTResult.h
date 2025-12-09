@@ -34,21 +34,28 @@ public:
     const int &getBestCost() const { return bestCost; }
 
     const int getCostWithoutTripTime() const { 
-        return valid && !bestJourney.empty() ? CostCalculator::calcPTJourneyCostWithoutTripTime(getTotalTransferTime(bestJourney), getNumberOfTransfers(bestJourney)) : 0;
+        return valid && !bestJourney.empty() ? 
+        CostCalculator::calcPTJourneyCostWithoutTripTime(
+            getTotalTransferTime(bestJourney), 
+            getNumberOfTransfers(bestJourney)
+        ) : 0;
     }
 
-    // Best cost from the pareto front
     const Journey &getBestJourney() const {
         return bestJourney;
     }
 
     // at Destination
     const int getArrivalTime() const {
-        return valid && !bestJourney.empty() ? convertToKaRRiTime(bestJourney.back().arrivalTime) : INFTY;
+        return valid && !bestJourney.empty() ? 
+            convertToKaRRiTime(bestJourney.back().arrivalTime) : 
+            INFTY;
     }
 
     const int getArrivalTimeAtLastStation() const {
-        return valid && bestJourney.size() >= 2 ? convertToKaRRiTime(bestJourney[bestJourney.size() - 2].arrivalTime) : INFTY;
+        return valid && bestJourney.size() >= 2 ? 
+            convertToKaRRiTime(bestJourney[bestJourney.size() - 2].arrivalTime) : 
+            INFTY;
     }
 
     const int getFirstStation() const {
@@ -76,7 +83,8 @@ public:
     }
 
     inline const int getNumberOfTransfers(Journey journey) const {
-        return RAPTOR::countTrips(journey) - 1;
+        const int numTrips = RAPTOR::countTrips(journey);
+        return numTrips == 0 ? 0 : numTrips - 1;
     }
     
 private:

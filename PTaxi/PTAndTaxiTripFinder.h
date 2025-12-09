@@ -156,6 +156,7 @@ namespace karri {
                     << ptOnlyResponse.getBestCost() << ", "
                     << intermediateResult.getBestCost() << ", "
                     << intermediateResult.getFirstTaxiLegCost() << ", "
+                    << InsertionTypes[intermediateResult.getFirstTaxiLegInsertionType()] << ", "
                     << intermediateResult.getPTLegCost() << ", "
                     << intermediateResult.getSecondTaxiLegCost() << ", "
                     << taxiOnlyResponse.first.getArrivalTime(routeState) << ", "

@@ -37,6 +37,7 @@ namespace karri::stats {
             "pt_only_cost," 
             "combined_cost," 
             "combined_cost_1st_taxi_leg," 
+            "combined_1st_taxi_leg_type,"
             "combined_cost_pt_leg," 
             "combined_cost_2nd_taxi_leg," 
             "taxi_arrival_time," 
