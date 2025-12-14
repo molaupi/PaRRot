@@ -719,7 +719,7 @@ int main(int argc, char *argv[]) {
         // Run simulation:
         using EventSimulationImpl = EventSimulation<PTAndTaxiTripFinderImpl, SystemStateUpdaterImpl, RouteState>;
         EventSimulationImpl eventSimulation(fleet, requests, ptAndTaxiTripFinder, systemStateUpdater,
-                                            routeState, true);
+                                            routeState, stations, true);
         eventSimulation.run();
 
     } catch (std::exception &e) {

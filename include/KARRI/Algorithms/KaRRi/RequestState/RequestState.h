@@ -53,7 +53,8 @@ namespace karri {
                   notUsingVehicleIsBest(false),
                   notUsingVehicleDist(INFTY),
                   earliestDepartureTime(INFTY),
-                  maxArrivalTimeAtDropoffStation(INFTY) {}
+                  maxArrivalTimeAtDropoffStation(INFTY),
+                  currentWaitTime(0) {}
 
 
         // Information about current request itself
@@ -95,7 +96,11 @@ namespace karri {
         }
 
         int getMaxDepTimeAtPickup() const {
-            return originalRequest.requestTime + InputConfig::getInstance().maxWaitTime;
+            return originalRequest.requestTime + InputConfig::getInstance().maxWaitTime - currentWaitTime;
+        }
+
+        void setCurrentWaitTime(const int waitTime) {
+            currentWaitTime = waitTime;
         }
 
         // Information about best known assignment for current request
@@ -187,5 +192,6 @@ namespace karri {
         int notUsingVehicleDist;
         int earliestDepartureTime;
         int maxArrivalTimeAtDropoffStation;
+        int currentWaitTime;
     };
 }

@@ -64,6 +64,7 @@ namespace karri {
             int walkingTimeFromDropoff;
             int assignmentCost;
             int arrivalTimeAtStation;
+            int waitTime;
         };
 
         const int TRIGGER_TAXI_TIME = 9000;
@@ -76,12 +77,14 @@ namespace karri {
                 PTAndTaxiTripFinderT &ptAndTaxiTripFinder,
                 SystemStateUpdaterT &systemStateUpdater,
                 const ScheduledStopsT &scheduledStops,
+                PTStations &stations,
                 const bool verbose = false)
                 : fleet(fleet),
                   requests(requests),
                   ptAndTaxiTripFinder(ptAndTaxiTripFinder),
                   systemStateUpdater(systemStateUpdater),
                   scheduledStops(scheduledStops),
+                  stations(stations),
                   vehicleEvents(fleet.size()),
                   requestEvents(requests.size()),
                   vehicleState(fleet.size(), OUT_OF_SERVICE),
@@ -288,6 +291,7 @@ namespace karri {
                 const auto curStop = scheduledStops.getCurrentOrPrevScheduledStop(vehId);
                 for (const auto &reqId: curStop.requestsPickedUpHere) {
                     requestData[reqId].depTime = occTime;
+                    requestData[reqId].waitTime = occTime - requests[reqId].requestTime;
                 }
                 vehicleState[vehId] = DRIVING;
                 vehicleEvents.increaseKey(vehId, scheduledStops.getNextScheduledStop(vehId).arrTime);
@@ -328,8 +332,9 @@ namespace karri {
         }
 
         template<typename AssignmentFinderResponseT>
-        void applyAssignment(AssignmentFinderResponseT &asgnFinderResponse, const int reqId, const int occTime) {
+        void applyAssignment(AssignmentFinderResponseT &asgnFinderResponse, const int reqId, const int occTime, bool isSecondTaxiLeg = false) {
             // walk and not taxi
+            // should not happen here since only walking is handled in PT
             if (asgnFinderResponse.first.isNotUsingVehicleBest()) {
                 requestState[reqId] = WALKING_TO_DEST;
                 requestData[reqId].assignmentCost = asgnFinderResponse.first.getBestCost();
@@ -354,9 +359,17 @@ namespace karri {
             }
 
             requestState[reqId] = ASSIGNED_TO_VEH;
-            requestData[reqId].walkingTimeToPickup = bestAsgn.pickup.walkingDist;
-            requestData[reqId].walkingTimeFromDropoff = bestAsgn.dropoff.walkingDist;
-            requestData[reqId].assignmentCost = asgnFinderResponse.first.getBestCost();
+
+            if (isSecondTaxiLeg) {
+                requestData[reqId].walkingTimeToPickup += bestAsgn.pickup.walkingDist;
+                requestData[reqId].walkingTimeFromDropoff += bestAsgn.dropoff.walkingDist;
+                requestData[reqId].assignmentCost += asgnFinderResponse.first.getBestCost();
+                // TODO: how to apply insert best assignment? system state updater?
+            } else {
+                requestData[reqId].walkingTimeToPickup = bestAsgn.pickup.walkingDist;
+                requestData[reqId].walkingTimeFromDropoff = bestAsgn.dropoff.walkingDist;
+                requestData[reqId].assignmentCost = asgnFinderResponse.first.getBestCost();    
+            }
 
             systemStateUpdater.insertBestAssignment(asgnFinderResponse.first, asgnFinderResponse.second);
             systemStateUpdater.writePerformanceLogs(asgnFinderResponse.first, asgnFinderResponse.second);
@@ -389,8 +402,8 @@ namespace karri {
             
             requestState[reqId] = FINISHED;
             requestData[reqId].depTime = ptResponse.getDepartureTime();
-            requestData[reqId].walkingTimeToPickup = ptResponse.getWalkingTimeToFirstStation();
-            requestData[reqId].walkingTimeFromDropoff = isWalkingOnly ? 0 : ptResponse.getWalkingTimeFromLastStation();
+            requestData[reqId].walkingTimeToPickup = isWalkingOnly ? 0 : ptResponse.getWalkingTimeToFirstStation();
+            requestData[reqId].walkingTimeFromDropoff = ptResponse.getWalkingTimeFromLastStation();
             requestData[reqId].assignmentCost = ptResponse.getBestCost();
             requestData[reqId].arrivalTimeAtStation = isWalkingOnly ? ptResponse.getArrivalTime() : ptResponse.getArrivalTimeAtLastStation();
 
@@ -415,16 +428,23 @@ namespace karri {
 
         void handleSecondTaxiLeg(const int reqId, const int occTime) {
             assert(requestState[reqId] == BEFORE_PT_ARRIVED);
-
-            // TODO: route second taxi leg from ptStationsForSecondTaxiLeg[reqId] to dest
-            // handleRequestReceipt(newReq) 
-            // applyAssignment (forbid only walking)
-
+            assert(ptStationsForSecondTaxiLeg[reqId] != INVALID_ID);
+            
+            const auto &request = requests[reqId];
+            const auto stationEdgeId = stations[ptStationsForSecondTaxiLeg[reqId]].psgEdgeId;
+            const Request &newReq = {
+                reqId,
+                stationEdgeId,
+                request.destination,
+                occTime + TRIGGER_TAXI_TIME,
+                request.numRiders
+            };
+            
+            auto secondTaxiLeg = ptAndTaxiTripFinder.findBestTaxiAssignment(newReq);
+            auto &reqState = secondTaxiLeg.first;
             const auto &reqData = requestData[reqId];
-            requestState[reqId] = FINISHED;
-            int id, key;
-            requestEvents.deleteMin(id, key);
-            assert(id == reqId && key == occTime);
+            reqState.setCurrentWaitTime(reqData.waitTime);
+            applyAssignment(secondTaxiLeg, reqId, occTime, true);
 
             const auto waitTime = reqData.depTime - requests[reqId].requestTime;
             const auto arrTime = occTime;
@@ -474,6 +494,7 @@ namespace karri {
         PTAndTaxiTripFinderT &ptAndTaxiTripFinder;
         SystemStateUpdaterT &systemStateUpdater;
         const ScheduledStopsT &scheduledStops;
+        PTStations &stations;
 
         AddressableQuadHeap vehicleEvents;
         AddressableQuadHeap requestEvents;
