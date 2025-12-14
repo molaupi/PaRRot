@@ -11,18 +11,13 @@ class PTAndTaxiTriple {
 public:
     PTAndTaxiTriple() = default;
     
-    PTAndTaxiTriple(std::pair<RequestState, stats::DispatchingPerformanceStats> &firstTaxiLeg, PTResult &ptLeg, RequestState &secondTaxiLeg)
-        : firstTaxiLeg(firstTaxiLeg), 
-          ptLeg(ptLeg), 
-          secondTaxiLeg(secondTaxiLeg) {}
+    PTAndTaxiTriple(std::pair<RequestState, stats::DispatchingPerformanceStats> firstTaxiLeg, PTResult ptLeg, bool hasSecondTaxiLeg)
+        : firstTaxiLeg(std::move(firstTaxiLeg)), 
+          ptLeg(std::move(ptLeg)), 
+          hasSecondTaxiLeg(hasSecondTaxiLeg) {}
     
     std::pair<RequestState, stats::DispatchingPerformanceStats>& getFirstTaxiLeg() { return firstTaxiLeg; }
     PTResult& getPTLeg() { return ptLeg; }
-    RequestState& getSecondTaxiLeg() { return secondTaxiLeg; }
-
-    const int getTotalCost() const {
-        return firstTaxiLeg.first.getBestCost() + ptLeg.getBestCost() + secondTaxiLeg.getBestCost();
-    }
     
     bool hasValidFirstTaxiLeg() const { 
         // check whether vehicle is set
@@ -33,30 +28,25 @@ public:
         return ptLeg.isValid(); 
     }
     
-    bool hasValidSecondTaxiLeg() const { 
-        // check whether vehicle is set
-        return secondTaxiLeg.getBestAssignment().vehicle != nullptr || secondTaxiLeg.isNotUsingVehicleBest(); 
-    }
-    
     // Check if this is a valid combined trip (taxi + PT + taxi)
     bool isValidCombinedTrip() const {
-        return hasValidFirstTaxiLeg() && hasValidPTLeg() && hasValidSecondTaxiLeg();
+        return hasValidFirstTaxiLeg() && hasValidPTLeg() && hasSecondTaxiLeg;
     }
     
     // Check if this is a valid taxi-only trip
     bool isValidTaxiOnlyTrip() const {
-        return hasValidFirstTaxiLeg() && !hasValidPTLeg() && !hasValidSecondTaxiLeg();
+        return hasValidFirstTaxiLeg() && !hasValidPTLeg() && !hasSecondTaxiLeg;
     }
     
     // Check if this is a valid PT-only trip
     bool isValidPTOnlyTrip() const {
-        return !hasValidFirstTaxiLeg() && hasValidPTLeg() && !hasValidSecondTaxiLeg();
+        return !hasValidFirstTaxiLeg() && hasValidPTLeg() && !hasSecondTaxiLeg;
     }
 
 private:
     std::pair<RequestState, stats::DispatchingPerformanceStats> firstTaxiLeg;  // First taxi leg result
     PTResult ptLeg;             // Public transit leg result
-    RequestState secondTaxiLeg; // Second taxi leg result
+    bool hasSecondTaxiLeg;      // Flag indicating if there is a second taxi leg
 };
 
 } // namespace karri

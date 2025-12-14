@@ -45,6 +45,12 @@ public:
         return bestJourney;
     }
 
+    const bool isJourneyWalking() const { 
+        return bestJourney.size() == 1 && 
+               !bestJourney.front().usesRoute && 
+               !bestJourney.front().usesTaxi; 
+    }
+
     // at Destination
     const int getArrivalTime() const {
         return valid && !bestJourney.empty() ? 
@@ -55,6 +61,34 @@ public:
     const int getArrivalTimeAtLastStation() const {
         return valid && bestJourney.size() >= 2 ? 
             convertToKaRRiTime(bestJourney[bestJourney.size() - 2].arrivalTime) : 
+            INFTY;
+    }
+
+    // at Origin
+    const int getDepartureTime() const {
+        return valid && !bestJourney.empty() ? 
+            convertToKaRRiTime(bestJourney.front().departureTime) : 
+            INFTY;
+    }
+
+    const int getDepartureTimeAtFirstStation() const {
+        for (const auto &leg : bestJourney) {
+            if (leg.usesRoute) {
+                return convertToKaRRiTime(leg.departureTime);
+            }
+        }
+        return INFTY;
+    }
+
+    const int getWalkingTimeToFirstStation() const {
+        return valid && !bestJourney.empty() ? 
+            convertToKaRRiTime(bestJourney.front().arrivalTime - bestJourney.front().departureTime) : 
+            INFTY;
+    }
+
+    const int getWalkingTimeFromLastStation() const {
+        return valid && !bestJourney.empty() ? 
+            convertToKaRRiTime(bestJourney.back().arrivalTime - bestJourney.back().departureTime) : 
             INFTY;
     }
 

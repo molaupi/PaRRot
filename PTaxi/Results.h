@@ -58,6 +58,10 @@ public:
         return firstTaxiLeg.insertionType;
     }
 
+    const TaxiResult &getFirstTaxiLeg() const {
+        return firstTaxiLeg;
+    }
+
     const int &getFirstTaxiLegCost() const { return firstTaxiLegCost; }
 
     const int &getPTLegCost() const { return ptLegCost; }

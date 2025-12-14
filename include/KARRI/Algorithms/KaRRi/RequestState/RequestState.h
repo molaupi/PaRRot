@@ -52,7 +52,8 @@ namespace karri {
                   bestArrivalTime(INFTY),
                   notUsingVehicleIsBest(false),
                   notUsingVehicleDist(INFTY),
-                  earliestDepartureTime(INFTY) {}
+                  earliestDepartureTime(INFTY),
+                  maxArrivalTimeAtDropoffStation(INFTY) {}
 
 
         // Information about current request itself
@@ -83,7 +84,14 @@ namespace karri {
         }
 
         int getMaxArrTimeAtDropoff(const PDLoc& dropoff) const {
-            return originalRequest.requestTime + getOriginalReqMaxTripTime() - dropoff.walkingDist;
+            return std::max(
+                originalRequest.requestTime + getOriginalReqMaxTripTime() - dropoff.walkingDist, 
+                maxArrivalTimeAtDropoffStation
+            );
+        }
+
+        void setMaxArrTimeAtDropoffStation(const int maxTime) {
+            maxArrivalTimeAtDropoffStation = maxTime;
         }
 
         int getMaxDepTimeAtPickup() const {
@@ -178,5 +186,6 @@ namespace karri {
         bool notUsingVehicleIsBest;
         int notUsingVehicleDist;
         int earliestDepartureTime;
+        int maxArrivalTimeAtDropoffStation;
     };
 }

@@ -195,14 +195,25 @@ namespace karri {
                     << intermediateResult.getPTLegCost() << ", "
                     << ptLegCount << "\n";
 
-            // TODO: IntermediateResult -> PTAndTaxiTriple
-            // if (combinationIsBestCost) return PTAndTaxiTriple();
+
+            const bool combinationIsBestCost = intermediateResult.getBestCost() < bestCost;
+            bestCost = combinationIsBestCost ? intermediateResult.getBestCost() : bestCost;
+
+            if (combinationIsBestCost) {
+                auto &firstTaxiLeg = intermediateResult.getFirstTaxiLeg();
+                curReqState.tryAssignmentWithKnownCost(firstTaxiLeg.bestAssignment, firstTaxiLeg.bestCost);
+                return PTAndTaxiTriple(
+                    {curReqState, taxiOnlyResponse.second},
+                    ptLegResponse,
+                    true
+                );
+            } 
             
-            // if (taxiOnlyHasBetterCost) {
-                return PTAndTaxiTriple(taxiOnlyResponse, invalidPTResponse, invalidTaxiResponse);
-            // } else {
-            //     return PTAndTaxiTriple(invalidTaxiResponseWithStats, ptOnlyResponse, invalidTaxiResponse);
-            // }
+            if (taxiOnlyHasBetterCost) {
+                return PTAndTaxiTriple(taxiOnlyResponse, invalidPTResponse, false);
+            } else {
+                return PTAndTaxiTriple(invalidTaxiResponseWithStats, ptOnlyResponse, false);
+            }
         }
 
         std::pair<RequestState, stats::DispatchingPerformanceStats> findBestTaxiAssignment(const Request &req) {
