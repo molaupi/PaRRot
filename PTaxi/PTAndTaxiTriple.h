@@ -20,17 +20,11 @@ public:
     PTResult& getPTLeg() { return ptLeg; }
     
     bool hasValidFirstTaxiLeg() const { 
-        // check whether vehicle is set
         return firstTaxiLeg.first.getBestAssignment().vehicle != nullptr || firstTaxiLeg.first.isNotUsingVehicleBest(); 
     }
     
     bool hasValidPTLeg() const { 
         return ptLeg.isValid(); 
-    }
-    
-    // Check if this is a valid combined trip (taxi + PT + taxi)
-    bool isValidCombinedTrip() const {
-        return hasValidFirstTaxiLeg() && hasValidPTLeg() && hasSecondTaxiLeg;
     }
     
     // Check if this is a valid taxi-only trip

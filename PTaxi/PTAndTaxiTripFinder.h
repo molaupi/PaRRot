@@ -201,6 +201,10 @@ namespace karri {
 
             if (combinationIsBestCost) {
                 auto &firstTaxiLeg = intermediateResult.getFirstTaxiLeg();
+                // No first taxi leg
+                if (firstTaxiLeg.insertionType == UNDEFINED && firstTaxiLeg.bestCost == INFTY) {
+                    return PTAndTaxiTriple(invalidTaxiResponseWithStats, ptLegResponse, true);
+                }
                 curReqState.tryAssignmentWithKnownCost(firstTaxiLeg.bestAssignment, firstTaxiLeg.bestCost);
                 return PTAndTaxiTriple(
                     {curReqState, taxiOnlyResponse.second},
