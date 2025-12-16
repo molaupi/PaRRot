@@ -347,7 +347,7 @@ namespace karri {
         }
 
         template<typename AssignmentFinderResponseT>
-        void applyAssignment(AssignmentFinderResponseT &asgnFinderResponse, const int reqId, const int occTime, bool isSecondTaxiLeg = false) {
+        void applyAssignment(AssignmentFinderResponseT &asgnFinderResponse, const int reqId, const int occTime) {
             // walk and not taxi
             // should not happen here since only walking is handled in PT
             if (asgnFinderResponse.first.isNotUsingVehicleBest()) {
@@ -375,7 +375,7 @@ namespace karri {
 
             requestState[reqId] = ASSIGNED_TO_VEH;
 
-            if (isSecondTaxiLeg) {
+            if (requestData[reqId].secondTaxiLeg) {
                 requestData[reqId].walkingTimeToSecondTaxiLegPickup = bestAsgn.pickup.walkingDist;
                 requestData[reqId].walkingTimeFromDropoff += bestAsgn.dropoff.walkingDist;
                 requestData[reqId].assignmentCost += asgnFinderResponse.first.getBestCost();
@@ -408,19 +408,22 @@ namespace karri {
         }
 
         template<typename JourneyResponseT>
-        void applyJourney(JourneyResponseT &ptResponse, const int reqId, const int occTime) {
+        void applyJourney(JourneyResponseT &ptResponse, const int reqId, const int occTime, bool inCombinedTrip = false) {
             int id, key;
             requestEvents.deleteMin(id, key); 
             assert(id == reqId && key == occTime);
 
             const bool isWalkingOnly = ptResponse.isJourneyWalking();
             
-            requestState[reqId] = FINISHED;
-            requestData[reqId].depTime = ptResponse.getDepartureTime();
+            // cannot be walking to destination in combined trip without first taxi leg, only in PT-only trip
+            requestState[reqId] = inCombinedTrip ? BEFORE_PT_ARRIVED : WALKING_TO_DEST;
+            requestEvents.insert(reqId, ptResponse.getArrivalTime());
+            requestData[reqId].depTime = isWalkingOnly ? ptResponse.getDepartureTime() : ptResponse.getDepartureTimeAtFirstStation();
             requestData[reqId].walkingTimeToPickup = isWalkingOnly ? 0 : ptResponse.getWalkingTimeToFirstStation();
             requestData[reqId].walkingTimeFromDropoff = ptResponse.getWalkingTimeFromLastStation();
-            requestData[reqId].assignmentCost = ptResponse.getBestCost();
             requestData[reqId].arrivalTimeAtStation = isWalkingOnly ? ptResponse.getArrivalTime() : ptResponse.getArrivalTimeAtLastStation();
+
+            if (!inCombinedTrip) { requestData[reqId].assignmentCost = ptResponse.getBestCost(); }
 
         }
 
@@ -432,9 +435,13 @@ namespace karri {
                 reqState.setMaxArrTimeAtDropoffStation(ptResponse.getDepartureTimeAtFirstStation());
                 applyAssignment(asgnFinderResponse, reqId, occTime);
                 requestsWithFirstTaxiLeg.insert(reqId);
+            } else {
+                // without first taxi leg
+                applyJourney(ptResponse, reqId, occTime, true);
             }
 
-            
+            requestData[reqId].assignmentCost += ptResponse.getBestCost();
+
             if (ptResponse.isFinalTransferByTaxi()) {
                 // Insert request event for second taxi leg 15 minutes before arrival
                 const auto arrivalTimeAtLastStation = ptResponse.getArrivalTimeAtLastStation();
@@ -463,8 +470,8 @@ namespace karri {
                 request.numRiders
             };
             
-            auto secondTaxiLeg = ptAndTaxiTripFinder.findBestTaxiAssignment(newReq);
-            auto &reqState = secondTaxiLeg.first;
+            auto secondTaxiLegResponse = ptAndTaxiTripFinder.findBestTaxiAssignment(newReq);
+            auto &reqState = secondTaxiLegResponse.first;
 
             // Before the second taxi leg
             const auto &reqData = requestData[reqId];
@@ -474,7 +481,7 @@ namespace karri {
             // Flag to signal the second taxi leg
             requestData[reqId].secondTaxiLeg = true;
 
-            applyAssignment(secondTaxiLeg, reqId, occTime, true);
+            applyAssignment(secondTaxiLegResponse, reqId, occTime);
 
         }
 
@@ -488,11 +495,11 @@ namespace karri {
             requestEvents.deleteMin(id, key);
             assert(id == reqId && key == occTime);
 
-            const auto firstLegWaitTime = reqData.depTime - requests[reqId].requestTime;
-            const auto secondLegWaitTime = reqData.secondTaxiLegDepTime - reqData.arrivalTimeAtStation;
-            const auto waitTime = firstLegWaitTime + secondLegWaitTime;
+            const auto firstTaxiLegWaitTime = reqData.depTime - requests[reqId].requestTime;
+            const auto secondTaxiLegWaitTime = reqData.secondTaxiLegDepTime - reqData.arrivalTimeAtStation;
+            const auto waitTime = firstTaxiLegWaitTime + secondTaxiLegWaitTime;
             const auto arrTime = occTime;
-            const auto rideTime = occTime - reqData.walkingTimeFromDropoff - secondLegWaitTime -reqData.walkingTimeToSecondTaxiLegPickup - reqData.depTime;
+            const auto rideTime = occTime - reqData.walkingTimeFromDropoff - secondTaxiLegWaitTime - reqData.walkingTimeToSecondTaxiLegPickup - reqData.depTime;
             const auto tripTime = arrTime - requests[reqId].requestTime;
             assignmentQualityStats << reqId << ','
                                     << arrTime << ','
