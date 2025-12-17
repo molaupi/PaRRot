@@ -52,7 +52,6 @@ namespace karri {
             NOT_RECEIVED,
             ASSIGNED_TO_VEH,
             BEFORE_PT_ARRIVED,
-            TAXIING_TO_DEST,
             WALKING_TO_DEST,
             FINISHED
         };
@@ -63,11 +62,18 @@ namespace karri {
             int depTime;
             int walkingTimeToPickup;
             int walkingTimeFromDropoff = 0;
+            // TODO:
+            // 1. approximate cost of intermediate -> entscheidung;(1st taxi leg + pt leg + 2nd taxi leg)
+            // 2. cost of the 2nd taxi leg
+            // how good/bad is the approximation
             int assignmentCost = 0;
-            int arrivalTimeAtStation;
-            bool secondTaxiLeg = false;
-            int secondTaxiLegDepTime;
-            int walkingTimeToSecondTaxiLegPickup;
+            
+            // related to combined trip
+            bool firstTaxiLegStarted = false;
+            int arrivalTimeAtStation = 0;
+            bool secondTaxiLegStarted = false;
+            int secondTaxiLegDepTime = 0;
+            int walkingTimeToSecondTaxiLegPickup = 0;
         };
 
         const int TRIGGER_TAXI_TIME = 9000;
@@ -94,7 +100,6 @@ namespace karri {
                   requestState(requests.size(), NOT_RECEIVED),
                   requestData(requests.size(), RequestData()),
                   ptStationsForSecondTaxiLeg(requests.size(), INVALID_ID),
-                  requestsWithFirstTaxiLeg(requests.size()),
                   eventSimulationStatsLogger(LogManager<std::ofstream>::getLogger("eventsimulationstats.csv",
                                                                                   "occurrence_time,"
                                                                                   "type,"
@@ -187,9 +192,6 @@ namespace karri {
                 case BEFORE_PT_ARRIVED:
                     handleSecondTaxiLeg(reqId, occTime);
                     break;
-                case TAXIING_TO_DEST:
-                    handleTaxiArrivalAtDest(reqId, occTime);
-                    break;
                 case WALKING_TO_DEST:
                     handleWalkingArrivalAtDest(reqId, occTime);
                     break;
@@ -259,13 +261,8 @@ namespace karri {
             for (const auto &reqId: reachedStop.requestsDroppedOffHere) {
                 const auto &reqData = requestData[reqId];
 
-                // in case of second taxi leg of combined trip
-                if (reqData.secondTaxiLeg) {
-                    requestState[reqId] = TAXIING_TO_DEST;
-                    requestEvents.insert(reqId, occTime + reqData.walkingTimeFromDropoff);
-
                 // in case of first taxi leg of combined trip
-                } else if (requestsWithFirstTaxiLeg.contains(reqId)) {
+                if (reqData.firstTaxiLegStarted) {
                     // without second taxi leg
                     if (ptStationsForSecondTaxiLeg[reqId] == INVALID_ID) {
                         requestState[reqId] = WALKING_TO_DEST;
@@ -274,6 +271,7 @@ namespace karri {
                         requestState[reqId] = BEFORE_PT_ARRIVED;
                     }
 
+                // taxi only trip or second taxi leg of combined trip
                 } else {
                     requestState[reqId] = WALKING_TO_DEST;
                     requestEvents.insert(reqId, occTime + reqData.walkingTimeFromDropoff);
@@ -302,7 +300,7 @@ namespace karri {
                 // Remember departure time for all requests picked up at this stop:
                 const auto curStop = scheduledStops.getCurrentOrPrevScheduledStop(vehId);
                 for (const auto &reqId: curStop.requestsPickedUpHere) {
-                    if (requestData[reqId].secondTaxiLeg) {
+                    if (requestData[reqId].secondTaxiLegStarted) {
                         requestData[reqId].secondTaxiLegDepTime = occTime;
                     } else { 
                         requestData[reqId].depTime = occTime;
@@ -375,11 +373,10 @@ namespace karri {
 
             requestState[reqId] = ASSIGNED_TO_VEH;
 
-            if (requestData[reqId].secondTaxiLeg) {
+            if (requestData[reqId].secondTaxiLegStarted) {
                 requestData[reqId].walkingTimeToSecondTaxiLegPickup = bestAsgn.pickup.walkingDist;
                 requestData[reqId].walkingTimeFromDropoff += bestAsgn.dropoff.walkingDist;
                 requestData[reqId].assignmentCost += asgnFinderResponse.first.getBestCost();
-                // TODO: how to apply insert best assignment? system state updater?
             } else {
                 requestData[reqId].walkingTimeToPickup = bestAsgn.pickup.walkingDist;
                 requestData[reqId].walkingTimeFromDropoff = bestAsgn.dropoff.walkingDist;
@@ -434,7 +431,7 @@ namespace karri {
                 auto &reqState = asgnFinderResponse.first;
                 reqState.setMaxArrTimeAtDropoffStation(ptResponse.getDepartureTimeAtFirstStation());
                 applyAssignment(asgnFinderResponse, reqId, occTime);
-                requestsWithFirstTaxiLeg.insert(reqId);
+                requestData[reqId].firstTaxiLegStarted = true;
             } else {
                 // without first taxi leg
                 applyJourney(ptResponse, reqId, occTime, true);
@@ -478,15 +475,14 @@ namespace karri {
             const auto waitTime = reqData.depTime - requests[reqId].requestTime;
             reqState.setCurrentWaitTime(waitTime);
 
-            // Flag to signal the second taxi leg
-            requestData[reqId].secondTaxiLeg = true;
+            requestData[reqId].secondTaxiLegStarted = true;
 
             applyAssignment(secondTaxiLegResponse, reqId, occTime);
 
         }
 
-        void handleTaxiArrivalAtDest(const int reqId, const int occTime) {
-            assert(requestState[reqId] == TAXIING_TO_DEST);
+        void handleWalkingArrivalAtDest(const int reqId, const int occTime) {
+            assert(requestState[reqId] == WALKING_TO_DEST);
             KaRRiTimer timer;
 
             const auto &reqData = requestData[reqId];
@@ -501,34 +497,7 @@ namespace karri {
             const auto arrTime = occTime;
             const auto rideTime = occTime - reqData.walkingTimeFromDropoff - secondTaxiLegWaitTime - reqData.walkingTimeToSecondTaxiLegPickup - reqData.depTime;
             const auto tripTime = arrTime - requests[reqId].requestTime;
-            assignmentQualityStats << reqId << ','
-                                    << arrTime << ','
-                                    << waitTime << ','
-                                    << rideTime << ','
-                                    << tripTime << ','
-                                    << reqData.walkingTimeToPickup + reqData.walkingTimeToSecondTaxiLegPickup << ','
-                                    << reqData.walkingTimeFromDropoff << ','
-                                    << reqData.assignmentCost << '\n';
 
-
-            const auto time = timer.elapsed<std::chrono::nanoseconds>();
-            eventSimulationStatsLogger << occTime << ",RequestTaxiArrival," << time << '\n';
-        }
-
-        void handleWalkingArrivalAtDest(const int reqId, const int occTime) {
-            assert(requestState[reqId] == WALKING_TO_DEST);
-            KaRRiTimer timer;
-
-            const auto &reqData = requestData[reqId];
-            requestState[reqId] = FINISHED;
-            int id, key;
-            requestEvents.deleteMin(id, key);
-            assert(id == reqId && key == occTime);
-
-            const auto waitTime = reqData.depTime - requests[reqId].requestTime;
-            const auto arrTime = occTime;
-            const auto rideTime = occTime - reqData.walkingTimeFromDropoff - reqData.depTime;
-            const auto tripTime = arrTime - requests[reqId].requestTime;
             assignmentQualityStats << reqId << ','
                                    << arrTime << ','
                                    << waitTime << ','
@@ -560,7 +529,6 @@ namespace karri {
         std::vector<RequestData> requestData;
 
         std::vector<int> ptStationsForSecondTaxiLeg;
-        Subset requestsWithFirstTaxiLeg;
 
         std::ofstream &eventSimulationStatsLogger;
         std::ofstream &assignmentQualityStats;
