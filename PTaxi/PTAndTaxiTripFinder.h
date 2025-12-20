@@ -202,21 +202,25 @@ namespace karri {
             if (combinationIsBestCost) {
                 auto &firstTaxiLeg = intermediateResult.getFirstTaxiLeg();
                 // No first taxi leg
-                if (firstTaxiLeg.insertionType == UNDEFINED && firstTaxiLeg.bestCost == INFTY) {
-                    return PTAndTaxiTriple(invalidTaxiResponseWithStats, ptLegResponse, true);
+                if (firstTaxiLeg.insertionType == UNDEFINED || firstTaxiLeg.bestCost == INFTY) {
+                    return PTAndTaxiTriple(invalidTaxiResponseWithStats, ptLegResponse, true, 
+                                           0, intermediateResult.getPTLegCost(), intermediateResult.getSecondTaxiLegCost());
                 }
                 curReqState.tryAssignmentWithKnownCost(firstTaxiLeg.bestAssignment, firstTaxiLeg.bestCost);
                 return PTAndTaxiTriple(
                     {curReqState, taxiOnlyResponse.second},
                     ptLegResponse,
-                    true
+                    true,
+                    intermediateResult.getFirstTaxiLegCost(),
+                    intermediateResult.getPTLegCost(),
+                    intermediateResult.getSecondTaxiLegCost()
                 );
             } 
             
             if (taxiOnlyHasBetterCost) {
-                return PTAndTaxiTriple(taxiOnlyResponse, invalidPTResponse, false);
+                return PTAndTaxiTriple(taxiOnlyResponse, invalidPTResponse, false, taxiOnlyResponse.first.getBestCost(), 0, 0);
             } else {
-                return PTAndTaxiTriple(invalidTaxiResponseWithStats, ptOnlyResponse, false);
+                return PTAndTaxiTriple(invalidTaxiResponseWithStats, ptOnlyResponse, false, 0, ptOnlyResponse.getBestCost(), 0);
             }
         }
 

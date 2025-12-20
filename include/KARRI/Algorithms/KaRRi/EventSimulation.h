@@ -62,17 +62,16 @@ namespace karri {
             int depTime;
             int walkingTimeToPickup;
             int walkingTimeFromDropoff = 0;
-            // TODO:
-            // 1. approximate cost of intermediate -> entscheidung;(1st taxi leg + pt leg + 2nd taxi leg)
-            // 2. cost of the 2nd taxi leg
-            // how good/bad is the approximation
-            int assignmentCost = 0;
+            int taxiLegCost = 0;
+            int ptLegCost = 0;
+            int secondTaxiLegApproxCost = 0;
             
             // related to combined trip
             bool firstTaxiLegStarted = false;
             int arrivalTimeAtStation = 0;
             bool secondTaxiLegStarted = false;
             int secondTaxiLegDepTime = 0;
+            int secondTaxiLegCost = 0;
             int walkingTimeToSecondTaxiLegPickup = 0;
         };
 
@@ -327,6 +326,11 @@ namespace karri {
             auto ptAndTaxiTripFinderResponse = ptAndTaxiTripFinder.findBestAssignment(request);
             auto firstTaxiLeg = ptAndTaxiTripFinderResponse.getFirstTaxiLeg();
             auto ptLeg = ptAndTaxiTripFinderResponse.getPTLeg();
+
+            // Calculated costs
+            requestData[reqId].taxiLegCost = ptAndTaxiTripFinderResponse.firstTaxiLegCost;
+            requestData[reqId].ptLegCost = ptAndTaxiTripFinderResponse.ptLegCost;
+            requestData[reqId].secondTaxiLegApproxCost = ptAndTaxiTripFinderResponse.secondTaxiLegApproxCost;
             
             if (ptAndTaxiTripFinderResponse.isValidTaxiOnlyTrip()) {
                 systemStateUpdater.writeBestAssignmentToLogger(firstTaxiLeg.first);
@@ -350,7 +354,7 @@ namespace karri {
             // should not happen here since only walking is handled in PT
             if (asgnFinderResponse.first.isNotUsingVehicleBest()) {
                 requestState[reqId] = WALKING_TO_DEST;
-                requestData[reqId].assignmentCost = asgnFinderResponse.first.getBestCost();
+                requestData[reqId].taxiLegCost = asgnFinderResponse.first.getBestCost();
                 requestData[reqId].depTime = occTime;
                 requestData[reqId].walkingTimeToPickup = 0;
                 requestData[reqId].walkingTimeFromDropoff = asgnFinderResponse.first.getNotUsingVehicleDist();
@@ -376,11 +380,10 @@ namespace karri {
             if (requestData[reqId].secondTaxiLegStarted) {
                 requestData[reqId].walkingTimeToSecondTaxiLegPickup = bestAsgn.pickup.walkingDist;
                 requestData[reqId].walkingTimeFromDropoff += bestAsgn.dropoff.walkingDist;
-                requestData[reqId].assignmentCost += asgnFinderResponse.first.getBestCost();
+                requestData[reqId].secondTaxiLegCost = asgnFinderResponse.first.getBestCost();
             } else {
                 requestData[reqId].walkingTimeToPickup = bestAsgn.pickup.walkingDist;
                 requestData[reqId].walkingTimeFromDropoff = bestAsgn.dropoff.walkingDist;
-                requestData[reqId].assignmentCost = asgnFinderResponse.first.getBestCost();    
             }
 
             systemStateUpdater.insertBestAssignment(asgnFinderResponse.first, asgnFinderResponse.second);
@@ -420,8 +423,6 @@ namespace karri {
             requestData[reqId].walkingTimeFromDropoff = ptResponse.getWalkingTimeFromLastStation();
             requestData[reqId].arrivalTimeAtStation = isWalkingOnly ? ptResponse.getArrivalTime() : ptResponse.getArrivalTimeAtLastStation();
 
-            if (!inCombinedTrip) { requestData[reqId].assignmentCost = ptResponse.getBestCost(); }
-
         }
 
         template<typename AssignmentFinderResponseT, typename JourneyResponseT>
@@ -436,8 +437,6 @@ namespace karri {
                 // without first taxi leg
                 applyJourney(ptResponse, reqId, occTime, true);
             }
-
-            requestData[reqId].assignmentCost += ptResponse.getBestCost();
 
             if (ptResponse.isFinalTransferByTaxi()) {
                 // Insert request event for second taxi leg 15 minutes before arrival
@@ -497,6 +496,9 @@ namespace karri {
             const auto arrTime = occTime;
             const auto rideTime = occTime - reqData.walkingTimeFromDropoff - secondTaxiLegWaitTime - reqData.walkingTimeToSecondTaxiLegPickup - reqData.depTime;
             const auto tripTime = arrTime - requests[reqId].requestTime;
+            const auto asgnCost = reqData.secondTaxiLegStarted ? 
+                                  reqData.taxiLegCost + reqData.ptLegCost + reqData.secondTaxiLegCost : 
+                                  reqData.taxiLegCost + reqData.ptLegCost + reqData.secondTaxiLegApproxCost;
 
             assignmentQualityStats << reqId << ','
                                    << arrTime << ','
@@ -505,7 +507,7 @@ namespace karri {
                                    << tripTime << ','
                                    << reqData.walkingTimeToPickup << ','
                                    << reqData.walkingTimeFromDropoff << ','
-                                   << reqData.assignmentCost << '\n';
+                                   << asgnCost << '\n';
 
 
             const auto time = timer.elapsed<std::chrono::nanoseconds>();
