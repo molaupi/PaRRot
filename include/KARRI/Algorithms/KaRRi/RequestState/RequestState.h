@@ -53,7 +53,7 @@ namespace karri {
                   notUsingVehicleIsBest(false),
                   notUsingVehicleDist(INFTY),
                   earliestDepartureTime(INFTY),
-                  maxArrivalTimeAtDropoffStation(INFTY),
+                  maxArrivalTimeAtDropoffStation(0),
                   currentWaitTime(0) {}
 
 

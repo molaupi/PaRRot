@@ -441,7 +441,7 @@ namespace karri {
             if (ptResponse.isFinalTransferByTaxi()) {
                 // Insert request event for second taxi leg 15 minutes before arrival
                 const auto arrivalTimeAtLastStation = ptResponse.getArrivalTimeAtLastStation();
-                requestEvents.insert(reqId, arrivalTimeAtLastStation - TRIGGER_TAXI_TIME);
+                requestEvents.insert(reqId, std::max(occTime, arrivalTimeAtLastStation - TRIGGER_TAXI_TIME));
                 ptStationsForSecondTaxiLeg[reqId] = ptResponse.getLastStation();
                 requestData[reqId].arrivalTimeAtStation = arrivalTimeAtLastStation;
             } else {
@@ -462,7 +462,7 @@ namespace karri {
                 reqId,
                 stationEdgeId,
                 request.destination,
-                occTime + TRIGGER_TAXI_TIME,
+                requestData[reqId].arrivalTimeAtStation,
                 request.numRiders
             };
             
