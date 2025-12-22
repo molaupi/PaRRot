@@ -61,18 +61,20 @@ namespace karri {
         Request originalRequest;
         int originalReqDirectDist;
         int minDirectPDDist;
+        int requestIssueTime;
 
-        // Shorthand for requestTime
+        // Shorthand for requestIssueTime
         int now() const {
-            return originalRequest.requestTime;
+            return requestIssueTime;
         }
 
+        void setRequestIssueTime(const int issueTime) {
+            requestIssueTime = issueTime;
+        }
+
+        // requestTime
         int earliestDeparture() const {
-            return earliestDepartureTime;
-        }
-
-        void setEarliestDeparture(const int earliestDeparture) {
-            earliestDepartureTime = earliestDeparture;
+            return originalRequest.requestTime;
         }
 
         int getOriginalReqMaxTripTime() const {

@@ -39,7 +39,7 @@ namespace karri {
                   vehChQuery(vehChEnv.template getFullCHQuery<>()) {}
 
 
-        std::pair<RequestState, stats::DispatchingPerformanceStats> initializeRequestState(const Request &req) {
+        std::pair<RequestState, stats::DispatchingPerformanceStats> initializeRequestState(const Request &req, const int requestIssueTime) {
             KaRRiTimer timer;
 
             RequestState requestState;
@@ -47,7 +47,7 @@ namespace karri {
             requestState.reset();
             stats.clear();
             requestState.originalRequest = req;
-            requestState.setEarliestDeparture(req.requestTime);
+            requestState.setRequestIssueTime(requestIssueTime);
 
             // Calculate the direct distance between the requests origin and destination
             timer.restart();

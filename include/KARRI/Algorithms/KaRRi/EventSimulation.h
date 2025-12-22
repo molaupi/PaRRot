@@ -266,8 +266,9 @@ namespace karri {
                     if (ptStationsForSecondTaxiLeg[reqId] == INVALID_ID) {
                         requestState[reqId] = WALKING_TO_DEST;
                     // with second taxi leg
-                    } else {
+                    } else if (!reqData.secondTaxiLegStarted) {
                         requestState[reqId] = BEFORE_PT_ARRIVED;
+                        requestEvents.insert(reqId, std::max(reqData.arrivalTimeAtStation - TRIGGER_TAXI_TIME, occTime));
                     }
 
                 // taxi only trip or second taxi leg of combined trip
@@ -448,7 +449,7 @@ namespace karri {
                 if (triggerNow) {
                     requestState[reqId] = BEFORE_PT_ARRIVED;
                     requestEvents.insert(reqId, occTime);
-                } else { requestEvents.insert(reqId, arrivalTimeAtLastStation - TRIGGER_TAXI_TIME); }
+                }
                 
             } else {
                 // Insert request event for walking to destination
@@ -461,6 +462,7 @@ namespace karri {
         void handleSecondTaxiLeg(const int reqId, const int occTime) {
             assert(requestState[reqId] == BEFORE_PT_ARRIVED);
             assert(ptStationsForSecondTaxiLeg[reqId] != INVALID_ID);
+            requestData[reqId].secondTaxiLegStarted = true;
             
             const auto &request = requests[reqId];
             const auto stationEdgeId = stations[ptStationsForSecondTaxiLeg[reqId]].vehEdgeId;
@@ -472,16 +474,14 @@ namespace karri {
                 request.numRiders
             };
             
-            auto secondTaxiLegResponse = ptAndTaxiTripFinder.findBestTaxiAssignment(newReq);
+            auto secondTaxiLegResponse = ptAndTaxiTripFinder.findBestTaxiAssignment(newReq, occTime);
             auto &reqState = secondTaxiLegResponse.first;
 
             // Before the second taxi leg
             const auto &reqData = requestData[reqId];
             const auto waitTime = reqData.depTime - requests[reqId].requestTime;
             reqState.setCurrentWaitTime(waitTime);
-
-            requestData[reqId].secondTaxiLegStarted = true;
-
+            
             applyAssignment(secondTaxiLegResponse, reqId, occTime);
 
         }

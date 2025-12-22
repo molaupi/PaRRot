@@ -111,7 +111,7 @@ namespace karri {
 
         PTAndTaxiTriple findBestAssignment(const Request &req) {
             // Taxi only leg and invalid taxi leg
-            auto taxiOnlyResponse = findBestTaxiAssignment(req);
+            auto taxiOnlyResponse = findBestTaxiAssignment(req, req.requestTime);
             RequestState invalidTaxiResponse;
             std::pair<RequestState, stats::DispatchingPerformanceStats> invalidTaxiResponseWithStats{invalidTaxiResponse, stats::DispatchingPerformanceStats()};
             
@@ -224,10 +224,10 @@ namespace karri {
             }
         }
 
-        std::pair<RequestState, stats::DispatchingPerformanceStats> findBestTaxiAssignment(const Request &req) {
+        std::pair<RequestState, stats::DispatchingPerformanceStats> findBestTaxiAssignment(const Request &req, const int requestIssueTime) {
 
             // Initialize finder for this request, find PD locations:
-            std::pair<RequestState, stats::DispatchingPerformanceStats> initRequestState = requestStateInitializer.initializeRequestState(req);
+            std::pair<RequestState, stats::DispatchingPerformanceStats> initRequestState = requestStateInitializer.initializeRequestState(req, requestIssueTime);
             RequestState rs = std::move(initRequestState.first);
             stats::DispatchingPerformanceStats stats = std::move(initRequestState.second);
             PDLocs pdLocs = pdLocsFinder.findPDLocs(req.origin, req.destination, stats.initializationStats);

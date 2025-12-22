@@ -595,7 +595,7 @@ namespace karri::PickupAfterLastStopStrategies {
                     // time at v, we can stop scanning entries if the lower bound exceeds the best known cost.
                     const int minVehTimeTillDepAtPickup = label.distToPickup + InputConfig::getInstance().stopTime;
                     const int minPsgTimeTillDepAtPickup = std::max(
-                            vehArrTimeAtPickup + InputConfig::getInstance().stopTime - requestState.now(),
+                            vehArrTimeAtPickup + InputConfig::getInstance().stopTime - requestState.earliestDeparture(),
                             pickup.walkingDist);
                     const auto lowerBoundCostForEarlyBreak = calculator.calcCostForPairedAssignmentAfterLastStop(
                             minVehTimeTillDepAtPickup, minPsgTimeTillDepAtPickup,
