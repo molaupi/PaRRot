@@ -441,9 +441,15 @@ namespace karri {
             if (ptResponse.isFinalTransferByTaxi()) {
                 // Insert request event for second taxi leg 15 minutes before arrival
                 const auto arrivalTimeAtLastStation = ptResponse.getArrivalTimeAtLastStation();
-                requestEvents.insert(reqId, std::max(occTime, arrivalTimeAtLastStation - TRIGGER_TAXI_TIME));
                 ptStationsForSecondTaxiLeg[reqId] = ptResponse.getLastStation();
                 requestData[reqId].arrivalTimeAtStation = arrivalTimeAtLastStation;
+
+                const bool triggerNow = occTime > arrivalTimeAtLastStation - TRIGGER_TAXI_TIME;
+                if (triggerNow) {
+                    requestState[reqId] = BEFORE_PT_ARRIVED;
+                    requestEvents.insert(reqId, occTime);
+                } else { requestEvents.insert(reqId, arrivalTimeAtLastStation - TRIGGER_TAXI_TIME); }
+                
             } else {
                 // Insert request event for walking to destination
                 const auto arrivalTimeAtDestination = ptResponse.getArrivalTime();
@@ -457,7 +463,7 @@ namespace karri {
             assert(ptStationsForSecondTaxiLeg[reqId] != INVALID_ID);
             
             const auto &request = requests[reqId];
-            const auto stationEdgeId = stations[ptStationsForSecondTaxiLeg[reqId]].psgEdgeId;
+            const auto stationEdgeId = stations[ptStationsForSecondTaxiLeg[reqId]].vehEdgeId;
             const Request &newReq = {
                 reqId,
                 stationEdgeId,
