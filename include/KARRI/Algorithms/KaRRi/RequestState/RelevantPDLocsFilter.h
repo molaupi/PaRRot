@@ -251,16 +251,15 @@ namespace karri {
             if (distFromStopToPickup >= INFTY || distFromPickupToNextStop >= INFTY)
                 return false;
 
-            assert(distFromStopToPickup + distFromPickupToNextStop >=
-                   calcLengthOfLegStartingAt(stopIndex, vehId, routeState));
-
             const auto &p = pdLocs.pickups[pickupId];
 
             const auto depTimeAtPickup = getActualDepTimeAtPickup(vehId, stopIndex, distFromStopToPickup, p,
                                                                   requestState, routeState);
-            const auto initialPickupDetour = calcInitialPickupDetour(vehId, stopIndex, INVALID_INDEX, depTimeAtPickup,
+            int initialPickupDetour = calcInitialPickupDetour(vehId, stopIndex, INVALID_INDEX, depTimeAtPickup,
                                                                      distFromPickupToNextStop, requestState,
                                                                      routeState);
+
+            initialPickupDetour = std::max(initialPickupDetour, 0);
 
             if (doesPickupDetourViolateHardConstraints(veh, requestState, stopIndex, initialPickupDetour, routeState))
                 return false;
@@ -305,11 +304,15 @@ namespace karri {
                 return false;
 
             const bool isDropoffAtExistingStop = d.loc == stopLocations[stopIndex];
-            const int initialDropoffDetour = calcInitialDropoffDetour(vehId, stopIndex, distFromStopToDropoff,
-                                                                      distFromDropoffToNextStop,
-                                                                      isDropoffAtExistingStop,
-                                                                      routeState);
-            assert(initialDropoffDetour >= 0);
+            // Use the version that accounts for prebooking (earliestDeparture)
+            int initialDropoffDetour = calcInitialDropoffDetourForRequest(vehId, stopIndex, distFromStopToDropoff,
+                                                                                 distFromDropoffToNextStop,
+                                                                                 isDropoffAtExistingStop,
+                                                                                 requestState,
+                                                                                 routeState);
+            // With prebooking, initialDropoffDetour can be negative if the effective leg length is reduced
+            // due to waiting until earliestDeparture(). This is valid - clamp to 0 for constraint checks.
+            initialDropoffDetour = std::max(initialDropoffDetour, 0);
             if (doesDropoffDetourViolateHardConstraints(veh, requestState, stopIndex, initialDropoffDetour,
                                                         routeState))
                 return false;
@@ -343,8 +346,10 @@ namespace karri {
         inline int getMinCostForDropoff(const Vehicle &veh, const int stopIndex, const int minDistToDropoff,
                                         const int minDistFromDropoff, const RequestState &requestState) const {
             using namespace time_utils;
-            int minInitialDropoffDetour = calcInitialDropoffDetour(veh.vehicleId, stopIndex, minDistToDropoff,
-                                                                   minDistFromDropoff, false, routeState);
+            // Use the version that accounts for prebooking
+            int minInitialDropoffDetour = calcInitialDropoffDetourForRequest(veh.vehicleId, stopIndex, minDistToDropoff,
+                                                                              minDistFromDropoff, false, 
+                                                                              requestState, routeState);
             minInitialDropoffDetour = std::max(minInitialDropoffDetour, 0);
             return calculator.calcMinKnownDropoffSideCost(veh, stopIndex, minInitialDropoffDetour, 0, requestState);
         }

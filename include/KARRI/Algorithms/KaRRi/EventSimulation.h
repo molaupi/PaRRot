@@ -448,7 +448,8 @@ namespace karri {
                 const bool triggerNow = occTime > arrivalTimeAtLastStation - TRIGGER_TAXI_TIME;
                 if (triggerNow) {
                     requestState[reqId] = BEFORE_PT_ARRIVED;
-                    requestEvents.insert(reqId, occTime);
+                    if (requestEvents.contains(reqId)) { requestEvents.updateKey(reqId, occTime); }
+                    else { requestEvents.insert(reqId, occTime); }
                 }
                 
             } else {

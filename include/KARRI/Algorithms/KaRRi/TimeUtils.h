@@ -131,6 +131,21 @@ namespace karri::time_utils {
         return minArrTimes[stopIndex + 1] - minDepTimes[stopIndex];
     }
 
+    // Overload that accounts for earliestDeparture() for prebooking scenarios.
+    // For prebooking, the vehicle may not depart until earliestDeparture(), which affects the effective leg length.
+    template<typename RequestContext>
+    static INLINE int
+    calcLengthOfLegStartingAtForRequest(const int stopIndex, const int vehicleId, const RequestContext &context,
+                                        const RouteState &routeState) {
+        if (stopIndex + 1 == routeState.numStopsOf(vehicleId))
+            return 0;
+        const auto &minArrTimes = routeState.schedArrTimesFor(vehicleId);
+        const auto effectiveDepTime = getVehDepTimeAtStopForRequest(vehicleId, stopIndex, context, routeState);
+        // For prebooking: if effectiveDepTime > minArrTimes[stopIndex + 1], the vehicle would arrive "late"
+        // at the next stop, meaning there's no leg to replace (effective length is 0 or negative treated as 0)
+        return std::max(0, minArrTimes[stopIndex + 1] - effectiveDepTime);
+    }
+
     static INLINE bool isDropoffAtExistingStop(const Assignment &asgn, const RouteState &routeState) {
         return asgn.pickupStopIdx != asgn.dropoffStopIdx &&
                asgn.dropoff.loc == routeState.stopLocationsFor(asgn.vehicle->vehicleId)[asgn.dropoffStopIdx];
@@ -182,7 +197,7 @@ namespace karri::time_utils {
         if (pickupIndex == dropoffIndex)
             return timeUntilDep;
 
-        return timeUntilDep + distFromPickup - calcLengthOfLegStartingAt(pickupIndex, vehId, routeState);
+        return timeUntilDep + distFromPickup - calcLengthOfLegStartingAtForRequest(pickupIndex, vehId, context, routeState);
     }
 
     // Returns the additional time that is needed for the vehicle asgn.vehicle to drive from its stop at index
@@ -254,6 +269,30 @@ namespace karri::time_utils {
                              const RouteState &routeState) {
         return calcInitialDropoffDetour(asgn.vehicle->vehicleId, asgn.dropoffStopIdx, asgn.distToDropoff,
                                         asgn.distFromDropoff, dropoffAtExistingStop, routeState);
+    }
+
+    // Version that accounts for earliestDeparture() for prebooking scenarios.
+    // For prebooking, the vehicle may not depart until earliestDeparture(), which affects the effective leg length.
+    template<typename RequestContext>
+    static INLINE int
+    calcInitialDropoffDetourForRequest(const int vehId, const int dropoffIndex, const int distToDropoff,
+                                       const int distFromDropoff,
+                                       const bool dropoffAtExistingStop,
+                                       const RequestContext &context,
+                                       const RouteState &routeState) {
+        if (dropoffAtExistingStop) return 0;
+        const auto lengthOfReplacedLeg = calcLengthOfLegStartingAtForRequest(dropoffIndex, vehId, context, routeState);
+        return distToDropoff + InputConfig::getInstance().stopTime + distFromDropoff - lengthOfReplacedLeg;
+    }
+
+    // Assignment overload for calcInitialDropoffDetourForRequest
+    template<typename RequestContext>
+    static INLINE int
+    calcInitialDropoffDetourForRequest(const Assignment &asgn, const bool dropoffAtExistingStop,
+                                       const RequestContext &context,
+                                       const RouteState &routeState) {
+        return calcInitialDropoffDetourForRequest(asgn.vehicle->vehicleId, asgn.dropoffStopIdx, asgn.distToDropoff,
+                                                  asgn.distFromDropoff, dropoffAtExistingStop, context, routeState);
     }
 
     static INLINE int

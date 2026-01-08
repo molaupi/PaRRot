@@ -77,13 +77,17 @@ namespace karri {
             const int vehId = asgn.vehicle->vehicleId;
             const auto numStops = routeState.numStopsOf(asgn.vehicle->vehicleId);
             const auto actualDepTimeAtPickup = getActualDepTimeAtPickup(asgn, context, routeState);
-            const auto initialPickupDetour = calcInitialPickupDetour(asgn, actualDepTimeAtPickup, context, routeState);
+            // Use the version that accounts for prebooking: initialPickupDetour can be negative - clamp to 0
+            auto initialPickupDetour = calcInitialPickupDetour(asgn, actualDepTimeAtPickup, context, routeState);
+            initialPickupDetour = std::max(initialPickupDetour, 0);
 
             int addedTripTime = calcAddedTripTimeInInterval(vehId, asgn.pickupStopIdx, asgn.dropoffStopIdx,
                                                             initialPickupDetour, routeState);
 
             const bool dropoffAtExistingStop = isDropoffAtExistingStop(asgn, routeState);
-            const auto initialDropoffDetour = calcInitialDropoffDetour(asgn, dropoffAtExistingStop, routeState);
+            // Use the version that accounts for prebooking: initialDropoffDetour can be negative - clamp to 0
+            auto initialDropoffDetour = calcInitialDropoffDetourForRequest(asgn, dropoffAtExistingStop, context, routeState);
+            initialDropoffDetour = std::max(initialDropoffDetour, 0);
             const auto detourRightAfterDropoff = calcDetourRightAfterDropoff(asgn, initialPickupDetour,
                                                                              initialDropoffDetour, routeState);
             const auto residualDetourAtEnd = calcResidualTotalDetourForStopAfterDropoff(asgn.vehicle->vehicleId,
@@ -149,8 +153,10 @@ namespace karri {
             const auto stopIdx = asgn.pickupStopIdx;
             const auto vehId = asgn.vehicle->vehicleId;
 
-            const int minDetour = asgn.distToPickup + asgn.distToDropoff + asgn.distFromDropoff -
-                                  calcLengthOfLegStartingAt(stopIdx, vehId, routeState);
+            // Use the version that accounts for prebooking: minDetour can be negative - clamp to 0
+            int minDetour = asgn.distToPickup + asgn.distToDropoff + asgn.distFromDropoff -
+                                  calcLengthOfLegStartingAtForRequest(stopIdx, vehId, context, routeState);
+            minDetour = std::max(minDetour, 0);
             if (doesDropoffDetourViolateHardConstraints(*asgn.vehicle, context, stopIdx, minDetour, routeState))
                 return INFTY;
 
@@ -181,8 +187,10 @@ namespace karri {
 
             const auto initialPickupDetour = calcInitialPickupDetour(asgn, minActualDepTimeAtPickup, context,
                                                                      routeState);
-            const auto minInitialDropoffDetour = std::max(minDistToDropoff, distFromPickupForDetourLowerBound) -
-                                                 calcLengthOfLegStartingAt(0, vehId, routeState);
+            // Use the version that accounts for prebooking: minInitialDropoffDetour can be negative - clamp to 0
+            auto minInitialDropoffDetour = std::max(minDistToDropoff, distFromPickupForDetourLowerBound) -
+                                                 calcLengthOfLegStartingAtForRequest(0, vehId, context, routeState);
+            minInitialDropoffDetour = std::max(minInitialDropoffDetour, 0);
             auto minDetourRightAfterDropoff =
                     calcDetourRightAfterDropoff(vehId, 0, 0, initialPickupDetour, minInitialDropoffDetour, routeState);
             minDetourRightAfterDropoff = std::max(minDetourRightAfterDropoff, 0);
