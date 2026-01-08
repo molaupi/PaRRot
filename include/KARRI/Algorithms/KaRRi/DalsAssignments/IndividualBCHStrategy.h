@@ -101,7 +101,7 @@ namespace karri::DropoffAfterLastStopStrategies {
                 }
 
                 const DistanceLabel costLowerBound = calc.template calcKVehicleDependentCostLowerBoundsForDALSWithKnownDistToDropoff<LabelSet>(
-                        vehId, strat.currentDropoffWalkingDists, distancesToDropoffs, 0, *strat.curReqState);
+                        vehId, strat.currentDropoffWalkingDists, distancesToDropoffs, *strat.curReqState);
                 return strat.upperBoundCost < costLowerBound;
             }
 

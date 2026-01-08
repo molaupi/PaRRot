@@ -455,15 +455,12 @@ namespace karri::DropoffAfterLastStopStrategies {
                 const auto &constraintBreaker = constraintBreakers[cur];
                 const auto &vehId = constraintBreaker.vehicle->vehicleId;
 
-                // Use the version that accounts for prebooking
-                const auto lengthOfPickupLeg = calcLengthOfLegStartingAtForRequest(constraintBreaker.pickupStopIdx,
-                                                                                   vehId, requestState, routeState);
-                auto totalDetour =
+                const auto lengthOfPickupLeg = calcLengthOfLegStartingAt(constraintBreaker.pickupStopIdx,
+                                                                         vehId, routeState);
+                const auto totalDetour =
                         constraintBreaker.distToPickup + InputConfig::getInstance().stopTime + constraintBreaker.distFromPickup -
                         lengthOfPickupLeg + closestDropoffSearch.getDistToClosestPDLocFromVeh(vehId) +
                                 InputConfig::getInstance().stopTime;
-                // For prebooking, totalDetour can be negative - clamp to 0
-                totalDetour = std::max(totalDetour, 0);
 
                 if (isServiceTimeConstraintViolated(fleet[vehId], requestState, totalDetour, routeState)) {
                     // Constraint cannot be held even with minimal distance to any dropoff, so breaker is not relevant
