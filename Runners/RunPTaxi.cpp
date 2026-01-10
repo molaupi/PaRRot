@@ -317,11 +317,6 @@ int main(int argc, char *argv[]) {
         }
         std::cout << "done.\n";
 
-        // Create Route State for empty routes.
-        RouteState routeState(fleet);
-
-
-
         // Read the request data from file.
         std::cout << "Reading request data from file... " << std::flush;
         std::vector<Request> requests;
@@ -443,6 +438,17 @@ int main(int argc, char *argv[]) {
         }
 #endif
 
+        // Create Route State for empty routes.
+        RouteState routeState(fleet);
+        
+        // Set up the distance checker callback to verify shortest path distances.
+        // This captures the vehicle graph and CH environment for use in checkDirectDistance().
+        routeState.setDistanceChecker([&vehicleInputGraph, &vehChEnv](int curStop, int nextStop, int expectedTravelTime) {
+            const auto &ch = vehChEnv->getCH();
+            auto chQuery = vehChEnv->template getFullCHQuery<>();
+            chQuery.run(ch.rank(vehicleInputGraph.edgeHead(curStop)), ch.rank(vehicleInputGraph.edgeTail(nextStop)));
+            KASSERT(chQuery.getDistance() + vehicleInputGraph.travelTime(nextStop) == expectedTravelTime);
+        });
 
         using VehicleLocatorImpl = VehicleLocator<VehicleInputGraph, VehCHEnv>;
         VehicleLocatorImpl locator(vehicleInputGraph, *vehChEnv, routeState);

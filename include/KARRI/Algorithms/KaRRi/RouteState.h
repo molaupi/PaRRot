@@ -26,6 +26,7 @@
 #pragma once
 
 #include <stack>
+#include <functional>
 
 #include "../../Tools/Constants.h"
 #include "../../DataStructures/Utilities/DynamicRagged2DArrays.h"
@@ -41,11 +42,15 @@ namespace karri {
     class RouteState {
 
     public:
-
+        // Callback type for verifying direct distances between consecutive stops.
+        // Parameters: (curStopEdge, nextStopEdge, expectedTravelTime)
+        // The callback should verify that the shortest path travel time matches expectedTravelTime.
+        using DistanceChecker = std::function<void(int curStopEdge, int nextStopEdge, int expectedTravelTime)>;
+        
         RouteState(const RouteState&) = delete;
         RouteState(RouteState&&) = delete;
 
-        RouteState(const Fleet &fleet)
+        explicit RouteState(const Fleet &fleet)
                 : pos(fleet.size()),
                   stopIds(fleet.size()),
                   stopLocations(fleet.size()),
@@ -217,6 +222,26 @@ namespace karri {
             return maxLegLength;
         }
 
+        // Set the distance checker callback. This should be called once after construction
+        // with a lambda that captures the input graph and CH environment.
+        void setDistanceChecker(DistanceChecker checker) {
+            distanceChecker = std::move(checker);
+        }
+
+        // Check that the distance between consecutive stops matches the stored schedule.
+        // This is a no-op if no distance checker has been set.
+        void checkDirectDistance(const int stopIndex, const int vehicleId) const {
+            if (!distanceChecker) return;
+            
+            const auto curStop = stopLocationsFor(vehicleId)[stopIndex];
+            const auto nextStop = stopLocationsFor(vehicleId)[stopIndex + 1];
+            const auto &depTimes = schedDepTimesFor(vehicleId);
+            const auto &arrTimes = schedArrTimesFor(vehicleId);
+            const int expectedTravelTime = arrTimes[stopIndex + 1] - depTimes[stopIndex];
+            
+            distanceChecker(curStop, nextStop, expectedTravelTime);
+        }
+
         template<typename RequestStateT>
         std::pair<int, int>
         insert(const Assignment &asgn, const RequestStateT &requestState) {
@@ -248,6 +273,7 @@ namespace karri {
                 // moment when vehicle and passenger are at the location.
                 schedDepTimes[start + pickupIndex] = std::max(schedDepTimes[start + pickupIndex],
                                                               requestState.getPassengerArrAtPickup(pickup));
+                // Auto vor dem Passagier, und muss warten bis der Passagier ankommt ^^
 
                 // If we allow pickupRadius > waitTime, then the passenger may arrive at the pickup location after
                 // the regular max dep time of requestTime + waitTime. In this case, the new latest permissible arrival
@@ -269,6 +295,10 @@ namespace karri {
                 schedArrTimes[start + pickupIndex] = schedDepTimes[start + pickupIndex - 1] + asgn.distToPickup;
                 schedDepTimes[start + pickupIndex] = std::max(schedArrTimes[start + pickupIndex] + InputConfig::getInstance().stopTime,
                                                               requestState.getPassengerArrAtPickup(pickup));
+
+                // Auto vor dem Passagier, und muss warten bis der Passagier ankommt ^^
+
+                // Ankunftszeit am Station mit PT + remaining Wartezeit
                 maxArrTimes[start + pickupIndex] = requestState.getMaxDepTimeAtPickup() - InputConfig::getInstance().stopTime;
                 occupancies[start + pickupIndex] = occupancies[start + pickupIndex - 1];
                 numDropoffsPrefixSum[start + pickupIndex] = numDropoffsPrefixSum[start + pickupIndex - 1];
@@ -282,6 +312,7 @@ namespace karri {
             }
 
             if (pickup.loc != dropoff.loc && dropoff.loc == stopLocations[start + dropoffIndex]) {
+                // PT Abfahrtszeit noch hinzufügen
                 maxArrTimes[start + dropoffIndex] = std::min(maxArrTimes[start + dropoffIndex],
                                                              requestState.getMaxArrTimeAtDropoff(dropoff));
             } else {
@@ -294,6 +325,7 @@ namespace karri {
                         schedDepTimes[start + dropoffIndex - 1] + asgn.distToDropoff;
                 schedDepTimes[start + dropoffIndex] = schedArrTimes[start + dropoffIndex] + InputConfig::getInstance().stopTime;
                 // compare maxVehArrTime to next stop later
+                // PT Abfahrtszeit noch hinzufügen
                 maxArrTimes[start + dropoffIndex] = requestState.getMaxArrTimeAtDropoff(dropoff);
                 occupancies[start + dropoffIndex] = occupancies[start + dropoffIndex - 1];
                 numDropoffsPrefixSum[start + dropoffIndex] = numDropoffsPrefixSum[start + dropoffIndex - 1];
@@ -368,6 +400,7 @@ namespace karri {
 
 
             // Remember that request is picked up and dropped of at respective stops:
+            // requestId pickup and dropoff
             insertion(stopIds[start + pickupIndex], requestState.originalRequest.requestId,
                       rangeOfRequestsPickedUpAtStop, requestsPickedUpAtStop);
             insertion(stopIds[start + dropoffIndex], requestState.originalRequest.requestId,
@@ -736,5 +769,8 @@ namespace karri {
         std::stack<int, std::vector<int>> unusedStopIds;
         int nextUnusedStopId;
         int maxStopId;
+
+        // Optional callback for verifying direct distances
+        DistanceChecker distanceChecker;
     };
 }
