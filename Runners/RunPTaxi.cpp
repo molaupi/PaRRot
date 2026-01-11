@@ -443,11 +443,11 @@ int main(int argc, char *argv[]) {
         
         // Set up the distance checker callback to verify shortest path distances.
         // This captures the vehicle graph and CH environment for use in checkDirectDistance().
-        routeState.setDistanceChecker([&vehicleInputGraph, &vehChEnv](int curStop, int nextStop, int expectedTravelTime) {
+        routeState.setDistanceChecker([&vehicleInputGraph, &vehChEnv](int curStop, int nextStop) {
             const auto &ch = vehChEnv->getCH();
             auto chQuery = vehChEnv->template getFullCHQuery<>();
             chQuery.run(ch.rank(vehicleInputGraph.edgeHead(curStop)), ch.rank(vehicleInputGraph.edgeTail(nextStop)));
-            KASSERT(chQuery.getDistance() + vehicleInputGraph.travelTime(nextStop) == expectedTravelTime);
+            return chQuery.getDistance() + vehicleInputGraph.travelTime(nextStop);
         });
 
         using VehicleLocatorImpl = VehicleLocator<VehicleInputGraph, VehCHEnv>;

@@ -42,16 +42,17 @@ namespace karri {
     class RouteState {
 
     public:
-        // Callback type for verifying direct distances between consecutive stops.
-        // Parameters: (curStopEdge, nextStopEdge, expectedTravelTime)
-        // The callback should verify that the shortest path travel time matches expectedTravelTime.
-        using DistanceChecker = std::function<void(int curStopEdge, int nextStopEdge, int expectedTravelTime)>;
+        // Callback type for calculating direct distances between consecutive stops.
+        // Parameters: (curStopEdge, nextStopEdge)
+        // The callback should calculate the shortest path travel time between the given stops.
+        using DistanceChecker = std::function<int(int curStopEdge, int nextStopEdge)>;
         
         RouteState(const RouteState&) = delete;
         RouteState(RouteState&&) = delete;
 
         explicit RouteState(const Fleet &fleet)
                 : pos(fleet.size()),
+                  distancesToNextStop(fleet.size(), INFTY),
                   stopIds(fleet.size()),
                   stopLocations(fleet.size()),
                   schedArrTimes(fleet.size()),
@@ -101,6 +102,16 @@ namespace karri {
             assert(vehId < pos.size());
             return pos[vehId].end - pos[vehId].start;
         }
+
+        // Range containing the distances to next stops of the scheduled stops of vehicle with given ID.
+        ConstantVectorRange<int> distancesToNextStopFor(const int vehId) const {
+            assert(vehId >= 0);
+            assert(vehId < pos.size());
+            const auto start = pos[vehId].start;
+            const auto end = pos[vehId].end;
+            return {distancesToNextStop.begin() + start, distancesToNextStop.begin() + end};
+        }
+
 
         // Range containing the ids of the currently scheduled stops of vehicle with given ID.
         ConstantVectorRange<int> stopIdsFor(const int vehId) const {
@@ -230,16 +241,26 @@ namespace karri {
 
         // Check that the distance between consecutive stops matches the stored schedule.
         // This is a no-op if no distance checker has been set.
-        void checkDirectDistance(const int stopIndex, const int vehicleId) const {
+        // Also caches the computed distance for future lookups.
+        void checkDirectDistance(const int stopIndex, const int vehId) const {
             if (!distanceChecker) return;
-            
-            const auto curStop = stopLocationsFor(vehicleId)[stopIndex];
-            const auto nextStop = stopLocationsFor(vehicleId)[stopIndex + 1];
-            const auto &depTimes = schedDepTimesFor(vehicleId);
-            const auto &arrTimes = schedArrTimesFor(vehicleId);
+
+            const auto &depTimes = schedDepTimesFor(vehId);
+            const auto &arrTimes = schedArrTimesFor(vehId);
             const int expectedTravelTime = arrTimes[stopIndex + 1] - depTimes[stopIndex];
+
+            const auto start = pos[vehId].start;
+            auto &curDistance = distancesToNextStop[start + stopIndex];
+            if (curDistance != INFTY) {
+                KASSERT(curDistance == expectedTravelTime);
+                return;
+            }
             
-            distanceChecker(curStop, nextStop, expectedTravelTime);
+            const auto curStop = stopLocationsFor(vehId)[stopIndex];
+            const auto nextStop = stopLocationsFor(vehId)[stopIndex + 1];
+            int actualTravelTime = distanceChecker(curStop, nextStop);
+            curDistance = actualTravelTime;  // Cache the computed distance
+            KASSERT(actualTravelTime == expectedTravelTime);
         }
 
         template<typename RequestStateT>
@@ -288,9 +309,10 @@ namespace karri {
                 schedArrTimes[end - 1] = schedDepTimes[end - 1] - InputConfig::getInstance().stopTime;
                 ++pickupIndex;
                 ++dropoffIndex;
-                stableInsertion(vehId, pickupIndex, getUnusedStopId(), pos, stopIds, stopLocations,
+                stableInsertion(vehId, pickupIndex, getUnusedStopId(), pos, stopIds, distancesToNextStop, stopLocations,
                                 schedArrTimes, schedDepTimes, vehWaitTimesPrefixSum, maxArrTimes, occupancies,
                                 numDropoffsPrefixSum, vehWaitTimesUntilDropoffsPrefixSum);
+                distancesToNextStop[start + pickupIndex] = INFTY;  // Initialize cached distance
                 stopLocations[start + pickupIndex] = pickup.loc;
                 schedArrTimes[start + pickupIndex] = schedDepTimes[start + pickupIndex - 1] + asgn.distToPickup;
                 schedDepTimes[start + pickupIndex] = std::max(schedArrTimes[start + pickupIndex] + InputConfig::getInstance().stopTime,
@@ -318,8 +340,9 @@ namespace karri {
             } else {
                 ++dropoffIndex;
                 stableInsertion(vehId, dropoffIndex, getUnusedStopId(),
-                                pos, stopIds, stopLocations, schedArrTimes, schedDepTimes, vehWaitTimesPrefixSum,
+                                pos, stopIds, distancesToNextStop, stopLocations, schedArrTimes, schedDepTimes, vehWaitTimesPrefixSum,
                                 maxArrTimes, occupancies, numDropoffsPrefixSum, vehWaitTimesUntilDropoffsPrefixSum);
+                distancesToNextStop[start + dropoffIndex] = INFTY;  // Initialize cached distance
                 stopLocations[start + dropoffIndex] = dropoff.loc;
                 schedArrTimes[start + dropoffIndex] =
                         schedDepTimes[start + dropoffIndex - 1] + asgn.distToDropoff;
@@ -428,7 +451,7 @@ namespace karri {
 
             const auto numDropoffsAtStart = numDropoffsPrefixSum[start];
             stableRemoval(vehId, 0,
-                          pos, stopIds, stopLocations, schedArrTimes, schedDepTimes, vehWaitTimesPrefixSum,
+                          pos, stopIds, distancesToNextStop, stopLocations, schedArrTimes, schedDepTimes, vehWaitTimesPrefixSum,
                           maxArrTimes, occupancies, numDropoffsPrefixSum, vehWaitTimesUntilDropoffsPrefixSum);
 
             const auto &startAfterRemoval = pos[vehId].start;
@@ -449,11 +472,12 @@ namespace karri {
             KASSERT(vehId < pos.size());
             KASSERT(pos[vehId].end - pos[vehId].start > 0);
             KASSERT(depTime >= now);
-            stableInsertion(vehId, 1, getUnusedStopId(), pos, stopIds, stopLocations,
+            stableInsertion(vehId, 1, getUnusedStopId(), pos, stopIds, distancesToNextStop, stopLocations,
                             schedArrTimes, schedDepTimes, vehWaitTimesPrefixSum, maxArrTimes, occupancies,
                             numDropoffsPrefixSum, vehWaitTimesUntilDropoffsPrefixSum);
             const auto start = pos[vehId].start;
             const auto end = pos[vehId].end;
+            distancesToNextStop[start + 1] = INFTY;  // Initialize cached distance
             stopLocations[start + 1] = location;
             schedArrTimes[start + 1] = now;
             schedDepTimes[start + 1] = depTime;
@@ -697,6 +721,9 @@ namespace karri {
         std::vector<ValueBlockPosition> pos;
 
         // Value Arrays:
+
+        // Distance from a stop to its next stop (mutable because it's a cache)
+        mutable std::vector<int> distancesToNextStop;
 
         // Unique ID for each stop (IDs can be reused after stops are finished, just unique for any point in time)
         std::vector<int> stopIds;
