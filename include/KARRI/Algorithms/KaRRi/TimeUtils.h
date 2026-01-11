@@ -126,10 +126,11 @@ namespace karri::time_utils {
     calcLengthOfLegStartingAt(const int stopIndex, const int vehicleId, const RouteState &routeState) {
         if (stopIndex + 1 == routeState.numStopsOf(vehicleId))
             return 0;
-        routeState.checkDirectDistance(stopIndex, vehicleId);
         const auto &minDepTimes = routeState.schedDepTimesFor(vehicleId);
         const auto &minArrTimes = routeState.schedArrTimesFor(vehicleId);
-        return minArrTimes[stopIndex + 1] - minDepTimes[stopIndex];
+        const auto expectedTravelTime = minArrTimes[stopIndex + 1] - minDepTimes[stopIndex];
+        routeState.checkDirectDistance(stopIndex, vehicleId, expectedTravelTime);
+        return expectedTravelTime;
     }
 
     static INLINE bool isDropoffAtExistingStop(const Assignment &asgn, const RouteState &routeState) {

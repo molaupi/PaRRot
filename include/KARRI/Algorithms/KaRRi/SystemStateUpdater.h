@@ -149,7 +149,7 @@ namespace karri {
             // If the vehicle has to be rerouted at its current location for a PBNS assignment, we introduce an
             // intermediate stop at its current location representing the rerouting.
             if (asgn.pickupStopIdx == 0 && numStopsBefore > 1 && routeState.schedDepTimesFor(vehId)[0] < requestState.now()) {
-                createIntermediateStopStopAtCurrentLocationForReroute(*asgn.vehicle,
+                createIntermediateStopAtCurrentLocationForReroute(*asgn.vehicle,
                                                                       requestState.now(),
                                                                       stats.updateStats
                                                                     );
@@ -278,7 +278,7 @@ namespace karri {
         // first stop, i.e. dist(s[i], s[i+1]) = schedArrTime(s[i+1]) - schedDepTime(s[i]).
         // Intermediate stop gets an arrival time equal to the request time so the stop is reached immediately,
         // making it the new stop 0. Thus, we do not need to compute target bucket entries for the stop.
-        void createIntermediateStopStopAtCurrentLocationForReroute(const Vehicle &veh, const int now, karri::stats::UpdatePerformanceStats &stats) {
+        void createIntermediateStopAtCurrentLocationForReroute(const Vehicle &veh, const int now, karri::stats::UpdatePerformanceStats &stats) {
             assert(curVehLocs.knowsCurrentLocationOf(veh.vehicleId));
             auto loc = curVehLocs.getCurrentLocationOf(veh.vehicleId);
             LIGHT_KASSERT(loc.depTimeAtHead >= now);
