@@ -260,6 +260,58 @@ namespace karri {
         }
 
         template<typename RequestStateT>
+        void checkAssignmentDistances(const Assignment& asgn, const RequestStateT & requestState) {
+            const auto vehId = asgn.vehicle->vehicleId;
+            const auto &pickup = asgn.pickup;
+            const auto &dropoff = asgn.dropoff;
+            const auto &start = pos[vehId].start;
+            const auto &end = pos[vehId].end;
+            auto pickupIndex = asgn.pickupStopIdx;
+            auto dropoffIndex = asgn.dropoffStopIdx;
+
+            assert(pickupIndex >= 0);
+            assert(pickupIndex < end - start);
+            assert(dropoffIndex >= 0);
+            assert(dropoffIndex < end - start);
+
+            if ((pickupIndex > 0 || schedDepTimes[start] > requestState.now()) && pickup.loc == stopLocations[start + pickupIndex]) {
+                // Pickup at existing stop
+                KASSERT(asgn.distToPickup == 0);
+            } else if (pickupIndex > 0) {
+                // New pickup stop
+                const int actualDist = distanceChecker(stopLocations[start + pickupIndex], pickup.loc);
+                KASSERT(asgn.distToPickup == actualDist);
+            } else {
+                // TODO: Check from current vehicle location to pickup
+            }
+
+            if (dropoffIndex == pickupIndex) {
+                KASSERT(asgn.distFromPickup == 0);
+            } else {
+                const int actualDist = distanceChecker(pickup.loc, stopLocations[start + pickupIndex + 1]);
+                KASSERT(asgn.distFromPickup == actualDist);
+            }
+
+            if (dropoffIndex == pickupIndex) {
+                const int actualDist = distanceChecker(pickup.loc, dropoff.loc);
+                KASSERT(asgn.distToDropoff == actualDist);
+            } else if (dropoff.loc == stopLocations[start + dropoffIndex]) {
+                // Dropoff at existing stop
+                KASSERT(asgn.distToDropoff == 0);
+            } else {
+                const int actualDist = distanceChecker(stopLocations[start + dropoffIndex], dropoff.loc);
+                KASSERT(asgn.distToDropoff == actualDist);
+            }
+
+            if (dropoffIndex == end - start - 1) {
+                KASSERT(asgn.distFromDropoff == 0);
+            } else {
+                const int actualDist = distanceChecker(dropoff.loc, stopLocations[start + dropoffIndex + 1]);
+                KASSERT(asgn.distFromDropoff == actualDist);
+            }
+        }
+
+        template<typename RequestStateT>
         std::pair<int, int>
         insert(const Assignment &asgn, const RequestStateT &requestState) {
             const auto vehId = asgn.vehicle->vehicleId;
@@ -468,6 +520,7 @@ namespace karri {
             KASSERT(vehId < pos.size());
             KASSERT(pos[vehId].end - pos[vehId].start > 0);
             KASSERT(depTime >= now);
+
             stableInsertion(vehId, 1, getUnusedStopId(), pos, stopIds, distancesToNextStop, stopLocations,
                             schedArrTimes, schedDepTimes, vehWaitTimesPrefixSum, maxArrTimes, occupancies,
                             numDropoffsPrefixSum, vehWaitTimesUntilDropoffsPrefixSum);
