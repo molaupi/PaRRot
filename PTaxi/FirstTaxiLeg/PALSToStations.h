@@ -171,12 +171,14 @@ namespace karri {
 
         void tryPickupAfterLastStop(RequestState& requestState, const PDLocs& pdLocs,
                                     StationDistancesT& stationDistances, 
+                                    LightweightSubset& stationsSeen,
                                     const PTStations& stations, 
                                     stats::PalsAssignmentsPerformanceStats& stats,
                                     FirstTaxiLegResult &firstTaxiLegResult) {
+
             minDistanceToAnyStation = stationDistances.getMinDistanceToAnyStation();
-            runBchSearches(requestState, stationDistances, pdLocs, stats, firstTaxiLegResult);
-            enumerateAssignments(requestState, stationDistances, pdLocs, stations, stats, firstTaxiLegResult);
+            runBchSearches(requestState, pdLocs, stationDistances, stats, firstTaxiLegResult);
+            enumerateAssignments(requestState, pdLocs, stationDistances, stationsSeen, stations, stats, firstTaxiLegResult);
         }
 
         void setExternalCostUpperBound(const int bestCost, const int worstCostForAllStations) {
@@ -187,9 +189,8 @@ namespace karri {
     private:
 
         // Run BCH searches that find distances from last stops to pickups
-        void runBchSearches(RequestState& requestState, 
+        void runBchSearches(RequestState& requestState, const PDLocs& pdLocs, 
                             StationDistancesT& stationDistances, 
-                            const PDLocs& pdLocs, 
                             stats::PalsAssignmentsPerformanceStats& stats,
                             FirstTaxiLegResult &firstTaxiLegResult) {
             KaRRiTimer timer;
@@ -207,9 +208,10 @@ namespace karri {
         }
 
         // Enumerate assignments with pickup after last stop
-        void enumerateAssignments(RequestState& requestState, 
+        void enumerateAssignments(RequestState& requestState, const PDLocs& pdLocs,
                                   StationDistancesT& stationDistances, 
-                                  const PDLocs& pdLocs, const PTStations& stations, 
+                                  LightweightSubset& stationsSeen,
+                                  const PTStations& stations, 
                                   stats::PalsAssignmentsPerformanceStats& stats,
                                   FirstTaxiLegResult &firstTaxiLegResult) {
             using namespace time_utils;
@@ -219,6 +221,7 @@ namespace karri {
             KaRRiTimer timer;
 
             Assignment asgn;
+            // 1 vehicle with best cost until the pickup
             for (const auto &vehId: vehiclesSeenForPickups) {
 
                 const int numStops = routeState.numStopsOf(vehId);
@@ -252,7 +255,10 @@ namespace karri {
                     if (minCost > upperBoundCost)
                         continue;
 
-                    for (const auto &station: stations) {
+                    // Consider only stations with feasible distances from StationBCH
+                    for (const auto &stationId: stationsSeen) {
+                        const auto station = stations[stationId];
+                        KASSERT(station.stationId == stationId);
                         asgn.dropoff = {
                             station.stationId, // PDLoc ID
                             station.vehEdgeId, // Location in road network

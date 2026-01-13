@@ -303,7 +303,7 @@ namespace karri {
             // last stop -> pickups
             // PALS Individual BCH
             palsToStations.setExternalCostUpperBound(bestCost, firstTaxiLegResult.getWorstCostForAllStations());
-            palsToStations.tryPickupAfterLastStop(rs, curPdLocs, stationBCH.getTentativeDistances(), stations, stats, firstTaxiLegResult);
+            palsToStations.tryPickupAfterLastStop(rs, curPdLocs, stationBCH.getTentativeDistances(), stationBCH.getStationsSeen(), stations, stats, firstTaxiLegResult);
         }
 
         void runOrdinary(RequestState &rs, stats::OrdAssignmentsPerformanceStats &stats, FirstTaxiLegResult &firstTaxiLegResult) {

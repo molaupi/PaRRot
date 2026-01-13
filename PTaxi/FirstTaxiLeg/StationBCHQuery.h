@@ -168,6 +168,10 @@ namespace karri {
             return tentativeDistances;
         }
 
+        LightweightSubset &getStationsSeen() {
+            return stationsSeen;
+        }
+
          // Sets a known upper bound on the cost of a PALS insertion.
         void setExternalCostUpperBound(const int c) {
             externalUpperBoundCost = c;

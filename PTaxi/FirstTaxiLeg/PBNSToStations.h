@@ -67,6 +67,8 @@ namespace karri {
                              FirstTaxiLegResult &firstTaxiLegResult) {
             
             numAssignmentsTriedWithPickupBeforeNextStop = 0;
+            init(requestState, pdLocs, stats);
+            
             KaRRiTimer timer;
 
             int numCandidateVehicles = 0;
@@ -103,6 +105,14 @@ namespace karri {
         }
 
     private:
+
+        // Initialize for new request.
+        void init(const RequestState& requestState, const PDLocs& pdLocs, stats::PbnsAssignmentsPerformanceStats& stats) {
+            KaRRiTimer timer;
+            curVehLocToPickupSearches.initialize(requestState.now(), pdLocs);
+            const auto time = timer.elapsed<std::chrono::nanoseconds>();
+            stats.initializationTime += time;
+        }
 
         // Filters combinations of pickups and dropoffs using a cost lower bound.
         // If a combination is found for a pickup that cannot be filtered, we need the exact distance from the vehicle
