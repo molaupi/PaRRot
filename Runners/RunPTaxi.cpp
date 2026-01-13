@@ -647,8 +647,8 @@ int main(int argc, char *argv[]) {
         using StationBCH = StationBCHQuery<VehicleInputGraph, VehCHEnv, StationBucketsEnv>;
 
         // PALS for stations
-        using PALSToStationsImpl = PALSToStations<VehicleInputGraph, VehCHEnv, LastStopBucketsEnv, StationBCH::StationDistances, PALSLabelSet>;
-        PALSToStationsImpl palsToStations(vehicleInputGraph, fleet, *vehChEnv, lastStopBucketsEnv, routeState);
+        using PALSToStationsImpl = PALSToStations<VehicleInputGraph, VehCHEnv, LastStopBucketsEnv, LastStopAtVerticesInfo, StationBCH::StationDistances, PALSLabelSet>;
+        PALSToStationsImpl palsToStations(vehicleInputGraph, fleet, *vehChEnv, lastStopBucketsEnv, lastStopBucketsEnv, routeState);
 
         // DALS for stations
         using DALSToStationsImpl = DALSToStations<VehicleInputGraph, VehCHEnv, CurVehLocToPickupSearchesImpl, StationBucketsEnv, PALSLabelSet>;

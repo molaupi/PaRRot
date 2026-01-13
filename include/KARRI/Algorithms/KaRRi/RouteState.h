@@ -260,7 +260,7 @@ namespace karri {
         }
 
         template<typename RequestStateT>
-        void checkAssignmentDistances(const Assignment& asgn, const RequestStateT & requestState) {
+        bool checkAssignmentDistances(const Assignment& asgn, const RequestStateT & requestState) {
             const auto vehId = asgn.vehicle->vehicleId;
             const auto &pickup = asgn.pickup;
             const auto &dropoff = asgn.dropoff;
@@ -274,10 +274,10 @@ namespace karri {
             assert(dropoffIndex >= 0);
             assert(dropoffIndex < end - start);
 
-            if ((pickupIndex > 0 || schedDepTimes[start] > requestState.now()) && pickup.loc == stopLocations[start + pickupIndex]) {
+            if (pickup.loc == stopLocations[start + pickupIndex]) {
                 // Pickup at existing stop
                 KASSERT(asgn.distToPickup == 0);
-            } else if (pickupIndex > 0) {
+            } else if (pickupIndex > 0 || (pickupIndex == 0 && end - start == 1)) {
                 // New pickup stop
                 const int actualDist = distanceChecker(stopLocations[start + pickupIndex], pickup.loc);
                 KASSERT(asgn.distToPickup == actualDist);
@@ -309,11 +309,14 @@ namespace karri {
                 const int actualDist = distanceChecker(dropoff.loc, stopLocations[start + dropoffIndex + 1]);
                 KASSERT(asgn.distFromDropoff == actualDist);
             }
+
+            return true;
         }
 
         template<typename RequestStateT>
         std::pair<int, int>
         insert(const Assignment &asgn, const RequestStateT &requestState) {
+            KASSERT(checkAssignmentDistances(asgn, requestState));
             const auto vehId = asgn.vehicle->vehicleId;
             const auto &pickup = asgn.pickup;
             const auto &dropoff = asgn.dropoff;
