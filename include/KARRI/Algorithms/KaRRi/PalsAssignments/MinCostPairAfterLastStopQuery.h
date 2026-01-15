@@ -574,9 +574,12 @@ namespace karri::PickupAfterLastStopStrategies {
                     //  could be used for both checking for new best insertion and stopping bucket scan early.
                     //  (This is not the case for non-idle vehicles as their detour may still differ and that has an
                     //  effect beyond the arrival time, too, so the vehicle-independent lower bound is different.)
-                    const auto vehTimeTillDepAtPickup = fullDistToPickup + InputConfig::getInstance().stopTime;
+                    const auto vehTimeTillDepAtPickup = std::max(fullDistToPickup + InputConfig::getInstance().stopTime,
+                        requestState.earliestDeparture() + pickup.walkingDist - requestState.now());
+                    const auto psgTimeTillDepAtPickup = std::max(requestState.now() + fullDistToPickup + InputConfig::getInstance().stopTime - requestState.earliestDeparture(),
+                                                                pickup.walkingDist);
                     const auto lowerBoundCostForEarlyBreak = calculator.calcCostForPairedAssignmentAfterLastStop(
-                            vehTimeTillDepAtPickup, std::max(pickup.walkingDist, vehTimeTillDepAtPickup),
+                            vehTimeTillDepAtPickup, psgTimeTillDepAtPickup,
                             directDist, pickup.walkingDist, dropoff.walkingDist, requestState);
                     if (lowerBoundCostForEarlyBreak > upperBoundCostWithConstraints)
                         break;
@@ -593,7 +596,8 @@ namespace karri::PickupAfterLastStopStrategies {
                     // We compute a vehicle-independent lower bound on the cost of any insertion for which the vehicle
                     // arrives at v at the earliest at entry.distOrArrTime. Since entries are ordered by the arrival
                     // time at v, we can stop scanning entries if the lower bound exceeds the best known cost.
-                    const int minVehTimeTillDepAtPickup = label.distToPickup + InputConfig::getInstance().stopTime;
+                    const int minVehTimeTillDepAtPickup = std::max(label.distToPickup + InputConfig::getInstance().stopTime,
+                        requestState.earliestDeparture() + pickup.walkingDist - requestState.now());
                     const int minPsgTimeTillDepAtPickup = std::max(
                             vehArrTimeAtPickup + InputConfig::getInstance().stopTime - requestState.earliestDeparture(),
                             pickup.walkingDist);

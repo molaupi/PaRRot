@@ -64,6 +64,7 @@ namespace karri {
                 const auto &walkingDists = considerPickupWalkingDists ? strat.currentPickupWalkingDists : 0;
 
                 const DistanceLabel directDist = strat.minDistanceToAnyStation;
+                KASSERT(strat.curReqState->now() == strat.curReqState->earliestDeparture());
                 const auto detourTillDepAtPickup = distancesToPickups + DistanceLabel(
                                                        InputConfig::getInstance().stopTime);
                 auto tripTimeTillDepAtPickup = detourTillDepAtPickup;
@@ -97,6 +98,7 @@ namespace karri {
                                                        InputConfig::getInstance().stopTime);
                 auto depTimeAtPickup = arrTimesAtPickups + DistanceLabel(InputConfig::getInstance().stopTime);
                 const auto reqTime = DistanceLabel(strat.curReqState->originalRequest.requestTime);
+                KASSERT(strat.curReqState->now() == strat.curReqState->earliestDeparture());
                 const auto tripTimeTillDepAtPickup = depTimeAtPickup - reqTime;
                 DistanceLabel costLowerBound = calc.template calcLowerBoundCostForKPairedAssignmentsAfterLastStop<
                     LabelSetT>(

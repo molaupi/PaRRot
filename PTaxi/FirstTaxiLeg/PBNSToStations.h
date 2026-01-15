@@ -127,6 +127,7 @@ namespace karri {
 
             for (const auto &entry: relPickupsBns.relevantSpotsFor(veh.vehicleId)) {
                 asgn.pickup = pdLocs.pickups[entry.pdId];
+                asgn.distFromPickup = 0;
 
                 // Distance from stop 0 to pickup is actually a lower bound on the distance from stop 0 via the
                 // vehicle's current location to the pickup => we get lower bound costs.
@@ -145,10 +146,9 @@ namespace karri {
                         // assignments as well as all assignments with later dropoffs. That way, the exact distances can be
                         // computed in a bundled fashion and the postponed assignments can use exact distances afterward.
                         curVehLocToPickupSearches.addPickupForProcessing(asgn.pickup.id, asgn.distToPickup);
-                        pairedContinuations.push_back({asgn.pickup.id, 0, 0});
+                        pairedContinuations.push_back({asgn.pickup.id, 0, INVALID_INDEX});
                         ++numAssignmentsTriedWithPickupBeforeNextStop; // Count first ordinary continuation
-                        ordinaryContinuations.push_back(
-                                {asgn.pickup.id, distFromPickup, 0});
+                        ordinaryContinuations.push_back({asgn.pickup.id, distFromPickup, 1});
                         continue; // Continue with next pickup, rest of assignments for this pickup later with exact distance
                     }
                 }
@@ -342,7 +342,7 @@ namespace karri {
             }
             
             // Finish all paired assignments.
-
+            asgn.distFromPickup = 0;
             for (const auto &continuation: pairedContinuations) {
                 asgn.pickup = pdLocs.pickups[continuation.pickupId];
 
