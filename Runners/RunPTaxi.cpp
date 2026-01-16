@@ -444,6 +444,8 @@ int main(int argc, char *argv[]) {
         // Set up the distance checker callback to verify shortest path distances.
         // This captures the vehicle graph and CH environment for use in checkDirectDistance().
         routeState.setDistanceChecker([&vehicleInputGraph, &vehChEnv](int curStop, int nextStop) {
+            if (curStop == nextStop)
+                return 0;
             const auto &ch = vehChEnv->getCH();
             auto chQuery = vehChEnv->template getFullCHQuery<>();
             chQuery.run(ch.rank(vehicleInputGraph.edgeHead(curStop)), ch.rank(vehicleInputGraph.edgeTail(nextStop)));

@@ -428,6 +428,11 @@ namespace karri {
 
         template<typename AssignmentFinderResponseT, typename JourneyResponseT>
         void applyCombinedTrip(AssignmentFinderResponseT &asgnFinderResponse, JourneyResponseT &ptResponse, const int reqId, const int occTime, bool validFirstTaxiLeg) {
+
+            if (reqId == 122) {
+                std::cout << ""; // stop to find out why requestData.depTime is set to 0 instead of occTime
+            }
+
             // Apply first taxi leg assignment
             if (validFirstTaxiLeg) {
                 auto &reqState = asgnFinderResponse.first;
@@ -474,7 +479,11 @@ namespace karri {
                 requestData[reqId].arrivalTimeAtStation,
                 request.numRiders
             };
-            
+
+            if (reqId == 122) {
+                std::cout << "";
+            }
+
             auto secondTaxiLegResponse = ptAndTaxiTripFinder.findBestTaxiAssignment(newReq, occTime);
             auto &reqState = secondTaxiLegResponse.first;
 
