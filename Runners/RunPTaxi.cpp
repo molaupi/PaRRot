@@ -157,7 +157,7 @@ inline void printUsage() {
               "  -csv-in-LOUD-format      if set, assumes that input files are in the format used by LOUD.\n"
               "  -o <file>                generate output files at name <file> (specify name without file suffix).\n"
               "  -raptor-data <file>      file with the precomputed RAPTOR data.\n"
-              "  -station-mapping <file>  file which maps the station used in RAPTOR to vertices in the given passenger road graph.\n"
+              "  -station-mapping <file>  file which maps the station to edge-ids in the given passenger road graph.\n"
               "  -ch <file>                 contraction hierarchy for the transfer graph of ULTRA in binary format.\n"
               "  -bucket-graph <file>     precomputed bucket graph for use in ULTRA in binary format.\n"
               "  -psg-ch <file>           converted passenger graph for use in ULTRA in binary format.\n"

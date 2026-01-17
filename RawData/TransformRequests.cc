@@ -48,6 +48,7 @@ inline void printUsage() {
               "  -add-time-offset <int>  time offset to add to all request times (in seconds).\n"
               "  -sub-time-offset <int>  time offset to subtract from all request times (in seconds).\n"
               "  -transfer-graph <file>  transfer graph in ULTRA format to match the requests.\n"
+              "  -station-mapping <file>  file which maps the station to edge-ids in the given passenger road graph.\n"
               "  -o <file>         place output in <file>\n"
               "  -help             display this help and exit\n";
 }
@@ -69,6 +70,7 @@ int main(int argc, char *argv[]) {
         const int timeOffset = addTimeOffset - subTimeOffset;
         std::cout << "Using total time offset of " << timeOffset << " seconds.\n";
         const auto transferGraphFileName = clp.getValue<std::string>("transfer-graph");
+        const auto stationMappingFileName = clp.getValue<std::string>("station-mapping");
         auto outputFileName = clp.getValue<std::string>("o");
         if (!endsWith(outputFileName, ".csv"))
             outputFileName += ".csv";
@@ -93,9 +95,27 @@ int main(int argc, char *argv[]) {
         passengerGraphFile.close();
         std::cout << "done.\n";
 
+        // Read the station mapping file
+        std::cout << "Reading station mapping from file... " << std::flush;
+        std::unordered_map<int, int> stations;
+        int edgeId;
+        int stationId = 0;
+        io::CSVReader<1> stationMappingFileReader(stationMappingFileName);
+
+        stationMappingFileReader.read_header(io::ignore_no_column, "initial_location");
+
+        while (stationMappingFileReader.read_row(edgeId)) {
+            if (edgeId < 0) {
+                throw std::invalid_argument("invalid edge id for a station-- '" + std::to_string(edgeId) + "'");
+            }
+            stations.insert({edgeId, stationId});
+            stationId++;
+        }
+        std::cout << "done.\n";
+
         // Read the request data from file.
         std::cout << "Reading request data from file... " << std::flush;
-        std::vector<std::tuple<int, int, int, LatLng, LatLng>> odPairs;
+        std::vector<std::tuple<int, int, int, LatLng, LatLng, int>> odPairs;
         int origin, destination, reqTime;
         io::CSVReader<3, io::trim_chars<' '>> reqFileReader(requestsFileName);
         reqFileReader.read_header(io::ignore_extra_column, "origin", "destination", "req_time");
@@ -103,9 +123,13 @@ int main(int argc, char *argv[]) {
         while (reqFileReader.read_row(origin, destination, reqTime)) {
             const int oPsgEdge = vehicleInputGraph.toPsgEdge(origin);
             const int dPsgEdge = vehicleInputGraph.toPsgEdge(destination);
+            int stationId = INVALID_ID;
+            if (stations.contains(dPsgEdge)) {
+                stationId = stations[dPsgEdge];
+            }
             const auto oLatLng = psgInputGraph.latLng(psgInputGraph.edgeHead(oPsgEdge));
             const auto dLatLng = psgInputGraph.latLng(psgInputGraph.edgeHead(dPsgEdge));
-            odPairs.push_back({origin, destination, reqTime + timeOffset, oLatLng, dLatLng});
+            odPairs.push_back({origin, destination, reqTime + timeOffset, oLatLng, dLatLng, stationId});
         }
         std::cout << "done.\n";
 
@@ -135,7 +159,10 @@ int main(int argc, char *argv[]) {
             const auto originEdgeId = get<0>(od);
             const auto destinationEdgeId = get<1>(od);
             const int requestTime = get<2>(od);
-            out << originEdgeId << "," << destinationEdgeId << "," << requestTime << "," << originVertex.value() << "," << destinationVertex.value() << "\n";
+            const int stationId = get<5>(od);
+            const auto originVertexId = originVertex.value();
+            const auto destinationVertexId = stationId == INVALID_ID ? destinationVertex.value() : stationId;
+            out << originEdgeId << "," << destinationEdgeId << "," << requestTime << "," << originVertexId << "," << destinationVertexId << "\n";
         }
 
         out.close();
