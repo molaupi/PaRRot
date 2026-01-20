@@ -129,7 +129,7 @@ namespace karri::time_utils {
         const auto &minDepTimes = routeState.schedDepTimesFor(vehicleId);
         const auto &minArrTimes = routeState.schedArrTimesFor(vehicleId);
         const auto expectedTravelTime = minArrTimes[stopIndex + 1] - minDepTimes[stopIndex];
-        routeState.checkDirectDistance(stopIndex, vehicleId, expectedTravelTime);
+        KASSERT(routeState.checkDirectDistance(stopIndex, vehicleId, expectedTravelTime));
         return expectedTravelTime;
     }
 

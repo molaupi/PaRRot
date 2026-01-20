@@ -242,14 +242,14 @@ namespace karri {
         // Check that the distance between consecutive stops matches the stored schedule.
         // This is a no-op if no distance checker has been set.
         // Also caches the computed distance for future lookups.
-        void checkDirectDistance(const int stopIndex, const int vehId, const int expectedTravelTime) const {
-            if (!distanceChecker) return;
+        bool checkDirectDistance(const int stopIndex, const int vehId, const int expectedTravelTime) const {
+            if (!distanceChecker) return false;
 
             const auto start = pos[vehId].start;
             auto &curDistance = distancesToNextStop[start + stopIndex];
             if (curDistance != INFTY) {
                 KASSERT(curDistance == expectedTravelTime);
-                return;
+                return true;
             }
             
             const auto curStop = stopLocationsFor(vehId)[stopIndex];
@@ -257,6 +257,7 @@ namespace karri {
             int actualTravelTime = distanceChecker(curStop, nextStop);
             curDistance = actualTravelTime;  // Cache the computed distance
             KASSERT(actualTravelTime == expectedTravelTime);
+            return true;
         }
 
         template<typename RequestStateT>

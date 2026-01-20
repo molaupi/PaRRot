@@ -121,12 +121,14 @@ int main(int argc, char *argv[]) {
         reqFileReader.read_header(io::ignore_extra_column, "origin", "destination", "req_time");
 
         while (reqFileReader.read_row(origin, destination, reqTime)) {
+            int stationId = INVALID_ID;
+            // checks if destination is a station
+            if (stations.contains(destination)) {
+                stationId = stations[destination];
+            }
+
             const int oPsgEdge = vehicleInputGraph.toPsgEdge(origin);
             const int dPsgEdge = vehicleInputGraph.toPsgEdge(destination);
-            int stationId = INVALID_ID;
-            if (stations.contains(dPsgEdge)) {
-                stationId = stations[dPsgEdge];
-            }
             const auto oLatLng = psgInputGraph.latLng(psgInputGraph.edgeHead(oPsgEdge));
             const auto dLatLng = psgInputGraph.latLng(psgInputGraph.edgeHead(dPsgEdge));
             odPairs.push_back({origin, destination, reqTime + timeOffset, oLatLng, dLatLng, stationId});
