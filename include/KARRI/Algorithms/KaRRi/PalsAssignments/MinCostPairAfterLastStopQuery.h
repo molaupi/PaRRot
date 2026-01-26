@@ -626,9 +626,10 @@ namespace karri::PickupAfterLastStopStrategies {
                     // We compute a vehicle-independent lower bound on the cost of any insertion for which the vehicle
                     // arrives at v at the earliest at entry.distOrArrTime. Since entries are ordered by the arrival
                     // time at v, we can stop scanning entries if the lower bound exceeds the best known cost.
-                    const int minVehTimeTillDepAtPickup = std::max(
-                        label.distToPickup + InputConfig::getInstance().stopTime,
-                        requestState.earliestDeparture() + pickup.walkingDist - requestState.now());
+
+                    // Bound for additional vehicle operation time cannot consider potential waiting since vehicles
+                    // that arrive later may wait less and we need lower bound for all remaining entries.
+                    const int minVehTimeTillDepAtPickup = label.distToPickup + InputConfig::getInstance().stopTime;
                     const int minPsgTimeTillDepAtPickup = std::max(
                         vehArrTimeAtPickup + InputConfig::getInstance().stopTime - requestState.earliestDeparture(),
                         pickup.walkingDist);

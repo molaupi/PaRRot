@@ -243,13 +243,14 @@ namespace karri {
         // This is a no-op if no distance checker has been set.
         // Also caches the computed distance for future lookups.
         bool checkDirectDistance(const int stopIndex, const int vehId, const int expectedTravelTime) const {
-            if (!distanceChecker) return false;
+            KASSERT(distanceChecker);
+            if (!distanceChecker) return true;
 
             const auto start = pos[vehId].start;
             auto &curDistance = distancesToNextStop[start + stopIndex];
             if (curDistance != INFTY) {
                 KASSERT(curDistance == expectedTravelTime);
-                return true;
+                return curDistance == expectedTravelTime;
             }
             
             const auto curStop = stopLocationsFor(vehId)[stopIndex];
@@ -257,7 +258,7 @@ namespace karri {
             int actualTravelTime = distanceChecker(curStop, nextStop);
             curDistance = actualTravelTime;  // Cache the computed distance
             KASSERT(actualTravelTime == expectedTravelTime);
-            return true;
+            return actualTravelTime == expectedTravelTime;
         }
 
         template<typename RequestStateT>
@@ -365,6 +366,7 @@ namespace karri {
                                 schedArrTimes, schedDepTimes, vehWaitTimesPrefixSum, maxArrTimes, occupancies,
                                 numDropoffsPrefixSum, vehWaitTimesUntilDropoffsPrefixSum);
                 distancesToNextStop[start + pickupIndex] = INFTY;  // Initialize cached distance
+                distancesToNextStop[start + pickupIndex - 1] = INFTY; // Invalidate cached distance from previous stop
                 stopLocations[start + pickupIndex] = pickup.loc;
                 schedArrTimes[start + pickupIndex] = schedDepTimes[start + pickupIndex - 1] + asgn.distToPickup;
                 schedDepTimes[start + pickupIndex] = std::max(schedArrTimes[start + pickupIndex] + InputConfig::getInstance().stopTime,
@@ -395,6 +397,7 @@ namespace karri {
                                 pos, stopIds, distancesToNextStop, stopLocations, schedArrTimes, schedDepTimes, vehWaitTimesPrefixSum,
                                 maxArrTimes, occupancies, numDropoffsPrefixSum, vehWaitTimesUntilDropoffsPrefixSum);
                 distancesToNextStop[start + dropoffIndex] = INFTY;  // Initialize cached distance
+                distancesToNextStop[start + dropoffIndex - 1] = INFTY; // Invalidate cached distance from previous stop
                 stopLocations[start + dropoffIndex] = dropoff.loc;
                 schedArrTimes[start + dropoffIndex] =
                         schedDepTimes[start + dropoffIndex - 1] + asgn.distToDropoff;
@@ -531,6 +534,7 @@ namespace karri {
             const auto start = pos[vehId].start;
             const auto end = pos[vehId].end;
             distancesToNextStop[start + 1] = INFTY;  // Initialize cached distance
+            distancesToNextStop[start] = INFTY;  // Invalidate cached distance from previous stop
             stopLocations[start + 1] = location;
             schedArrTimes[start + 1] = now;
             schedDepTimes[start + 1] = depTime;
