@@ -243,7 +243,6 @@ namespace karri {
         // This is a no-op if no distance checker has been set.
         // Also caches the computed distance for future lookups.
         bool checkDirectDistance(const int stopIndex, const int vehId, const int expectedTravelTime) const {
-            KASSERT(distanceChecker);
             if (!distanceChecker) return true;
 
             const auto start = pos[vehId].start;
