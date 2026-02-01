@@ -42,7 +42,7 @@
 #include "../PTaxi/Station/StationBucketsEnvironment.h"
 #include "../PTaxi/Station/StationsInEllipse.h"
 #include "../PTaxi/SecondTaxiLeg/TaxiLegApproximation.h"
-#include "../PTaxi/PTLeg/TaxiULTRARAPTOR.h"
+#include "../PTaxi/PTLeg/OldTaxiULTRARAPTOR.h"
 
 #include <ULTRA/Algorithms/RAPTOR/ULTRARAPTOR.h>
 #include <ULTRA/DataStructures/Queries/Queries.h>
@@ -161,7 +161,8 @@ inline void printUsage() {
               "  -ch <file>                 contraction hierarchy for the transfer graph of ULTRA in binary format.\n"
               "  -bucket-graph <file>     precomputed bucket graph for use in ULTRA in binary format.\n"
               "  -psg-ch <file>           converted passenger graph for use in ULTRA in binary format.\n"
-              "  -station-buckets <file>  precomputed station buckets for use in KaRRi in binary format.\n"
+              "  -station-buckets <file>  precomputed station buckets (vehicle) for use in KaRRi in binary format.\n"
+              "  -psg-station-buckets <file>  precomputed station buckets (pedestrian) for walking transfers in binary format.\n"
               "  -help                    show usage help text.\n";
 }
 
@@ -205,6 +206,8 @@ int main(int argc, char *argv[]) {
         const auto psgChFileName = clp.getValue<std::string>("psg-ch");
         auto stationBucketsFilename = clp.getValue<std::string>("station-buckets");
         if (!endsWith(stationBucketsFilename, ".bucket.bin")) stationBucketsFilename += ".bucket.bin";
+         auto psgStationBucketsFilename = clp.getValue<std::string>("psg-station-buckets");
+        if (!endsWith(psgStationBucketsFilename, ".bucket.bin")) psgStationBucketsFilename += ".bucket.bin";
 
         auto outputFileName = clp.getValue<std::string>("o");
         if (endsWith(outputFileName, ".csv"))
@@ -638,12 +641,21 @@ int main(int argc, char *argv[]) {
         PTAlgorithmWithTaxi ptAlgorithmWithTaxi(raptor, ch, stations, bucketGraphFileName);
 
         // Buckets for PT stations
-        using StationBucketsEnv = StationBucketsEnvironment<VehicleInputGraph, VehCHEnv>;
+        using StationBucketsEnv = StationBucketsEnvironment<VehicleInputGraph, VehCHEnv, false>;
         
         std::cout << "Reading station buckets from file... " << std::flush;
         std::ifstream in(stationBucketsFilename, std::ios::binary);
         StationBucketsEnv stationBucketsEnv(vehicleInputGraph, *vehChEnv);
         stationBucketsEnv.readBucketsFrom(in);
+        std::cout << "done.\n";
+
+         // Pedestrian Station Buckets for walking transfers
+        using PsgStationBucketsEnv = karri::StationBucketsEnvironment<PsgInputGraph, PsgCHEnv, true>;
+        
+        std::cout << "Reading pedestrian station buckets from file... " << std::flush;
+        std::ifstream inPsg(psgStationBucketsFilename, std::ios::binary);
+        PsgStationBucketsEnv psgStationBucketsEnv(psgInputGraph, *psgChEnv);
+        psgStationBucketsEnv.readBucketsFrom(inPsg);
         std::cout << "done.\n";
 
         using StationBCH = StationBCHQuery<VehicleInputGraph, VehCHEnv, StationBucketsEnv>;

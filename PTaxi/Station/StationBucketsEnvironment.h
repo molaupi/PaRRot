@@ -34,7 +34,7 @@
 
 namespace karri {
 
-    template<typename InputGraphT, typename CHEnvT>
+    template<typename InputGraphT, typename CHEnvT, bool isPsg>
     class StationBucketsEnvironment {
 
         public:
@@ -126,9 +126,10 @@ namespace karri {
         void generateBucketEntries(const Station &station) {
             verticesVisitedInSearch = 0;
             stationId = station.stationId;
-            const auto stationHead = inputGraph.edgeHead(station.vehEdgeId);
-            const auto stationTail = inputGraph.edgeTail(station.vehEdgeId);
-            const auto stationEdge = inputGraph.travelTime(station.vehEdgeId);
+            const auto edgeId = isPsg ? station.psgEdgeId : station.vehEdgeId;
+            const auto stationHead = inputGraph.edgeHead(edgeId);
+            const auto stationTail = inputGraph.edgeTail(edgeId);
+            const auto stationEdge = inputGraph.travelTime(edgeId);
 
             sourceEntryGenSearch.run(ch.rank(stationHead));
             targetEntryGenSearch.runWithOffset(ch.rank(stationTail), stationEdge);
