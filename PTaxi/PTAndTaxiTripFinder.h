@@ -33,7 +33,6 @@ namespace karri {
             typename DALSToStationsT,
             typename PBNSToStationsT,
             typename PTQueryT,
-            typename PTAlgorithmT,
             typename PTAlgorithmWithTaxiT,
             typename TaxiLegApproximationT
     >
@@ -66,7 +65,6 @@ namespace karri {
                             StationsInEllipseT &stationsInEllipse,
                             DALSToStationsT &dalsToStations,
                             PBNSToStationsT &pbnsToStations,
-                            PTAlgorithmT &ptAlgorithm,
                             PTAlgorithmWithTaxiT &ptAlgorithmWithTaxi)
                 : feasibleEllipticPickups(feasibleEllipticPickups),
                   feasibleEllipticDropoffs(feasibleEllipticDropoffs),
@@ -93,7 +91,6 @@ namespace karri {
                   ordinaryToStations(fleet, routeState),
                   dalsToStations(dalsToStations),
                   pbnsToStations(pbnsToStations),
-                  ptAlgorithm(ptAlgorithm),
                   ptAlgorithmWithTaxi(ptAlgorithmWithTaxi),
                   taxiLegApproximation(vehInputGraph, vehChEnv, stationBucketsEnv, stations.size()),
                   curRelOrdinaryPickups(fleet.size()),
@@ -116,8 +113,13 @@ namespace karri {
             std::pair<RequestState, stats::DispatchingPerformanceStats> invalidTaxiResponseWithStats{invalidTaxiResponse, stats::DispatchingPerformanceStats()};
             
             const auto query = queries[req.requestId];
-            ptAlgorithm.run(query.source, query.departureTime, query.target);
-            auto ptOnlyParetoFront = ptAlgorithm.getJourneys();
+            // Convert vehicle edge IDs to pedestrian edge IDs for initial transfers
+            const int originPsgEdge = vehInputGraph.toPsgEdge(req.origin);
+            const int destPsgEdge = vehInputGraph.toPsgEdge(req.destination);
+
+            ptAlgorithmWithTaxi.run(query.source, query.departureTime, query.target,
+                                    originPsgEdge, destPsgEdge);
+            auto ptOnlyParetoFront = ptAlgorithmWithTaxi.getJourneys();
 
             PTResult ptOnlyResponse(ptOnlyParetoFront, curReqState);
             PTResult invalidPTResponse;
@@ -134,7 +136,8 @@ namespace karri {
             taxiLegApproximation.findDistancesFromStationsToDest(req.destination, maxTripTime);
             const auto &distFromStations = taxiLegApproximation.getDistancesFromStations();
 
-            ptAlgorithmWithTaxi.run(query.source, query.departureTime, query.target, firstTaxiLeg, distFromStations);
+            ptAlgorithmWithTaxi.runWithTaxi(query.source, query.departureTime, query.target, firstTaxiLeg, distFromStations,
+                                    originPsgEdge, destPsgEdge);
             auto ptLegParetoFront = ptAlgorithmWithTaxi.getJourneys();
             PTResult ptLegResponse(ptLegParetoFront, curReqState);
 
@@ -375,7 +378,6 @@ namespace karri {
         PBNSToStationsT &pbnsToStations;
 
         const std::vector<PTQueryT> &queries;
-        PTAlgorithmT &ptAlgorithm;
         PTAlgorithmWithTaxiT &ptAlgorithmWithTaxi;
 
         TaxiLegApproximationT taxiLegApproximation;
