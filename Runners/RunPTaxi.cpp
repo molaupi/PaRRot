@@ -45,7 +45,6 @@
 #include "../PTaxi/PTLeg/TaxiULTRARAPTOR.h"
 #include "../PTaxi/PTLeg/TaxiInitialTransfers.h"
 
-#include <ULTRA/Algorithms/RAPTOR/ULTRARAPTOR.h>
 #include <ULTRA/DataStructures/Queries/Queries.h>
 
 #include <KARRI/Algorithms/CH/CH.h>
@@ -324,7 +323,7 @@ int main(int argc, char *argv[]) {
         // Read the request data from file.
         std::cout << "Reading request data from file... " << std::flush;
         std::vector<Request> requests;
-        std::vector<VertexQuery> queries;
+        std::vector<EdgeQuery> queries;
         int origin, destination, requestTime, numRiders, source, target;
         io::CSVReader<6, io::trim_chars<' '>> reqFileReader(requestFileName);
 
@@ -354,8 +353,12 @@ int main(int argc, char *argv[]) {
             if (numRiders == -1) // If number of riders was not specified, assume one rider
                 numRiders = 1;
             requests.push_back({requestId, originSeqId, destSeqId, requestTime * 10, numRiders});
-            if (reqFileReader.has_column("source") && reqFileReader.has_column("target"))
-                queries.push_back(VertexQuery(Vertex(source), Vertex(target), requestTime));
+            
+            // Create EdgeQuery with both vehicle and passenger edge IDs
+            const int originPsgEdge = vehicleInputGraph.toPsgEdge(originSeqId);
+            const int destPsgEdge = vehicleInputGraph.toPsgEdge(destSeqId);
+            queries.push_back(EdgeQuery(originSeqId, originPsgEdge, destSeqId, destPsgEdge, requestTime));
+            
             numRiders = -1;
         }
         std::cout << "done.\n";
@@ -657,7 +660,7 @@ int main(int argc, char *argv[]) {
         // Create TaxiULTRARAPTOR with our custom TaxiInitialTransfers
         using PTAlgorithmWithTaxi = RAPTOR::TaxiULTRARAPTOR<BasicLabelSet<0, ParentInfo::FULL_PARENT_INFO>, RAPTOR::NoProfiler, false, TaxiInitialTransfersType>;
 
-        PTAlgorithmWithTaxi ptAlgorithmWithTaxi(raptor, taxiInitialTransfers, stations);
+        PTAlgorithmWithTaxi ptAlgorithmWithTaxi(raptor, taxiInitialTransfers, stations, psgInputGraph.numEdges());
 
         using StationBCH = StationBCHQuery<VehicleInputGraph, VehCHEnv, StationBucketsEnv>;
 
@@ -703,7 +706,7 @@ int main(int argc, char *argv[]) {
                 OrdinaryToStationsImpl,
                 DALSToStationsImpl,
                 PBNSToStationsImpl,
-                VertexQuery,
+                EdgeQuery,
                 PTAlgorithmWithTaxi,
                 TaxiLegApproximationImpl>;
         PTAndTaxiTripFinderImpl ptAndTaxiTripFinder(requestStateInitializer, pdLocsFinder, pdLocsAtExistingStops,

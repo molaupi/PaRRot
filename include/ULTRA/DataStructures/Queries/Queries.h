@@ -21,6 +21,30 @@ struct VertexQuery {
     int departureTime;
 };
 
+struct EdgeQuery {
+    EdgeQuery(const int originVehEdge = INVALID_ID, const int originPsgEdge = INVALID_ID,
+              const int destinationVehEdge = INVALID_ID, const int destinationPsgEdge = INVALID_ID,
+              const int departureTime = never) :
+        originVehEdge(originVehEdge),
+        originPsgEdge(originPsgEdge),
+        destinationVehEdge(destinationVehEdge),
+        destinationPsgEdge(destinationPsgEdge),
+        departureTime(departureTime) {
+    }
+
+    inline friend std::ostream& operator<<(std::ostream& out, const EdgeQuery& query) noexcept {
+        return out << "veh:" << query.originVehEdge << " (psg:" << query.originPsgEdge << ") -> "
+                   << "veh:" << query.destinationVehEdge << " (psg:" << query.destinationPsgEdge << ") @ "
+                   << query.departureTime << std::endl;
+    }
+
+    int originVehEdge;
+    int originPsgEdge;
+    int destinationVehEdge;
+    int destinationPsgEdge;
+    int departureTime;
+};
+
 inline std::vector<VertexQuery> generateRandomVertexQueries(const size_t numVertices, const size_t numQueries, const int startTime = 0, const int endTime = 24 * 60 * 60) noexcept {
     std::mt19937 randomGenerator(42);
     std::uniform_int_distribution<> vertexDistribution(0, numVertices - 1);
