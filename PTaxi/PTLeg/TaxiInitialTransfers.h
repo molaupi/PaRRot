@@ -98,10 +98,10 @@ public:
         : inputGraph(inputGraph)
         , ch(chEnv.getCH())
         , chQuery(chEnv.template getFullCHQuery<LabelSetT>())
-        , forwardSearch(chEnv.template getForwardSearch<ScanSourceBuckets, dij::NoCriterion, LabelSetT>(
-              ScanSourceBuckets(*this)))
-        , backwardSearch(chEnv.template getReverseSearch<ScanTargetBuckets, dij::NoCriterion, LabelSetT>(
+        , forwardSearch(chEnv.template getForwardSearch<ScanTargetBuckets, dij::NoCriterion, LabelSetT>(
               ScanTargetBuckets(*this)))
+        , backwardSearch(chEnv.template getReverseSearch<ScanSourceBuckets, dij::NoCriterion, LabelSetT>(
+              ScanSourceBuckets(*this)))
         , sourceBucketContainer(stationBucketsEnv.getSourceBuckets())
         , targetBucketContainer(stationBucketsEnv.getTargetBuckets())
         , distance{std::vector<int>(numStations, INFTY), std::vector<int>(numStations, INFTY)}
@@ -238,8 +238,8 @@ private:
     const CH& ch;
     
     typename CHEnvT::template FullCHQuery<LabelSetT> chQuery;
-    typename CHEnvT::template UpwardSearch<ScanSourceBuckets, dij::NoCriterion, LabelSetT> forwardSearch;
-    typename CHEnvT::template UpwardSearch<ScanTargetBuckets, dij::NoCriterion, LabelSetT> backwardSearch;
+    typename CHEnvT::template UpwardSearch<ScanTargetBuckets, dij::NoCriterion, LabelSetT> forwardSearch;
+    typename CHEnvT::template UpwardSearch<ScanSourceBuckets, dij::NoCriterion, LabelSetT> backwardSearch;
     
     const typename StationBucketsEnvT::BucketContainer& sourceBucketContainer;
     const typename StationBucketsEnvT::BucketContainer& targetBucketContainer;

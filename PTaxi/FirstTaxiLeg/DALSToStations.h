@@ -176,6 +176,7 @@ namespace karri {
                 for (const auto& s : stationsWithValidDistances)
                     currentLastStopDistances[s] = INFTY;
                 stationsWithValidDistances.clear();
+                // TODO: explicitly set distance to zero for station at last stop of any vehicle in batch
                 runSearchesForVehicleBatch(i, stats);
                 enumerateAssignmentsForVehicleBatch(i, relevantOrdinaryPickups, relevantPickupsBeforeNextStop, requestState, pdLocs, stats, firstTaxiLegResult);
             }

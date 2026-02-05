@@ -163,7 +163,9 @@ public:
     }
 
     // without initialization phase
-    inline void runWithTaxi(const int departureTime,
+    inline void runWithTaxi(const int originPsgEdge, const int originVehEdge,
+        const int destPsgEdge, const int destVehEdge,
+        const int departureTime,
         const karri::FirstTaxiLegResult &firstTaxiLeg, const std::vector<DistanceLabel> &distFromStations,
         const size_t maxRounds = INFTY) noexcept
     {
@@ -172,7 +174,10 @@ public:
         clear();
         profiler.doneRound();
 
-        startNewRound();
+        profiler.startExtraRound(EXTRA_ROUND_INITIALIZATION);
+        profiler.startPhase();
+        initialize(originPsgEdge, originVehEdge, destPsgEdge, destVehEdge, departureTime);
+        profiler.donePhase(PHASE_INITIALIZATION);
 
         profiler.startPhase();
         relaxInitialTransfers(departureTime, &firstTaxiLeg);

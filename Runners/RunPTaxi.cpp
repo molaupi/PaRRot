@@ -640,6 +640,8 @@ int main(int argc, char *argv[]) {
         
         std::cout << "Reading station buckets from file... " << std::flush;
         std::ifstream in(stationBucketsFilename, std::ios::binary);
+        if (!in.good())
+            throw std::invalid_argument("file not found -- '" + stationBucketsFilename + "'");
         StationBucketsEnv stationBucketsEnv(vehicleInputGraph, *vehChEnv);
         stationBucketsEnv.readBucketsFrom(in);
         std::cout << "done.\n";
@@ -649,6 +651,8 @@ int main(int argc, char *argv[]) {
         
         std::cout << "Reading pedestrian station buckets from file... " << std::flush;
         std::ifstream inPsg(psgStationBucketsFilename, std::ios::binary);
+        if (!inPsg.good())
+            throw std::invalid_argument("file not found -- '" + psgStationBucketsFilename + "'");
         PsgStationBucketsEnv psgStationBucketsEnv(psgInputGraph, *psgChEnv);
         psgStationBucketsEnv.readBucketsFrom(inPsg);
         std::cout << "done.\n";
@@ -673,7 +677,7 @@ int main(int argc, char *argv[]) {
         DALSToStationsImpl dalsToStations(vehicleInputGraph, fleet, *vehChEnv, curVehLocToPickupSearches, routeState, stationBucketsEnv, stations);
 
         using StationsInEllipseImpl = StationsInEllipse<VehicleInputGraph, VehCHEnv, StationBucketsEnv>;
-        StationsInEllipseImpl stationsInEllipse(vehicleInputGraph, *vehChEnv, routeState, stationBucketsEnv, stations.size());
+        StationsInEllipseImpl stationsInEllipse(vehicleInputGraph, *vehChEnv, routeState, stationBucketsEnv, stations);
 
         // Ordinary for stations
         using OrdinaryToStationsImpl =  OrdinaryToStations<StationsInEllipseImpl, StationBCH::StationDistances>;
