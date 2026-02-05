@@ -89,33 +89,6 @@ public:
         initializeEdgeToStationMappings();
     }
 
-    template <typename ATTRIBUTE>
-    TaxiULTRARAPTOR(const Data& data, const InitialTransferGraph& forwardGraph,
-        const InitialTransferGraph& backwardGraph, const ATTRIBUTE weight, const PTStations &stations,
-        const std::string& fileName = "", const Profiler& profilerTemplate = Profiler())
-        : TaxiULTRARAPTOR(data,
-            InitialTransferType(forwardGraph, backwardGraph,
-                data.numberOfStops(), weight, fileName),
-            stations,
-            profilerTemplate)
-    {
-    }
-
-    TaxiULTRARAPTOR(const Data& data, const ULTRACH::CH& chData, const PTStations &stations,
-        const std::string& fileName = "", const Profiler& profilerTemplate = Profiler())
-        : TaxiULTRARAPTOR(data, chData.forward, chData.backward, Weight, stations,
-            fileName, profilerTemplate)
-    {
-    }
-
-    TaxiULTRARAPTOR(const Data& data, const TransferGraph& forwardGraph,
-        const TransferGraph& backwardGraph,
-        const Profiler& profilerTemplate = Profiler())
-        : TaxiULTRARAPTOR(data, forwardGraph, backwardGraph, TravelTime,
-            profilerTemplate)
-    {
-    }
-
     inline void run(const int originPsgEdge, const int originVehEdge, 
         const int destPsgEdge, const int destVehEdge,
         const int departureTime, const size_t maxRounds = INFTY) noexcept

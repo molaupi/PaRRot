@@ -43,10 +43,7 @@ inline void printUsage() {
               "  -psg-g <file>                  pedestrian road network in binary format.\n"
               "  -veh-h <file>                  contraction hierarchy for the vehicle network in binary format.\n"
               "  -psg-h <file>                  contraction hierarchy for the pedestrian network in binary format.\n"
-              "  -raptor-data <file>            file with the precomputed RAPTOR data.\n"
               "  -station-mapping <file>        file which maps the station used in RAPTOR to edges in the given road graph.\n"
-              "  -ch <file>                     contraction hierarchy for the transfer graph of ULTRA in binary format.\n"
-              "  -o-bucket-graph <file>         bucket graph for ULTRA in <file>.\n"
               "  -o-station-buckets <file>      station buckets (vehicle) for KaRRi in <file>.\n"
               "  -o-psg-station-buckets <file>  station buckets (pedestrian) for walking transfers in <file>.\n"
               "  -help                          display this help and exit.\n";
@@ -67,10 +64,7 @@ int main(int argc, char *argv[]) {
         const auto psgNetworkFileName = clp.getValue<std::string>("psg-g");
         const auto vehHierarchyFileName = clp.getValue<std::string>("veh-h");
         const auto psgHierarchyFileName = clp.getValue<std::string>("psg-h");
-        const auto raptorFileName = clp.getValue<std::string>("raptor-data");
         const auto stationMappingFileName = clp.getValue<std::string>("station-mapping");
-        const auto chFileName = clp.getValue<std::string>("ch");
-        const auto bucketGraphOutputFileName = clp.getValue<std::string>("o-bucket-graph");
         auto stationBucketsOutputFilename = clp.getValue<std::string>("o-station-buckets");
         if (!endsWith(stationBucketsOutputFilename, ".bucket.bin")) stationBucketsOutputFilename += ".bucket.bin";
         auto psgStationBucketsOutputFilename = clp.getValue<std::string>("o-psg-station-buckets");
@@ -212,16 +206,6 @@ int main(int argc, char *argv[]) {
             stations.push_back({stationId, psgEdgeId, edgeId});
             stationId++;
         }
-        std::cout << "done.\n";
-        
-        std::cout << "Reading ULTRA CH from file... " << std::flush;
-        ULTRACH::CH ch(chFileName);
-        std::cout << "Building bucket graph... " << std::flush;
-        ULTRACH::BucketQuery bucketGraph(ch, FORWARD, raptor.numberOfStops());
-        std::cout << "done.\n";
-
-        std::cout << "Writing bucket graph to file... " << std::flush;
-        bucketGraph.writeBinary(bucketGraphOutputFileName);
         std::cout << "done.\n";
 
         // Station Buckets for first taxi leg in KaRRi
