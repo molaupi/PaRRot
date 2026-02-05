@@ -95,11 +95,11 @@ namespace karri {
 
         private:
 
-            void tryUpdatingDistance(const int stationId, const DistanceLabel& distFromPDLoc) {
+            void tryUpdatingDistance(const int stationId, const DistanceLabel& distToStation) {
                 // Update tentative distances to v for any searches where distViaV admits a possible better assignment
                 // than the current best and where distViaV is at least as good as the current tentative distance.
-                LabelMask curMask = ~(search.currentLastStopDistances[stationId] < distFromPDLoc);
-                curMask &= distFromPDLoc < INFTY;
+                LabelMask curMask = ~(search.currentLastStopDistances[stationId] < distToStation);
+                curMask &= distToStation < INFTY;
                 if (!anySet(curMask))
                     return;
 
@@ -107,7 +107,7 @@ namespace karri {
                 if (allSet(search.currentLastStopDistances[stationId] == INFTY))
                     search.stationsWithValidDistances.push_back(stationId);
 
-                search.currentLastStopDistances[stationId].setIf(distFromPDLoc, curMask);
+                search.currentLastStopDistances[stationId].setIf(distToStation, curMask);
             }
 
             DALSToStations &search;
@@ -152,8 +152,11 @@ namespace karri {
                   bucketContainer(stationBucketsEnv.getTargetBuckets()),
                   ptStations(ptStations),
                   stationsWithValidDistances(),
-                  currentLastStopDistances(ptStations.size(), DistanceLabel(INFTY)) {
+                  currentLastStopDistances(ptStations.size(), DistanceLabel(INFTY)),
+                    stationsAtVehEdgeIndex(inputGraph.numEdges() + 1) {
             stationsWithValidDistances.reserve(ptStations.size());
+
+            initializeEdgeToStationMapping();
         }
 
         void tryDropoffAfterLastStop(RequestState& requestState, const PDLocs& pdLocs,
@@ -176,7 +179,7 @@ namespace karri {
                 for (const auto& s : stationsWithValidDistances)
                     currentLastStopDistances[s] = INFTY;
                 stationsWithValidDistances.clear();
-                // TODO: explicitly set distance to zero for station at last stop of any vehicle in batch
+                initializeDistancesForStationsAtLastStops(i, stats);
                 runSearchesForVehicleBatch(i, stats);
                 enumerateAssignmentsForVehicleBatch(i, relevantOrdinaryPickups, relevantPickupsBeforeNextStop, requestState, pdLocs, stats, firstTaxiLegResult);
             }
@@ -217,6 +220,36 @@ namespace karri {
 
     private:
 
+        void initializeEdgeToStationMapping() {
+            // Count stations per vehicle edge to get offsets
+            for (const auto& station : ptStations) {
+                ++stationsAtVehEdgeIndex[station.vehEdgeId];
+            }
+
+            // Compute offsets as prefix sum of counts
+            int offset = 0;
+            for (size_t i = 0; i < stationsAtVehEdgeIndex.size(); ++i) {
+                int count = stationsAtVehEdgeIndex[i];
+                stationsAtVehEdgeIndex[i] = offset;
+                offset += count;
+            }
+
+            // Fill stationsAtVehEdge according to offsets
+            stationsAtVehEdge.resize(ptStations.size());
+            for (const auto& station : ptStations) {
+                int edgeId = station.vehEdgeId;
+                int index = stationsAtVehEdgeIndex[edgeId]++;
+                stationsAtVehEdge[index] = station.stationId;
+            }
+
+            // Restore correct offsets
+            for (size_t i = stationsAtVehEdgeIndex.size() - 1; i > 0; --i) {
+                stationsAtVehEdgeIndex[i] = stationsAtVehEdgeIndex[i - 1];
+            }
+            stationsAtVehEdgeIndex[0] = 0;
+            KASSERT(stationsAtVehEdgeIndex.back() == ptStations.size());
+        }
+
         void initLastStopSearches(const RequestState& requestState) {
             totalNumberOfCandidateDropoffs = 0;
             totalNumEdgeRelaxations = 0;
@@ -224,6 +257,35 @@ namespace karri {
             totalNumEntriesScanned = 0;
             
             curReqState = &requestState;
+        }
+
+        void initializeDistancesForStationsAtLastStops(const int firstVehId, stats::DalsAssignmentsPerformanceStats& stats) {
+            KaRRiTimer timer;
+
+            for (int i = 0; i < K; ++i) {
+                const auto &veh = firstVehId + i < fleet.size() ? fleet[firstVehId + i] : fleet[firstVehId];
+                const int lastStopIndex = routeState.numStopsOf(veh.vehicleId) - 1;
+                const int lastStopLocation = routeState.stopLocationsFor(veh.vehicleId)[lastStopIndex];
+
+                DistanceLabel zeroAtI = INFTY;
+                zeroAtI[i] = 0;
+
+                const int stationsAtEdgeStart = stationsAtVehEdgeIndex[lastStopLocation];
+                const int stationsAtEdgeEnd = stationsAtVehEdgeIndex[lastStopLocation + 1];
+                for (int j = stationsAtEdgeStart; j < stationsAtEdgeEnd; ++j) {
+                    const int stationId = stationsAtVehEdge[j];
+                    const auto &station = ptStations[stationId];
+
+                    // Mark station as having valid distance if seen for the first time
+                    if (allSet(currentLastStopDistances[stationId] == INFTY))
+                        stationsWithValidDistances.push_back(stationId);
+
+                    currentLastStopDistances[stationId].min(zeroAtI);
+                }
+            }
+
+            const int64_t searchTime = timer.elapsed<std::chrono::nanoseconds>();
+            stats.searchTime += searchTime;
         }
 
         void runSearchesForVehicleBatch(const int firstVehId, stats::DalsAssignmentsPerformanceStats& stats) {
@@ -546,6 +608,11 @@ namespace karri {
         int totalNumEntriesScanned;
 
         int totalNumberOfCandidateDropoffs;
+
+        // stationsAtVehEdge[stationsAtVehEdgeIndex[e]..stationsAtVehEdgeIndex[e+1]) are the stations at edge e.
+        // This is used to efficiently find stations at the last stop edge of a vehicle.
+        std::vector<int> stationsAtVehEdgeIndex;
+        std::vector<int> stationsAtVehEdge;
 
     };
     
