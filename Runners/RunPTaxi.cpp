@@ -159,7 +159,6 @@ inline void printUsage() {
               "  -raptor-data <file>      file with the precomputed RAPTOR data.\n"
               "  -station-mapping <file>  file which maps the station to edge-ids in the given passenger road graph.\n"
               "  -ch <file>                 contraction hierarchy for the transfer graph of ULTRA in binary format.\n"
-              "  -bucket-graph <file>     precomputed bucket graph for use in ULTRA in binary format.\n"
               "  -psg-ch <file>           converted passenger graph for use in ULTRA in binary format.\n"
               "  -station-buckets <file>  precomputed station buckets (vehicle) for use in KaRRi in binary format.\n"
               "  -psg-station-buckets <file>  precomputed station buckets (pedestrian) for walking transfers in binary format.\n"
@@ -201,8 +200,6 @@ int main(int argc, char *argv[]) {
         // new
         const auto raptorFileName = clp.getValue<std::string>("raptor-data");
         const auto stationMappingFileName = clp.getValue<std::string>("station-mapping");
-        const auto chFileName = clp.getValue<std::string>("ch");
-        const auto bucketGraphFileName = clp.getValue<std::string>("bucket-graph");
         const auto psgChFileName = clp.getValue<std::string>("psg-ch");
         auto stationBucketsFilename = clp.getValue<std::string>("station-buckets");
         if (!endsWith(stationBucketsFilename, ".bucket.bin")) stationBucketsFilename += ".bucket.bin";
@@ -324,18 +321,18 @@ int main(int argc, char *argv[]) {
         std::cout << "Reading request data from file... " << std::flush;
         std::vector<Request> requests;
         std::vector<EdgeQuery> queries;
-        int origin, destination, requestTime, numRiders, source, target;
-        io::CSVReader<6, io::trim_chars<' '>> reqFileReader(requestFileName);
+        int origin, destination, requestTime, numRiders;
+        io::CSVReader<4, io::trim_chars<' '>> reqFileReader(requestFileName);
 
         if (csvFilesInLoudFormat) {
             reqFileReader.read_header(io::ignore_missing_column, "pickup_spot", "dropoff_spot", "min_dep_time",
-                                      "num_riders", "source", "target");
+                                      "num_riders");
         } else {
-            reqFileReader.read_header(io::ignore_missing_column, "origin", "destination", "req_time", "num_riders", "source", "target");
+            reqFileReader.read_header(io::ignore_missing_column, "origin", "destination", "req_time", "num_riders");
         }
 
         numRiders = -1;
-        while (reqFileReader.read_row(origin, destination, requestTime, numRiders, source, target)) {
+        while (reqFileReader.read_row(origin, destination, requestTime, numRiders)) {
             if (origin < 0 || origin >= vehGraphOrigIdToSeqId.size() || vehGraphOrigIdToSeqId[origin] == INVALID_ID)
                 throw std::invalid_argument("invalid location -- '" + std::to_string(origin) + "'");
             if (destination < 0 || destination >= vehGraphOrigIdToSeqId.size() ||
@@ -628,11 +625,6 @@ int main(int argc, char *argv[]) {
             stations.push_back({stationId, psgEdgeId, edgeId});
             stationId++;
         }
-        std::cout << "done.\n";
-
-
-        std::cout << "Reading ULTRA CH from file... " << std::flush;
-        ULTRACH::CH ch(chFileName);
         std::cout << "done.\n";
 
         // Buckets for PT stations (vehicle graph)

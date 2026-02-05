@@ -21,6 +21,7 @@ As a result, you will obtain the CH files and raptor binary required to run the 
 `runULTRARAPTORQueries ../Networks/Berlin/ULTRA/Berlin-1pct_raptor-shortcuts.binary ../Networks/Berlin/ULTRA/Berlin-1pct_CH 10`
 
 ## Transform KaRRi Requests to ULTRA Requests (via LatLng)
+Note that this is not required for running PTaxi. PTaxi uses the edge IDs in KaRRi instead of vertex IDs in ULTRA.
 Run `./RawData/TransformRequests -veh-g ../../Networks/Berlin/KARRI/Graphs/Berlin-1pct_pedestrian_veh.gr.bin -psg-g ../../Networks/Berlin/KARRI/Graphs/Berlin-1pct_pedestrian_psg.gr.bin -r ../../Networks/Berlin/KARRI/Requests/Berlin-1pct_pedestrian.csv -transfer-graph ../../Networks/Berlin/ULTRA/Berlin-1pct_raptor.binary.graph -station-mapping ../../Networks/Berlin/Preprocessing/PT/Berlin-1pct_stations.mapped.csv -o ../../Networks/Berlin/KARRI/Requests/Berlin-1pct_transformed2.csv` to obtain a requests file with both KaRRi edge ids and ULTRA vertex ids.
 
 In ULTRA: run `runULTRARAPTORWithGivenQueries ../Networks/Berlin/ULTRA/Berlin-1pct_raptor-shortcuts.binary ../Networks/Berlin/ULTRA/Berlin-1pct_CH ../Networks/Berlin/KARRI/Requests/Berlin-1pct_transformed.csv ../Networks/Berlin/ULTRA/Outputs/Berlin-1pct_journeys_withWalking2.csv false` to run ULTRARAPTOR algorithm with KaRRi requests.
@@ -29,9 +30,8 @@ In ULTRA: run `runULTRARAPTORWithGivenQueries ../Networks/Berlin/ULTRA/Berlin-1p
 ## Build Static Buckets for PTaxi
 You must run the executables BuildStaticBuckets to generate required input data for PTaxi.
 These includes:
-- Bucket graph for ULTRA
-- Station buckets for KaRRi
-`./RawData/BuildStaticBuckets -veh-g ../../Networks/Berlin/KARRI/Graphs/Berlin-1pct_pedestrian_veh.gr.bin -veh-h ../../Networks/Berlin/KARRI/CHs/Berlin-1pct_pedestrian_veh_time.ch.bin -raptor-data ../../Networks/Berlin/ULTRA/Berlin-1pct_raptor-shortcuts.binary -station-mapping ../../Networks/Berlin/Preprocessing/PT/Berlin-1pct_stations.mapped.csv -ch ../../Networks/Berlin/ULTRA/Berlin-1pct_CH -o-bucket-graph ../../Networks/Berlin/Preprocessing/PT/Berlin-1pct_bucket -o-station-buckets ../../Networks/Berlin/Preprocessing/Taxi/Berlin-1pct_stations`
+- Station buckets (in KaRRi vehicle and passenger graph)
+`./RawData/BuildStaticBuckets -veh-g ../../Networks/Berlin/KARRI/Graphs/Berlin-1pct_pedestrian_veh.gr.bin -veh-h ../../Networks/Berlin/KARRI/CHs/Berlin-1pct_pedestrian_veh_time.ch.bin -psg-g ../../Networks/Berlin/KARRI/Graphs/Berlin-1pct_pedestrian_psg.gr.bin -psg-h Networks/Berlin/KARRI/CHs/Berlin-1pct_pedestrian_psg_time.ch.bin -station-mapping ../../Networks/Berlin/Preprocessing/PT/Berlin-1pct_stations.mapped.csv -o-station-buckets ../../Networks/Berlin/Preprocessing/Taxi/Berlin-1pct_stations -o-psg-station-buckets ../../Networks/Berlin/Preprocessing/Taxi/Berlin-1pct_psg_stations`
 
 
 ## Prerequisites
