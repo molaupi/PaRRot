@@ -28,12 +28,12 @@ namespace RAPTOR {
  * - direct origin to destination
  * 
  */
-template<typename InputGraphT, typename CHEnvT, typename StationBucketsEnvT,
-         typename LabelSetT = BasicLabelSet<0, ParentInfo::NO_PARENT_INFO>>
+template<typename InputGraphT, typename CHEnvT, typename StationBucketsEnvT>
 class TaxiInitialTransfers {
 public:
+    using LabelSetT = BasicLabelSet<0, ParentInfo::FULL_PARENT_INFO>;
     using Graph = TransferGraph;
-    using Type = TaxiInitialTransfers<InputGraphT, CHEnvT, StationBucketsEnvT, LabelSetT>;
+    using Type = TaxiInitialTransfers<InputGraphT, CHEnvT, StationBucketsEnvT>;
     
     static constexpr int K = LabelSetT::K;
     using DistanceLabel = typename LabelSetT::DistanceLabel;
@@ -45,15 +45,15 @@ private:
         explicit ScanSourceBuckets(TaxiInitialTransfers& search) : search(search) {}
 
         template<typename DistLabelT, typename DistLabelContainerT>
-        bool operator()(const int v, DistLabelT& distToV, const DistLabelContainerT&) {
+        bool operator()(const int v, DistLabelT& distFromV, const DistLabelContainerT&) {
             for (const auto& entry : search.sourceBucketContainer.getBucketOf(v)) {
                 const int stationId = entry.targetId;
-                const int distViaV = distToV[0] + entry.distToTarget;
-                if (distViaV < search.targetDistance && distViaV < search.distance[FORWARD][stationId]) {
-                    if (search.distance[FORWARD][stationId] == INFTY) {
-                        search.reachedPOIs[FORWARD].emplace_back(Vertex(stationId));
+                const int distViaV = distFromV[0] + entry.distToTarget;
+                if (distViaV < search.targetDistance && distViaV < search.distance[BACKWARD][stationId]) {
+                    if (search.distance[BACKWARD][stationId] == INFTY) {
+                        search.reachedPOIs[BACKWARD].emplace_back(Vertex(stationId));
                     }
-                    search.distance[FORWARD][stationId] = distViaV;
+                    search.distance[BACKWARD][stationId] = distViaV;
                 }
             }
             return false; // Never prune
@@ -71,11 +71,11 @@ private:
             for (const auto& entry : search.targetBucketContainer.getBucketOf(v)) {
                 const int stationId = entry.targetId;
                 const int distViaV = distToV[0] + entry.distToTarget;
-                if (distViaV < search.targetDistance && distViaV < search.distance[BACKWARD][stationId]) {
-                    if (search.distance[BACKWARD][stationId] == INFTY) {
-                        search.reachedPOIs[BACKWARD].emplace_back(Vertex(stationId));
+                if (distViaV < search.targetDistance && distViaV < search.distance[FORWARD][stationId]) {
+                    if (search.distance[FORWARD][stationId] == INFTY) {
+                        search.reachedPOIs[FORWARD].emplace_back(Vertex(stationId));
                     }
-                    search.distance[BACKWARD][stationId] = distViaV;
+                    search.distance[FORWARD][stationId] = distViaV;
                 }
             }
             return false; // Never prune
