@@ -87,7 +87,7 @@ namespace karri {
         }
 
         int getMaxArrTimeAtDropoff(const PDLoc& dropoff) const {
-            return std::max(
+            return std::min(
                 originalRequest.requestTime + getOriginalReqMaxTripTime() - dropoff.walkingDist, 
                 maxArrivalTimeAtDropoffStation
             );

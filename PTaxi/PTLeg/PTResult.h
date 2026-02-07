@@ -59,9 +59,14 @@ public:
     }
 
     const int getArrivalTimeAtLastStation() const {
-        return valid && bestJourney.size() >= 2 ? 
-            convertToKaRRiTime(bestJourney[bestJourney.size() - 2].arrivalTime) : 
-            INFTY;
+        if (!valid)
+            return INFTY;
+        for (auto it = bestJourney.rbegin(); it != bestJourney.rend(); ++it) {
+            if (it->usesRoute) {
+                return convertToKaRRiTime(it->arrivalTime);
+            }
+        }
+        return INFTY;
     }
 
     // at Origin

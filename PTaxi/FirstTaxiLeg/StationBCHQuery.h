@@ -160,8 +160,9 @@ namespace karri {
         void runBchQueries(const RequestState& requestState, const PDLocs& pdLocs) {
 
             initPickupSearches(pdLocs, requestState);
-            for (unsigned int i = 0; i < pdLocs.numPickups(); i += K)
+            for (unsigned int i = 0; i < pdLocs.numPickups(); i += K) {
                 runSearchesForPickupBatch(i, pdLocs);
+            }
         }
 
         StationDistances &getTentativeDistances() {
@@ -177,23 +178,7 @@ namespace karri {
             externalUpperBoundCost = c;
         }
 
-        LabelMask canPrune(const DistanceLabel &distancesToPickups) const {
-            if (externalUpperBoundCost >= INFTY) {
-                // If current best is INFTY, only indices i with distancesToPickups[i] >= INFTY or
-                // minDirectDistances[i] >= INFTY are worse than the current best.
-                return ~(distancesToPickups < INFTY);
-            }
-
-            DistanceLabel costLowerBound = calc.template calcLowerBoundCostForKPALSAssignmentsWithPTStations<LabelSetT>(
-                    distancesToPickups, currentPickupWalkingDists, *curReqState);
-
-            costLowerBound.setIf(DistanceLabel(INFTY), ~(distancesToPickups < INFTY));
-
-            return externalUpperBoundCost < costLowerBound;
-        }
-
     private:
-
         void initPickupSearches(const PDLocs& pdLocs, const RequestState& requestState) {
             totalNumEdgeRelaxations = 0;
             totalNumVerticesSettled = 0;
@@ -207,8 +192,7 @@ namespace karri {
         }
 
         void runSearchesForPickupBatch(const int firstPickupId, const PDLocs& pdLocs) {
-            assert(firstPickupId % K == 0 && firstPickupId < pdLocs.numPickups());
-
+            KASSERT(firstPickupId % K == 0 && firstPickupId < pdLocs.numPickups());
 
             std::array<int, K> pickupHeads;
             for (int i = 0; i < K; ++i) {
@@ -235,6 +219,21 @@ namespace karri {
             std::transform(sources.begin(), sources.end(), sources_ranks.begin(),
                            [&](const int v) { return ch.rank(v); });
             upwardSearch.runWithOffset(sources_ranks, offsets);
+        }
+
+        LabelMask canPrune(const DistanceLabel &distancesToPickups) const {
+            if (externalUpperBoundCost >= INFTY) {
+                // If current best is INFTY, only indices i with distancesToPickups[i] >= INFTY or
+                // minDirectDistances[i] >= INFTY are worse than the current best.
+                return ~(distancesToPickups < INFTY);
+            }
+
+            DistanceLabel costLowerBound = calc.template calcLowerBoundCostForKPALSAssignmentsWithPTStations<LabelSetT>(
+                distancesToPickups, currentPickupWalkingDists, *curReqState);
+
+            costLowerBound.setIf(DistanceLabel(INFTY), ~(distancesToPickups < INFTY));
+
+            return externalUpperBoundCost < costLowerBound;
         }
 
         int getNumEdgeRelaxations() const {

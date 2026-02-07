@@ -149,7 +149,6 @@ inline void printUsage() {
               "  -d-radius <sec>          walking radius (in s) for dropoff locations around destination. (dflt: 300s)\n"
               "  -max-num-p <int>         max number of pickup locations to consider, sampled from all in radius. Set to 0 for no limit (dflt).\n"
               "  -max-num-d <int>         max number of dropoff locations to consider, sampled from all in radius. Set to 0 for no limit (dflt).\n"
-              "  -always-veh              if set, the rider is not allowed to walk to their destination without a vehicle trip.\n"
               "  -veh-h <file>            contraction hierarchy for the vehicle network in binary format.\n"
               "  -psg-h <file>            contraction hierarchy for the passenger network in binary format.\n"
               "  -veh-d <file>            separator decomposition for the vehicle network in binary format (needed for CCHs).\n"
@@ -159,7 +158,6 @@ inline void printUsage() {
               "  -raptor-data <file>      file with the precomputed RAPTOR data.\n"
               "  -station-mapping <file>  file which maps the station to edge-ids in the given passenger road graph.\n"
               "  -ch <file>                 contraction hierarchy for the transfer graph of ULTRA in binary format.\n"
-              "  -psg-ch <file>           converted passenger graph for use in ULTRA in binary format.\n"
               "  -station-buckets <file>  precomputed station buckets (vehicle) for use in KaRRi in binary format.\n"
               "  -psg-station-buckets <file>  precomputed station buckets (pedestrian) for walking transfers in binary format.\n"
               "  -help                    show usage help text.\n";
@@ -183,7 +181,6 @@ int main(int argc, char *argv[]) {
         inputConfig.dropoffRadius = clp.getValue<int>("d-radius", inputConfig.maxWaitTime / 10) * 10;
         inputConfig.maxNumPickups = clp.getValue<int>("max-num-p", INFTY);
         inputConfig.maxNumDropoffs = clp.getValue<int>("max-num-d", INFTY);
-        inputConfig.alwaysUseVehicle = clp.isSet("always-veh");
         if (inputConfig.maxNumPickups == 0) inputConfig.maxNumPickups = INFTY;
         if (inputConfig.maxNumDropoffs == 0) inputConfig.maxNumDropoffs = INFTY;
         inputConfig.alpha = clp.getValue<double>("a", 1.7);
@@ -200,7 +197,6 @@ int main(int argc, char *argv[]) {
         // new
         const auto raptorFileName = clp.getValue<std::string>("raptor-data");
         const auto stationMappingFileName = clp.getValue<std::string>("station-mapping");
-        const auto psgChFileName = clp.getValue<std::string>("psg-ch");
         auto stationBucketsFilename = clp.getValue<std::string>("station-buckets");
         if (!endsWith(stationBucketsFilename, ".bucket.bin")) stationBucketsFilename += ".bucket.bin";
          auto psgStationBucketsFilename = clp.getValue<std::string>("psg-station-buckets");

@@ -137,14 +137,11 @@ namespace karri {
             }
 
             void updateUpperBoundCost(const int vehId, const DistanceLabel &distancesToPickups) {
-                assert(allSet(distancesToPickups >= 0));
-                // If the distance to the pickup is INFTY, then this vehicle cannot perform a PALS assignment.
-                if (strat.curDistancesToDest.horizontalMin() == INFTY)
-                    return;
+                KASSERT(allSet(distancesToPickups >= 0));
                 const DistanceLabel cost = calc.template calcUpperBoundCostForKPairedAssignmentsAfterLastStop<
                     LabelSetT>(
                     strat.fleet[vehId], distancesToPickups, strat.curPassengerArrTimesAtPickups,
-                    strat.curDistancesToDest,
+                    strat.curMinDistancesToAnyStation,
                     strat.currentPickupWalkingDists, *strat.curReqState);
 
                 strat.upperBoundCost = std::min(strat.upperBoundCost, cost.horizontalMin());
@@ -316,7 +313,7 @@ namespace karri {
 
         void runSearchesForPickupBatch(const int firstPickupId, const RequestState &requestState,
                                        StationDistancesT &stationDistances, const PDLocs &pdLocs) {
-            assert(firstPickupId % K == 0 && firstPickupId < pdLocs.numPickups());
+            KASSERT(firstPickupId % K == 0 && firstPickupId < pdLocs.numPickups());
 
             std::array<int, K> pickupTails;
             std::array<int, K> travelTimes;
@@ -329,7 +326,7 @@ namespace karri {
                 travelTimes[i] = inputGraph.travelTime(pickup.loc);
                 currentPickupWalkingDists[i] = pickup.walkingDist;
                 curPassengerArrTimesAtPickups[i] = requestState.getPassengerArrAtPickup(pickup);
-                curDistancesToDest[i] = stationDistances.getDistanceToDestinationFrom(pickup.id);
+                curMinDistancesToAnyStation[i] = stationDistances.getMinDistanceForPDLoc(pickup.id);
             }
 
             distances.setCurBatchIdx(firstPickupId / K);
@@ -421,7 +418,7 @@ namespace karri {
         LightweightSubset vehiclesSeenForPickups;
         DistanceLabel currentPickupWalkingDists;
         DistanceLabel curPassengerArrTimesAtPickups;
-        DistanceLabel curDistancesToDest;
+        DistanceLabel curMinDistancesToAnyStation;
 
         int minDistanceToAnyStation;
 

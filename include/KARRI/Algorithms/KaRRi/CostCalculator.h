@@ -313,9 +313,9 @@ namespace karri {
             using DistanceLabel = typename LabelSet::DistanceLabel;
             using LabelMask = typename LabelSet::LabelMask;
             using namespace time_utils;
-            assert(psgArrTimesAtPickups.horizontalMin() >= 0 && psgArrTimesAtPickups.horizontalMax() < INFTY);
-            assert(distancesToDest.horizontalMin() >= 0 && distancesToDest.horizontalMax() < INFTY);
-            assert(pickupWalkingDists.horizontalMin() >= 0 && pickupWalkingDists.horizontalMax() < INFTY);
+            KASSERT(psgArrTimesAtPickups.horizontalMin() >= 0 && psgArrTimesAtPickups.horizontalMax() < INFTY);
+            KASSERT(distancesToDest.horizontalMin() >= 0);
+            KASSERT(pickupWalkingDists.horizontalMin() >= 0 && pickupWalkingDists.horizontalMax() < INFTY);
 
             const int &vehId = veh.vehicleId;
 
@@ -323,6 +323,9 @@ namespace karri {
             // to INFTY later.
             const LabelMask distToPickupInftyMask = ~(distancesToPickups < INFTY);
             const DistanceLabel adaptedDistToPickup = select(distToPickupInftyMask, 0, distancesToPickups);
+
+            const LabelMask distancesToDestInftyMask = ~(distancesToDest < INFTY);
+            const DistanceLabel adaptedDistancesToDest = select(distancesToDestInftyMask, 0, distancesToDest);
 
             const auto &stopIdx = routeState.numStopsOf(vehId) - 1;
             const int vehDepTimeAtLastStop = getVehDepTimeAtStopForRequest(vehId, stopIdx, context, routeState);
@@ -332,10 +335,10 @@ namespace karri {
             depTimesAtPickups.max(psgArrTimesAtPickups);
 
             const DistanceLabel vehTimeTillDepAtPickup = depTimesAtPickups - DistanceLabel(vehDepTimeAtLastStop);
-            const DistanceLabel detourCost = F::calcKVehicleCosts(vehTimeTillDepAtPickup + distancesToDest + stopTime);
+            const DistanceLabel detourCost = F::calcKVehicleCosts(vehTimeTillDepAtPickup + adaptedDistancesToDest + stopTime);
 
             const DistanceLabel psgTimeTillDepAtPickup = depTimesAtPickups - context.earliestDeparture();
-            const DistanceLabel tripCost = F::calcKTripCosts(psgTimeTillDepAtPickup + distancesToDest, context);
+            const DistanceLabel tripCost = F::calcKTripCosts(psgTimeTillDepAtPickup + adaptedDistancesToDest, context);
             const DistanceLabel walkingCost = F::calcKWalkingCosts(pickupWalkingDists,
                                                                    InputConfig::getInstance().pickupRadius);
             const DistanceLabel waitViolationCost = F::calcKWaitViolationCosts(depTimesAtPickups, context);
@@ -343,13 +346,12 @@ namespace karri {
             DistanceLabel cost = detourCost + tripCost + walkingCost + waitViolationCost;
 
             // Set cost to INFTY where dist was INFTY
-            cost.setIf(DistanceLabel(INFTY), distToPickupInftyMask);
+            cost.setIf(DistanceLabel(INFTY), distToPickupInftyMask | distancesToDestInftyMask);
 
             // Check if service time hard constraint is violated for any pairs. Set cost to INFTY if so.
             const LabelMask violatesServiceTime = DistanceLabel(veh.endOfServiceTime) <
                                                   (DistanceLabel(vehDepTimeAtLastStop + 2 * stopTime) +
-                                                   distancesToPickups +
-                                                   distancesToDest);
+                                                   adaptedDistToPickup + adaptedDistancesToDest);
             cost.setIf(DistanceLabel(INFTY), violatesServiceTime);
 
 
@@ -374,7 +376,7 @@ namespace karri {
                                                                        context, routeState);
             const int vehDepTimeAtPrevStop = std::max(routeState.schedDepTimesFor(vehId)[numStops - 1], context.now());
             const int detourUntilDepAtPickup = actualDepTimeAtPickup - vehDepTimeAtPrevStop;
-            assert(!((bool) (detourUntilDepAtPickup < 0)));
+            KASSERT(!(detourUntilDepAtPickup < 0));
             const int minDetour = detourUntilDepAtPickup + minDistToDropoff;
 
             if (time_utils::isServiceTimeConstraintViolated(veh, context, minDetour, routeState))

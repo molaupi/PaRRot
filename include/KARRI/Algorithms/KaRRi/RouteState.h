@@ -286,32 +286,32 @@ namespace karri {
             } else if (pickupIndex > 0 || (numStops == 1 && pickupIndex == 0)) {
                 // New pickup stop
                 const int actualDist = distanceChecker(stopLocations[start + pickupIndex], pickup.loc);
-                KASSERT(asgn.distToPickup == actualDist);
+                KASSERT(asgn.distToPickup == actualDist, "Assignment = " << asgn << ", num stops = " << numStops);
             }
 
             if (dropoffIndex == pickupIndex) {
-                KASSERT(asgn.distFromPickup == 0);
+                KASSERT(asgn.distFromPickup == 0, "Assignment = " << asgn << ", num stops = " << numStops);
             } else {
                 const int actualDist = distanceChecker(pickup.loc, stopLocations[start + pickupIndex + 1]);
-                KASSERT(asgn.distFromPickup == actualDist);
+                KASSERT(asgn.distFromPickup == actualDist, "Assignment = " << asgn << ", num stops = " << numStops);
             }
 
             if (dropoffIndex == pickupIndex) {
                 const int actualDist = distanceChecker(pickup.loc, dropoff.loc);
-                KASSERT(asgn.distToDropoff == actualDist);
+                KASSERT(asgn.distToDropoff == actualDist, "Assignment = " << asgn << ", num stops = " << numStops);
             } else if (dropoff.loc == stopLocations[start + dropoffIndex]) {
                 // Dropoff at existing stop
-                KASSERT(asgn.distToDropoff == 0);
+                KASSERT(asgn.distToDropoff == 0, "Assignment = " << asgn << ", num stops = " << numStops);
             } else {
                 const int actualDist = distanceChecker(stopLocations[start + dropoffIndex], dropoff.loc);
-                KASSERT(asgn.distToDropoff == actualDist);
+                KASSERT(asgn.distToDropoff == actualDist, "Assignment = " << asgn << ", num stops = " << numStops);
             }
 
             if (dropoffIndex == numStops - 1) {
-                KASSERT(asgn.distFromDropoff == 0);
+                KASSERT(asgn.distFromDropoff == 0, "Assignment = " << asgn << ", num stops = " << numStops);
             } else {
                 const int actualDist = distanceChecker(dropoff.loc, stopLocations[start + dropoffIndex + 1]);
-                KASSERT(asgn.distFromDropoff == actualDist);
+                KASSERT(asgn.distFromDropoff == actualDist, "Assignment = " << asgn << ", num stops = " << numStops);
             }
 
             return true;
@@ -349,7 +349,6 @@ namespace karri {
                 // moment when vehicle and passenger are at the location.
                 schedDepTimes[start + pickupIndex] = std::max(schedDepTimes[start + pickupIndex],
                                                               requestState.getPassengerArrAtPickup(pickup));
-                // Auto vor dem Passagier, und muss warten bis der Passagier ankommt ^^
 
                 // If we allow pickupRadius > waitTime, then the passenger may arrive at the pickup location after
                 // the regular max dep time of requestTime + waitTime. In this case, the new latest permissible arrival
@@ -374,9 +373,6 @@ namespace karri {
                 schedDepTimes[start + pickupIndex] = std::max(schedArrTimes[start + pickupIndex] + InputConfig::getInstance().stopTime,
                                                               requestState.getPassengerArrAtPickup(pickup));
 
-                // Auto vor dem Passagier, und muss warten bis der Passagier ankommt ^^
-
-                // Ankunftszeit am Station mit PT + remaining Wartezeit
                 maxArrTimes[start + pickupIndex] = requestState.getMaxDepTimeAtPickup() - InputConfig::getInstance().stopTime;
                 occupancies[start + pickupIndex] = occupancies[start + pickupIndex - 1];
                 numDropoffsPrefixSum[start + pickupIndex] = numDropoffsPrefixSum[start + pickupIndex - 1];
@@ -390,7 +386,6 @@ namespace karri {
             }
 
             if (pickup.loc != dropoff.loc && dropoff.loc == stopLocations[start + dropoffIndex]) {
-                // PT Abfahrtszeit noch hinzufügen
                 maxArrTimes[start + dropoffIndex] = std::min(maxArrTimes[start + dropoffIndex],
                                                              requestState.getMaxArrTimeAtDropoff(dropoff));
             } else {
@@ -404,8 +399,6 @@ namespace karri {
                 schedArrTimes[start + dropoffIndex] =
                         schedDepTimes[start + dropoffIndex - 1] + asgn.distToDropoff;
                 schedDepTimes[start + dropoffIndex] = schedArrTimes[start + dropoffIndex] + InputConfig::getInstance().stopTime;
-                // compare maxVehArrTime to next stop later
-                // PT Abfahrtszeit noch hinzufügen
                 maxArrTimes[start + dropoffIndex] = requestState.getMaxArrTimeAtDropoff(dropoff);
                 occupancies[start + dropoffIndex] = occupancies[start + dropoffIndex - 1];
                 numDropoffsPrefixSum[start + dropoffIndex] = numDropoffsPrefixSum[start + dropoffIndex - 1];
@@ -596,8 +589,6 @@ namespace karri {
             return getScheduledStop(vehId, 0);
         }
 
-    private:
-
         ScheduledStop getScheduledStop(const int vehId, const int stopIndex) const {
             assert(numStopsOf(vehId) > stopIndex);
             const auto id = stopIdsFor(vehId)[stopIndex];
@@ -606,13 +597,14 @@ namespace karri {
             const auto occ = occupanciesFor(vehId)[stopIndex];
             const auto pickupsRange = rangeOfRequestsPickedUpAtStop[id];
             const ConstantVectorRange<int> pickups = {requestsPickedUpAtStop.begin() + pickupsRange.start,
-                                                      requestsPickedUpAtStop.begin() + pickupsRange.end};
+                requestsPickedUpAtStop.begin() + pickupsRange.end};
             const auto dropoffsRange = rangeOfRequestsDroppedOffAtStop[id];
             const ConstantVectorRange<int> dropoffs = {requestsDroppedOffAtStop.begin() + dropoffsRange.start,
-                                                       requestsDroppedOffAtStop.begin() + dropoffsRange.end};
+                requestsDroppedOffAtStop.begin() + dropoffsRange.end};
             return {id, arrTime, depTime, occ, pickups, dropoffs};
         }
 
+    private:
         int getUnusedStopId() {
             if (!unusedStopIds.empty()) {
                 const auto id = unusedStopIds.top();

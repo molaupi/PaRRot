@@ -25,7 +25,6 @@
 #pragma once
 
 #include "../../DataStructures/Queues/AddressableKHeap.h"
-#include "../../DataStructures/Containers/Subset.h"
 #include "../../Tools/CommandLine/ProgressBar.h"
 #include "../../Tools/Workarounds.h"
 #include "../../Tools/Logging/LogManager.h"
@@ -34,13 +33,10 @@
 #include "BaseObjects/Vehicle.h"
 
 namespace karri {
-
-
     template<typename PTAndTaxiTripFinderT,
-            typename SystemStateUpdaterT,
-            typename ScheduledStopsT>
+        typename SystemStateUpdaterT,
+        typename ScheduledStopsT>
     class EventSimulation {
-
         enum VehicleState {
             OUT_OF_SERVICE,
             IDLING,
@@ -48,12 +44,28 @@ namespace karri {
             STOPPING
         };
 
-        enum RequestState {
+        enum RiderState {
             NOT_RECEIVED,
-            ASSIGNED_TO_VEH,
-            BEFORE_PT_ARRIVED,
-            WALKING_TO_DEST,
+            WAITING_FOR_PICKUP,
+            IN_TAXI_VEHICLE,
+            NON_TAXI_TO_DESTINATION,
             FINISHED
+        };
+
+
+        enum VehicleEventType {
+            VEHICLE_NO_EVENT,
+            STARTUP,
+            ARRIVE_AT_STOP,
+            DEPART_FROM_STOP,
+            SHUTDOWN
+        };
+
+        enum RiderEventType {
+            RIDER_NO_EVENT,
+            RECEIVE,
+            SCHEDULE_2ND_TAXI_LEG,
+            ARRIVE_AT_DESTINATION // Any non-taxi arrival
         };
 
         // Stores information about assignment and departure time of a request needed for logging on arrival of the
@@ -65,71 +77,95 @@ namespace karri {
             int taxiLegCost = 0;
             int ptLegCost = 0;
             int secondTaxiLegApproxCost = 0;
-            
+
             // related to combined trip
-            bool firstTaxiLegStarted = false;
-            int arrivalTimeAtStation = 0;
-            bool secondTaxiLegStarted = false;
+            bool isCombinedTrip = false;
+            bool hasFirstTaxiLeg = false;
+            bool hasSecondTaxiLeg = false;
+            bool completedFirstTaxiLeg = false;
+            int arrivalTimeAtEndOfPtJourney = 0; // arr time at last station if 2nd taxi leg or at destination if not
             int secondTaxiLegDepTime = 0;
             int secondTaxiLegCost = 0;
             int walkingTimeToSecondTaxiLegPickup = 0;
         };
 
+        // Prints representation of request data to output stream for debugging purposes
+        inline friend std::ostream& operator<<(std::ostream& os, const RequestData& data) {
+            os << "depTime: " << data.depTime
+               << ", walkingTimeToPickup: " << data.walkingTimeToPickup
+               << ", walkingTimeFromDropoff: " << data.walkingTimeFromDropoff
+               << ", taxiLegCost: " << data.taxiLegCost
+               << ", ptLegCost: " << data.ptLegCost
+               << ", secondTaxiLegApproxCost: " << data.secondTaxiLegApproxCost
+               << ", isCombinedTrip: " << data.isCombinedTrip
+               << ", hasFirstTaxiLeg: " << data.hasFirstTaxiLeg
+               << ", hasSecondTaxiLeg: " << data.hasSecondTaxiLeg
+               << ", completedFirstTaxiLeg: " << data.completedFirstTaxiLeg
+               << ", arrivalTimeAtEndOfPtJourney: " << data.arrivalTimeAtEndOfPtJourney
+               << ", secondTaxiLegDepTime: " << data.secondTaxiLegDepTime
+               << ", secondTaxiLegCost: " << data.secondTaxiLegCost
+               << ", walkingTimeToSecondTaxiLegPickup: " << data.walkingTimeToSecondTaxiLegPickup;
+            return os;
+        }
+
         const int TRIGGER_TAXI_TIME = 9000;
 
     public:
-
-
         EventSimulation(
-                const Fleet &fleet, const std::vector<Request> &requests,
-                PTAndTaxiTripFinderT &ptAndTaxiTripFinder,
-                SystemStateUpdaterT &systemStateUpdater,
-                const ScheduledStopsT &scheduledStops,
-                PTStations &stations,
-                const bool verbose = false)
-                : fleet(fleet),
-                  requests(requests),
-                  ptAndTaxiTripFinder(ptAndTaxiTripFinder),
-                  systemStateUpdater(systemStateUpdater),
-                  scheduledStops(scheduledStops),
-                  stations(stations),
-                  vehicleEvents(fleet.size()),
-                  requestEvents(requests.size()),
-                  vehicleState(fleet.size(), OUT_OF_SERVICE),
-                  requestState(requests.size(), NOT_RECEIVED),
-                  requestData(requests.size(), RequestData()),
-                  ptStationsForSecondTaxiLeg(requests.size(), INVALID_ID),
-                  eventSimulationStatsLogger(LogManager<std::ofstream>::getLogger("eventsimulationstats.csv",
-                                                                                  "occurrence_time,"
-                                                                                  "type,"
-                                                                                  "running_time\n")),
-                  assignmentQualityStats(LogManager<std::ofstream>::getLogger("assignmentquality.csv",
-                                                                              "request_id,"
-                                                                              "arr_time,"
-                                                                              "wait_time,"
-                                                                              "ride_time,"
-                                                                              "trip_time,"
-                                                                              "walk_to_pickup_time,"
-                                                                              "walk_to_dropoff_time,"
-                                                                              "cost\n")),
-                  legStatsLogger(LogManager<std::ofstream>::getLogger("legstats.csv",
-                                                                      "vehicle_id,"
-                                                                      "stop_time,"
-                                                                      "dep_time,"
-                                                                      "arr_time,"
-                                                                      "drive_time,"
-                                                                      "occupancy\n")),
-                  progressBar(requests.size(), verbose) {
+            const Fleet &fleet, const std::vector<Request> &requests,
+            PTAndTaxiTripFinderT &ptAndTaxiTripFinder,
+            SystemStateUpdaterT &systemStateUpdater,
+            const ScheduledStopsT &scheduledStops,
+            PTStations &stations,
+            const bool verbose = false)
+            : fleet(fleet),
+              requests(requests),
+              ptAndTaxiTripFinder(ptAndTaxiTripFinder),
+              systemStateUpdater(systemStateUpdater),
+              scheduledStops(scheduledStops),
+              stations(stations),
+              vehicleEvents(fleet.size()),
+              requestEvents(requests.size()),
+              nextVehicleEvents(fleet.size(), VEHICLE_NO_EVENT),
+              nextRiderEvents(requests.size(), RIDER_NO_EVENT),
+              vehicleState(fleet.size(), OUT_OF_SERVICE),
+              riderState(requests.size(), NOT_RECEIVED),
+              requestData(requests.size(), RequestData()),
+              ptStationsForSecondTaxiLeg(requests.size(), INVALID_ID),
+              eventSimulationStatsLogger(LogManager<std::ofstream>::getLogger("eventsimulationstats.csv",
+                                                                              "occurrence_time,"
+                                                                              "type,"
+                                                                              "running_time\n")),
+              assignmentQualityStats(LogManager<std::ofstream>::getLogger("assignmentquality.csv",
+                                                                          "request_id,"
+                                                                          "arr_time,"
+                                                                          "wait_time,"
+                                                                          "ride_time,"
+                                                                          "trip_time,"
+                                                                          "walk_to_pickup_time,"
+                                                                          "walk_to_dropoff_time,"
+                                                                          "cost\n")),
+              legStatsLogger(LogManager<std::ofstream>::getLogger("legstats.csv",
+                                                                  "vehicle_id,"
+                                                                  "stop_time,"
+                                                                  "dep_time,"
+                                                                  "arr_time,"
+                                                                  "drive_time,"
+                                                                  "occupancy\n")),
+              progressBar(requests.size(), verbose) {
             progressBar.setDotOutputInterval(1);
             progressBar.setPercentageOutputInterval(5);
-            for (const auto &veh: fleet)
+            for (const auto &veh: fleet) {
+                nextVehicleEvents[veh.vehicleId] = STARTUP;
                 vehicleEvents.insert(veh.vehicleId, veh.startOfServiceTime);
-            for (const auto &req: requests)
+            }
+            for (const auto &req: requests) {
+                nextRiderEvents[req.requestId] = RECEIVE;
                 requestEvents.insert(req.requestId, req.requestTime);
+            }
         }
 
         void run() {
-
             while (!(vehicleEvents.empty() && requestEvents.empty())) {
                 // Pop next event from either queue. Request event has precedence if at the same time as vehicle event.
                 int id, occTime;
@@ -158,20 +194,22 @@ namespace karri {
         }
 
     private:
-
         void handleVehicleEvent(const int vehId, const int occTime) {
-            switch (vehicleState[vehId]) {
-                case OUT_OF_SERVICE:
+            switch (nextVehicleEvents[vehId]) {
+                case STARTUP:
                     handleVehicleStartup(vehId, occTime);
                     break;
-                case IDLING:
+                case SHUTDOWN:
                     handleVehicleShutdown(vehId, occTime);
                     break;
-                case DRIVING:
+                case ARRIVE_AT_STOP:
                     handleVehicleArrivalAtStop(vehId, occTime);
                     break;
-                case STOPPING:
+                case DEPART_FROM_STOP:
                     handleVehicleDepartureFromStop(vehId, occTime);
+                    break;
+                case VEHICLE_NO_EVENT:
+                    KASSERT(false);
                     break;
                 default:
                     break;
@@ -179,22 +217,20 @@ namespace karri {
         }
 
         void handleRequestEvent(const int reqId, const int occTime) {
-            switch (requestState[reqId]) {
-                case NOT_RECEIVED:
+            switch (nextRiderEvents[reqId]) {
+                case RECEIVE:
                     handleRequestReceipt(reqId, occTime);
                     break;
-                case ASSIGNED_TO_VEH:
-                    // When assigned to a vehicle, there should be no request event until the dropoff.
-                    // At that point the request state becomes WALKING_TO_DEST.
-                    KASSERT(false);
-                    break;
-                case BEFORE_PT_ARRIVED:
+                case SCHEDULE_2ND_TAXI_LEG:
                     handleSecondTaxiLeg(reqId, occTime);
                     break;
-                case WALKING_TO_DEST:
-                    handleWalkingArrivalAtDest(reqId, occTime);
+                case ARRIVE_AT_DESTINATION:
+                    handleRiderArrivalAtDest(reqId, occTime);
                     break;
                 case FINISHED:
+                    KASSERT(false);
+                    break;
+                case RIDER_NO_EVENT:
                     KASSERT(false);
                     break;
                 default:
@@ -211,9 +247,11 @@ namespace karri {
             // Vehicle may have already been assigned stops. In this case it will start driving right away:
             if (scheduledStops.hasNextScheduledStop(vehId)) {
                 vehicleState[vehId] = DRIVING;
+                nextVehicleEvents[vehId] = ARRIVE_AT_STOP;
                 vehicleEvents.increaseKey(vehId, scheduledStops.getNextScheduledStop(vehId).arrTime);
             } else {
                 vehicleState[vehId] = IDLING;
+                nextVehicleEvents[vehId] = SHUTDOWN;
                 vehicleEvents.increaseKey(vehId, fleet[vehId].endOfServiceTime);
             }
 
@@ -229,6 +267,7 @@ namespace karri {
             KaRRiTimer timer;
 
             vehicleState[vehId] = OUT_OF_SERVICE;
+            nextVehicleEvents[vehId] = VEHICLE_NO_EVENT;
 
             int id, key;
             vehicleEvents.deleteMin(id, key);
@@ -246,43 +285,52 @@ namespace karri {
 
             const auto prevStop = scheduledStops.getCurrentOrPrevScheduledStop(vehId);
             legStatsLogger << vehId << ','
-                           << prevStop.depTime - prevStop.arrTime << ','
-                           << prevStop.depTime << ','
-                           << occTime << ','
-                           << occTime - prevStop.depTime << ','
-                           << prevStop.occupancyInFollowingLeg << '\n';
+                    << prevStop.depTime - prevStop.arrTime << ','
+                    << prevStop.depTime << ','
+                    << occTime << ','
+                    << occTime - prevStop.depTime << ','
+                    << prevStop.occupancyInFollowingLeg << '\n';
 
-            vehicleState[vehId] = STOPPING;
             const auto reachedStop = scheduledStops.getNextScheduledStop(vehId);
 
             // Handle dropoffs at reached stop: Insert walking arrival event at the time when passenger will arrive at
             // destination. Thus, all requests are logged in the order of the arrival at their destination.
             for (const auto &reqId: reachedStop.requestsDroppedOffHere) {
-                const auto &reqData = requestData[reqId];
+                KASSERT(riderState[reqId] == IN_TAXI_VEHICLE, "request " << reqId << " data: " << requestData[reqId]);
+                auto &reqData = requestData[reqId];
 
-                // in case of first taxi leg of combined trip
-                if (reqData.firstTaxiLegStarted) {
-                    // without second taxi leg
+                const bool lastTaxiLegFinished =
+                        !reqData.isCombinedTrip || // finished first leg in taxi only trip
+                        !reqData.hasSecondTaxiLeg || // finished first leg in combined trip without second taxi leg
+                        reqData.completedFirstTaxiLeg; // finished second leg of combined trip
+
+                if (lastTaxiLegFinished) {
+                    // No more taxis used, so arrival time at destination is fixed.
+                    // Insert rider event for arrival at destination.
+                    riderState[reqId] = NON_TAXI_TO_DESTINATION;
+                    int arrTimeAtDest;
                     if (ptStationsForSecondTaxiLeg[reqId] == INVALID_ID) {
-                        requestState[reqId] = WALKING_TO_DEST;
-                    // with second taxi leg
-                    } else if (!reqData.secondTaxiLegStarted) {
-                        requestState[reqId] = BEFORE_PT_ARRIVED;
-                        requestEvents.insert(reqId, std::max(reqData.arrivalTimeAtStation - TRIGGER_TAXI_TIME, occTime));
+                        // If finished first leg in combined trip without second taxi leg, arrival time at destination is
+                        // arrival time with PT journey
+                        arrTimeAtDest = reqData.arrivalTimeAtEndOfPtJourney;
+                    } else {
+                        // If finished a taxi leg with no more PT, walk to destination.
+                        arrTimeAtDest = occTime + reqData.walkingTimeFromDropoff;
                     }
-
-                    // TODO: Missing case for second leg arrival at dropoff -> walk to destination
-
-                // taxi only trip or second taxi leg of combined trip
+                    nextRiderEvents[reqId] = ARRIVE_AT_DESTINATION;
+                    requestEvents.insert(reqId, arrTimeAtDest);
                 } else {
-                    requestState[reqId] = WALKING_TO_DEST;
-                    requestEvents.insert(reqId, occTime + reqData.walkingTimeFromDropoff);
+                    KASSERT(reqData.hasSecondTaxiLeg);
+                    // If finished first leg of a trip with more than one leg, wait for pickup by next vehicle.
+                    riderState[reqId] = WAITING_FOR_PICKUP;
+                    reqData.completedFirstTaxiLeg = true;
                 }
-
             }
 
 
             // Next event for this vehicle is the departure at this stop:
+            vehicleState[vehId] = STOPPING;
+            nextVehicleEvents[vehId] = DEPART_FROM_STOP;
             vehicleEvents.increaseKey(vehId, reachedStop.depTime);
             systemStateUpdater.notifyStopStarted(fleet[vehId]);
 
@@ -297,18 +345,23 @@ namespace karri {
 
             if (!scheduledStops.hasNextScheduledStop(vehId)) {
                 vehicleState[vehId] = IDLING;
+                nextVehicleEvents[vehId] = SHUTDOWN;
                 vehicleEvents.increaseKey(vehId, fleet[vehId].endOfServiceTime);
             } else {
                 // Remember departure time for all requests picked up at this stop:
                 const auto curStop = scheduledStops.getCurrentOrPrevScheduledStop(vehId);
                 for (const auto &reqId: curStop.requestsPickedUpHere) {
-                    if (requestData[reqId].secondTaxiLegStarted) {
+                    KASSERT(riderState[reqId] == WAITING_FOR_PICKUP, "request " << reqId << ", occTime " << occTime << ", data: " << requestData[reqId]);
+
+                    riderState[reqId] = IN_TAXI_VEHICLE;
+                    if (requestData[reqId].completedFirstTaxiLeg) {
                         requestData[reqId].secondTaxiLegDepTime = occTime;
-                    } else { 
+                    } else {
                         requestData[reqId].depTime = occTime;
                     }
                 }
                 vehicleState[vehId] = DRIVING;
+                nextVehicleEvents[vehId] = ARRIVE_AT_STOP;
                 vehicleEvents.increaseKey(vehId, scheduledStops.getNextScheduledStop(vehId).arrTime);
             }
 
@@ -320,7 +373,7 @@ namespace karri {
 
         void handleRequestReceipt(const int reqId, const int occTime) {
             ++progressBar;
-            KASSERT(requestState[reqId] == NOT_RECEIVED);
+            KASSERT(riderState[reqId] == NOT_RECEIVED);
             KASSERT(requests[reqId].requestTime == occTime);
             KaRRiTimer timer;
 
@@ -334,53 +387,42 @@ namespace karri {
             requestData[reqId].taxiLegCost = ptAndTaxiTripFinderResponse.firstTaxiLegCost;
             requestData[reqId].ptLegCost = ptAndTaxiTripFinderResponse.ptLegCost;
             requestData[reqId].secondTaxiLegApproxCost = ptAndTaxiTripFinderResponse.secondTaxiLegApproxCost;
-            
+
+            int id, key;
+            requestEvents.deleteMin(id, key);
+            KASSERT(id == reqId && key == occTime);
+            nextRiderEvents[reqId] = RIDER_NO_EVENT;
+
             if (ptAndTaxiTripFinderResponse.isValidTaxiOnlyTrip()) {
                 systemStateUpdater.writeBestAssignmentToLogger(firstTaxiLeg.first);
+                riderState[reqId] = WAITING_FOR_PICKUP;
                 applyAssignment(firstTaxiLeg, reqId, occTime);
-    
             } else if (ptAndTaxiTripFinderResponse.isValidPTOnlyTrip()) {
-                applyJourney(ptLeg, reqId, occTime);
-    
+                applyPtOnlyJourney(ptLeg, reqId, occTime);
             } else {
-                applyCombinedTrip(firstTaxiLeg, ptLeg, reqId, occTime, ptAndTaxiTripFinderResponse.hasValidFirstTaxiLeg());
+                riderState[reqId] = WAITING_FOR_PICKUP;
+                applyCombinedTrip(firstTaxiLeg, ptLeg, reqId, occTime,
+                                  ptAndTaxiTripFinderResponse.hasValidFirstTaxiLeg());
             }
 
             const auto time = timer.elapsed<std::chrono::nanoseconds>();
             eventSimulationStatsLogger << occTime << ",RequestReceipt," << time << '\n';
-        
         }
 
         template<typename AssignmentFinderResponseT>
-        void applyAssignment(AssignmentFinderResponseT &asgnFinderResponse, const int reqId, const int occTime) {
-            // walk and not taxi
-            // should not happen here since only walking is handled in PT
-            if (asgnFinderResponse.first.isNotUsingVehicleBest()) {
-                requestState[reqId] = WALKING_TO_DEST;
-                requestData[reqId].taxiLegCost = asgnFinderResponse.first.getBestCost();
-                requestData[reqId].depTime = occTime;
-                requestData[reqId].walkingTimeToPickup = 0;
-                requestData[reqId].walkingTimeFromDropoff = asgnFinderResponse.first.getNotUsingVehicleDist();
-                requestEvents.increaseKey(reqId, occTime + asgnFinderResponse.first.getNotUsingVehicleDist());
-                systemStateUpdater.writePerformanceLogs(asgnFinderResponse.first, asgnFinderResponse.second);
-                return;
-            }
-
-            int id, key;
-            requestEvents.deleteMin(id, key); // event for walking arrival at dest inserted at dropoff
-            KASSERT(id == reqId && key == occTime);
+        void applyAssignment(AssignmentFinderResponseT &asgnFinderResponse, const int reqId, const int,
+                             const bool isSecondTaxiLeg = false) {
+            KASSERT(!asgnFinderResponse.first.isNotUsingVehicleBest());
 
             const auto &bestAsgn = asgnFinderResponse.first.getBestAssignment();
             // || !bestAsgn.pickup || !bestAsgn.dropoff
             if (!bestAsgn.vehicle) {
-                requestState[reqId] = FINISHED;
+                riderState[reqId] = FINISHED;
                 systemStateUpdater.writePerformanceLogs(asgnFinderResponse.first, asgnFinderResponse.second);
                 return;
             }
 
-            requestState[reqId] = ASSIGNED_TO_VEH;
-
-            if (requestData[reqId].secondTaxiLegStarted) {
+            if (isSecondTaxiLeg) {
                 requestData[reqId].walkingTimeToSecondTaxiLegPickup = bestAsgn.pickup.walkingDist;
                 requestData[reqId].walkingTimeFromDropoff += bestAsgn.dropoff.walkingDist;
                 requestData[reqId].secondTaxiLegCost = asgnFinderResponse.first.getBestCost();
@@ -399,7 +441,8 @@ namespace karri {
                     vehicleEvents.updateKey(vehId, scheduledStops.getCurrentOrPrevScheduledStop(vehId).depTime);
                     break;
                 case IDLING:
-                    vehicleState[vehId] = VehicleState::DRIVING;
+                    vehicleState[vehId] = DRIVING;
+                    nextVehicleEvents[vehId] = ARRIVE_AT_STOP;
                     [[fallthrough]];
                 case DRIVING:
                     // Update event time to arrival time at next stop since it may have changed (also for case of idling).
@@ -411,70 +454,73 @@ namespace karri {
         }
 
         template<typename JourneyResponseT>
-        void applyJourney(JourneyResponseT &ptResponse, const int reqId, const int occTime, bool inCombinedTrip = false) {
-            int id, key;
-            requestEvents.deleteMin(id, key); 
-            KASSERT(id == reqId && key == occTime);
+        void applyPtOnlyJourney(JourneyResponseT &ptResponse, const int reqId, const int) {
+            auto &reqData = requestData[reqId];
 
             const bool isWalkingOnly = ptResponse.isJourneyWalking();
-            
-            // cannot be walking to destination in combined trip without first taxi leg, only in PT-only trip
-            requestState[reqId] = inCombinedTrip ? BEFORE_PT_ARRIVED : WALKING_TO_DEST;
+            riderState[reqId] = NON_TAXI_TO_DESTINATION;
+            nextRiderEvents[reqId] = ARRIVE_AT_DESTINATION;
             requestEvents.insert(reqId, ptResponse.getArrivalTime());
-            requestData[reqId].depTime = isWalkingOnly ? ptResponse.getDepartureTime() : ptResponse.getDepartureTimeAtFirstStation();
-            requestData[reqId].walkingTimeToPickup = isWalkingOnly ? 0 : ptResponse.getWalkingTimeToFirstStation();
-            requestData[reqId].walkingTimeFromDropoff = ptResponse.getWalkingTimeFromLastStation();
-            requestData[reqId].arrivalTimeAtStation = isWalkingOnly ? ptResponse.getArrivalTime() : ptResponse.getArrivalTimeAtLastStation();
-
+            reqData.depTime = isWalkingOnly
+                                  ? ptResponse.getDepartureTime()
+                                  : ptResponse.getDepartureTimeAtFirstStation();
+            reqData.walkingTimeToPickup = isWalkingOnly ? 0 : ptResponse.getWalkingTimeToFirstStation();
+            reqData.walkingTimeFromDropoff = ptResponse.getWalkingTimeFromLastStation();
+            reqData.arrivalTimeAtEndOfPtJourney = ptResponse.getArrivalTime();
         }
 
         template<typename AssignmentFinderResponseT, typename JourneyResponseT>
-        void applyCombinedTrip(AssignmentFinderResponseT &asgnFinderResponse, JourneyResponseT &ptResponse, const int reqId, const int occTime, bool validFirstTaxiLeg) {
+        void applyCombinedTrip(AssignmentFinderResponseT &asgnFinderResponse, JourneyResponseT &ptResponse,
+                               const int reqId, const int occTime, bool validFirstTaxiLeg) {
+            KASSERT(ptResponse.getDepartureTimeAtFirstStation() < ptResponse.getArrivalTimeAtLastStation(), "Journey: " << ptResponse.getBestJourney());
+            auto &reqData = requestData[reqId];
+            reqData.isCombinedTrip = true;
+            reqData.arrivalTimeAtEndOfPtJourney = ptResponse.getArrivalTimeAtLastStation();
 
             // Apply first taxi leg assignment
             if (validFirstTaxiLeg) {
                 auto &reqState = asgnFinderResponse.first;
                 reqState.setMaxArrTimeAtDropoffStation(ptResponse.getDepartureTimeAtFirstStation());
                 applyAssignment(asgnFinderResponse, reqId, occTime);
-                requestData[reqId].firstTaxiLegStarted = true;
+                reqData.hasFirstTaxiLeg = true;
             } else {
                 // without first taxi leg
-                applyJourney(ptResponse, reqId, occTime, true);
+                KASSERT(!ptResponse.isJourneyWalking());
+                reqData.depTime = ptResponse.getDepartureTimeAtFirstStation();
+                reqData.walkingTimeToPickup = ptResponse.getWalkingTimeToFirstStation();
+                reqData.walkingTimeFromDropoff = ptResponse.getWalkingTimeFromLastStation();
             }
 
             if (ptResponse.isFinalTransferByTaxi()) {
-                // Insert request event for second taxi leg 15 minutes before arrival
-                const auto arrivalTimeAtLastStation = ptResponse.getArrivalTimeAtLastStation();
+                reqData.hasSecondTaxiLeg = true;
                 ptStationsForSecondTaxiLeg[reqId] = ptResponse.getLastStation();
-                requestData[reqId].arrivalTimeAtStation = arrivalTimeAtLastStation;
 
-                const bool triggerNow = occTime > arrivalTimeAtLastStation - TRIGGER_TAXI_TIME;
-                if (triggerNow) {
-                    requestState[reqId] = BEFORE_PT_ARRIVED;
-                    if (requestEvents.contains(reqId)) { requestEvents.updateKey(reqId, occTime); }
-                    else { requestEvents.insert(reqId, occTime); }
-                }
-                
+                // Insert request event for second taxi leg 15 minutes before arrival
+                const int schedule2ndLegTime = std::max(occTime, ptResponse.getArrivalTimeAtLastStation() - TRIGGER_TAXI_TIME);
+                nextRiderEvents[reqId] = SCHEDULE_2ND_TAXI_LEG;
+                requestEvents.insert(reqId, schedule2ndLegTime);
             } else {
-                // Insert request event for walking to destination
                 const auto arrivalTimeAtDestination = ptResponse.getArrivalTime();
-                requestEvents.insert(reqId, arrivalTimeAtDestination);
-                requestData[reqId].arrivalTimeAtStation = arrivalTimeAtDestination;
+                requestData[reqId].arrivalTimeAtEndOfPtJourney = arrivalTimeAtDestination;
             }
         }
 
         void handleSecondTaxiLeg(const int reqId, const int occTime) {
-            KASSERT(requestState[reqId] == BEFORE_PT_ARRIVED);
+            KASSERT(riderState[reqId] == WAITING_FOR_PICKUP || riderState[reqId] == IN_TAXI_VEHICLE);
             KASSERT(ptStationsForSecondTaxiLeg[reqId] != INVALID_ID);
-            requestData[reqId].secondTaxiLegStarted = true;
-            
+
+            int id, key;
+            requestEvents.deleteMin(id, key);
+            KASSERT(id == reqId && key == occTime);
+            nextRiderEvents[reqId] = RIDER_NO_EVENT;
+
             const auto &request = requests[reqId];
             const auto stationEdgeId = stations[ptStationsForSecondTaxiLeg[reqId]].vehEdgeId;
             const Request &newReq = {
                 reqId,
                 stationEdgeId,
                 request.destination,
-                requestData[reqId].arrivalTimeAtStation,
+                requestData[reqId].arrivalTimeAtEndOfPtJourney,
                 request.numRiders
             };
 
@@ -485,39 +531,42 @@ namespace karri {
             const auto &reqData = requestData[reqId];
             const auto waitTime = reqData.depTime - requests[reqId].requestTime;
             reqState.setCurrentWaitTime(waitTime);
-            
-            applyAssignment(secondTaxiLegResponse, reqId, occTime);
 
+            applyAssignment(secondTaxiLegResponse, reqId, occTime, true);
         }
 
-        void handleWalkingArrivalAtDest(const int reqId, const int occTime) {
-            KASSERT(requestState[reqId] == WALKING_TO_DEST);
+        void handleRiderArrivalAtDest(const int reqId, const int occTime) {
+            KASSERT(riderState[reqId] == NON_TAXI_TO_DESTINATION);
             KaRRiTimer timer;
 
             const auto &reqData = requestData[reqId];
-            requestState[reqId] = FINISHED;
+            riderState[reqId] = FINISHED;
             int id, key;
             requestEvents.deleteMin(id, key);
             KASSERT(id == reqId && key == occTime);
+            nextRiderEvents[reqId] = RIDER_NO_EVENT;
 
             const auto firstTaxiLegWaitTime = reqData.depTime - requests[reqId].requestTime;
-            const auto secondTaxiLegWaitTime = reqData.secondTaxiLegDepTime - reqData.arrivalTimeAtStation;
+            const auto secondTaxiLegWaitTime = reqData.hasSecondTaxiLeg
+                                                   ? reqData.secondTaxiLegDepTime - reqData.arrivalTimeAtEndOfPtJourney
+                                                   : 0;
             const auto waitTime = firstTaxiLegWaitTime + secondTaxiLegWaitTime;
             const auto arrTime = occTime;
-            const auto rideTime = occTime - reqData.walkingTimeFromDropoff - secondTaxiLegWaitTime - reqData.walkingTimeToSecondTaxiLegPickup - reqData.depTime;
+            const auto rideTime = occTime - reqData.walkingTimeFromDropoff - secondTaxiLegWaitTime - reqData.
+                                  walkingTimeToSecondTaxiLegPickup - reqData.depTime;
             const auto tripTime = arrTime - requests[reqId].requestTime;
-            const auto asgnCost = reqData.secondTaxiLegStarted ? 
-                                  reqData.taxiLegCost + reqData.ptLegCost + reqData.secondTaxiLegCost : 
-                                  reqData.taxiLegCost + reqData.ptLegCost + reqData.secondTaxiLegApproxCost;
+            const auto asgnCost = reqData.hasSecondTaxiLeg
+                                      ? reqData.taxiLegCost + reqData.ptLegCost + reqData.secondTaxiLegCost
+                                      : reqData.taxiLegCost + reqData.ptLegCost;
 
             assignmentQualityStats << reqId << ','
-                                   << arrTime << ','
-                                   << waitTime << ','
-                                   << rideTime << ','
-                                   << tripTime << ','
-                                   << reqData.walkingTimeToPickup << ','
-                                   << reqData.walkingTimeFromDropoff << ','
-                                   << asgnCost << '\n';
+                    << arrTime << ','
+                    << waitTime << ','
+                    << rideTime << ','
+                    << tripTime << ','
+                    << reqData.walkingTimeToPickup << ','
+                    << reqData.walkingTimeFromDropoff << ','
+                    << asgnCost << '\n';
 
 
             const auto time = timer.elapsed<std::chrono::nanoseconds>();
@@ -535,8 +584,10 @@ namespace karri {
         AddressableQuadHeap vehicleEvents;
         AddressableQuadHeap requestEvents;
 
+        std::vector<VehicleEventType> nextVehicleEvents;
+        std::vector<RiderEventType> nextRiderEvents;
         std::vector<VehicleState> vehicleState;
-        std::vector<RequestState> requestState;
+        std::vector<RiderState> riderState;
 
         std::vector<RequestData> requestData;
 
@@ -546,6 +597,5 @@ namespace karri {
         std::ofstream &assignmentQualityStats;
         std::ofstream &legStatsLogger;
         KaRRiProgressBar progressBar;
-
     };
 }
