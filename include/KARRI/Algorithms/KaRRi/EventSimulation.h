@@ -186,7 +186,7 @@ namespace karri {
                 case ASSIGNED_TO_VEH:
                     // When assigned to a vehicle, there should be no request event until the dropoff.
                     // At that point the request state becomes WALKING_TO_DEST.
-                    assert(false);
+                    KASSERT(false);
                     break;
                 case BEFORE_PT_ARRIVED:
                     handleSecondTaxiLeg(reqId, occTime);
@@ -195,7 +195,7 @@ namespace karri {
                     handleWalkingArrivalAtDest(reqId, occTime);
                     break;
                 case FINISHED:
-                    assert(false);
+                    KASSERT(false);
                     break;
                 default:
                     break;
@@ -203,8 +203,8 @@ namespace karri {
         }
 
         void handleVehicleStartup(const int vehId, const int occTime) {
-            assert(vehicleState[vehId] == OUT_OF_SERVICE);
-            assert(fleet[vehId].startOfServiceTime == occTime);
+            KASSERT(vehicleState[vehId] == OUT_OF_SERVICE);
+            KASSERT(fleet[vehId].startOfServiceTime == occTime);
             unused(occTime);
             KaRRiTimer timer;
 
@@ -222,17 +222,17 @@ namespace karri {
         }
 
         void handleVehicleShutdown(const int vehId, const int occTime) {
-            assert(vehicleState[vehId] == IDLING);
-            assert(fleet[vehId].endOfServiceTime == occTime);
+            KASSERT(vehicleState[vehId] == IDLING);
+            KASSERT(fleet[vehId].endOfServiceTime == occTime);
             unused(occTime);
-            assert(!scheduledStops.hasNextScheduledStop(vehId));
+            KASSERT(!scheduledStops.hasNextScheduledStop(vehId));
             KaRRiTimer timer;
 
             vehicleState[vehId] = OUT_OF_SERVICE;
 
             int id, key;
             vehicleEvents.deleteMin(id, key);
-            assert(id == vehId && key == occTime);
+            KASSERT(id == vehId && key == occTime);
             systemStateUpdater.notifyVehicleReachedEndOfServiceTime(fleet[vehId]);
 
             const auto time = timer.elapsed<std::chrono::nanoseconds>();
@@ -240,8 +240,8 @@ namespace karri {
         }
 
         void handleVehicleArrivalAtStop(const int vehId, const int occTime) {
-            assert(vehicleState[vehId] == DRIVING);
-            assert(scheduledStops.getNextScheduledStop(vehId).arrTime == occTime);
+            KASSERT(vehicleState[vehId] == DRIVING);
+            KASSERT(scheduledStops.getNextScheduledStop(vehId).arrTime == occTime);
             KaRRiTimer timer;
 
             const auto prevStop = scheduledStops.getCurrentOrPrevScheduledStop(vehId);
@@ -271,6 +271,8 @@ namespace karri {
                         requestEvents.insert(reqId, std::max(reqData.arrivalTimeAtStation - TRIGGER_TAXI_TIME, occTime));
                     }
 
+                    // TODO: Missing case for second leg arrival at dropoff -> walk to destination
+
                 // taxi only trip or second taxi leg of combined trip
                 } else {
                     requestState[reqId] = WALKING_TO_DEST;
@@ -289,8 +291,8 @@ namespace karri {
         }
 
         void handleVehicleDepartureFromStop(const int vehId, const int occTime) {
-            assert(vehicleState[vehId] == STOPPING);
-            assert(scheduledStops.getCurrentOrPrevScheduledStop(vehId).depTime == occTime);
+            KASSERT(vehicleState[vehId] == STOPPING);
+            KASSERT(scheduledStops.getCurrentOrPrevScheduledStop(vehId).depTime == occTime);
             KaRRiTimer timer;
 
             if (!scheduledStops.hasNextScheduledStop(vehId)) {
@@ -318,8 +320,8 @@ namespace karri {
 
         void handleRequestReceipt(const int reqId, const int occTime) {
             ++progressBar;
-            assert(requestState[reqId] == NOT_RECEIVED);
-            assert(requests[reqId].requestTime == occTime);
+            KASSERT(requestState[reqId] == NOT_RECEIVED);
+            KASSERT(requests[reqId].requestTime == occTime);
             KaRRiTimer timer;
 
             const auto &request = requests[reqId];
@@ -366,7 +368,7 @@ namespace karri {
 
             int id, key;
             requestEvents.deleteMin(id, key); // event for walking arrival at dest inserted at dropoff
-            assert(id == reqId && key == occTime);
+            KASSERT(id == reqId && key == occTime);
 
             const auto &bestAsgn = asgnFinderResponse.first.getBestAssignment();
             // || !bestAsgn.pickup || !bestAsgn.dropoff
@@ -412,7 +414,7 @@ namespace karri {
         void applyJourney(JourneyResponseT &ptResponse, const int reqId, const int occTime, bool inCombinedTrip = false) {
             int id, key;
             requestEvents.deleteMin(id, key); 
-            assert(id == reqId && key == occTime);
+            KASSERT(id == reqId && key == occTime);
 
             const bool isWalkingOnly = ptResponse.isJourneyWalking();
             
@@ -462,8 +464,8 @@ namespace karri {
         }
 
         void handleSecondTaxiLeg(const int reqId, const int occTime) {
-            assert(requestState[reqId] == BEFORE_PT_ARRIVED);
-            assert(ptStationsForSecondTaxiLeg[reqId] != INVALID_ID);
+            KASSERT(requestState[reqId] == BEFORE_PT_ARRIVED);
+            KASSERT(ptStationsForSecondTaxiLeg[reqId] != INVALID_ID);
             requestData[reqId].secondTaxiLegStarted = true;
             
             const auto &request = requests[reqId];
@@ -489,14 +491,14 @@ namespace karri {
         }
 
         void handleWalkingArrivalAtDest(const int reqId, const int occTime) {
-            assert(requestState[reqId] == WALKING_TO_DEST);
+            KASSERT(requestState[reqId] == WALKING_TO_DEST);
             KaRRiTimer timer;
 
             const auto &reqData = requestData[reqId];
             requestState[reqId] = FINISHED;
             int id, key;
             requestEvents.deleteMin(id, key);
-            assert(id == reqId && key == occTime);
+            KASSERT(id == reqId && key == occTime);
 
             const auto firstTaxiLegWaitTime = reqData.depTime - requests[reqId].requestTime;
             const auto secondTaxiLegWaitTime = reqData.secondTaxiLegDepTime - reqData.arrivalTimeAtStation;

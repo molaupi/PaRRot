@@ -23,9 +23,6 @@
 #include <KARRI/Algorithms/KaRRi/CHEnvironment.h>
 #include <KARRI/Algorithms/CH/CH.h>
 
-#include <ULTRA/Algorithms/CH/Query/BucketQuery.h>
-#include <ULTRA/DataStructures/RAPTOR/Data.h>
-
 #include "../PTaxi/Station/Station.h"
 #include "../PTaxi/Station/StationBucketsEnvironment.h"
 
@@ -33,8 +30,8 @@
 inline void printUsage() {
     std::cout <<
               "Usage: \n"
-              "     BuildStaticBuckets -veh-g <file> -psg-g <file> -veh-h <file> -psg-h <file> -raptor-data <file> -station-mapping <file>\n"
-              "     -o-bucket-graph <file> -o-station-buckets <file> -o-psg-station-buckets <file>\n"
+              "     BuildStaticBuckets -veh-g <file> -psg-g <file> -veh-h <file> -psg-h <file> -station-mapping <file>\n"
+              "      -o-station-buckets <file> -o-psg-station-buckets <file>\n"
               "Build static buckets for the preprocessing of PTaxi and write them to the specified output files.\n"
               "1. Build the bucket graph for the passenger network for use in ULTRA algorithm.\n"
               "2. Build the buckets for the stations in the vehicle network for use in KaRRi.\n"
@@ -178,14 +175,6 @@ int main(int argc, char *argv[]) {
             std::cout << "done.\n";
             psgChEnv = std::make_unique<PsgCHEnv>(std::move(psgCh));
         }
-
-        // Read the RAPTOR data
-        std::cout << "Reading RAPTOR data from file... " << std::flush;
-        RAPTOR::Data raptor(raptorFileName);
-        raptor.useImplicitDepartureBufferTimes();
-        std::cout << "done.\n";
-
-        raptor.printInfo();
 
         // Read the station mapping file
         std::cout << "Reading station mapping from file... " << std::flush;

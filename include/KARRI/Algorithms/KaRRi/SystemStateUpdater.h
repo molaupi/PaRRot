@@ -30,97 +30,95 @@
 #include "PathTracker.h"
 
 namespace karri {
-
     // Updates the system state consisting of the route state (schedules of vehicles and additional information about
     // stops) as well as the bucket state (precomputed information for fast shortest path queries to vehicle stops).
     template<typename InputGraphT,
-            typename EllipticBucketsEnvT,
-            typename LastStopBucketsEnvT,
-            typename StationsInEllipseT,
-            typename CurVehLocsT,
-            typename PathTrackerT,
-            typename LoggerT = NullLogger>
+        typename EllipticBucketsEnvT,
+        typename LastStopBucketsEnvT,
+        typename StationsInEllipseT,
+        typename CurVehLocsT,
+        typename PathTrackerT,
+        typename LoggerT = NullLogger>
     class SystemStateUpdater {
-
     public:
-
-        SystemStateUpdater(const InputGraphT &inputGraph, 
+        SystemStateUpdater(const InputGraphT &inputGraph,
                            const CurVehLocsT &curVehLocs,
                            PathTrackerT &pathTracker,
                            RouteState &routeState, EllipticBucketsEnvT &ellipticBucketsEnv,
                            LastStopBucketsEnvT &lastStopBucketsEnv,
                            StationsInEllipseT &stationsInEllipse)
-                : inputGraph(inputGraph),
-                  curVehLocs(curVehLocs),
-                  pathTracker(pathTracker),
-                  routeState(routeState),
-                  ellipticBucketsEnv(ellipticBucketsEnv),
-                  lastStopBucketsEnv(lastStopBucketsEnv),
-                  stationsInEllipse(stationsInEllipse),
-                  bestAssignmentsLogger(LogManager<LoggerT>::getLogger("bestassignments.csv",
-                                                                       "request_id, "
-                                                                       "request_time, "
-                                                                       "direct_od_dist, "
-                                                                       "vehicle_id, "
-                                                                       "pickup_insertion_point, "
-                                                                       "dropoff_insertion_point, "
-                                                                       "dist_to_pickup, "
-                                                                       "dist_from_pickup, "
-                                                                       "dist_to_dropoff, "
-                                                                       "dist_from_dropoff, "
-                                                                       "pickup_id, "
-                                                                       "pickup_walking_dist, "
-                                                                       "dropoff_id, "
-                                                                       "dropoff_walking_dist, "
-                                                                       "num_stops, "
-                                                                       "veh_dep_time_at_stop_before_pickup, "
-                                                                       "veh_dep_time_at_stop_before_dropoff, "
-                                                                       "not_using_vehicle, "
-                                                                       "cost\n")),
-                  overallPerfLogger(
-                          LogManager<LoggerT>::getLogger(stats::DispatchingPerformanceStats::LOGGER_NAME,
-                                                         "request_id, " +
-                                                         std::string(stats::DispatchingPerformanceStats::LOGGER_COLS))),
-                  initializationPerfLogger(
-                          LogManager<LoggerT>::getLogger(stats::InitializationPerformanceStats::LOGGER_NAME,
-                                                         "request_id, " +
-                                                         std::string(
-                                                                 stats::InitializationPerformanceStats::LOGGER_COLS))),
-                  ellipticBchPerfLogger(
-                          LogManager<LoggerT>::getLogger(stats::EllipticBCHPerformanceStats::LOGGER_NAME,
-                                                         "request_id, " +
-                                                         std::string(stats::EllipticBCHPerformanceStats::LOGGER_COLS))),
-                  pdDistancesPerfLogger(
-                          LogManager<LoggerT>::getLogger(stats::PDDistancesPerformanceStats::LOGGER_NAME,
-                                                         "request_id, " +
-                                                         std::string(stats::PDDistancesPerformanceStats::LOGGER_COLS))),
-                  ordPerfLogger(
-                          LogManager<LoggerT>::getLogger(stats::OrdAssignmentsPerformanceStats::LOGGER_NAME,
-                                                         "request_id, " +
-                                                         std::string(
-                                                                 stats::OrdAssignmentsPerformanceStats::LOGGER_COLS))),
-                  pbnsPerfLogger(
-                          LogManager<LoggerT>::getLogger(stats::PbnsAssignmentsPerformanceStats::LOGGER_NAME,
-                                                         "request_id, " +
-                                                         std::string(
-                                                                 stats::PbnsAssignmentsPerformanceStats::LOGGER_COLS))),
-                  palsPerfLogger(
-                          LogManager<LoggerT>::getLogger(stats::PalsAssignmentsPerformanceStats::LOGGER_NAME,
-                                                         "request_id, " +
-                                                         std::string(
-                                                                 stats::PalsAssignmentsPerformanceStats::LOGGER_COLS))),
-                  dalsPerfLogger(
-                          LogManager<LoggerT>::getLogger(stats::DalsAssignmentsPerformanceStats::LOGGER_NAME,
-                                                         "request_id, " +
-                                                         std::string(
-                                                                 stats::DalsAssignmentsPerformanceStats::LOGGER_COLS))),
-                  updatePerfLogger(LogManager<LoggerT>::getLogger(stats::UpdatePerformanceStats::LOGGER_NAME,
-                                                                  "request_id, " +
-                                                                  std::string(
-                                                                          stats::UpdatePerformanceStats::LOGGER_COLS))),
-                  roadCatLogger(LogManager<LoggerT>::getLogger(karri::stats::OsmRoadCategoryStats::LOGGER_NAME,
-                                                               "type," +
-                                                               karri::stats::OsmRoadCategoryStats::getLoggerCols())) {}
+            : inputGraph(inputGraph),
+              curVehLocs(curVehLocs),
+              pathTracker(pathTracker),
+              routeState(routeState),
+              ellipticBucketsEnv(ellipticBucketsEnv),
+              lastStopBucketsEnv(lastStopBucketsEnv),
+              stationsInEllipse(stationsInEllipse),
+              bestAssignmentsLogger(LogManager<LoggerT>::getLogger("bestassignments.csv",
+                                                                   "request_id, "
+                                                                   "request_time, "
+                                                                   "direct_od_dist, "
+                                                                   "vehicle_id, "
+                                                                   "pickup_insertion_point, "
+                                                                   "dropoff_insertion_point, "
+                                                                   "dist_to_pickup, "
+                                                                   "dist_from_pickup, "
+                                                                   "dist_to_dropoff, "
+                                                                   "dist_from_dropoff, "
+                                                                   "pickup_id, "
+                                                                   "pickup_walking_dist, "
+                                                                   "dropoff_id, "
+                                                                   "dropoff_walking_dist, "
+                                                                   "num_stops, "
+                                                                   "veh_dep_time_at_stop_before_pickup, "
+                                                                   "veh_dep_time_at_stop_before_dropoff, "
+                                                                   "not_using_vehicle, "
+                                                                   "cost\n")),
+              overallPerfLogger(
+                  LogManager<LoggerT>::getLogger(stats::DispatchingPerformanceStats::LOGGER_NAME,
+                                                 "request_id, " +
+                                                 std::string(stats::DispatchingPerformanceStats::LOGGER_COLS))),
+              initializationPerfLogger(
+                  LogManager<LoggerT>::getLogger(stats::InitializationPerformanceStats::LOGGER_NAME,
+                                                 "request_id, " +
+                                                 std::string(
+                                                     stats::InitializationPerformanceStats::LOGGER_COLS))),
+              ellipticBchPerfLogger(
+                  LogManager<LoggerT>::getLogger(stats::EllipticBCHPerformanceStats::LOGGER_NAME,
+                                                 "request_id, " +
+                                                 std::string(stats::EllipticBCHPerformanceStats::LOGGER_COLS))),
+              pdDistancesPerfLogger(
+                  LogManager<LoggerT>::getLogger(stats::PDDistancesPerformanceStats::LOGGER_NAME,
+                                                 "request_id, " +
+                                                 std::string(stats::PDDistancesPerformanceStats::LOGGER_COLS))),
+              ordPerfLogger(
+                  LogManager<LoggerT>::getLogger(stats::OrdAssignmentsPerformanceStats::LOGGER_NAME,
+                                                 "request_id, " +
+                                                 std::string(
+                                                     stats::OrdAssignmentsPerformanceStats::LOGGER_COLS))),
+              pbnsPerfLogger(
+                  LogManager<LoggerT>::getLogger(stats::PbnsAssignmentsPerformanceStats::LOGGER_NAME,
+                                                 "request_id, " +
+                                                 std::string(
+                                                     stats::PbnsAssignmentsPerformanceStats::LOGGER_COLS))),
+              palsPerfLogger(
+                  LogManager<LoggerT>::getLogger(stats::PalsAssignmentsPerformanceStats::LOGGER_NAME,
+                                                 "request_id, " +
+                                                 std::string(
+                                                     stats::PalsAssignmentsPerformanceStats::LOGGER_COLS))),
+              dalsPerfLogger(
+                  LogManager<LoggerT>::getLogger(stats::DalsAssignmentsPerformanceStats::LOGGER_NAME,
+                                                 "request_id, " +
+                                                 std::string(
+                                                     stats::DalsAssignmentsPerformanceStats::LOGGER_COLS))),
+              updatePerfLogger(LogManager<LoggerT>::getLogger(stats::UpdatePerformanceStats::LOGGER_NAME,
+                                                              "request_id, " +
+                                                              std::string(
+                                                                  stats::UpdatePerformanceStats::LOGGER_COLS))),
+              roadCatLogger(LogManager<LoggerT>::getLogger(karri::stats::OsmRoadCategoryStats::LOGGER_NAME,
+                                                           "type," +
+                                                           karri::stats::OsmRoadCategoryStats::getLoggerCols())) {
+        }
 
 
         void insertBestAssignment(RequestState &requestState, stats::DispatchingPerformanceStats &stats) {
@@ -144,15 +142,17 @@ namespace karri {
             const auto routeUpdateTime = timer.elapsed<std::chrono::nanoseconds>();
             stats.updateStats.updateRoutesTime += routeUpdateTime;
 
-            updateBucketState(asgn, pickupIndex, dropoffIndex, depTimeAtLastStopBefore, stats.updateStats);
+            updateBucketState(asgn, pickupIndex, dropoffIndex, depTimeAtLastStopBefore, requestState.now(),
+                              stats.updateStats);
 
             // If the vehicle has to be rerouted at its current location for a PBNS assignment, we introduce an
             // intermediate stop at its current location representing the rerouting.
-            if (asgn.pickupStopIdx == 0 && numStopsBefore > 1 && routeState.schedDepTimesFor(vehId)[0] < requestState.now()) {
+            if (asgn.pickupStopIdx == 0 && numStopsBefore > 1 && routeState.schedDepTimesFor(vehId)[0] < requestState.
+                now()) {
                 createIntermediateStopAtCurrentLocationForReroute(*asgn.vehicle,
-                                                                      requestState.now(),
-                                                                      stats.updateStats
-                                                                    );
+                                                                  requestState.now(),
+                                                                  stats.updateStats
+                );
                 ++pickupIndex;
                 ++dropoffIndex;
             }
@@ -161,19 +161,23 @@ namespace karri {
             int dropoffStopId = routeState.stopIdsFor(vehId)[dropoffIndex];
 
             assert(pickupStopId >= 0 && dropoffStopId >= 0);
-            
+
             // Register the inserted pickup and dropoff with the path data
             pathTracker.registerPdEventsForBestAssignment(requestState, pickupStopId, dropoffStopId);
         }
 
         void notifyStopStarted(const Vehicle &veh) {
-
             // Update buckets and route state
             ellipticBucketsEnv.deleteSourceBucketEntries(veh, 0);
             ellipticBucketsEnv.deleteTargetBucketEntries(veh, 1);
             // remove the stations from the ellipse that are no longer relevant
             stationsInEllipse.removeStationsForStop(0, veh.vehicleId);
             routeState.removeStartOfCurrentLeg(veh.vehicleId);
+        }
+
+
+        void notifyStopCompleted(const Vehicle &veh) {
+            pathTracker.logCompletedStop(veh);
 
             // If vehicle has become idle, update last stop bucket entries
             if (routeState.numStopsOf(veh.vehicleId) == 1) {
@@ -182,15 +186,10 @@ namespace karri {
             }
         }
 
-
-        void notifyStopCompleted(const Vehicle &veh) {
-            pathTracker.logCompletedStop(veh);
-        }
-
         void notifyVehicleReachedEndOfServiceTime(const Vehicle &veh) {
             const auto vehId = veh.vehicleId;
             assert(routeState.numStopsOf(vehId) == 1);
-            
+
             stats::UpdatePerformanceStats finalRemovalStatsPlaceholder;
             lastStopBucketsEnv.removeIdleBucketEntries(veh, 0, finalRemovalStatsPlaceholder);
 
@@ -211,7 +210,7 @@ namespace karri {
 
             if (requestState.isNotUsingVehicleBest()) {
                 bestAssignmentsLogger << "-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1, true, "
-                                      << requestState.getBestCost() << "\n";
+                        << requestState.getBestCost() << "\n";
                 return;
             }
 
@@ -223,7 +222,7 @@ namespace karri {
             const auto &vehDepTimeBeforePickup = getVehDepTimeAtStopForRequest(vehId, bestAsgn.pickupStopIdx,
                                                                                requestState, routeState);
             const auto &vehDepTimeBeforeDropoff = getVehDepTimeAtStopForRequest(vehId, bestAsgn.dropoffStopIdx,
-                                                                                requestState, routeState);
+                requestState, routeState);
             bestAssignmentsLogger
                     << vehId << ", "
                     << bestAsgn.pickupStopIdx << ", "
@@ -245,23 +244,23 @@ namespace karri {
 
         void writePerformanceLogs(const RequestState &requestState, const stats::DispatchingPerformanceStats &stats) {
             overallPerfLogger << requestState.originalRequest.requestId << ", "
-                              << stats.getLoggerRow() << "\n";
+                    << stats.getLoggerRow() << "\n";
             initializationPerfLogger << requestState.originalRequest.requestId << ", "
-                                     << stats.initializationStats.getLoggerRow() << "\n";
+                    << stats.initializationStats.getLoggerRow() << "\n";
             ellipticBchPerfLogger << requestState.originalRequest.requestId << ", "
-                                  << stats.ellipticBchStats.getLoggerRow() << "\n";
+                    << stats.ellipticBchStats.getLoggerRow() << "\n";
             pdDistancesPerfLogger << requestState.originalRequest.requestId << ", "
-                                  << stats.pdDistancesStats.getLoggerRow() << "\n";
+                    << stats.pdDistancesStats.getLoggerRow() << "\n";
             ordPerfLogger << requestState.originalRequest.requestId << ", "
-                          << stats.ordAssignmentsStats.getLoggerRow() << "\n";
+                    << stats.ordAssignmentsStats.getLoggerRow() << "\n";
             pbnsPerfLogger << requestState.originalRequest.requestId << ", "
-                           << stats.pbnsAssignmentsStats.getLoggerRow() << "\n";
+                    << stats.pbnsAssignmentsStats.getLoggerRow() << "\n";
             palsPerfLogger << requestState.originalRequest.requestId << ", "
-                           << stats.palsAssignmentsStats.getLoggerRow() << "\n";
+                    << stats.palsAssignmentsStats.getLoggerRow() << "\n";
             dalsPerfLogger << requestState.originalRequest.requestId << ", "
-                           << stats.dalsAssignmentsStats.getLoggerRow() << "\n";
+                    << stats.dalsAssignmentsStats.getLoggerRow() << "\n";
             updatePerfLogger << requestState.originalRequest.requestId << ", "
-                             << stats.updateStats.getLoggerRow() << "\n";
+                    << stats.updateStats.getLoggerRow() << "\n";
         }
 
         void writeRoadCatLogs() {
@@ -272,13 +271,13 @@ namespace karri {
         }
 
     private:
-
         // If vehicle is rerouted from its current position to a newly inserted stop (PBNS assignment), create new
         // intermediate stop at the vehicle's current position to maintain the invariant of the schedule for the
         // first stop, i.e. dist(s[i], s[i+1]) = schedArrTime(s[i+1]) - schedDepTime(s[i]).
         // Intermediate stop gets an arrival time equal to the request time so the stop is reached immediately,
         // making it the new stop 0. Thus, we do not need to compute target bucket entries for the stop.
-        void createIntermediateStopAtCurrentLocationForReroute(const Vehicle &veh, const int now, karri::stats::UpdatePerformanceStats &stats) {
+        void createIntermediateStopAtCurrentLocationForReroute(const Vehicle &veh, const int now,
+                                                               karri::stats::UpdatePerformanceStats &stats) {
             assert(curVehLocs.knowsCurrentLocationOf(veh.vehicleId));
             auto loc = curVehLocs.getCurrentLocationOf(veh.vehicleId);
             LIGHT_KASSERT(loc.depTimeAtHead >= now);
@@ -292,9 +291,10 @@ namespace karri {
         // dropoff after the insertion.
         void updateBucketState(const Assignment &asgn,
                                const int pickupIndex, const int dropoffIndex,
-                               const int depTimeAtLastStopBefore, karri::stats::UpdatePerformanceStats &stats) {
-
-            generateBucketStateForNewStops(asgn, pickupIndex, dropoffIndex, stats);
+                               const int depTimeAtLastStopBefore,
+                               const int now,
+                               karri::stats::UpdatePerformanceStats &stats) {
+            generateBucketStateForNewStops(asgn, pickupIndex, dropoffIndex, depTimeAtLastStopBefore, now, stats);
 
             // If we use buckets sorted by remaining leeway, we have to update the leeway of all
             // entries for stops of this vehicle.
@@ -313,11 +313,15 @@ namespace karri {
             const bool depTimeAtLastChanged = depTimeAtLastStopAfter != depTimeAtLastStopBefore;
 
             if ((dropoffAtExistingStop || dropoffIndex < numStopsAfter - 1) && depTimeAtLastChanged) {
-                lastStopBucketsEnv.updateBucketEntries(*asgn.vehicle, numStopsAfter - 1, stats.lastStopBucketsUpdateEntriesTime);
+                lastStopBucketsEnv.updateBucketEntries(*asgn.vehicle, numStopsAfter - 1,
+                                                       stats.lastStopBucketsUpdateEntriesTime);
             }
         }
 
-        void generateBucketStateForNewStops(const Assignment &asgn, const int pickupIndex, const int dropoffIndex, karri::stats::UpdatePerformanceStats &stats) {
+        void generateBucketStateForNewStops(const Assignment &asgn, const int pickupIndex, const int dropoffIndex,
+                                            const int depTimeAtLastStopBefore,
+                                            const int now,
+                                            karri::stats::UpdatePerformanceStats &stats) {
             const auto vehId = asgn.vehicle->vehicleId;
             const auto &numStops = routeState.numStopsOf(vehId);
             const bool pickupAtExistingStop = pickupIndex == asgn.pickupStopIdx;
@@ -329,7 +333,6 @@ namespace karri {
                 // calculate the relevant stations for this new pickup stop
                 stationsInEllipse.recomputeStationsInEllipseForStop(pickupIndex - 1, vehId);
                 stationsInEllipse.computeNewStationsInEllipsesForStop(pickupIndex, vehId);
-
             }
 
             // If no new stop was inserted for the pickup, we do not need to generate any new entries for it.
@@ -337,7 +340,7 @@ namespace karri {
                 return;
 
             ellipticBucketsEnv.generateTargetBucketEntries(*asgn.vehicle, dropoffIndex, stats);
-            
+
             // If dropoff is not the new last stop, we generate elliptic source buckets for it.
             if (dropoffIndex < numStops - 1) {
                 ellipticBucketsEnv.generateSourceBucketEntries(*asgn.vehicle, dropoffIndex, stats);
@@ -355,7 +358,7 @@ namespace karri {
             stationsInEllipse.computeNewStationsInEllipsesForStop(formerLastStopIdx, vehId);
 
             // Remove last stop bucket entries for former last stop and generate them for dropoff
-            if (formerLastStopIdx == 0) {
+            if (formerLastStopIdx == 0 && depTimeAtLastStopBefore < now) {
                 lastStopBucketsEnv.removeIdleBucketEntries(*asgn.vehicle, formerLastStopIdx, stats);
             } else {
                 lastStopBucketsEnv.removeNonIdleBucketEntries(*asgn.vehicle, formerLastStopIdx, stats);

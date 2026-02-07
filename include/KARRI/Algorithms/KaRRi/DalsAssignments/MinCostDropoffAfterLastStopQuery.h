@@ -378,6 +378,9 @@ namespace karri::DropoffAfterLastStopStrategies {
                     ++numEntriesScannedHere;
 
                     const int &vehId = entry.targetId;
+                    const int &depTimeAtLastStop = routeState.schedDepTimesFor(vehId)[routeState.numStopsOf(vehId) - 1];
+                    KASSERT(entry.distToTarget >= depTimeAtLastStop, "Num stops = " << routeState.numStopsOf(vehId) << ", now = " << requestState.now());
+
                     const int arrTimeAtDropoff = entry.distToTarget + label.distToDropoff;
 
                     const auto costFromLastStop = calculator.calcVehicleIndependentCostLowerBoundForDALSWithKnownMinArrTime(
@@ -399,8 +402,8 @@ namespace karri::DropoffAfterLastStopStrategies {
                         continue;
 
 
-                    const int &depTimeAtLastStop = routeState.schedDepTimesFor(vehId)[routeState.numStopsOf(vehId) - 1];
                     const int fullDistToDropoff = arrTimeAtDropoff - depTimeAtLastStop;
+                    KASSERT(fullDistToDropoff >= 0);
                     const DropoffLabel labelAtVeh = {dropoff.id, fullDistToDropoff};
                     insertLabelAtVehicleAndClean(vehId, labelAtVeh, requestState, pdLocs);
                 }

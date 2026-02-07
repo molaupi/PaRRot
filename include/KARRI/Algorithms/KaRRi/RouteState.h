@@ -262,28 +262,31 @@ namespace karri {
 
         template<typename RequestStateT>
         bool checkAssignmentDistances(const Assignment& asgn, const RequestStateT & requestState) {
+            unused(requestState);
             const auto vehId = asgn.vehicle->vehicleId;
             const auto &pickup = asgn.pickup;
             const auto &dropoff = asgn.dropoff;
             const auto &start = pos[vehId].start;
             const auto &end = pos[vehId].end;
+            const auto numStops = end - start;
             auto pickupIndex = asgn.pickupStopIdx;
             auto dropoffIndex = asgn.dropoffStopIdx;
 
-            assert(pickupIndex >= 0);
-            assert(pickupIndex < end - start);
-            assert(dropoffIndex >= 0);
-            assert(dropoffIndex < end - start);
+            KASSERT(pickupIndex >= 0);
+            KASSERT(pickupIndex < numStops);
+            KASSERT(dropoffIndex >= 0);
+            KASSERT(dropoffIndex < numStops);
 
-            if (pickup.loc == stopLocations[start + pickupIndex]) {
+
+            if (numStops > 1 && pickupIndex == 0) {
+                // TODO: Check from current vehicle location to pickup
+            } else if (pickup.loc == stopLocations[start + pickupIndex]) {
                 // Pickup at existing stop
-                KASSERT(asgn.distToPickup == 0);
-            } else if (pickupIndex > 0 || (pickupIndex == 0 && end - start == 1)) {
+                KASSERT(asgn.distToPickup == 0, "Assignment = " << asgn << ", num stops = " << numStops);
+            } else if (pickupIndex > 0 || (numStops == 1 && pickupIndex == 0)) {
                 // New pickup stop
                 const int actualDist = distanceChecker(stopLocations[start + pickupIndex], pickup.loc);
                 KASSERT(asgn.distToPickup == actualDist);
-            } else {
-                // TODO: Check from current vehicle location to pickup
             }
 
             if (dropoffIndex == pickupIndex) {
@@ -304,7 +307,7 @@ namespace karri {
                 KASSERT(asgn.distToDropoff == actualDist);
             }
 
-            if (dropoffIndex == end - start - 1) {
+            if (dropoffIndex == numStops - 1) {
                 KASSERT(asgn.distFromDropoff == 0);
             } else {
                 const int actualDist = distanceChecker(dropoff.loc, stopLocations[start + dropoffIndex + 1]);
