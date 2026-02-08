@@ -561,15 +561,15 @@ int main(int argc, char *argv[]) {
 
         // Construct DALS strategy and assignment finder:
 
+        using DALSLabelSet = std::conditional_t<KARRI_DALS_USE_SIMD,
+                SimdLabelSet<KARRI_DALS_LOG_K, ParentInfo::NO_PARENT_INFO>,
+                BasicLabelSet<KARRI_DALS_LOG_K, ParentInfo::NO_PARENT_INFO>>;
 #if KARRI_DALS_STRATEGY == KARRI_COL
         // Use Collective-BCH DALS Strategy
         using DALSStrategy = DropoffAfterLastStopStrategies::CollectiveBCHStrategy<VehicleInputGraph, VehCHEnv, LastStopBucketsEnv, CurVehLocToPickupSearchesImpl>;
         DALSStrategy dalsStrategy(vehicleInputGraph, fleet, routeState, *vehChEnv, lastStopBucketsEnv, curVehLocToPickupSearches);
 #elif KARRI_DALS_STRATEGY == KARRI_IND
         // Use Individual-BCH DALS Strategy
-        using DALSLabelSet = std::conditional_t<KARRI_DALS_USE_SIMD,
-                SimdLabelSet<KARRI_DALS_LOG_K, ParentInfo::NO_PARENT_INFO>,
-                BasicLabelSet<KARRI_DALS_LOG_K, ParentInfo::NO_PARENT_INFO>>;
         using DALSStrategy = DropoffAfterLastStopStrategies::IndividualBCHStrategy<VehicleInputGraph, VehCHEnv, LastStopBucketsEnv, CurVehLocToPickupSearchesImpl, DALSLabelSet>;
         DALSStrategy dalsStrategy(vehicleInputGraph, fleet, *vehChEnv, lastStopBucketsEnv, curVehLocToPickupSearches, routeState);
 #else // KARRI_DALS_STRATEGY == KARRI_DIJ
@@ -654,14 +654,14 @@ int main(int argc, char *argv[]) {
 
         PTAlgorithmWithTaxi ptAlgorithmWithTaxi(raptor, taxiInitialTransfers, stations, psgInputGraph.numEdges());
 
-        using StationBCH = StationBCHQuery<VehicleInputGraph, VehCHEnv, StationBucketsEnv>;
+        using StationBCH = StationBCHQuery<VehicleInputGraph, VehCHEnv, StationBucketsEnv, PALSLabelSet>;
 
         // PALS for stations
         using PALSToStationsImpl = PALSToStations<VehicleInputGraph, VehCHEnv, LastStopBucketsEnv, LastStopAtVerticesInfo, StationBCH::StationDistances, PALSLabelSet>;
         PALSToStationsImpl palsToStations(vehicleInputGraph, fleet, *vehChEnv, lastStopBucketsEnv, lastStopBucketsEnv, routeState);
 
         // DALS for stations
-        using DALSToStationsImpl = DALSToStations<VehicleInputGraph, VehCHEnv, CurVehLocToPickupSearchesImpl, StationBucketsEnv, PALSLabelSet>;
+        using DALSToStationsImpl = DALSToStations<VehicleInputGraph, VehCHEnv, CurVehLocToPickupSearchesImpl, StationBucketsEnv, DALSLabelSet>;
         DALSToStationsImpl dalsToStations(vehicleInputGraph, fleet, *vehChEnv, curVehLocToPickupSearches, routeState, stationBucketsEnv, stations);
 
         using StationsInEllipseImpl = StationsInEllipse<VehicleInputGraph, VehCHEnv, StationBucketsEnv>;

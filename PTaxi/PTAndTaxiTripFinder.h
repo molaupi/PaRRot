@@ -106,6 +106,13 @@ namespace karri {
         }
 
         PTAndTaxiTriple findBestAssignment(const Request &req) {
+
+            // TODO: Rework stats
+            //  - one KaRRi stats object for taxi only
+            //  - some kind of PT stats object for PT only
+            //  - one KaRRi stats object for first taxi leg
+            //  - one PT stats object for PT with taxi
+
             // Taxi only leg and invalid taxi leg
             auto taxiOnlyResponse = findBestTaxiAssignment(req, req.requestTime);
             RequestState invalidTaxiResponse;
@@ -300,6 +307,7 @@ namespace karri {
         FirstTaxiLegResult runFirstTaxiSharingLeg(stats::DispatchingPerformanceStats &stats) {
             FirstTaxiLegResult firstTaxiLegResult(routeState, curReqState, stations.size());
 
+            runStationBCH(curReqState, stats.stationBchStats);
             runPALS(curReqState, stats.palsAssignmentsStats, firstTaxiLegResult);
             runOrdinary(curReqState, stats.ordAssignmentsStats, firstTaxiLegResult);
             runDALS(curReqState, stats.dalsAssignmentsStats, firstTaxiLegResult);
@@ -309,12 +317,14 @@ namespace karri {
             return firstTaxiLegResult;
         }
 
+        void runStationBCH(RequestState &rs, stats::StationBchPerformanceStats &stats) {
+            // Run BCH queries from origin to all stations reachable pickups from origin from KaRRi
+            stationBCH.setExternalCostUpperBound(bestCost);
+            stationBCH.runBchQueries(rs, curPdLocs, stats);
+        }
+
         void runPALS(RequestState &rs, stats::PalsAssignmentsPerformanceStats &stats,
                      FirstTaxiLegResult &firstTaxiLegResult) {
-            // Run BCH queries from origin to all stations
-            // reachable pickups from origin from KaRRi
-            stationBCH.setExternalCostUpperBound(bestCost);
-            stationBCH.runBchQueries(rs, curPdLocs);
 
             // last stop -> pickups
             // PALS Individual BCH

@@ -33,31 +33,26 @@
 #include "../Station/TentativeStationDistances.h"
 
 namespace karri {
-
-
     template<typename InputGraphT, typename CHEnvT,
-            typename StationBucketsEnvT,
-            typename LabelSetT = BasicLabelSet<0, ParentInfo::FULL_PARENT_INFO>>
+        typename StationBucketsEnvT,
+        typename LabelSetT = BasicLabelSet<0, ParentInfo::FULL_PARENT_INFO> >
     class StationBCHQuery {
-
     private:
-
         static constexpr int K = LabelSetT::K;
         using DistanceLabel = typename LabelSetT::DistanceLabel;
         using LabelMask = typename LabelSetT::LabelMask;
 
         struct ScanBucket {
-
         public:
-
-            explicit ScanBucket(StationBCHQuery &search) : search(search){}
+            explicit ScanBucket(StationBCHQuery &search) : search(search) {
+            }
 
             template<typename DistLabelT, typename DistLabelContainerT>
             bool operator()(const int v, DistLabelT &distToV, const DistLabelContainerT & /*distLabels*/) {
                 // Check if we can prune at this vertex based only on the distance to v
                 if (allSet(search.canPrune(distToV)))
                     return true;
-            
+
                 int numEntriesScannedHere = 0;
 
                 if constexpr (!StationBucketsEnvT::SORTED) {
@@ -71,38 +66,37 @@ namespace karri {
                         tryUpdatingDistance(stationId, distViaV);
                     }
                 } else {
-                        auto bucket = search.bucketContainer.getBucketOf(v);
+                    auto bucket = search.bucketContainer.getBucketOf(v);
 
-                        for (const auto &entry: bucket) {
-                            ++numEntriesScannedHere;
+                    for (const auto &entry: bucket) {
+                        ++numEntriesScannedHere;
 
-                            const int &stationId = entry.targetId;
-                            const DistanceLabel distViaV = distToV + DistanceLabel(entry.distToTarget);
-                            const auto atLeastAsGoodAsCurBest = ~search.canPrune(distViaV);
+                        const int &stationId = entry.targetId;
+                        const DistanceLabel distViaV = distToV + DistanceLabel(entry.distToTarget);
+                        const auto atLeastAsGoodAsCurBest = ~search.canPrune(distViaV);
 
-                            if (!anySet(atLeastAsGoodAsCurBest))
-                                break;
+                        if (!anySet(atLeastAsGoodAsCurBest))
+                            break;
 
-                            tryUpdatingDistance(stationId, distViaV);
-                        }
+                        tryUpdatingDistance(stationId, distViaV);
+                    }
                 }
-                
-                search.numEntriesVisited += numEntriesScannedHere;
+
+                search.numEntriesVisitedThisRun += numEntriesScannedHere;
                 ++search.numVerticesSettled;
 
                 return false;
             }
 
         private:
-
-            void tryUpdatingDistance(const int stationId, const DistanceLabel& distFromPDLoc) {
+            void tryUpdatingDistance(const int stationId, const DistanceLabel &distFromPDLoc) {
                 // Update tentative distances to v for any searches where distViaV admits a possible better assignment
                 // than the current best and where distViaV is at least as good as the current tentative distance.
                 LabelMask mask = ~(search.tentativeDistances.getDistancesForCurBatch(stationId) < distFromPDLoc);
                 mask &= distFromPDLoc < INFTY;
                 if (!anySet(mask))
                     return;
-                    
+
                 search.tentativeDistances.setDistancesForCurBatchIf(stationId, distFromPDLoc, mask);
                 search.stationsSeen.insert(stationId);
             }
@@ -113,7 +107,8 @@ namespace karri {
 
 
         struct StopStationBCH {
-            explicit StopStationBCH(const StationBCHQuery &search) : search(search) {}
+            explicit StopStationBCH(const StationBCHQuery &search) : search(search) {
+            }
 
             template<typename DistLabelT, typename DistLabelContainerT>
             bool operator()(const int, DistLabelT &distToV, const DistLabelContainerT & /*distLabels*/) const {
@@ -125,44 +120,52 @@ namespace karri {
 
         private:
             const StationBCHQuery &search;
-
         };
 
-
     public:
+        using StationDistances = TentativeStationDistances<LabelSetT>;
 
-     using StationDistances = TentativeStationDistances<LabelSetT>;
-    
-        // Pruning: 
+        // Pruning:
         // 1. no
         // 2. from origin to v
         // 3. consider the routes of the taxi before origin
 
         StationBCHQuery(
-                const InputGraphT &inputGraph,
-                const CHEnvT &chEnv,
-                RouteState &routeState,
-                const StationBucketsEnvT &stationBucketsEnv,
-                const int numberOfStations)
-                : inputGraph(inputGraph),
-                  ch(chEnv.getCH()),
-                  calc(CostCalculator(routeState)),
-                  upwardSearch(chEnv.template getForwardSearch<ScanBucket, StopStationBCH, LabelSetT>(
-                               ScanBucket(*this), StopStationBCH(*this))),
-                  bucketContainer(stationBucketsEnv.getTargetBuckets()),
-                  tentativeDistances(numberOfStations),
-                  stationsSeen(numberOfStations),
-                  numVerticesSettled(0),
-                  numEntriesVisited(0),
-                  externalUpperBoundCost(INFTY) {}
+            const InputGraphT &inputGraph,
+            const CHEnvT &chEnv,
+            RouteState &routeState,
+            const StationBucketsEnvT &stationBucketsEnv,
+            const int numberOfStations)
+            : inputGraph(inputGraph),
+              ch(chEnv.getCH()),
+              calc(CostCalculator(routeState)),
+              upwardSearch(chEnv.template getForwardSearch<ScanBucket, StopStationBCH, LabelSetT>(
+                  ScanBucket(*this), StopStationBCH(*this))),
+              bucketContainer(stationBucketsEnv.getTargetBuckets()),
+              tentativeDistances(numberOfStations),
+              stationsSeen(numberOfStations),
+              numVerticesSettled(0),
+              numEntriesVisitedThisRun(0),
+              externalUpperBoundCost(INFTY) {
+        }
 
         // Run BCH queries that obtain distances from pickups to stations
-        void runBchQueries(const RequestState& requestState, const PDLocs& pdLocs) {
+        void runBchQueries(const RequestState &requestState, const PDLocs &pdLocs, stats::StationBchPerformanceStats& stats) {
 
+            KaRRiTimer timer;
             initPickupSearches(pdLocs, requestState);
+            stats.initializationTime += timer.elapsed<std::chrono::nanoseconds>();
+
+            timer.restart();
             for (unsigned int i = 0; i < pdLocs.numPickups(); i += K) {
                 runSearchesForPickupBatch(i, pdLocs);
             }
+            const int64_t searchTime = timer.elapsed<std::chrono::nanoseconds>();
+            stats.pickupBchSearchTime += searchTime;
+            stats.numEdgeRelaxations += totalNumEdgeRelaxations;
+            stats.numVerticesSettled += totalNumVerticesSettled;
+            stats.numEntriesScanned += totalNumEntriesScanned;
+            stats.numStationsSeen += stationsSeen.size();
         }
 
         StationDistances &getTentativeDistances() {
@@ -173,17 +176,29 @@ namespace karri {
             return stationsSeen;
         }
 
-         // Sets a known upper bound on the cost of a PALS insertion.
+        // const int &getNumEdgeRelaxations() const {
+        //     return totalNumEdgeRelaxations;
+        // }
+        //
+        // const int &getNumVerticesSettled() const {
+        //     return totalNumVerticesSettled;
+        // }
+        //
+        // const int &getNumEntriesScanned() const {
+        //     return totalNumEntriesScanned;
+        // }
+
+        // Sets a known upper bound on the cost of a PALS insertion.
         void setExternalCostUpperBound(const int c) {
             externalUpperBoundCost = c;
         }
 
     private:
-        void initPickupSearches(const PDLocs& pdLocs, const RequestState& requestState) {
+        void initPickupSearches(const PDLocs &pdLocs, const RequestState &requestState) {
             totalNumEdgeRelaxations = 0;
             totalNumVerticesSettled = 0;
             totalNumEntriesScanned = 0;
-            
+
             curReqState = &requestState;
 
             stationsSeen.clear();
@@ -191,14 +206,15 @@ namespace karri {
             tentativeDistances.init(numPickupBatches);
         }
 
-        void runSearchesForPickupBatch(const int firstPickupId, const PDLocs& pdLocs) {
+        void runSearchesForPickupBatch(const int firstPickupId, const PDLocs &pdLocs) {
             KASSERT(firstPickupId % K == 0 && firstPickupId < pdLocs.numPickups());
 
             std::array<int, K> pickupHeads;
             for (int i = 0; i < K; ++i) {
                 const auto &pickup =
-                        firstPickupId + i < pdLocs.numPickups() ? pdLocs.pickups[firstPickupId + i]
-                                                                      : pdLocs.pickups[firstPickupId];
+                        firstPickupId + i < pdLocs.numPickups()
+                            ? pdLocs.pickups[firstPickupId + i]
+                            : pdLocs.pickups[firstPickupId];
                 pickupHeads[i] = inputGraph.edgeHead(pickup.loc);
                 currentPickupWalkingDists[i] = pickup.walkingDist;
             }
@@ -206,19 +222,20 @@ namespace karri {
             tentativeDistances.setCurBatchIdx(firstPickupId / K);
             run(pickupHeads);
 
-            totalNumEdgeRelaxations += getNumEdgeRelaxations();
-            totalNumVerticesSettled += getNumVerticesSettled();
-            totalNumEntriesScanned += getNumEntriesScanned();
         }
 
         void run(const std::array<int, K> &sources,
                  const std::array<int, K> offsets = {}) {
             numVerticesSettled = 0;
-            numEntriesVisited = 0;
+            numEntriesVisitedThisRun = 0;
             std::array<int, K> sources_ranks = {};
             std::transform(sources.begin(), sources.end(), sources_ranks.begin(),
                            [&](const int v) { return ch.rank(v); });
             upwardSearch.runWithOffset(sources_ranks, offsets);
+
+            totalNumEdgeRelaxations += upwardSearch.getNumEdgeRelaxations();
+            totalNumVerticesSettled += upwardSearch.getNumVerticesSettled();
+            totalNumEntriesScanned += numEntriesVisitedThisRun;
         }
 
         LabelMask canPrune(const DistanceLabel &distancesToPickups) const {
@@ -236,18 +253,6 @@ namespace karri {
             return externalUpperBoundCost < costLowerBound;
         }
 
-        int getNumEdgeRelaxations() const {
-            return upwardSearch.getNumEdgeRelaxations();
-        }
-
-        int getNumVerticesSettled() const {
-            return numVerticesSettled;
-        }
-
-        int getNumEntriesScanned() const {
-            return numEntriesVisited;
-        }
-
         typename CHEnvT::template UpwardSearch<ScanBucket, StopStationBCH, LabelSetT> upwardSearch;
 
         const InputGraphT &inputGraph;
@@ -260,15 +265,14 @@ namespace karri {
         DistanceLabel currentPickupWalkingDists;
 
         int externalUpperBoundCost;
-        RequestState const * curReqState;
+        RequestState const *curReqState;
 
         LightweightSubset stationsSeen;
         int numVerticesSettled;
-        int numEntriesVisited;
+        int numEntriesVisitedThisRun;
 
         int totalNumEdgeRelaxations;
         int totalNumVerticesSettled;
         int totalNumEntriesScanned;
     };
-
 }

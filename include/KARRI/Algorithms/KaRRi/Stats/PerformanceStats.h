@@ -28,7 +28,6 @@
 #include <cstdint>
 
 namespace karri::stats {
-
     struct InitializationPerformanceStats {
         int64_t findPDLocsInRadiusTime;
         int64_t findVehicleToPdLocsDistancesTime;
@@ -59,10 +58,10 @@ namespace karri::stats {
         std::string getLoggerRow() const {
             std::stringstream ss;
             ss << findPDLocsInRadiusTime << ", "
-               << findVehicleToPdLocsDistancesTime << ", "
-               << notUsingVehicleTime << ", "
-               << computeODDistanceTime << ", "
-               << getTotalTime();
+                    << findVehicleToPdLocsDistancesTime << ", "
+                    << notUsingVehicleTime << ", "
+                    << computeODDistanceTime << ", "
+                    << getTotalTime();
             return ss.str();
         }
     };
@@ -112,15 +111,15 @@ namespace karri::stats {
         std::string getLoggerRow() const {
             std::stringstream ss;
             ss << initializationTime << ", "
-               << pickupTime << ", "
-               << dropoffTime << ", "
-               << pickupNumEdgeRelaxations << ", "
-               << pickupNumVerticesSettled << ", "
-               << pickupNumEntriesScanned << ", "
-               << dropoffNumEdgeRelaxations << ", "
-               << dropoffNumVerticesSettled << ", "
-               << dropoffNumEntriesScanned << ", "
-               << getTotalTime();
+                    << pickupTime << ", "
+                    << dropoffTime << ", "
+                    << pickupNumEdgeRelaxations << ", "
+                    << pickupNumVerticesSettled << ", "
+                    << pickupNumEntriesScanned << ", "
+                    << dropoffNumEdgeRelaxations << ", "
+                    << dropoffNumVerticesSettled << ", "
+                    << dropoffNumEntriesScanned << ", "
+                    << getTotalTime();
             return ss.str();
         }
     };
@@ -151,9 +150,9 @@ namespace karri::stats {
         std::string getLoggerRow() const {
             std::stringstream ss;
             ss << initializationTime << ", "
-               << dropoffBucketEntryGenTime << ", "
-               << pickupBchSearchTime << ", "
-               << getTotalTime();
+                    << dropoffBucketEntryGenTime << ", "
+                    << pickupBchSearchTime << ", "
+                    << getTotalTime();
             return ss.str();
         }
     };
@@ -203,14 +202,14 @@ namespace karri::stats {
         std::string getLoggerRow() const {
             std::stringstream ss;
             ss << initializationTime << ", "
-               << numRelevantStopsForPickups << ", "
-               << numRelevantStopsForDropoffs << ", "
-               << filterRelevantPDLocsTime << ", "
-               << numCandidateVehicles << ", "
-               << numAssignmentsTried << ", "
-               << tryNonPairedAssignmentsTime << ", "
-               << tryPairedAssignmentsTime << ", "
-               << getTotalTime();
+                    << numRelevantStopsForPickups << ", "
+                    << numRelevantStopsForDropoffs << ", "
+                    << filterRelevantPDLocsTime << ", "
+                    << numCandidateVehicles << ", "
+                    << numAssignmentsTried << ", "
+                    << tryNonPairedAssignmentsTime << ", "
+                    << tryPairedAssignmentsTime << ", "
+                    << getTotalTime();
             return ss.str();
         }
     };
@@ -267,22 +266,21 @@ namespace karri::stats {
         std::string getLoggerRow() const {
             std::stringstream ss;
             ss << initializationTime << ", "
-               << numRelevantStopsForPickups << ", "
-               << numRelevantStopsForDropoffs << ", "
-               << filterRelevantPDLocsTime << ", "
-               << locatingVehiclesTime << ", "
-               << numCHSearches << ", "
-               << directCHSearchTime << ", "
-               << numCandidateVehicles << ", "
-               << numAssignmentsTried << ", "
-               << tryAssignmentsTime << ", "
-               << getTotalTime();
+                    << numRelevantStopsForPickups << ", "
+                    << numRelevantStopsForDropoffs << ", "
+                    << filterRelevantPDLocsTime << ", "
+                    << locatingVehiclesTime << ", "
+                    << numCHSearches << ", "
+                    << directCHSearchTime << ", "
+                    << numCandidateVehicles << ", "
+                    << numAssignmentsTried << ", "
+                    << tryAssignmentsTime << ", "
+                    << getTotalTime();
             return ss.str();
         }
     };
 
     struct PalsAssignmentsPerformanceStats {
-
         int64_t initializationTime;
 
         int64_t numEdgeRelaxationsInSearchGraph;
@@ -359,32 +357,29 @@ namespace karri::stats {
         std::string getLoggerRow() const {
             std::stringstream ss;
             ss << initializationTime << ", "
-               << numEdgeRelaxationsInSearchGraph << ", "
-               << numVerticesOrLabelsSettled << ", "
-               << numEntriesOrLastStopsScanned << ", "
-               << searchTime << ", "
-               << numCandidateVehicles << ", "
-               << numAssignmentsTried << ", "
-               << tryAssignmentsTime << ", "
-               << pickupAtLastStop_numCandidateVehicles << ", "
-               << pickupAtLastStop_numAssignmentsTried << ", "
-               << pickupAtLastStop_tryAssignmentsTime << ", "
-               << collective_pickupVehDistQueryTime << ", "
-               << collective_numPromisingDropoffs << ", "
-               << collective_numInitialLabelsGenerated << ", "
-               << collective_numInitialLabelsNotPruned << ", "
-               << collective_initializationTime << ", "
-               << collective_numDominationRelationTests << ", "
-               << collective_usedFallback << ", "
-               << getTotalTime();
+                    << numEdgeRelaxationsInSearchGraph << ", "
+                    << numVerticesOrLabelsSettled << ", "
+                    << numEntriesOrLastStopsScanned << ", "
+                    << searchTime << ", "
+                    << numCandidateVehicles << ", "
+                    << numAssignmentsTried << ", "
+                    << tryAssignmentsTime << ", "
+                    << pickupAtLastStop_numCandidateVehicles << ", "
+                    << pickupAtLastStop_numAssignmentsTried << ", "
+                    << pickupAtLastStop_tryAssignmentsTime << ", "
+                    << collective_pickupVehDistQueryTime << ", "
+                    << collective_numPromisingDropoffs << ", "
+                    << collective_numInitialLabelsGenerated << ", "
+                    << collective_numInitialLabelsNotPruned << ", "
+                    << collective_initializationTime << ", "
+                    << collective_numDominationRelationTests << ", "
+                    << collective_usedFallback << ", "
+                    << getTotalTime();
             return ss.str();
         }
-
-
     };
 
     struct DalsAssignmentsPerformanceStats {
-
         int64_t initializationTime;
 
         int64_t numEdgeRelaxationsInSearchGraph;
@@ -445,26 +440,70 @@ namespace karri::stats {
         std::string getLoggerRow() const {
             std::stringstream ss;
             ss << initializationTime << ", "
-               << numEdgeRelaxationsInSearchGraph << ", "
-               << numVerticesOrLabelsSettled << ", "
-               << numEntriesOrLastStopsScanned << ", "
-               << searchTime << ", "
-               << numCandidateVehicles << ", "
-               << numCandidateDropoffsAcrossAllVehicles << ", "
-               << numAssignmentsTried << ", "
-               << tryAssignmentsTime << ", "
-               << collective_numDominationRelationTests << ", "
-               << collective_ranClosestDropoffSearch << ", "
-               << collective_numDirectCHSearches << ", "
-               << collective_initializationTime << ", "
-               << getTotalTime();
+                    << numEdgeRelaxationsInSearchGraph << ", "
+                    << numVerticesOrLabelsSettled << ", "
+                    << numEntriesOrLastStopsScanned << ", "
+                    << searchTime << ", "
+                    << numCandidateVehicles << ", "
+                    << numCandidateDropoffsAcrossAllVehicles << ", "
+                    << numAssignmentsTried << ", "
+                    << tryAssignmentsTime << ", "
+                    << collective_numDominationRelationTests << ", "
+                    << collective_ranClosestDropoffSearch << ", "
+                    << collective_numDirectCHSearches << ", "
+                    << collective_initializationTime << ", "
+                    << getTotalTime();
             return ss.str();
         }
+    };
 
+
+    struct StationBchPerformanceStats {
+        int64_t initializationTime;
+        int64_t pickupBchSearchTime;
+        int64_t numEdgeRelaxations;
+        int64_t numVerticesSettled;
+        int64_t numEntriesScanned;
+        int64_t numStationsSeen;
+
+        int64_t getTotalTime() const {
+            return initializationTime + pickupBchSearchTime;
+        }
+
+        void clear() {
+            initializationTime = 0;
+            pickupBchSearchTime = 0;
+            numEdgeRelaxations = 0;
+            numVerticesSettled = 0;
+            numEntriesScanned = 0;
+            numStationsSeen = 0;
+        }
+
+        static constexpr auto LOGGER_NAME = "perf_stationbch.csv";
+        static constexpr auto LOGGER_COLS =
+                "initialization_time,"
+                "pickup_bch_search_time,"
+                "num_edge_relaxations,"
+                "num_vertices_settled,"
+                "num_entries_scanned,"
+                "num_stations_seen,"
+                "total_time\n";
+
+
+        std::string getLoggerRow() const {
+            std::stringstream ss;
+            ss << initializationTime << ", "
+                    << pickupBchSearchTime << ", "
+                    << numEdgeRelaxations << ", "
+                    << numVerticesSettled << ", "
+                    << numEntriesScanned << ", "
+                    << numStationsSeen << ", "
+                    << getTotalTime();
+            return ss.str();
+        }
     };
 
     struct UpdatePerformanceStats {
-
         int64_t elliptic_generate_numVerticesInSearchSpace;
         int64_t elliptic_generate_numEntriesInserted;
         int64_t elliptic_generate_time;
@@ -528,26 +567,24 @@ namespace karri::stats {
         std::string getLoggerRow() const {
             std::stringstream ss;
             ss << elliptic_generate_numVerticesInSearchSpace << ", "
-               << elliptic_generate_numEntriesInserted << ", "
-               << elliptic_generate_time << ", "
-               << elliptic_update_numVerticesVisited << ", "
-               << elliptic_update_numEntriesScanned << ", "
-               << elliptic_update_time << ", "
-               << elliptic_delete_numVerticesVisited << ", "
-               << elliptic_delete_numEntriesScanned << ", "
-               << elliptic_delete_time << ", "
-               << lastStopBucketsGenerateEntriesTime << ", "
-               << lastStopBucketsDeleteEntriesTime << ", "
-               << lastStopsAtVerticesUpdateTime << ", "
-               << updateRoutesTime << ", "
-               << getTotalTime();
+                    << elliptic_generate_numEntriesInserted << ", "
+                    << elliptic_generate_time << ", "
+                    << elliptic_update_numVerticesVisited << ", "
+                    << elliptic_update_numEntriesScanned << ", "
+                    << elliptic_update_time << ", "
+                    << elliptic_delete_numVerticesVisited << ", "
+                    << elliptic_delete_numEntriesScanned << ", "
+                    << elliptic_delete_time << ", "
+                    << lastStopBucketsGenerateEntriesTime << ", "
+                    << lastStopBucketsDeleteEntriesTime << ", "
+                    << lastStopsAtVerticesUpdateTime << ", "
+                    << updateRoutesTime << ", "
+                    << getTotalTime();
             return ss.str();
         }
-
     };
 
     struct DispatchingPerformanceStats {
-
         int32_t numPickups;
         int32_t numDropoffs;
 
@@ -558,6 +595,7 @@ namespace karri::stats {
         PbnsAssignmentsPerformanceStats pbnsAssignmentsStats;
         PalsAssignmentsPerformanceStats palsAssignmentsStats;
         DalsAssignmentsPerformanceStats dalsAssignmentsStats;
+        StationBchPerformanceStats stationBchStats;
         UpdatePerformanceStats updateStats;
 
         int64_t getTotalTime() const {
@@ -568,6 +606,7 @@ namespace karri::stats {
                    pbnsAssignmentsStats.getTotalTime() +
                    palsAssignmentsStats.getTotalTime() +
                    dalsAssignmentsStats.getTotalTime() +
+                   stationBchStats.getTotalTime() +
                    updateStats.getTotalTime();
         }
 
@@ -581,6 +620,7 @@ namespace karri::stats {
             pbnsAssignmentsStats.clear();
             palsAssignmentsStats.clear();
             dalsAssignmentsStats.clear();
+            stationBchStats.clear();
             updateStats.clear();
         }
 
@@ -595,6 +635,7 @@ namespace karri::stats {
                 "pbns_assignments_time,"
                 "pals_assignments_time,"
                 "dals_assignments_time,"
+                "station_bch_time,"
                 "update_time,"
                 "total_time\n";
 
@@ -602,19 +643,18 @@ namespace karri::stats {
         std::string getLoggerRow() const {
             std::stringstream ss;
             ss << numPickups << ", "
-               << numDropoffs << ", "
-               << initializationStats.getTotalTime() << ", "
-               << ellipticBchStats.getTotalTime() << ", "
-               << pdDistancesStats.getTotalTime() << ", "
-               << ordAssignmentsStats.getTotalTime() << ", "
-               << pbnsAssignmentsStats.getTotalTime() << ", "
-               << palsAssignmentsStats.getTotalTime() << ", "
-               << dalsAssignmentsStats.getTotalTime() << ", "
-               << updateStats.getTotalTime() << ", "
-               << getTotalTime();
+                    << numDropoffs << ", "
+                    << initializationStats.getTotalTime() << ", "
+                    << ellipticBchStats.getTotalTime() << ", "
+                    << pdDistancesStats.getTotalTime() << ", "
+                    << ordAssignmentsStats.getTotalTime() << ", "
+                    << pbnsAssignmentsStats.getTotalTime() << ", "
+                    << palsAssignmentsStats.getTotalTime() << ", "
+                    << dalsAssignmentsStats.getTotalTime() << ", "
+                    << stationBchStats.getTotalTime() << ", "
+                    << updateStats.getTotalTime() << ", "
+                    << getTotalTime();
             return ss.str();
         }
-
     };
-
 }

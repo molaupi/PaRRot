@@ -111,6 +111,10 @@ namespace karri {
                                                  "request_id, " +
                                                  std::string(
                                                      stats::DalsAssignmentsPerformanceStats::LOGGER_COLS))),
+              stationBchPerfLogger(LogManager<LoggerT>::getLogger(stats::StationBchPerformanceStats::LOGGER_NAME,
+                                                                  "request_id, " +
+                                                                  std::string(
+                                                                      stats::StationBchPerformanceStats::LOGGER_COLS))),
               updatePerfLogger(LogManager<LoggerT>::getLogger(stats::UpdatePerformanceStats::LOGGER_NAME,
                                                               "request_id, " +
                                                               std::string(
@@ -390,6 +394,7 @@ namespace karri {
         LoggerT &pbnsPerfLogger;
         LoggerT &palsPerfLogger;
         LoggerT &dalsPerfLogger;
+        LoggerT &stationBchPerfLogger;
         LoggerT &updatePerfLogger;
         LoggerT &roadCatLogger;
 

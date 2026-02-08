@@ -33,31 +33,28 @@
 #include <sys/stat.h>
 
 namespace karri {
-
     template<typename InputGraphT,
-            typename CHEnvT,
-            typename CurVehLocToPickupSearchesT,
-            typename StationBucketsEnvT,
-            typename LabelSet>
+        typename CHEnvT,
+        typename CurVehLocToPickupSearchesT,
+        typename StationBucketsEnvT,
+        typename LabelSet>
     class DALSToStations {
     private:
-
         static constexpr int K = LabelSet::K;
         using LabelMask = typename LabelSet::LabelMask;
         using DistanceLabel = typename LabelSet::DistanceLabel;
-        
+
         struct ScanBucket {
-
         public:
-
-            explicit ScanBucket(DALSToStations &search) : search(search){}
+            explicit ScanBucket(DALSToStations &search) : search(search) {
+            }
 
             template<typename DistLabelT, typename DistLabelContainerT>
             bool operator()(const int v, DistLabelT &distToV, const DistLabelContainerT & /*distLabels*/) {
                 // Check if we can prune at this vertex based only on the distance to v
                 if (allSet(search.canPrune(distToV)))
                     return true;
-            
+
                 int numEntriesScannedHere = 0;
 
                 if constexpr (!StationBucketsEnvT::SORTED) {
@@ -71,22 +68,22 @@ namespace karri {
                         tryUpdatingDistance(stationId, distViaV);
                     }
                 } else {
-                        auto bucket = search.bucketContainer.getBucketOf(v);
+                    auto bucket = search.bucketContainer.getBucketOf(v);
 
-                        for (const auto &entry: bucket) {
-                            ++numEntriesScannedHere;
+                    for (const auto &entry: bucket) {
+                        ++numEntriesScannedHere;
 
-                            const int &stationId = entry.targetId;
-                            const DistanceLabel distViaV = distToV + DistanceLabel(entry.distToTarget);
-                            const auto atLeastAsGoodAsCurBest = ~search.canPrune(distViaV);
+                        const int &stationId = entry.targetId;
+                        const DistanceLabel distViaV = distToV + DistanceLabel(entry.distToTarget);
+                        const auto atLeastAsGoodAsCurBest = ~search.canPrune(distViaV);
 
-                            if (!anySet(atLeastAsGoodAsCurBest))
-                                break;
+                        if (!anySet(atLeastAsGoodAsCurBest))
+                            break;
 
-                            tryUpdatingDistance(stationId, distViaV);
-                        }
+                        tryUpdatingDistance(stationId, distViaV);
+                    }
                 }
-                
+
                 search.numEntriesVisited += numEntriesScannedHere;
                 ++search.numVerticesSettled;
 
@@ -94,8 +91,7 @@ namespace karri {
             }
 
         private:
-
-            void tryUpdatingDistance(const int stationId, const DistanceLabel& distToStation) {
+            void tryUpdatingDistance(const int stationId, const DistanceLabel &distToStation) {
                 // Update tentative distances to v for any searches where distViaV admits a possible better assignment
                 // than the current best and where distViaV is at least as good as the current tentative distance.
                 LabelMask curMask = ~(search.currentLastStopDistances[stationId] < distToStation);
@@ -115,7 +111,8 @@ namespace karri {
 
 
         struct StopStationBCH {
-            explicit StopStationBCH(const DALSToStations &search) : search(search) {}
+            explicit StopStationBCH(const DALSToStations &search) : search(search) {
+            }
 
             template<typename DistLabelT, typename DistLabelContainerT>
             bool operator()(const int, DistLabelT &distToV, const DistLabelContainerT & /*distLabels*/) const {
@@ -127,42 +124,39 @@ namespace karri {
 
         private:
             const DALSToStations &search;
-
         };
 
-
     public:
-
         DALSToStations(const InputGraphT &inputGraph,
-                              const Fleet &fleet,
-                              const CHEnvT &chEnv,
-                              CurVehLocToPickupSearchesT &curVehLocToPickupSearchesT,
-                              const RouteState &routeState,
-                              const StationBucketsEnvT &stationBucketsEnv,
-                              PTStations &ptStations)
-                : inputGraph(inputGraph),
-                  ch(chEnv.getCH()),
-                  fleet(fleet),
-                  calculator(routeState),
-                  upwardSearch(chEnv.template getForwardSearch<ScanBucket, StopStationBCH, LabelSet>(
-                        ScanBucket(*this), StopStationBCH(*this))),
-                  curVehLocToPickupSearches(curVehLocToPickupSearchesT),
-                  routeState(routeState),
-                  checkPBNSForVehicle(fleet.size()),
-                  bucketContainer(stationBucketsEnv.getTargetBuckets()),
-                  ptStations(ptStations),
-                  stationsWithValidDistances(),
-                  currentLastStopDistances(ptStations.size(), DistanceLabel(INFTY)),
-                    stationsAtVehEdgeIndex(inputGraph.numEdges() + 1) {
+                       const Fleet &fleet,
+                       const CHEnvT &chEnv,
+                       CurVehLocToPickupSearchesT &curVehLocToPickupSearchesT,
+                       const RouteState &routeState,
+                       const StationBucketsEnvT &stationBucketsEnv,
+                       PTStations &ptStations)
+            : inputGraph(inputGraph),
+              ch(chEnv.getCH()),
+              fleet(fleet),
+              calculator(routeState),
+              upwardSearch(chEnv.template getForwardSearch<ScanBucket, StopStationBCH, LabelSet>(
+                  ScanBucket(*this), StopStationBCH(*this))),
+              curVehLocToPickupSearches(curVehLocToPickupSearchesT),
+              routeState(routeState),
+              checkPBNSForVehicle(fleet.size()),
+              bucketContainer(stationBucketsEnv.getTargetBuckets()),
+              ptStations(ptStations),
+              stationsWithValidDistances(),
+              currentLastStopDistances(ptStations.size(), DistanceLabel(INFTY)),
+              stationsAtVehEdgeIndex(inputGraph.numEdges() + 1) {
             stationsWithValidDistances.reserve(ptStations.size());
 
             initializeEdgeToStationMapping();
         }
 
-        void tryDropoffAfterLastStop(RequestState& requestState, const PDLocs& pdLocs,
+        void tryDropoffAfterLastStop(RequestState &requestState, const PDLocs &pdLocs,
                                      const RelevantPDLocs &relevantOrdinaryPickups,
                                      const RelevantPDLocs &relevantPickupsBeforeNextStop,
-                                     stats::DalsAssignmentsPerformanceStats& stats,
+                                     stats::DalsAssignmentsPerformanceStats &stats,
                                      FirstTaxiLegResult &firstTaxiLegResult) {
             curReqState = &requestState;
             curRelOrdinaryPickups = &relevantOrdinaryPickups;
@@ -173,15 +167,21 @@ namespace karri {
             const int64_t pbnsTimeBefore = curVehLocToPickupSearches.getTotalLocatingVehiclesTimeForRequest() +
                                            curVehLocToPickupSearches.getTotalVehicleToPickupSearchTimeForRequest();
 
-            for (unsigned int i = 0; i < fleet.size(); i += K) {
-                // TODO: not sure whether this is faster than std::fill on the entire distances vector since
-                //  there seem to be around 8000/26000 stations with valid distances on average, even with K=1
-                for (const auto& s : stationsWithValidDistances)
-                    currentLastStopDistances[s] = INFTY;
-                stationsWithValidDistances.clear();
+            // Collect all vehicles for which a pickup can be made along the route (ordinary or before-next-stop).
+            // Only these vehicles can make a dropoff-after-last-stop assignment.
+            relevantVehicleIdsForRequest.clear();
+            for (const auto &vehId: relevantOrdinaryPickups.getVehiclesWithRelevantPDLocs())
+                relevantVehicleIdsForRequest.push_back(vehId);
+            for (const auto &vehId: relevantPickupsBeforeNextStop.getVehiclesWithRelevantPDLocs())
+                if (!relevantOrdinaryPickups.hasRelevantSpotsFor(vehId))
+                    relevantVehicleIdsForRequest.push_back(vehId);
+
+
+            for (unsigned int i = 0; i < relevantVehicleIdsForRequest.size(); i += K) {
                 initializeDistancesForStationsAtLastStops(i, stats);
                 runSearchesForVehicleBatch(i, stats);
-                enumerateAssignmentsForVehicleBatch(i, relevantOrdinaryPickups, relevantPickupsBeforeNextStop, requestState, pdLocs, stats, firstTaxiLegResult);
+                enumerateAssignmentsForVehicleBatch(i, relevantOrdinaryPickups, relevantPickupsBeforeNextStop,
+                                                    requestState, pdLocs, stats, firstTaxiLegResult);
             }
 
             // Time spent to locate vehicles and compute distances from current vehicle locations to pickups is counted
@@ -191,13 +191,13 @@ namespace karri {
                                      pbnsTimeBefore;
 
             stats.tryAssignmentsTime -= pbnsTime;
-            
+
             stats.numCandidateDropoffsAcrossAllVehicles += totalNumberOfCandidateDropoffs;
             stats.numEdgeRelaxationsInSearchGraph += totalNumEdgeRelaxations;
             stats.numVerticesOrLabelsSettled += totalNumVerticesSettled;
             stats.numEntriesOrLastStopsScanned += totalNumEntriesScanned;
             stats.numCandidateVehicles += curRelOrdinaryPickups->getVehiclesWithRelevantPDLocs().size() +
-                                         curRelPickupsBns->getVehiclesWithRelevantPDLocs().size();
+                    curRelPickupsBns->getVehiclesWithRelevantPDLocs().size();
         }
 
         void setExternalCostUpperBound(const int bestCost, const int worstCostForAllStations) {
@@ -212,17 +212,17 @@ namespace karri {
                 return ~(distancesToDropoffs < INFTY);
             }
 
-            const DistanceLabel costLowerBound = calculator.template calcKVehicleIndependentCostLowerBoundsForDALSWithKnownMinDistToDropoff<LabelSet>(
-                    0, distancesToDropoffs, 0, *curReqState);
+            const DistanceLabel costLowerBound = calculator.template
+                    calcKVehicleIndependentCostLowerBoundsForDALSWithKnownMinDistToDropoff<LabelSet>(
+                        0, distancesToDropoffs, 0, *curReqState);
 
             return upperBoundCost < costLowerBound;
         }
 
     private:
-
         void initializeEdgeToStationMapping() {
             // Count stations per vehicle edge to get offsets
-            for (const auto& station : ptStations) {
+            for (const auto &station: ptStations) {
                 ++stationsAtVehEdgeIndex[station.vehEdgeId];
             }
 
@@ -236,7 +236,7 @@ namespace karri {
 
             // Fill stationsAtVehEdge according to offsets
             stationsAtVehEdge.resize(ptStations.size());
-            for (const auto& station : ptStations) {
+            for (const auto &station: ptStations) {
                 int edgeId = station.vehEdgeId;
                 int index = stationsAtVehEdgeIndex[edgeId]++;
                 stationsAtVehEdge[index] = station.stationId;
@@ -250,20 +250,29 @@ namespace karri {
             KASSERT(stationsAtVehEdgeIndex.back() == ptStations.size());
         }
 
-        void initLastStopSearches(const RequestState& requestState) {
+        void initLastStopSearches(const RequestState &requestState) {
             totalNumberOfCandidateDropoffs = 0;
             totalNumEdgeRelaxations = 0;
             totalNumVerticesSettled = 0;
             totalNumEntriesScanned = 0;
-            
+
             curReqState = &requestState;
         }
 
-        void initializeDistancesForStationsAtLastStops(const int firstVehId, stats::DalsAssignmentsPerformanceStats& stats) {
+        void initializeDistancesForStationsAtLastStops(const int indexOfFirstVeh,
+                                                       stats::DalsAssignmentsPerformanceStats &stats) {
             KaRRiTimer timer;
 
+            // TODO: not sure whether this is faster than std::fill on the entire distances vector since
+            //  there seem to be around 8000/26000 stations with valid distances on average, even with K=1
+            for (const auto &s: stationsWithValidDistances)
+                currentLastStopDistances[s] = INFTY;
+            stationsWithValidDistances.clear();
+
             for (int i = 0; i < K; ++i) {
-                const auto &veh = firstVehId + i < fleet.size() ? fleet[firstVehId + i] : fleet[firstVehId];
+                const auto &veh = indexOfFirstVeh + i < relevantVehicleIdsForRequest.size()
+                                      ? fleet[relevantVehicleIdsForRequest[indexOfFirstVeh + i]]
+                                      : fleet[relevantVehicleIdsForRequest[indexOfFirstVeh]];
                 const int lastStopIndex = routeState.numStopsOf(veh.vehicleId) - 1;
                 const int lastStopLocation = routeState.stopLocationsFor(veh.vehicleId)[lastStopIndex];
 
@@ -288,21 +297,22 @@ namespace karri {
             stats.searchTime += searchTime;
         }
 
-        void runSearchesForVehicleBatch(const int firstVehId, stats::DalsAssignmentsPerformanceStats& stats) {
+        void runSearchesForVehicleBatch(const int indexOfFirstVeh, stats::DalsAssignmentsPerformanceStats &stats) {
             KaRRiTimer timer;
 
-            assert(firstVehId % K == 0 && firstVehId < fleet.size());
+            assert(indexOfFirstVeh % K == 0 && indexOfFirstVeh < relevantVehicleIdsForRequest.size());
 
             std::array<int, K> lastStopHeads;
             for (int i = 0; i < K; ++i) {
                 const auto &veh =
-                        firstVehId + i < fleet.size() ? fleet[firstVehId + i]
-                                                                      : fleet[firstVehId];
+                        indexOfFirstVeh + i < relevantVehicleIdsForRequest.size()
+                            ? fleet[relevantVehicleIdsForRequest[indexOfFirstVeh + i]]
+                            : fleet[relevantVehicleIdsForRequest[indexOfFirstVeh]];
                 const int lastStopIndex = routeState.numStopsOf(veh.vehicleId) - 1;
                 const int lastStopLocation = routeState.stopLocationsFor(veh.vehicleId)[lastStopIndex];
                 lastStopHeads[i] = inputGraph.edgeHead(lastStopLocation);
             }
-            
+
             run(lastStopHeads);
             const int64_t searchTime = timer.elapsed<std::chrono::nanoseconds>();
 
@@ -321,7 +331,7 @@ namespace karri {
                            [&](const int v) { return ch.rank(v); });
             upwardSearch.runWithOffset(sources_ranks, offsets);
         }
-        
+
         int getNumEdgeRelaxations() const {
             return upwardSearch.getNumEdgeRelaxations();
         }
@@ -334,39 +344,40 @@ namespace karri {
             return numEntriesVisited;
         }
 
-        void enumerateAssignmentsForVehicleBatch(const int firstVehId,
+        void enumerateAssignmentsForVehicleBatch(const int indexOfFirstVeh,
                                                  const RelevantPDLocs &relevantOrdinaryPickups,
                                                  const RelevantPDLocs &relevantPickupsBeforeNextStop,
-                                                 RequestState& requestState,
-                                                 const PDLocs& pdLocs, stats::DalsAssignmentsPerformanceStats& stats,
+                                                 RequestState &requestState,
+                                                 const PDLocs &pdLocs, stats::DalsAssignmentsPerformanceStats &stats,
                                                  FirstTaxiLegResult &firstTaxiLegResult) {
-
             int numAssignmentsTried = 0;
             KaRRiTimer timer;
 
-            enumerateAssignmentsWithOrdinaryPickupForVehicleBatch(firstVehId, numAssignmentsTried, relevantOrdinaryPickups, requestState, pdLocs, firstTaxiLegResult);
-            enumerateAssignmentsWithPBNSForVehicleBatch(firstVehId, numAssignmentsTried, relevantPickupsBeforeNextStop, requestState, pdLocs, firstTaxiLegResult);
+            enumerateAssignmentsWithOrdinaryPickupForVehicleBatch(indexOfFirstVeh, numAssignmentsTried,
+                                                                  relevantOrdinaryPickups, requestState, pdLocs,
+                                                                  firstTaxiLegResult);
+            enumerateAssignmentsWithPBNSForVehicleBatch(indexOfFirstVeh, numAssignmentsTried, relevantPickupsBeforeNextStop,
+                                                        requestState, pdLocs, firstTaxiLegResult);
 
             const int64_t tryAssignmentsTime = timer.elapsed<std::chrono::nanoseconds>();
             stats.tryAssignmentsTime += tryAssignmentsTime;
-            stats.numAssignmentsTried += numAssignmentsTried;            
+            stats.numAssignmentsTried += numAssignmentsTried;
         }
-        
+
         // Enumerate assignments where pickup is after next stop (ordinary pickup):
-        void enumerateAssignmentsWithOrdinaryPickupForVehicleBatch(const int firstVehId,
+        void enumerateAssignmentsWithOrdinaryPickupForVehicleBatch(const int indexOfFirstVeh,
                                                                    int &numAssignmentsTried,
                                                                    const RelevantPDLocs &relevantOrdinaryPickups,
-                                                                   RequestState& requestState,
-                                                                   const PDLocs& pdLocs,
+                                                                   RequestState &requestState,
+                                                                   const PDLocs &pdLocs,
                                                                    FirstTaxiLegResult &firstTaxiLegResult) {
-            
             Assignment asgn;
 
             checkPBNSForVehicle.reset();
             for (int i = 0; i < K; ++i) {
-                const auto &veh =
-                        firstVehId + i < fleet.size() ? fleet[firstVehId + i]
-                                                                      : fleet[firstVehId];
+                const auto &veh = indexOfFirstVeh + i < relevantVehicleIdsForRequest.size()
+                            ? fleet[relevantVehicleIdsForRequest[indexOfFirstVeh + i]]
+                            : fleet[relevantVehicleIdsForRequest[indexOfFirstVeh]];
                 const int vehId = veh.vehicleId;
 
                 if (!relevantOrdinaryPickups.hasRelevantSpotsFor(vehId)) {
@@ -406,15 +417,18 @@ namespace karri {
                         if (entry.stopIndex < curPickupIndex) {
                             // New smaller pickup index reached: Check if seating capacity and cost lower bound admit
                             // any valid assignments at this or earlier indices.
-                            if (occupancies[entry.stopIndex] + requestState.originalRequest.numRiders > asgn.vehicle->capacity)
+                            if (occupancies[entry.stopIndex] + requestState.originalRequest.numRiders > asgn.vehicle->
+                                capacity)
                                 break;
 
                             KASSERT(entry.stopIndex < numStops - 1);
                             const auto minTripTimeToLastStop = routeState.schedDepTimesFor(vehId)[numStops - 1] -
                                                                routeState.schedArrTimesFor(vehId)[entry.stopIndex + 1];
 
-                            const auto minCostFromHere = calculator.calcVehicleIndependentCostLowerBoundForDALSWithKnownMinDistToDropoff(
-                                    asgn.dropoff.walkingDist, asgn.distToDropoff, minTripTimeToLastStop, requestState);
+                            const auto minCostFromHere = calculator.
+                                    calcVehicleIndependentCostLowerBoundForDALSWithKnownMinDistToDropoff(
+                                        asgn.dropoff.walkingDist, asgn.distToDropoff, minTripTimeToLastStop,
+                                        requestState);
                             if (minCostFromHere > upperBoundCost)
                                 break;
 
@@ -429,9 +443,10 @@ namespace karri {
                         asgn.distToPickup = entry.distToPDLoc;
                         asgn.distFromPickup = entry.distFromPDLocToNextStop;
                         // requestState.tryAssignmentWithKnownCost(asgn, calculator.calc(asgn, requestState));
-                        firstTaxiLegResult.tryAssignmentWithKnownCostForStation(station.stationId, asgn, calculator.calc(asgn, requestState), InsertionType::DALS);
+                        firstTaxiLegResult.tryAssignmentWithKnownCostForStation(
+                            station.stationId, asgn, calculator.calc(asgn, requestState), InsertionType::DALS);
                     }
-                    
+
                     if (pickupIt == relevantPickupsInRevOrder.end()) {
                         // If the reverse scan of the vehicle route did not break early at a later stop, then we also
                         // need to consider the pickup before next stop case.
@@ -444,20 +459,19 @@ namespace karri {
         }
 
         // Enumerate assignments where the pickup is before the next stop (PBNS + DALS):
-        void enumerateAssignmentsWithPBNSForVehicleBatch(const int firstVehId,
+        void enumerateAssignmentsWithPBNSForVehicleBatch(const int indexOfFirstVeh,
                                                          int &numAssignmentsTried,
                                                          const RelevantPDLocs &relevantPickupsBeforeNextStop,
-                                                         RequestState& requestState,
-                                                         const PDLocs& pdLocs,
+                                                         RequestState &requestState,
+                                                         const PDLocs &pdLocs,
                                                          FirstTaxiLegResult &firstTaxiLegResult) {
-            
             Assignment asgn;
             asgn.pickupStopIdx = 0;
 
             for (int i = 0; i < K; ++i) {
-                const auto &veh =
-                        firstVehId + i < fleet.size() ? fleet[firstVehId + i]
-                                                                      : fleet[firstVehId];
+                const auto &veh = indexOfFirstVeh + i < relevantVehicleIdsForRequest.size()
+                            ? fleet[relevantVehicleIdsForRequest[indexOfFirstVeh + i]]
+                            : fleet[relevantVehicleIdsForRequest[indexOfFirstVeh]];
                 const int vehId = veh.vehicleId;
 
                 if (!relevantPickupsBeforeNextStop.hasRelevantSpotsFor(vehId))
@@ -467,7 +481,8 @@ namespace karri {
                     continue;
 
                 if (routeState.numStopsOf(vehId) == 0 ||
-                    routeState.occupanciesFor(vehId)[0] + requestState.originalRequest.numRiders > fleet[vehId].capacity)
+                    routeState.occupanciesFor(vehId)[0] + requestState.originalRequest.numRiders > fleet[vehId].
+                    capacity)
                     continue;
 
                 pbnsContinuations.clear();
@@ -480,8 +495,9 @@ namespace karri {
                 for (auto &entry: relevantPickupsBeforeNextStop.relevantSpotsFor(vehId)) {
                     asgn.pickup = pdLocs.pickups[entry.pdId];
                     asgn.distFromPickup = entry.distFromPDLocToNextStop;
-                    for (int idxInValidStations = 0; idxInValidStations < stationsWithValidDistances.size(); ++idxInValidStations) {
-                        const auto& station = ptStations[stationsWithValidDistances[idxInValidStations]];
+                    for (int idxInValidStations = 0; idxInValidStations < stationsWithValidDistances.size(); ++
+                         idxInValidStations) {
+                        const auto &station = ptStations[stationsWithValidDistances[idxInValidStations]];
                         KASSERT(station.stationId == stationsWithValidDistances[idxInValidStations]);
                         asgn.dropoff = {
                             station.stationId, // PDLoc ID
@@ -503,7 +519,8 @@ namespace karri {
                         if (curVehLocToPickupSearches.knowsDistance(vehId, asgn.pickup.id)) {
                             asgn.distToPickup = curVehLocToPickupSearches.getDistance(vehId, asgn.pickup.id);
                             // requestState.tryAssignmentWithKnownCost(asgn, calculator.calc(asgn, requestState));
-                            firstTaxiLegResult.tryAssignmentWithKnownCostForStation(station.stationId, asgn, calculator.calc(asgn, requestState), InsertionType::DALS_PBNS);
+                            firstTaxiLegResult.tryAssignmentWithKnownCostForStation(
+                                station.stationId, asgn, calculator.calc(asgn, requestState), InsertionType::DALS_PBNS);
                             ++numAssignmentsTried;
                         } else {
                             asgn.distToPickup = entry.distToPDLoc;
@@ -527,7 +544,9 @@ namespace karri {
                 curVehLocToPickupSearches.computeExactDistancesVia(fleet[vehId], pdLocs);
                 for (const auto &continuation: pbnsContinuations) {
                     assert(continuation.pickupID >= 0 && continuation.pickupID < pdLocs.numPickups());
-                    assert(continuation.fromIdxInValidStations >= 0 && continuation.fromIdxInValidStations < stationsWithValidDistances.size());
+                    assert(
+                        continuation.fromIdxInValidStations >= 0 && continuation.fromIdxInValidStations <
+                        stationsWithValidDistances.size());
                     asgn.pickup = pdLocs.pickups[continuation.pickupID];
 
                     asgn.distToPickup = curVehLocToPickupSearches.getDistance(vehId,
@@ -558,7 +577,8 @@ namespace karri {
                         ++numAssignmentsTried;
                         asgn.dropoffStopIdx = numStops - 1;
                         // requestState.tryAssignmentWithKnownCost(asgn, calculator.calc(asgn, requestState));
-                        firstTaxiLegResult.tryAssignmentWithKnownCostForStation(station.stationId, asgn, calculator.calc(asgn, requestState), InsertionType::DALS_PBNS);
+                        firstTaxiLegResult.tryAssignmentWithKnownCostForStation(
+                            station.stationId, asgn, calculator.calc(asgn, requestState), InsertionType::DALS_PBNS);
                     }
                 }
             }
@@ -587,14 +607,16 @@ namespace karri {
             int distFromPickup;
             int fromIdxInValidStations;
         };
+
         std::vector<PickupBeforeNextStopContinuation> pbnsContinuations;
 
         int upperBoundCost;
         int externalUpperBoundCost; // External upper bound on the cost of a PALS insertion
 
+        std::vector<int> relevantVehicleIdsForRequest;
         std::vector<int> stationsWithValidDistances;
         std::vector<DistanceLabel> currentLastStopDistances;
-        
+
         // Pointers to request state and relevant PD locs so Dijkstra search callback has access to them
         RequestState const *curReqState;
         RelevantPDLocs const *curRelOrdinaryPickups;
@@ -613,7 +635,5 @@ namespace karri {
         // This is used to efficiently find stations at the last stop edge of a vehicle.
         std::vector<int> stationsAtVehEdgeIndex;
         std::vector<int> stationsAtVehEdge;
-
     };
-    
 }

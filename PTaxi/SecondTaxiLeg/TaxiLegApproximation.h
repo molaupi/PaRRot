@@ -36,12 +36,10 @@ namespace karri {
 
 
     template<typename InputGraphT, typename CHEnvT,
-            typename StationBucketsEnvT,
-            typename LabelSetT = BasicLabelSet<0, ParentInfo::FULL_PARENT_INFO>>
+            typename StationBucketsEnvT>
     class TaxiLegApproximation {
 
-    private:
-
+        using LabelSetT = BasicLabelSet<0, ParentInfo::FULL_PARENT_INFO>;
         static constexpr int K = LabelSetT::K;
         using DistanceLabel = typename LabelSetT::DistanceLabel;
         using LabelMask = typename LabelSetT::LabelMask;
@@ -65,7 +63,7 @@ namespace karri {
                 int numEntriesScannedHere = 0;
 
                 if constexpr (!StationBucketsEnvT::SORTED) {
-                    auto bucket = search.stationbucketContainer.getBucketOf(v);
+                    auto bucket = search.stationBucketContainer.getBucketOf(v);
                     for (const auto &entry: bucket) {
                         ++numEntriesScannedHere;
 
@@ -75,7 +73,7 @@ namespace karri {
                     }
                 } else {
 
-                    auto bucket = search.stationbucketContainer.getBucketOf(v);
+                    auto bucket = search.stationBucketContainer.getBucketOf(v);
 
                     for (const auto &entry: bucket) {
                         ++numEntriesScannedHere;
@@ -139,7 +137,7 @@ namespace karri {
                   reverseUpwardSearch(chEnv.template getReverseSearch<ScanSourceBucket, StopSearch, LabelSetT>(
                                ScanSourceBucket(*this), StopSearch(*this))),
                   ch(chEnv.getCH()),
-                  stationbucketContainer(stationBucketsEnv.getSourceBuckets()),
+                  stationBucketContainer(stationBucketsEnv.getSourceBuckets()),
                   distFromStations(numberOfStations, DistanceLabel(INFTY)),
                   upperBoundCost(INFTY) {}
 
@@ -196,7 +194,7 @@ namespace karri {
         int upperBoundCost;
         int curMaxTripTime;
         
-        const StationBucketContainer &stationbucketContainer;
+        const StationBucketContainer &stationBucketContainer;
 
         std::vector<DistanceLabel> distFromStations;
     };
