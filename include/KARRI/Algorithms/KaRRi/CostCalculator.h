@@ -68,7 +68,7 @@ namespace karri {
         int calcBase(const Assignment &asgn, const RequestContext &context, const bool excludeTripTime = false) const {
             using namespace time_utils;
             assert(asgn.vehicle && asgn.pickup.id != INVALID_ID && asgn.dropoff.id != INVALID_ID);
-            if (!asgn.vehicle || asgn.pickup.id == INVALID_ID || asgn.dropoff.id == INVALID_ID)
+            if (!asgn.vehicle || asgn.pickup.id == INVALID_ID || asgn.dropoff.id == INVALID_ID || asgn.pickup.loc == asgn.dropoff.loc)
                 return INFTY;
 
             if (asgn.distToPickup == INFTY || asgn.distFromPickup == INFTY ||
