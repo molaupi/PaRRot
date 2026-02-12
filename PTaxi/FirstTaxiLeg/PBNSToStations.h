@@ -60,7 +60,7 @@ namespace karri {
                   calculator(routeState),
                   routeState(routeState) {}
 
-        void findAssignments(RequestState& requestState, const PDLocs& pdLocs, 
+        void findAssignments(const RequestState& requestState, const PDLocs& pdLocs,
                              const RelevantPDLocs &relPickupsBns, 
                              const PTStations& stations, StationsInEllipseT &stationsInEllipse, StationDistancesT &stationDistances,
                              stats::PbnsAssignmentsPerformanceStats& stats,
@@ -112,7 +112,7 @@ namespace karri {
         // the iteration of combinations for that pickup after the computation of exact distances.
         void determineNecessaryExactDistances(const Vehicle &veh, const RelevantPDLocs &relPickupsBns,
                                               const PTStations& stations, StationsInEllipseT &stationsInEllipse , StationDistancesT &stationDistances,
-                                              RequestState& requestState, const PDLocs& pdLocs, FirstTaxiLegResult &firstTaxiLegResult) {
+                                              const RequestState& requestState, const PDLocs& pdLocs, const FirstTaxiLegResult &firstTaxiLegResult) {
 
             Assignment asgn(&veh);
 
@@ -167,9 +167,9 @@ namespace karri {
                                      const PTStations& stations, 
                                      StationsInEllipseT &stationsInEllipse, 
                                      StationDistancesT &stationDistances, 
-                                     RequestState& requestState,
+                                     const RequestState& requestState,
                                      const PDLocs& pdLocs,
-                                     FirstTaxiLegResult &firstTaxiLegResult) {
+                                     const FirstTaxiLegResult &firstTaxiLegResult) {
             assert(asgn.vehicle && asgn.pickup.id != INVALID_ID);
             const auto vehId = asgn.vehicle->vehicleId;
 
@@ -220,9 +220,9 @@ namespace karri {
         int tryLowerBoundsForOrdinary(Assignment &asgn, 
                                       const PTStations& stations, 
                                       StationsInEllipseT &stationsInEllipse, 
-                                      RequestState& requestState, 
+                                      const RequestState& requestState,
                                       const PDLocs& pdLocs,
-                                      FirstTaxiLegResult &firstTaxiLegResult) {
+                                      const FirstTaxiLegResult &firstTaxiLegResult) {
             using namespace time_utils;
             assert(asgn.vehicle && asgn.pickup.id != INVALID_ID);
             const auto vehId = asgn.vehicle->vehicleId;
@@ -273,8 +273,8 @@ namespace karri {
         void finishContinuations(const Vehicle &veh, 
                                  const PTStations& stations, 
                                  StationsInEllipseT &stationsInEllipse, 
-                                 StationDistancesT &stationDistances, 
-                                 RequestState& requestState, 
+                                 StationDistancesT &stationDistances,
+                                 const RequestState& requestState,
                                  const PDLocs& pdLocs,
                                  FirstTaxiLegResult &firstTaxiLegResult) {
             

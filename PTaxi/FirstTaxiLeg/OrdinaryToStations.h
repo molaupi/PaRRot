@@ -42,7 +42,7 @@ namespace karri {
                   calculator(routeState),
                   routeState(routeState) {}
 
-        void enumerateAssignments(RequestState& requestState, const PDLocs& pdLocs, const RelevantPDLocs& relPickups, 
+        void enumerateAssignments(const RequestState& requestState, const PDLocs& pdLocs, const RelevantPDLocs& relPickups,
                                   const PTStations& stations, StationsInEllipseT &stationsInEllipse , StationDistancesT &stationDistances,
                                   stats::OrdAssignmentsPerformanceStats &stats, FirstTaxiLegResult &firstTaxiLegResult) {
 

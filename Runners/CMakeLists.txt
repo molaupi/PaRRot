@@ -24,8 +24,17 @@
 # SOFTWARE.
 # ******************************************************************************
 
+
+if (CMAKE_BUILD_TYPE STREQUAL "Debug")
+    set(KASSERT_ASSERTION_LEVEL 40)
+else ()
+    set(KASSERT_ASSERTION_LEVEL 20)
+endif ()
+message("Using kassert assertion level ${KASSERT_ASSERTION_LEVEL}")
+
 add_executable(PTaxi RunPTaxi.cpp)
 target_compile_definitions(PTaxi PRIVATE CSV_IO_NO_THREAD)
+set_target_properties(PTaxi PROPERTIES KASSERT_ASSERTION_LEVEL ${KASSERT_ASSERTION_LEVEL})
 target_link_libraries(PTaxi routingkit vectorclass fast_cpp_csv_parser kassert)
 target_include_directories(PTaxi PUBLIC ${PARROT_INCLUDE_DIR})
 if(OpenMP_FOUND)

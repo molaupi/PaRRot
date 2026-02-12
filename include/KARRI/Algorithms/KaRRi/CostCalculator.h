@@ -620,9 +620,8 @@ namespace karri {
         }
 
         // Calculates the cost for a PT Journey
-        template<typename RequestContext>
-        static int calcPTJourneyCost(const int totalTripTime, const int totalTransferTime, const int numberOfTransfers, const RequestContext &context) {
-            const int tripCost = F::calcTripCost(totalTripTime, context);
+        static int calcPTJourneyCost(const int totalTripTime, const int totalTransferTime, const int numberOfTransfers, const int &maxTripTime) {
+            const int tripCost = F::calcTripCost(totalTripTime, maxTripTime);
             const int transferCost = F::calcTransferCost(totalTransferTime);
             const int transferPenalty = F::calcTransferPenalty(numberOfTransfers);
 

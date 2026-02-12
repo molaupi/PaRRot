@@ -154,7 +154,7 @@ namespace karri {
 
             KaRRiTimer timer;
             initPickupSearches(pdLocs, requestState);
-            stats.initializationTime += timer.elapsed<std::chrono::nanoseconds>();
+            stats.pickupInitializationTime += timer.elapsed<std::chrono::nanoseconds>();
 
             timer.restart();
             for (unsigned int i = 0; i < pdLocs.numPickups(); i += K) {
@@ -162,10 +162,10 @@ namespace karri {
             }
             const int64_t searchTime = timer.elapsed<std::chrono::nanoseconds>();
             stats.pickupBchSearchTime += searchTime;
-            stats.numEdgeRelaxations += totalNumEdgeRelaxations;
-            stats.numVerticesSettled += totalNumVerticesSettled;
-            stats.numEntriesScanned += totalNumEntriesScanned;
-            stats.numStationsSeen += stationsSeen.size();
+            stats.pickupNumEdgeRelaxations += totalNumEdgeRelaxations;
+            stats.pickupNumVerticesSettled += totalNumVerticesSettled;
+            stats.pickupNumEntriesScanned += totalNumEntriesScanned;
+            stats.pickupNumStationsSeen += stationsSeen.size();
         }
 
         StationDistances &getTentativeDistances() {

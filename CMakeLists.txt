@@ -68,14 +68,8 @@ find_library(PROJ_LIBRARY proj)
 # Dependencies from git submodules and bundled libraries
 add_subdirectory(External)
 
-message("Fetching kassert library...")
-if (CMAKE_BUILD_TYPE STREQUAL "Debug")
-    set(KASSERT_ASSERTION_LEVEL 40)
-else ()
-    set(KASSERT_ASSERTION_LEVEL 20)
-endif ()
+set(PARROT_INCLUDE_DIR ${CMAKE_SOURCE_DIR}/include)
 
-set(PARROT_INCLUDE_DIR ${CMAKE_SOURCE_DIR}/include ${CMAKE_SOURCE_DIR}/External/kassert/include)
 
 # Directories containing .cc source files.
 set(SOURCE_DIRECTORIES Runners RawData ULTRA_Runnables)

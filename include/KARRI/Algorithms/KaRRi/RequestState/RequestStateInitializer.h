@@ -39,13 +39,11 @@ namespace karri {
                   vehChQuery(vehChEnv.template getFullCHQuery<>()) {}
 
 
-        std::pair<RequestState, stats::DispatchingPerformanceStats> initializeRequestState(const Request &req, const int requestIssueTime) {
+        RequestState initializeRequestState(const Request &req, const int requestIssueTime,
+            stats::InitializationPerformanceStats &stats) {
             KaRRiTimer timer;
 
             RequestState requestState;
-            stats::DispatchingPerformanceStats stats;
-            requestState.reset();
-            stats.clear();
             requestState.originalRequest = req;
             requestState.setRequestIssueTime(requestIssueTime);
 
@@ -57,9 +55,9 @@ namespace karri {
             requestState.originalReqDirectDist = vehChQuery.getDistance() + vehInputGraph.travelTime(req.destination);
 
             const auto directSearchTime = timer.elapsed<std::chrono::nanoseconds>();
-            stats.initializationStats.computeODDistanceTime = directSearchTime;
+            stats.computeODDistanceTime = directSearchTime;
 
-            return {requestState, stats};
+            return requestState;
         }
 
 

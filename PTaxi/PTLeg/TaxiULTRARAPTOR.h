@@ -91,8 +91,10 @@ public:
 
     inline void run(const int originPsgEdge, const int originVehEdge, 
         const int destPsgEdge, const int destVehEdge,
-        const int departureTime, const size_t maxRounds = INFTY) noexcept
+        const int departureTime, karri::stats::PtPerformanceStats &stats,
+        const size_t maxRounds = INFTY) noexcept
     {
+        KaRRiTimer timer;
         profiler.start();
         profiler.startExtraRound(EXTRA_ROUND_CLEAR);
         clear();
@@ -100,48 +102,66 @@ public:
 
         profiler.startExtraRound(EXTRA_ROUND_INITIALIZATION);
         profiler.startPhase();
-        initialize(originPsgEdge, originVehEdge, destPsgEdge, destVehEdge, departureTime);
+        initialize(originPsgEdge, originVehEdge, destPsgEdge, destVehEdge, departureTime, stats);
         profiler.donePhase(PHASE_INITIALIZATION);
+
+        stats.roundInitializationTime += timer.elapsed<std::chrono::nanoseconds>();
+        timer.restart();
+
         profiler.startPhase();
-        relaxInitialTransfers(departureTime);
+        relaxInitialTransfers(departureTime, stats);
         profiler.donePhase(PHASE_TRANSFERS);
         profiler.doneRound();
 
+        stats.relaxInitialTransfersTime += timer.elapsed<std::chrono::nanoseconds>();
+
         for (size_t i = 0; i < maxRounds; i++) {
+            ++stats.numRounds;
+            timer.restart();
             profiler.startRound();
             profiler.startPhase();
             startNewRound();
             profiler.donePhase(PHASE_INITIALIZATION);
+            stats.roundInitializationTime += timer.elapsed<std::chrono::nanoseconds>();
+            timer.restart();
             profiler.startPhase();
             collectRoutesServingUpdatedStops();
             profiler.donePhase(PHASE_COLLECT);
+            stats.collectRoutesTime += timer.elapsed<std::chrono::nanoseconds>();
+            timer.restart();
             profiler.startPhase();
-            scanRoutes();
+            scanRoutes(stats);
             profiler.donePhase(PHASE_SCAN);
+            stats.scanRoutesTime += timer.elapsed<std::chrono::nanoseconds>();
             if (stopsUpdatedByRoute.empty()) {
                 profiler.doneRound();
                 break;
             }
             if constexpr (SeparateRouteAndTransferEntries) {
+                timer.restart();
                 profiler.startPhase();
                 startNewRound();
                 profiler.donePhase(PHASE_INITIALIZATION);
+                stats.roundInitializationTime += timer.elapsed<std::chrono::nanoseconds>();
             }
+            timer.restart();
             profiler.startPhase();
-            relaxIntermediateTransfers();
+            relaxIntermediateTransfers(stats);
             profiler.donePhase(PHASE_TRANSFERS);
+            stats.relaxIntermediateTransfersTime += timer.elapsed<std::chrono::nanoseconds>();
             profiler.doneRound();
         }
         profiler.done();
     }
 
-    // without initialization phase
     inline void runWithTaxi(const int originPsgEdge, const int originVehEdge,
         const int destPsgEdge, const int destVehEdge,
         const int departureTime,
         const karri::FirstTaxiLegResult &firstTaxiLeg, const std::vector<DistanceLabel> &distFromStations,
+        karri::stats::PtPerformanceStats &stats,
         const size_t maxRounds = INFTY) noexcept
     {
+        KaRRiTimer timer;
         profiler.start();
         profiler.startExtraRound(EXTRA_ROUND_CLEAR);
         clear();
@@ -149,37 +169,51 @@ public:
 
         profiler.startExtraRound(EXTRA_ROUND_INITIALIZATION);
         profiler.startPhase();
-        initialize(originPsgEdge, originVehEdge, destPsgEdge, destVehEdge, departureTime);
+        initialize(originPsgEdge, originVehEdge, destPsgEdge, destVehEdge, departureTime, stats);
         profiler.donePhase(PHASE_INITIALIZATION);
+        stats.roundInitializationTime += timer.elapsed<std::chrono::nanoseconds>();
 
+        timer.restart();
         profiler.startPhase();
-        relaxInitialTransfers(departureTime, &firstTaxiLeg);
+        relaxInitialTransfers(departureTime, stats, &firstTaxiLeg);
         profiler.donePhase(PHASE_TRANSFERS);
         profiler.doneRound();
+        stats.relaxInitialTransfersTime += timer.elapsed<std::chrono::nanoseconds>();
 
         for (size_t i = 0; i < maxRounds; i++) {
+            ++stats.numRounds;
             profiler.startRound();
+            timer.restart();
             profiler.startPhase();
             startNewRound();
             profiler.donePhase(PHASE_INITIALIZATION);
+            stats.roundInitializationTime += timer.elapsed<std::chrono::nanoseconds>();
+            timer.restart();
             profiler.startPhase();
             collectRoutesServingUpdatedStops();
             profiler.donePhase(PHASE_COLLECT);
+            stats.collectRoutesTime += timer.elapsed<std::chrono::nanoseconds>();
+            timer.restart();
             profiler.startPhase();
-            scanRoutes();
+            scanRoutes(stats);
             profiler.donePhase(PHASE_SCAN);
+            stats.scanRoutesTime += timer.elapsed<std::chrono::nanoseconds>();
             if (stopsUpdatedByRoute.empty()) {
                 profiler.doneRound();
                 break;
             }
             if constexpr (SeparateRouteAndTransferEntries) {
+                timer.restart();
                 profiler.startPhase();
                 startNewRound();
                 profiler.donePhase(PHASE_INITIALIZATION);
+                stats.roundInitializationTime += timer.elapsed<std::chrono::nanoseconds>();
             }
+            timer.restart();
             profiler.startPhase();
-            relaxIntermediateTransfers(distFromStations);
+            relaxIntermediateTransfers(stats, distFromStations);
             profiler.donePhase(PHASE_TRANSFERS);
+            stats.relaxIntermediateTransfersTime += timer.elapsed<std::chrono::nanoseconds>();
             profiler.doneRound();
         }
         profiler.done();
@@ -339,7 +373,8 @@ private:
     }
 
     inline void initialize(const int originPsgEdge_, const int originVehEdge_,
-        const int destPsgEdge_, const int destVehEdge_, const int departureTime) noexcept
+        const int destPsgEdge_, const int destVehEdge_, const int departureTime,
+        karri::stats::PtPerformanceStats &stats) noexcept
     {
         originPsgEdge = originPsgEdge_;
         originVehEdge = originVehEdge_;
@@ -361,7 +396,7 @@ private:
             int stationId = psgEdgeToStation[originPsgEdge_];
             if (stationId != INVALID_ID && data.isStop(StopId(stationId))) {
                 StopId sourceStop = StopId(stationId);
-                arrivalByRoute(sourceStop, sourceDepartureTime);
+                arrivalByRoute(sourceStop, sourceDepartureTime, stats);
                 currentRound()[sourceStop].parent = noVertex; // Sentinel: this stop was reached from origin
                 currentRound()[sourceStop].parentDepartureTime = sourceDepartureTime;
                 currentRound()[sourceStop].usesRoute = false;
@@ -400,10 +435,11 @@ private:
         }
     }
 
-    inline void scanRoutes() noexcept
+    inline void scanRoutes(karri::stats::PtPerformanceStats &stats) noexcept
     {
         stopsUpdatedByRoute.clear();
         for (const RouteId route : routesServingUpdatedStops.getKeys()) {
+            ++stats.numRoutesScanned;
             profiler.countMetric(METRIC_ROUTES);
             StopIndex stopIndex = routesServingUpdatedStops[route];
             const size_t tripSize = data.numberOfStopsInRoute(route);
@@ -431,8 +467,9 @@ private:
                 }
                 stopIndex++;
                 stop = stops[stopIndex];
+                ++stats.numRouteSegmentsScanned;
                 profiler.countMetric(METRIC_ROUTE_SEGMENTS);
-                if (arrivalByRoute(stop, trip[stopIndex].arrivalTime)) {
+                if (arrivalByRoute(stop, trip[stopIndex].arrivalTime, stats)) {
                     EarliestArrivalLabel& label = currentRound()[stop];
                     label.parent = stops[parentIndex];
                     label.parentDepartureTime = trip[parentIndex].departureTime;
@@ -444,7 +481,8 @@ private:
         }
     }
 
-    inline void relaxInitialTransfers(const int sourceDepartureTime, const karri::FirstTaxiLegResult *firstTaxiLeg = nullptr) noexcept
+    inline void relaxInitialTransfers(const int sourceDepartureTime, karri::stats::PtPerformanceStats &stats,
+        const karri::FirstTaxiLegResult *firstTaxiLeg = nullptr) noexcept
     {
         // Pass edge IDs to initialTransfers for BCH-based distance computation
         initialTransfers.template run<!PreventDirectWalking>(originPsgEdge,
@@ -456,7 +494,7 @@ private:
             Assert(initialTransfers.getForwardDistance(stop) != INFTY,
                 "Vertex " << stop << " was not reached!");
             const int arrivalTime = sourceDepartureTime + convertToULTRATime(initialTransfers.getForwardDistance(stop));
-            if (arrivalByTransfer(StopId(stop), arrivalTime)) {
+            if (arrivalByTransfer(StopId(stop), arrivalTime, stats)) {
                 EarliestArrivalLabel& label = currentRound()[stop];
                 label.parent = noVertex; // Sentinel: this stop was reached from origin
                 label.parentDepartureTime = sourceDepartureTime;
@@ -488,7 +526,7 @@ private:
                     continue;
                 Assert(data.isStop(targetStop), "Taxi station " << targetStop << " is not a stop!");
                 const int arrivalTime = convertToULTRATime(taxiResult.arrivalTime);
-                if (arrivalByTransfer(targetStopId, arrivalTime)) {
+                if (arrivalByTransfer(targetStopId, arrivalTime, stats)) {
                     EarliestArrivalLabel& label = currentRound()[targetStop];
                     label.parent = noVertex; // Sentinel: this stop was reached from origin via taxi
                     label.parentDepartureTime = sourceDepartureTime;
@@ -502,7 +540,7 @@ private:
         if constexpr (!PreventDirectWalking) {
             if (initialTransfers.getDistance() != INFTY) {
                 const int arrivalTime = sourceDepartureTime + convertToULTRATime(initialTransfers.getDistance());
-                if (arrivalByTransfer(targetStop, arrivalTime)) {
+                if (arrivalByTransfer(targetStop, arrivalTime, stats)) {
                     EarliestArrivalLabel& label = currentRound()[targetStop];
                     label.parent = noVertex; // Sentinel: target reached directly from origin
                     label.parentDepartureTime = sourceDepartureTime;
@@ -514,7 +552,8 @@ private:
         }
     }
 
-    inline void relaxIntermediateTransfers(const std::vector<DistanceLabel> &distFromStations = {}) noexcept
+    inline void relaxIntermediateTransfers(karri::stats::PtPerformanceStats &stats,
+        const std::vector<DistanceLabel> &distFromStations = {}) noexcept
     {
         stopsUpdatedByTransfer.clear();
         routesServingUpdatedStops.clear();
@@ -526,11 +565,12 @@ private:
                 const StopId toStop = StopId(data.transferGraph.get(ToVertex, edge));
                 if (toStop == targetStop)
                     continue;
+                ++stats.numTransferEdgesRelaxed;
                 profiler.countMetric(METRIC_EDGES);
                 const int arrivalTime = earliestArrivalTime + data.transferGraph.get(TravelTime, edge);
                 Assert(data.isStop(data.transferGraph.get(ToVertex, edge)),
                     "Graph contains edges to non stop vertices!");
-                if (arrivalByTransfer(toStop, arrivalTime)) {
+                if (arrivalByTransfer(toStop, arrivalTime, stats)) {
                     EarliestArrivalLabel& label = currentRound()[toStop];
                     label.parent = stop;
                     label.parentDepartureTime = earliestArrivalTime;
@@ -541,7 +581,7 @@ private:
             }
             if (initialTransfers.getBackwardDistance(stop) != INFTY) {
                 const int arrivalTime = earliestArrivalTime + convertToULTRATime(initialTransfers.getBackwardDistance(stop));
-                if (arrivalByTransfer(targetStop, arrivalTime)) {
+                if (arrivalByTransfer(targetStop, arrivalTime, stats)) {
                     EarliestArrivalLabel& label = currentRound()[targetStop];
                     label.parent = stop;
                     label.parentDepartureTime = earliestArrivalTime;
@@ -559,7 +599,7 @@ private:
                 if (stationId != INVALID_ID && station.vehEdgeId != destinationVehEdge) {
                     const int taxiTravelDistance = convertToULTRATime(distFromStations[stationId][0]);
                     const int arrivalTime = earliestArrivalTime + taxiTravelDistance;
-                    if (arrivalByTransfer(targetStop, arrivalTime)) {
+                    if (arrivalByTransfer(targetStop, arrivalTime, stats)) {
                         EarliestArrivalLabel& label = currentRound()[targetStop];
                         label.parent = stop;
                         label.parentDepartureTime = earliestArrivalTime;
@@ -572,7 +612,7 @@ private:
             }
             
             if constexpr (SeparateRouteAndTransferEntries) {
-                if (arrivalByTransfer(stop, earliestArrivalTime)) {
+                if (arrivalByTransfer(stop, earliestArrivalTime, stats)) {
                     EarliestArrivalLabel& label = currentRound()[stop];
                     label.parent = stop;
                     label.parentDepartureTime = earliestArrivalTime;
@@ -605,13 +645,15 @@ private:
         rounds.emplace_back(data.numberOfStops() + 1);
     }
 
-    inline bool arrivalByRoute(const StopId stop, const int time) noexcept
+    inline bool arrivalByRoute(const StopId stop, const int time,
+        karri::stats::PtPerformanceStats &stats) noexcept
     {
         Assert(data.isStop(stop), "Stop " << stop << " is out of range!");
         if (earliestArrival[targetStop].getArrivalTimeByRoute() <= time)
             return false;
         if (earliestArrival[stop].getArrivalTimeByRoute() <= time)
             return false;
+        ++stats.numStopsImprovedByTrip;
         profiler.countMetric(METRIC_STOPS_BY_TRIP);
         currentRound()[stop].arrivalTime = time;
         earliestArrival[stop].setArrivalTimeByRoute(time);
@@ -619,7 +661,7 @@ private:
         return true;
     }
 
-    inline bool arrivalByTransfer(const StopId stop, const int time) noexcept
+    inline bool arrivalByTransfer(const StopId stop, const int time, karri::stats::PtPerformanceStats &stats) noexcept
     {
         Assert(data.isStop(stop) || stop == targetStop,
             "Stop " << stop << " is out of range!");
@@ -627,6 +669,7 @@ private:
             return false;
         if (earliestArrival[stop].getArrivalTimeByTransfer() <= time)
             return false;
+        ++stats.numStopsImprovedByTransfer;
         profiler.countMetric(METRIC_STOPS_BY_TRANSFER);
         currentRound()[stop].arrivalTime = time;
         earliestArrival[stop].setArrivalTimeByTransfer(time);

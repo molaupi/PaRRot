@@ -10,7 +10,7 @@ class PTResult {
 public:
     PTResult() : valid(false), bestCost(INFTY) {}
 
-    PTResult(std::vector<Journey> &journeyParetoFront, RequestState &curReqState) 
+    PTResult(std::vector<Journey> &journeyParetoFront, const int &maxTripTime)
         : bestCost(INFTY), valid(false) {
             int cost;
             for (Journey &journey: journeyParetoFront) {
@@ -18,7 +18,7 @@ public:
                                                 getTotalTripTime(journey), 
                                                 getTotalTransferTime(journey), 
                                                 getNumberOfTransfers(journey),
-                                                curReqState);
+                                                maxTripTime);
                 if (cost < bestCost) {
                     valid = true;
                     bestCost = cost;

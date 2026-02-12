@@ -80,12 +80,10 @@ namespace karri {
                   dalsAssignments(dalsAssignments),
                   relevantPdLocsFilter(relevantPdLocsFilter) {}
 
-        RequestState findBestAssignment(const Request &req) {
+        RequestState findBestAssignment(const Request &req, stats::TaxiPerformanceStats &stats) {
 
             // Initialize finder for this request, find PD locations:
-            std::pair<RequestState, stats::DispatchingPerformanceStats> initRequestState = requestStateInitializer.initializeRequestState(req);
-            RequestState rs = initRequestState.first;
-            stats::DispatchingPerformanceStats& stats = initRequestState.second;
+            RequestState rs = requestStateInitializer.initializeRequestState(req, stats.initializationStats);
             PDLocs pdLocs = pdLocsFinder.findPDLocs(req.origin, req.destination, stats.initializationStats);
             stats.numPickups = pdLocs.numPickups();
             stats.numDropoffs = pdLocs.numDropoffs();
@@ -129,7 +127,7 @@ namespace karri {
 
     private:
 
-        void initializeComponentsForRequest(const RequestState& requestState, const PDLocs &pdLocs, stats::DispatchingPerformanceStats& stats) {
+        void initializeComponentsForRequest(const RequestState& requestState, const PDLocs &pdLocs, stats::TaxiPerformanceStats& stats) {
             feasibleEllipticPickups.init(pdLocs.numPickups(), stats.ellipticBchStats);
             auto pickupsAtExistingStops = pdLocsAtExistingStopsFinder.template findPDLocsAtExistingStops<PICKUP>(pdLocs.pickups, stats.ellipticBchStats);
             feasibleEllipticPickups.initializeDistancesForPdLocsAtExistingStops(std::move(pickupsAtExistingStops), inputGraph, stats.ellipticBchStats);

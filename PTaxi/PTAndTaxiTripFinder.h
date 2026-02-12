@@ -89,8 +89,6 @@ namespace karri {
               pbnsToStations(pbnsToStations),
               ptAlgorithmWithTaxi(ptAlgorithmWithTaxi),
               taxiLegApproximation(vehInputGraph, vehChEnv, stationBucketsEnv, stations.size()),
-              curRelOrdinaryPickups(fleet.size()),
-              curRelPickupsBns(fleet.size()),
               bestCost(INFTY),
               intermediateLogger(LogManager<std::ofstream>::getLogger(stats::IntermediateResultStats::LOGGER_NAME,
                                                                       "request_id," +
@@ -105,20 +103,24 @@ namespace karri {
                                                             std::string(stats::PTResultStats::LOGGER_COLS))) {
         }
 
-        PTAndTaxiTriple findBestAssignment(const Request &req) {
+        PTAndTaxiTriple findBestAssignment(const Request &req, stats::RequestReceiveStats &stats) {
+            // Initialize finder for this request, find PD locations:
+            // TODO: initializationStats are for whole request not just taxi only
+            RequestState rs = requestStateInitializer.initializeRequestState(
+                req, req.requestTime, stats.taxiOnlyStats.initializationStats);
+            const int maxTripTime = rs.getOriginalReqMaxTripTime();
+            PDLocs pdLocs = pdLocsFinder.findPDLocs(req.origin, req.destination,
+                                                    stats.taxiOnlyStats.initializationStats);
+            stats.taxiOnlyStats.numPickups = pdLocs.numPickups();
+            stats.taxiOnlyStats.numDropoffs = pdLocs.numDropoffs();
+            stats.taxiFirstLegStats.numPickups = pdLocs.numPickups();
+            stats.taxiFirstLegStats.numDropoffs = pdLocs.numDropoffs();
 
-            // TODO: Rework stats
-            //  - one KaRRi stats object for taxi only
-            //  - some kind of PT stats object for PT only
-            //  - one KaRRi stats object for first taxi leg
-            //  - one PT stats object for PT with taxi
+            RelevantPDLocs relOrdinaryPickups(fleet.size());
+            RelevantPDLocs relPickupsBns(fleet.size());
 
             // Taxi only leg and invalid taxi leg
-            auto taxiOnlyResponse = findBestTaxiAssignment(req, req.requestTime);
-            RequestState invalidTaxiResponse;
-            std::pair<RequestState, stats::DispatchingPerformanceStats> invalidTaxiResponseWithStats{
-                invalidTaxiResponse, stats::DispatchingPerformanceStats()
-            };
+            findBestTaxiAssignment(rs, pdLocs, relOrdinaryPickups, relPickupsBns, stats.taxiOnlyStats);
 
             const auto query = queries[req.requestId];
             const int originPsgEdge = query.originPsgEdge;
@@ -126,28 +128,28 @@ namespace karri {
             const int destPsgEdge = query.destinationPsgEdge;
             const int destVehEdge = query.destinationVehEdge;
 
-            ptAlgorithmWithTaxi.run(originPsgEdge, originVehEdge, destPsgEdge, destVehEdge, query.departureTime);
+            ptAlgorithmWithTaxi.run(originPsgEdge, originVehEdge, destPsgEdge, destVehEdge, query.departureTime, stats.ptOnlyStats);
             auto ptOnlyParetoFront = ptAlgorithmWithTaxi.getJourneys();
 
-            PTResult ptOnlyResponse(ptOnlyParetoFront, curReqState);
-            PTResult invalidPTResponse;
+            PTResult ptOnlyResponse(ptOnlyParetoFront, maxTripTime);
 
             size_t ptOnlyLegCount = ptOnlyResponse.getBestJourney().size();
 
-            const bool taxiOnlyHasBetterCost = taxiOnlyResponse.first.getBestCost() < ptOnlyResponse.getBestCost();
-            bestCost = taxiOnlyHasBetterCost ? taxiOnlyResponse.first.getBestCost() : ptOnlyResponse.getBestCost();
+            const bool taxiOnlyHasBetterCost = rs.getBestCost() < ptOnlyResponse.getBestCost();
+            bestCost = taxiOnlyHasBetterCost ? rs.getBestCost() : ptOnlyResponse.getBestCost();
 
-            const FirstTaxiLegResult &firstTaxiLeg = runFirstTaxiSharingLeg(taxiOnlyResponse.second);
+            const FirstTaxiLegResult &firstTaxiLeg = runFirstTaxiSharingLeg(
+                rs, pdLocs, relOrdinaryPickups, relPickupsBns, stats.taxiFirstLegStats);
 
-            const int maxTripTime = taxiOnlyResponse.first.getOriginalReqMaxTripTime();
 
-            taxiLegApproximation.findDistancesFromStationsToDest(req.destination, maxTripTime);
+            taxiLegApproximation.findDistancesFromStationsToDest(req.destination, maxTripTime,
+                                                                 stats.taxiFirstLegStats.stationBchStats);
             const auto &distFromStations = taxiLegApproximation.getDistancesFromStations();
 
             ptAlgorithmWithTaxi.runWithTaxi(originPsgEdge, originVehEdge, destPsgEdge, destVehEdge,
-                                            query.departureTime, firstTaxiLeg, distFromStations);
+                                            query.departureTime, firstTaxiLeg, distFromStations, stats.ptWithTaxiStats);
             auto ptLegParetoFront = ptAlgorithmWithTaxi.getJourneys();
-            PTResult ptLegResponse(ptLegParetoFront, curReqState);
+            PTResult ptLegResponse(ptLegParetoFront, maxTripTime);
 
             size_t ptLegCount = ptLegResponse.getBestJourney().size();
 
@@ -163,14 +165,14 @@ namespace karri {
             // LOGS: Cost of taxi, PT, combined; arrivalTimes
 
             intermediateLogger << req.requestId << ", "
-                    << taxiOnlyResponse.first.getBestCost() << ", "
+                    << rs.getBestCost() << ", "
                     << ptOnlyResponse.getBestCost() << ", "
                     << intermediateResult.getBestCost() << ", "
                     << intermediateResult.getFirstTaxiLegCost() << ", "
                     << InsertionTypes[intermediateResult.getFirstTaxiLegInsertionType()] << ", "
                     << intermediateResult.getPTLegCost() << ", "
                     << intermediateResult.getSecondTaxiLegCost() << ", "
-                    << taxiOnlyResponse.first.getArrivalTime(routeState) << ", "
+                    << rs.getArrivalTime(routeState) << ", "
                     << ptOnlyResponse.getArrivalTime() << ", "
                     << intermediateResult.getArrivalTime() << "\n";
 
@@ -183,7 +185,7 @@ namespace karri {
             for (const auto &result: firstTaxiLegResults) {
                 sumCost += result.bestCost;
                 sumArrivalTime += result.arrivalTime;
-                insertionTypeCounts[result.insertionType]++;
+                ++insertionTypeCounts[result.insertionType];
             }
 
             const double averageCost = firstTaxiLegResults.empty()
@@ -215,16 +217,16 @@ namespace karri {
             bestCost = combinationIsBestCost ? intermediateResult.getBestCost() : bestCost;
 
             if (combinationIsBestCost) {
-                auto &firstTaxiLeg = intermediateResult.getFirstTaxiLeg();
+                auto &chosenFirstTaxiLeg = intermediateResult.getFirstTaxiLeg();
                 // No first taxi leg
-                if (firstTaxiLeg.insertionType == UNDEFINED || firstTaxiLeg.bestCost == INFTY) {
-                    return PTAndTaxiTriple(invalidTaxiResponseWithStats, ptLegResponse, true,
+                if (chosenFirstTaxiLeg.insertionType == UNDEFINED || chosenFirstTaxiLeg.bestCost == INFTY) {
+                    return PTAndTaxiTriple(RequestState(), ptLegResponse, true,
                                            0, intermediateResult.getPTLegCost(),
                                            intermediateResult.getSecondTaxiLegCost());
                 }
-                curReqState.tryAssignmentWithKnownCost(firstTaxiLeg.bestAssignment, firstTaxiLeg.bestCost);
+                rs.tryAssignmentWithKnownCost(chosenFirstTaxiLeg.bestAssignment, chosenFirstTaxiLeg.bestCost);
                 return PTAndTaxiTriple(
-                    {curReqState, taxiOnlyResponse.second},
+                    rs,
                     ptLegResponse,
                     true,
                     intermediateResult.getFirstTaxiLegCost(),
@@ -234,127 +236,133 @@ namespace karri {
             }
 
             if (taxiOnlyHasBetterCost) {
-                return PTAndTaxiTriple(taxiOnlyResponse, invalidPTResponse, false, taxiOnlyResponse.first.getBestCost(),
+                PTResult invalidPTResponse;
+                return PTAndTaxiTriple(rs, invalidPTResponse, false, rs.getBestCost(),
                                        0, 0);
-            } else {
-                return PTAndTaxiTriple(invalidTaxiResponseWithStats, ptOnlyResponse, false, 0,
-                                       ptOnlyResponse.getBestCost(), 0);
             }
+
+            return PTAndTaxiTriple(RequestState(), ptOnlyResponse, false, 0,
+                                   ptOnlyResponse.getBestCost(), 0);
         }
 
-        std::pair<RequestState, stats::DispatchingPerformanceStats> findBestTaxiAssignment(
-            const Request &req, const int requestIssueTime) {
-            // Initialize finder for this request, find PD locations:
-            std::pair<RequestState, stats::DispatchingPerformanceStats> initRequestState = requestStateInitializer.
-                    initializeRequestState(req, requestIssueTime);
-            RequestState rs = std::move(initRequestState.first);
-            stats::DispatchingPerformanceStats stats = std::move(initRequestState.second);
+        RequestState findBestSecondTaxiLeg(const Request& req, const int now, stats::TaxiPerformanceStats &stats) {
+            RequestState rs = requestStateInitializer.initializeRequestState(
+                req, now, stats.initializationStats);
             PDLocs pdLocs = pdLocsFinder.findPDLocs(req.origin, req.destination, stats.initializationStats);
             stats.numPickups = pdLocs.numPickups();
             stats.numDropoffs = pdLocs.numDropoffs();
-            initializeComponentsForRequest(rs, pdLocs, stats);
+            RelevantPDLocs relOrdinaryPickups(fleet.size());
+            RelevantPDLocs relPickupsBns(fleet.size());
 
-            stats::DispatchingPerformanceStats taxiOnlyStats = stats;
-            curPdLocs = pdLocs;
-            curReqState = rs;
+            findBestTaxiAssignment(rs, pdLocs, relOrdinaryPickups, relPickupsBns, stats);
 
-            // Compute PD distances:
-            const auto ffPdDistances = ffPDDistanceSearches.run(rs, pdLocs, taxiOnlyStats.pdDistancesStats);
-
-            // Try PALS assignments:
-            palsAssignments.findAssignments(rs, ffPdDistances, pdLocs, taxiOnlyStats.palsAssignmentsStats);
-
-            // Run elliptic BCH searches (populates feasibleEllipticPickups and feasibleEllipticDropoffs):
-            ellipticBchSearches.run(feasibleEllipticPickups, feasibleEllipticDropoffs, rs, pdLocs,
-                                    taxiOnlyStats.ellipticBchStats);
-
-            // Filter feasible PD-locations between ordinary stops:
-            const auto &relOrdinaryPickups = relevantPdLocsFilter.filterOrdinaryPickups(
-                feasibleEllipticPickups, rs, pdLocs,
-                taxiOnlyStats.ordAssignmentsStats);
-            const auto &relOrdinaryDropoffs = relevantPdLocsFilter.filterOrdinaryDropoffs(feasibleEllipticDropoffs,
-                rs, pdLocs, taxiOnlyStats.ordAssignmentsStats);
-
-
-            curRelOrdinaryPickups = relOrdinaryPickups;
-
-            // Try ordinary assignments:
-            ordAssignments.findAssignments(relOrdinaryPickups, relOrdinaryDropoffs, rs, ffPdDistances, pdLocs,
-                                           taxiOnlyStats.ordAssignmentsStats);
-
-            // Filter feasible pickups before next stops:
-            const auto &relPickupsBeforeNextStop = relevantPdLocsFilter.filterPickupsBeforeNextStop(
-                feasibleEllipticPickups, rs, pdLocs, taxiOnlyStats.pbnsAssignmentsStats);
-
-            curRelPickupsBns = relPickupsBeforeNextStop;
-
-            // Try DALS assignments:
-            dalsAssignments.findAssignments(relOrdinaryPickups, relPickupsBeforeNextStop, rs, pdLocs,
-                                            taxiOnlyStats.dalsAssignmentsStats);
-
-            // Filter feasible dropoffs before next stop:
-            const auto relDropoffsBeforeNextStop = relevantPdLocsFilter.filterDropoffsBeforeNextStop(
-                feasibleEllipticDropoffs, rs, pdLocs, taxiOnlyStats.pbnsAssignmentsStats);
-
-            // Try PBNS assignments:
-            pbnsAssignments.findAssignments(relPickupsBeforeNextStop, relOrdinaryDropoffs, relDropoffsBeforeNextStop,
-                                            rs, ffPdDistances, pdLocs, taxiOnlyStats.pbnsAssignmentsStats);
-
-            return {rs, stats};
+            return rs;
         }
 
     private:
-        FirstTaxiLegResult runFirstTaxiSharingLeg(stats::DispatchingPerformanceStats &stats) {
-            FirstTaxiLegResult firstTaxiLegResult(routeState, curReqState, stations.size());
+        void findBestTaxiAssignment(RequestState &rs, const PDLocs &pdLocs,
+                                    RelevantPDLocs &relOrdinaryPickups,
+                                    RelevantPDLocs &relPickupsBeforeNextStop,
+                                    stats::TaxiPerformanceStats &stats) {
+            initializeComponentsForRequest(rs, pdLocs, stats);
 
-            runStationBCH(curReqState, stats.stationBchStats);
-            runPALS(curReqState, stats.palsAssignmentsStats, firstTaxiLegResult);
-            runOrdinary(curReqState, stats.ordAssignmentsStats, firstTaxiLegResult);
-            runDALS(curReqState, stats.dalsAssignmentsStats, firstTaxiLegResult);
-            runPBNS(curReqState, stats.pbnsAssignmentsStats, firstTaxiLegResult);
+            // Compute PD distances:
+            const auto ffPdDistances = ffPDDistanceSearches.run(rs, pdLocs, stats.pdDistancesStats);
+
+            // Try PALS assignments:
+            palsAssignments.findAssignments(rs, ffPdDistances, pdLocs, stats.palsAssignmentsStats);
+
+            // Run elliptic BCH searches (populates feasibleEllipticPickups and feasibleEllipticDropoffs):
+            ellipticBchSearches.run(feasibleEllipticPickups, feasibleEllipticDropoffs, rs, pdLocs,
+                                    stats.ellipticBchStats);
+
+            // Filter feasible PD-locations between ordinary stops:
+            relOrdinaryPickups = relevantPdLocsFilter.filterOrdinaryPickups(
+                feasibleEllipticPickups, rs, pdLocs,
+                stats.ordAssignmentsStats);
+            const auto &relOrdinaryDropoffs = relevantPdLocsFilter.filterOrdinaryDropoffs(feasibleEllipticDropoffs,
+                rs, pdLocs, stats.ordAssignmentsStats);
+
+            // Try ordinary assignments:
+            ordAssignments.findAssignments(relOrdinaryPickups, relOrdinaryDropoffs, rs, ffPdDistances, pdLocs,
+                                           stats.ordAssignmentsStats);
+
+            // Filter feasible pickups before next stops:
+            relPickupsBeforeNextStop = relevantPdLocsFilter.filterPickupsBeforeNextStop(
+                feasibleEllipticPickups, rs, pdLocs, stats.pbnsAssignmentsStats);
+
+            // Try DALS assignments:
+            dalsAssignments.findAssignments(relOrdinaryPickups, relPickupsBeforeNextStop, rs, pdLocs,
+                                            stats.dalsAssignmentsStats);
+
+            // Filter feasible dropoffs before next stop:
+            const auto relDropoffsBeforeNextStop = relevantPdLocsFilter.filterDropoffsBeforeNextStop(
+                feasibleEllipticDropoffs, rs, pdLocs, stats.pbnsAssignmentsStats);
+
+            // Try PBNS assignments:
+            pbnsAssignments.findAssignments(relPickupsBeforeNextStop, relOrdinaryDropoffs, relDropoffsBeforeNextStop,
+                                            rs, ffPdDistances, pdLocs, stats.pbnsAssignmentsStats);
+        }
+
+        FirstTaxiLegResult runFirstTaxiSharingLeg(const RequestState &rs, const PDLocs &pdLocs,
+                                                  const RelevantPDLocs &relOrdinaryPickups,
+                                                  const RelevantPDLocs &relPickupsBeforeNextStop,
+                                                  stats::TaxiPerformanceStats &stats) {
+            FirstTaxiLegResult firstTaxiLegResult(routeState, rs, stations.size());
+
+            runStationBCH(rs, pdLocs, stats.stationBchStats);
+            runPALS(rs, pdLocs, stats.palsAssignmentsStats, firstTaxiLegResult);
+            runOrdinary(rs, pdLocs, relOrdinaryPickups, stats.ordAssignmentsStats, firstTaxiLegResult);
+            runDALS(rs, pdLocs, relOrdinaryPickups, relPickupsBeforeNextStop, stats.dalsAssignmentsStats,
+                    firstTaxiLegResult);
+            runPBNS(rs, pdLocs, relPickupsBeforeNextStop, stats.pbnsAssignmentsStats, firstTaxiLegResult);
 
             // -> assignment with best cost for each PT station
             return firstTaxiLegResult;
         }
 
-        void runStationBCH(RequestState &rs, stats::StationBchPerformanceStats &stats) {
+        void runStationBCH(const RequestState &rs, const PDLocs &pdLocs, stats::StationBchPerformanceStats &stats) {
             // Run BCH queries from origin to all stations reachable pickups from origin from KaRRi
             stationBCH.setExternalCostUpperBound(bestCost);
-            stationBCH.runBchQueries(rs, curPdLocs, stats);
+            stationBCH.runBchQueries(rs, pdLocs, stats);
         }
 
-        void runPALS(RequestState &rs, stats::PalsAssignmentsPerformanceStats &stats,
+        void runPALS(const RequestState &rs, const PDLocs &pdLocs, stats::PalsAssignmentsPerformanceStats &stats,
                      FirstTaxiLegResult &firstTaxiLegResult) {
-
             // last stop -> pickups
             // PALS Individual BCH
             palsToStations.setExternalCostUpperBound(bestCost, firstTaxiLegResult.getWorstCostForAllStations());
-            palsToStations.tryPickupAfterLastStop(rs, curPdLocs, stationBCH.getTentativeDistances(),
+            palsToStations.tryPickupAfterLastStop(rs, pdLocs, stationBCH.getTentativeDistances(),
                                                   stationBCH.getStationsSeen(), stations, stats, firstTaxiLegResult);
         }
 
-        void runOrdinary(RequestState &rs, stats::OrdAssignmentsPerformanceStats &stats,
+        void runOrdinary(const RequestState &rs, const PDLocs &pdLocs,
+                         const RelevantPDLocs &relOrdinaryPickpus, stats::OrdAssignmentsPerformanceStats &stats,
                          FirstTaxiLegResult &firstTaxiLegResult) {
-            ordinaryToStations.enumerateAssignments(rs, curPdLocs, curRelOrdinaryPickups, stations, stationsInEllipse,
+            ordinaryToStations.enumerateAssignments(rs, pdLocs, relOrdinaryPickpus, stations, stationsInEllipse,
                                                     stationBCH.getTentativeDistances(), stats, firstTaxiLegResult);
         }
 
-        void runDALS(RequestState &rs, stats::DalsAssignmentsPerformanceStats &stats,
+        void runDALS(const RequestState &rs, const PDLocs &pdLocs,
+                     const RelevantPDLocs &relOrdinaryPickups, const RelevantPDLocs &relPickupsBeforeNextStop,
+                     stats::DalsAssignmentsPerformanceStats &stats,
                      FirstTaxiLegResult &firstTaxiLegResult) {
             dalsToStations.setExternalCostUpperBound(bestCost, firstTaxiLegResult.getWorstCostForAllStations());
-            dalsToStations.tryDropoffAfterLastStop(rs, curPdLocs, curRelOrdinaryPickups, curRelPickupsBns, stats,
+            dalsToStations.tryDropoffAfterLastStop(rs, pdLocs, relOrdinaryPickups, relPickupsBeforeNextStop, stats,
                                                    firstTaxiLegResult);
         }
 
-        void runPBNS(RequestState &rs, stats::PbnsAssignmentsPerformanceStats &stats,
+        void runPBNS(const RequestState &rs, const PDLocs &pdLocs,
+                     const RelevantPDLocs &relPickupsBns,
+                     stats::PbnsAssignmentsPerformanceStats &stats,
                      FirstTaxiLegResult &firstTaxiLegResult) {
             pbnsToStations.setExternalCostUpperBound(bestCost, firstTaxiLegResult.getWorstCostForAllStations());
-            pbnsToStations.findAssignments(rs, curPdLocs, curRelPickupsBns, stations, stationsInEllipse,
+            pbnsToStations.findAssignments(rs, pdLocs, relPickupsBns, stations, stationsInEllipse,
                                            stationBCH.getTentativeDistances(), stats, firstTaxiLegResult);
         }
 
         void initializeComponentsForRequest(const RequestState &requestState, const PDLocs &pdLocs,
-                                            stats::DispatchingPerformanceStats &stats) {
+                                            stats::TaxiPerformanceStats &stats) {
             feasibleEllipticPickups.init(pdLocs.numPickups(), stats.ellipticBchStats);
             auto pickupsAtExistingStops = pdLocsAtExistingStopsFinder.template findPDLocsAtExistingStops<PICKUP>(
                 pdLocs.pickups, stats.ellipticBchStats);
@@ -405,10 +413,6 @@ namespace karri {
         const Fleet &fleet;
         RouteState &routeState;
 
-        RelevantPDLocs curRelOrdinaryPickups;
-        RelevantPDLocs curRelPickupsBns;
-        PDLocs curPdLocs;
-
         PTStations stations;
         StationBucketsEnvT &stationBucketsEnv;
         StationBCHQueryT stationBCH;
@@ -425,7 +429,6 @@ namespace karri {
 
         TaxiLegApproximationT taxiLegApproximation;
 
-        RequestState curReqState;
         int bestCost;
 
         std::ofstream &intermediateLogger;

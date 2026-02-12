@@ -153,7 +153,7 @@ namespace karri {
             initializeEdgeToStationMapping();
         }
 
-        void tryDropoffAfterLastStop(RequestState &requestState, const PDLocs &pdLocs,
+        void tryDropoffAfterLastStop(const RequestState &requestState, const PDLocs &pdLocs,
                                      const RelevantPDLocs &relevantOrdinaryPickups,
                                      const RelevantPDLocs &relevantPickupsBeforeNextStop,
                                      stats::DalsAssignmentsPerformanceStats &stats,
@@ -347,7 +347,7 @@ namespace karri {
         void enumerateAssignmentsForVehicleBatch(const int indexOfFirstVeh,
                                                  const RelevantPDLocs &relevantOrdinaryPickups,
                                                  const RelevantPDLocs &relevantPickupsBeforeNextStop,
-                                                 RequestState &requestState,
+                                                 const RequestState &requestState,
                                                  const PDLocs &pdLocs, stats::DalsAssignmentsPerformanceStats &stats,
                                                  FirstTaxiLegResult &firstTaxiLegResult) {
             int numAssignmentsTried = 0;
@@ -368,7 +368,7 @@ namespace karri {
         void enumerateAssignmentsWithOrdinaryPickupForVehicleBatch(const int indexOfFirstVeh,
                                                                    int &numAssignmentsTried,
                                                                    const RelevantPDLocs &relevantOrdinaryPickups,
-                                                                   RequestState &requestState,
+                                                                   const RequestState &requestState,
                                                                    const PDLocs &pdLocs,
                                                                    FirstTaxiLegResult &firstTaxiLegResult) {
             Assignment asgn;
@@ -462,7 +462,7 @@ namespace karri {
         void enumerateAssignmentsWithPBNSForVehicleBatch(const int indexOfFirstVeh,
                                                          int &numAssignmentsTried,
                                                          const RelevantPDLocs &relevantPickupsBeforeNextStop,
-                                                         RequestState &requestState,
+                                                         const RequestState &requestState,
                                                          const PDLocs &pdLocs,
                                                          FirstTaxiLegResult &firstTaxiLegResult) {
             Assignment asgn;

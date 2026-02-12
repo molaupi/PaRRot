@@ -379,7 +379,8 @@ namespace karri {
 
             const auto &request = requests[reqId];
             // Find best assignment -> PTAndTaxiTripFinder
-            auto ptAndTaxiTripFinderResponse = ptAndTaxiTripFinder.findBestAssignment(request);
+            karri::stats::RequestReceiveStats stats;
+            auto ptAndTaxiTripFinderResponse = ptAndTaxiTripFinder.findBestAssignment(request, stats);
             auto firstTaxiLeg = ptAndTaxiTripFinderResponse.getFirstTaxiLeg();
             auto ptLeg = ptAndTaxiTripFinderResponse.getPTLeg();
 
@@ -394,45 +395,46 @@ namespace karri {
             nextRiderEvents[reqId] = RIDER_NO_EVENT;
 
             if (ptAndTaxiTripFinderResponse.isValidTaxiOnlyTrip()) {
-                systemStateUpdater.writeBestAssignmentToLogger(firstTaxiLeg.first);
+                systemStateUpdater.writeBestAssignmentToLogger(firstTaxiLeg);
                 riderState[reqId] = WAITING_FOR_PICKUP;
-                applyAssignment(firstTaxiLeg, reqId, occTime);
+                applyAssignment(firstTaxiLeg, reqId, occTime, stats.updateStats);
             } else if (ptAndTaxiTripFinderResponse.isValidPTOnlyTrip()) {
                 applyPtOnlyJourney(ptLeg, reqId, occTime);
             } else {
                 riderState[reqId] = WAITING_FOR_PICKUP;
                 applyCombinedTrip(firstTaxiLeg, ptLeg, reqId, occTime,
-                                  ptAndTaxiTripFinderResponse.hasValidFirstTaxiLeg());
+                                  ptAndTaxiTripFinderResponse.hasValidFirstTaxiLeg(),
+                                  stats.updateStats);
             }
+
+            systemStateUpdater.writeReceiveRequestLogs(reqId, stats);
 
             const auto time = timer.elapsed<std::chrono::nanoseconds>();
             eventSimulationStatsLogger << occTime << ",RequestReceipt," << time << '\n';
         }
 
-        template<typename AssignmentFinderResponseT>
-        void applyAssignment(AssignmentFinderResponseT &asgnFinderResponse, const int reqId, const int,
+        void applyAssignment(RequestState &asgnFinderResponse, const int reqId, const int,
+                            karri::stats::UpdatePerformanceStats &updateStats,
                              const bool isSecondTaxiLeg = false) {
-            KASSERT(!asgnFinderResponse.first.isNotUsingVehicleBest());
+            KASSERT(!asgnFinderResponse.isNotUsingVehicleBest());
 
-            const auto &bestAsgn = asgnFinderResponse.first.getBestAssignment();
+            const auto &bestAsgn = asgnFinderResponse.getBestAssignment();
             // || !bestAsgn.pickup || !bestAsgn.dropoff
             if (!bestAsgn.vehicle) {
                 riderState[reqId] = FINISHED;
-                systemStateUpdater.writePerformanceLogs(asgnFinderResponse.first, asgnFinderResponse.second);
                 return;
             }
 
             if (isSecondTaxiLeg) {
                 requestData[reqId].walkingTimeToSecondTaxiLegPickup = bestAsgn.pickup.walkingDist;
                 requestData[reqId].walkingTimeFromDropoff += bestAsgn.dropoff.walkingDist;
-                requestData[reqId].secondTaxiLegCost = asgnFinderResponse.first.getBestCost();
+                requestData[reqId].secondTaxiLegCost = asgnFinderResponse.getBestCost();
             } else {
                 requestData[reqId].walkingTimeToPickup = bestAsgn.pickup.walkingDist;
                 requestData[reqId].walkingTimeFromDropoff = bestAsgn.dropoff.walkingDist;
             }
 
-            systemStateUpdater.insertBestAssignment(asgnFinderResponse.first, asgnFinderResponse.second);
-            systemStateUpdater.writePerformanceLogs(asgnFinderResponse.first, asgnFinderResponse.second);
+            systemStateUpdater.insertBestAssignment(asgnFinderResponse, updateStats);
 
             const auto vehId = bestAsgn.vehicle->vehicleId;
             switch (vehicleState[vehId]) {
@@ -471,7 +473,8 @@ namespace karri {
 
         template<typename AssignmentFinderResponseT, typename JourneyResponseT>
         void applyCombinedTrip(AssignmentFinderResponseT &asgnFinderResponse, JourneyResponseT &ptResponse,
-                               const int reqId, const int occTime, bool validFirstTaxiLeg) {
+                               const int reqId, const int occTime, bool validFirstTaxiLeg,
+                               karri::stats::UpdatePerformanceStats &updateStats) {
             KASSERT(ptResponse.getDepartureTimeAtFirstStation() < ptResponse.getArrivalTimeAtLastStation(), "Journey: " << ptResponse.getBestJourney());
             auto &reqData = requestData[reqId];
             reqData.isCombinedTrip = true;
@@ -479,9 +482,8 @@ namespace karri {
 
             // Apply first taxi leg assignment
             if (validFirstTaxiLeg) {
-                auto &reqState = asgnFinderResponse.first;
-                reqState.setMaxArrTimeAtDropoffStation(ptResponse.getDepartureTimeAtFirstStation());
-                applyAssignment(asgnFinderResponse, reqId, occTime);
+                asgnFinderResponse.setMaxArrTimeAtDropoffStation(ptResponse.getDepartureTimeAtFirstStation());
+                applyAssignment(asgnFinderResponse, reqId, occTime, updateStats);
                 reqData.hasFirstTaxiLeg = true;
             } else {
                 // without first taxi leg
@@ -524,15 +526,17 @@ namespace karri {
                 request.numRiders
             };
 
-            auto secondTaxiLegResponse = ptAndTaxiTripFinder.findBestTaxiAssignment(newReq, occTime);
-            auto &reqState = secondTaxiLegResponse.first;
+            karri::stats::SecondTaxiLegStats secondTaxiLegStats;
+            auto asgnFinderResponse = ptAndTaxiTripFinder.findBestSecondTaxiLeg(newReq, occTime, secondTaxiLegStats.taxiSecondLegStats);
 
             // Before the second taxi leg
             const auto &reqData = requestData[reqId];
             const auto waitTime = reqData.depTime - requests[reqId].requestTime;
-            reqState.setCurrentWaitTime(waitTime);
+            asgnFinderResponse.setCurrentWaitTime(waitTime);
 
-            applyAssignment(secondTaxiLegResponse, reqId, occTime, true);
+            applyAssignment(asgnFinderResponse, reqId, occTime, secondTaxiLegStats.updateStats, true);
+
+            systemStateUpdater.writeSecondTaxiLegLogs(reqId, secondTaxiLegStats);
         }
 
         void handleRiderArrivalAtDest(const int reqId, const int occTime) {

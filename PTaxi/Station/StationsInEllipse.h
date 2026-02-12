@@ -214,6 +214,7 @@ namespace karri {
               numEntriesVisited(0) {
         }
 
+        // TODO: ADD TO UPDATE STATS
         void computeNewStationsInEllipsesForStop(const int stopIndex, const int vehId) {
             const int stopId = routeState.stopIdsFor(vehId)[stopIndex];
             const int stopLoc = routeState.stopLocationsFor(vehId)[stopIndex];

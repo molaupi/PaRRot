@@ -178,7 +178,7 @@ namespace karri {
               vehiclesSeenForPickups(fleet.size()) {
         }
 
-        void tryPickupAfterLastStop(RequestState &requestState, const PDLocs &pdLocs,
+        void tryPickupAfterLastStop(const RequestState &requestState, const PDLocs &pdLocs,
                                     StationDistancesT &stationDistances,
                                     LightweightSubset &stationsSeen,
                                     const PTStations &stations,
@@ -200,7 +200,7 @@ namespace karri {
 
     private:
         // Run BCH searches that find distances from last stops to pickups
-        void runBchSearches(RequestState &requestState, const PDLocs &pdLocs,
+        void runBchSearches(const RequestState &requestState, const PDLocs &pdLocs,
                             StationDistancesT &stationDistances,
                             stats::PalsAssignmentsPerformanceStats &stats,
                             FirstTaxiLegResult &firstTaxiLegResult) {
@@ -219,7 +219,7 @@ namespace karri {
         }
 
         // Enumerate assignments with pickup after last stop
-        void enumerateAssignments(RequestState &requestState, const PDLocs &pdLocs,
+        void enumerateAssignments(const RequestState &requestState, const PDLocs &pdLocs,
                                   StationDistancesT &stationDistances,
                                   LightweightSubset &stationsSeen,
                                   const PTStations &stations,
@@ -338,10 +338,10 @@ namespace karri {
         }
 
         // Simple case for pickups that coincide with last stops of vehicles.
-        void enumerateAssignmentsWherePickupCoincidesWithLastStop(RequestState &requestState,
+        void enumerateAssignmentsWherePickupCoincidesWithLastStop(const RequestState &requestState,
                                                                   const PDLocs &pdLocs,
                                                                   StationDistancesT &stationDistances,
-                                                                  LightweightSubset &stationsSeen,
+                                                                  const LightweightSubset &stationsSeen,
                                                                   const PTStations &stations,
                                                                   stats::PalsAssignmentsPerformanceStats &stats,
                                                                   FirstTaxiLegResult &firstTaxiLegResult) {

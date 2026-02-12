@@ -11,25 +11,25 @@ class PTAndTaxiTriple {
 public:
     PTAndTaxiTriple() = default;
     
-    PTAndTaxiTriple(std::pair<RequestState, stats::DispatchingPerformanceStats> firstTaxiLeg, 
+    PTAndTaxiTriple(RequestState firstTaxiLeg,
                     PTResult ptLeg, 
                     bool hasSecondTaxiLeg,
                     int firstTaxiLegCost,
                     int ptLegCost,
                     int secondTaxiLegApproxCost
                 )
-        : firstTaxiLeg(std::move(firstTaxiLeg)), 
+        : firstTaxiLeg(firstTaxiLeg),
           ptLeg(std::move(ptLeg)), 
           hasSecondTaxiLeg(hasSecondTaxiLeg),
           firstTaxiLegCost(firstTaxiLegCost),
           ptLegCost(ptLegCost),
           secondTaxiLegApproxCost(secondTaxiLegApproxCost) {}
     
-    std::pair<RequestState, stats::DispatchingPerformanceStats>& getFirstTaxiLeg() { return firstTaxiLeg; }
+    RequestState& getFirstTaxiLeg() { return firstTaxiLeg; }
     PTResult& getPTLeg() { return ptLeg; }
     
     bool hasValidFirstTaxiLeg() const { 
-        return firstTaxiLeg.first.getBestAssignment().vehicle != nullptr || firstTaxiLeg.first.isNotUsingVehicleBest(); 
+        return firstTaxiLeg.getBestAssignment().vehicle != nullptr || firstTaxiLeg.isNotUsingVehicleBest();
     }
     
     bool hasValidPTLeg() const { 
@@ -52,7 +52,7 @@ public:
     int secondTaxiLegApproxCost;  // Approximated cost of the second taxi leg
 
 private:
-    std::pair<RequestState, stats::DispatchingPerformanceStats> firstTaxiLeg;  // First taxi leg result
+    RequestState firstTaxiLeg;  // First taxi leg result
     PTResult ptLeg;               // Public transit leg result
     bool hasSecondTaxiLeg;        // Flag indicating if there is a second taxi leg
 };

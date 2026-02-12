@@ -33,12 +33,9 @@
 #include "../Station/StationEntry.h"
 
 namespace karri {
-
-
     template<typename InputGraphT, typename CHEnvT,
-            typename StationBucketsEnvT>
+        typename StationBucketsEnvT>
     class TaxiLegApproximation {
-
         using LabelSetT = BasicLabelSet<0, ParentInfo::FULL_PARENT_INFO>;
         static constexpr int K = LabelSetT::K;
         using DistanceLabel = typename LabelSetT::DistanceLabel;
@@ -48,14 +45,12 @@ namespace karri {
         using StopBucketContainer = DynamicBucketContainer<StationEntry>;
 
         struct ScanSourceBucket {
-
         public:
-
-            explicit ScanSourceBucket(TaxiLegApproximation &search) : search(search) {}
+            explicit ScanSourceBucket(TaxiLegApproximation &search) : search(search) {
+            }
 
             template<typename DistLabelT, typename DistLabelContainerT>
             bool operator()(const int v, DistLabelT &distToV, const DistLabelContainerT & /*distLabels*/) {
-
                 // Check if we can prune at this vertex based only on the distance from v to the pickup(s)
                 if (allSet(search.exceedsGlobalBestCost(distToV)))
                     return true;
@@ -72,7 +67,6 @@ namespace karri {
                         tryUpdatingDistance(stationId, distViaV);
                     }
                 } else {
-
                     auto bucket = search.stationBucketContainer.getBucketOf(v);
 
                     for (const auto &entry: bucket) {
@@ -85,25 +79,27 @@ namespace karri {
                             break;
 
                         tryUpdatingDistance(stationId, distViaV);
-                        
                     }
                 }
+
+                search.numEntriesVisited += numEntriesScannedHere;
 
                 return false;
             }
 
         private:
-
-            void tryUpdatingDistance(const int stationId, const DistanceLabel& distFromStopToStation) {
+            void tryUpdatingDistance(const int stationId, const DistanceLabel &distFromStopToStation) {
                 // Update tentative distances to v for any searches where distViaV admits a possible better assignment
                 // than the current best and where distViaV is at least as good as the current tentative distance.
                 LabelMask mask = ~(search.distFromStations[stationId] < distFromStopToStation);
                 mask &= distFromStopToStation < INFTY;
                 if (!anySet(mask))
                     return;
-                
-                if (anySet(mask)) { // if any search requires updates, update the right ones according to mask
+
+                if (anySet(mask)) {
+                    // if any search requires updates, update the right ones according to mask
                     search.distFromStations[stationId].setIf(distFromStopToStation, mask);
+                    search.stationsSeen.insert(stationId);
                 }
             }
 
@@ -112,7 +108,8 @@ namespace karri {
         };
 
         struct StopSearch {
-            explicit StopSearch(const TaxiLegApproximation &search) : search(search) {}
+            explicit StopSearch(const TaxiLegApproximation &search) : search(search) {
+            }
 
             template<typename DistLabelT, typename DistLabelContainerT>
             bool operator()(const int, DistLabelT &distToOrFromV, const DistLabelContainerT & /*distLabels*/) const {
@@ -121,29 +118,33 @@ namespace karri {
 
         private:
             const TaxiLegApproximation &search;
-
         };
 
     public:
-    
         // Pruning: Fahrzeit = trip time -> untere Schranke
         // > besten globalen Kosten -> abbrechen
         TaxiLegApproximation(
-                const InputGraphT &inputGraph,
-                const CHEnvT &chEnv,
-                const StationBucketsEnvT &stationBucketsEnv,
-                const int numberOfStations)
-                : inputGraph(inputGraph),
-                  reverseUpwardSearch(chEnv.template getReverseSearch<ScanSourceBucket, StopSearch, LabelSetT>(
-                               ScanSourceBucket(*this), StopSearch(*this))),
-                  ch(chEnv.getCH()),
-                  stationBucketContainer(stationBucketsEnv.getSourceBuckets()),
-                  distFromStations(numberOfStations, DistanceLabel(INFTY)),
-                  upperBoundCost(INFTY) {}
+            const InputGraphT &inputGraph,
+            const CHEnvT &chEnv,
+            const StationBucketsEnvT &stationBucketsEnv,
+            const int numberOfStations)
+            : inputGraph(inputGraph),
+              reverseUpwardSearch(chEnv.template getReverseSearch<ScanSourceBucket, StopSearch, LabelSetT>(
+                  ScanSourceBucket(*this), StopSearch(*this))),
+              ch(chEnv.getCH()),
+              stationBucketContainer(stationBucketsEnv.getSourceBuckets()),
+              distFromStations(numberOfStations, DistanceLabel(INFTY)),
+              upperBoundCost(INFTY),
+              stationsSeen(numberOfStations) {
+        }
 
-        void findDistancesFromStationsToDest(const int destination, const int maxTripTime) {
+        void findDistancesFromStationsToDest(const int destination, const int maxTripTime,
+                                             stats::StationBchPerformanceStats &stats) {
+            KaRRiTimer timer;
             init(maxTripTime);
+            stats.destInitializationTime += timer.elapsed<std::chrono::nanoseconds>();
 
+            timer.restart();
             const int destinationVertex = inputGraph.edgeTail(destination);
             const int rank = ch.rank(destinationVertex);
             const int offset = inputGraph.travelTime(destination);
@@ -151,7 +152,12 @@ namespace karri {
             // Run the reverse upward search from the second stop vertex
             // This will compute the distances from all stations to the next stop
             reverseUpwardSearch.runWithOffset(rank, offset);
+            stats.destBchSearchTime += timer.elapsed<std::chrono::nanoseconds>();
 
+            stats.destNumEdgeRelaxations += reverseUpwardSearch.getNumEdgeRelaxations();
+            stats.destNumVerticesSettled += reverseUpwardSearch.getNumVerticesSettled();
+            stats.destNumEntriesScanned += numEntriesVisited;
+            stats.destNumStationsSeen += stationsSeen.size();
         }
 
         void setCostUpperBound(const int c) {
@@ -175,8 +181,9 @@ namespace karri {
         }
 
     private:
-
         void init(const int maxTripTime) {
+            numEntriesVisited = 0;
+            stationsSeen.clear();
             curMaxTripTime = maxTripTime;
             std::fill(distFromStations.begin(), distFromStations.end(), INFTY);
         }
@@ -193,10 +200,12 @@ namespace karri {
 
         int upperBoundCost;
         int curMaxTripTime;
-        
+
         const StationBucketContainer &stationBucketContainer;
 
         std::vector<DistanceLabel> distFromStations;
-    };
 
+        int64_t numEntriesVisited = 0;
+        LightweightSubset stationsSeen;
+    };
 }

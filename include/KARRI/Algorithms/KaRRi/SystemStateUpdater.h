@@ -74,58 +74,13 @@ namespace karri {
                                                                    "veh_dep_time_at_stop_before_dropoff, "
                                                                    "not_using_vehicle, "
                                                                    "cost\n")),
-              overallPerfLogger(
-                  LogManager<LoggerT>::getLogger(stats::DispatchingPerformanceStats::LOGGER_NAME,
-                                                 "request_id, " +
-                                                 std::string(stats::DispatchingPerformanceStats::LOGGER_COLS))),
-              initializationPerfLogger(
-                  LogManager<LoggerT>::getLogger(stats::InitializationPerformanceStats::LOGGER_NAME,
-                                                 "request_id, " +
-                                                 std::string(
-                                                     stats::InitializationPerformanceStats::LOGGER_COLS))),
-              ellipticBchPerfLogger(
-                  LogManager<LoggerT>::getLogger(stats::EllipticBCHPerformanceStats::LOGGER_NAME,
-                                                 "request_id, " +
-                                                 std::string(stats::EllipticBCHPerformanceStats::LOGGER_COLS))),
-              pdDistancesPerfLogger(
-                  LogManager<LoggerT>::getLogger(stats::PDDistancesPerformanceStats::LOGGER_NAME,
-                                                 "request_id, " +
-                                                 std::string(stats::PDDistancesPerformanceStats::LOGGER_COLS))),
-              ordPerfLogger(
-                  LogManager<LoggerT>::getLogger(stats::OrdAssignmentsPerformanceStats::LOGGER_NAME,
-                                                 "request_id, " +
-                                                 std::string(
-                                                     stats::OrdAssignmentsPerformanceStats::LOGGER_COLS))),
-              pbnsPerfLogger(
-                  LogManager<LoggerT>::getLogger(stats::PbnsAssignmentsPerformanceStats::LOGGER_NAME,
-                                                 "request_id, " +
-                                                 std::string(
-                                                     stats::PbnsAssignmentsPerformanceStats::LOGGER_COLS))),
-              palsPerfLogger(
-                  LogManager<LoggerT>::getLogger(stats::PalsAssignmentsPerformanceStats::LOGGER_NAME,
-                                                 "request_id, " +
-                                                 std::string(
-                                                     stats::PalsAssignmentsPerformanceStats::LOGGER_COLS))),
-              dalsPerfLogger(
-                  LogManager<LoggerT>::getLogger(stats::DalsAssignmentsPerformanceStats::LOGGER_NAME,
-                                                 "request_id, " +
-                                                 std::string(
-                                                     stats::DalsAssignmentsPerformanceStats::LOGGER_COLS))),
-              stationBchPerfLogger(LogManager<LoggerT>::getLogger(stats::StationBchPerformanceStats::LOGGER_NAME,
-                                                                  "request_id, " +
-                                                                  std::string(
-                                                                      stats::StationBchPerformanceStats::LOGGER_COLS))),
-              updatePerfLogger(LogManager<LoggerT>::getLogger(stats::UpdatePerformanceStats::LOGGER_NAME,
-                                                              "request_id, " +
-                                                              std::string(
-                                                                  stats::UpdatePerformanceStats::LOGGER_COLS))),
               roadCatLogger(LogManager<LoggerT>::getLogger(karri::stats::OsmRoadCategoryStats::LOGGER_NAME,
                                                            "type," +
                                                            karri::stats::OsmRoadCategoryStats::getLoggerCols())) {
         }
 
 
-        void insertBestAssignment(RequestState &requestState, stats::DispatchingPerformanceStats &stats) {
+        void insertBestAssignment(RequestState &requestState, stats::UpdatePerformanceStats &stats) {
             KaRRiTimer timer;
 
             if (requestState.isNotUsingVehicleBest()) {
@@ -144,19 +99,16 @@ namespace karri {
             timer.restart();
             auto [pickupIndex, dropoffIndex] = routeState.insert(asgn, requestState);
             const auto routeUpdateTime = timer.elapsed<std::chrono::nanoseconds>();
-            stats.updateStats.updateRoutesTime += routeUpdateTime;
+            stats.updateRoutesTime += routeUpdateTime;
 
             updateBucketState(asgn, pickupIndex, dropoffIndex, depTimeAtLastStopBefore, requestState.now(),
-                              stats.updateStats);
+                              stats);
 
             // If the vehicle has to be rerouted at its current location for a PBNS assignment, we introduce an
             // intermediate stop at its current location representing the rerouting.
             if (asgn.pickupStopIdx == 0 && numStopsBefore > 1 && routeState.schedDepTimesFor(vehId)[0] < requestState.
                 now()) {
-                createIntermediateStopAtCurrentLocationForReroute(*asgn.vehicle,
-                                                                  requestState.now(),
-                                                                  stats.updateStats
-                );
+                createIntermediateStopAtCurrentLocationForReroute(*asgn.vehicle, requestState.now(), stats);
                 ++pickupIndex;
                 ++dropoffIndex;
             }
@@ -246,25 +198,17 @@ namespace karri {
                     << requestState.getBestCost() << "\n";
         }
 
-        void writePerformanceLogs(const RequestState &requestState, const stats::DispatchingPerformanceStats &stats) {
-            overallPerfLogger << requestState.originalRequest.requestId << ", "
-                    << stats.getLoggerRow() << "\n";
-            initializationPerfLogger << requestState.originalRequest.requestId << ", "
-                    << stats.initializationStats.getLoggerRow() << "\n";
-            ellipticBchPerfLogger << requestState.originalRequest.requestId << ", "
-                    << stats.ellipticBchStats.getLoggerRow() << "\n";
-            pdDistancesPerfLogger << requestState.originalRequest.requestId << ", "
-                    << stats.pdDistancesStats.getLoggerRow() << "\n";
-            ordPerfLogger << requestState.originalRequest.requestId << ", "
-                    << stats.ordAssignmentsStats.getLoggerRow() << "\n";
-            pbnsPerfLogger << requestState.originalRequest.requestId << ", "
-                    << stats.pbnsAssignmentsStats.getLoggerRow() << "\n";
-            palsPerfLogger << requestState.originalRequest.requestId << ", "
-                    << stats.palsAssignmentsStats.getLoggerRow() << "\n";
-            dalsPerfLogger << requestState.originalRequest.requestId << ", "
-                    << stats.dalsAssignmentsStats.getLoggerRow() << "\n";
-            updatePerfLogger << requestState.originalRequest.requestId << ", "
-                    << stats.updateStats.getLoggerRow() << "\n";
+        void writeReceiveRequestLogs(const int requestId, const stats::RequestReceiveStats &stats) {
+            logPerformance(requestId, "", stats);
+            writeTaxiPerformanceLogs(requestId, "taxi_only.", stats.taxiOnlyStats);
+            writeTaxiPerformanceLogs(requestId, "first_leg.", stats.taxiFirstLegStats);
+            logPerformance(requestId, "pt_only.", stats.ptOnlyStats);
+            logPerformance(requestId, "pt_with_taxi.", stats.ptWithTaxiStats);
+        }
+
+        void writeSecondTaxiLegLogs(const int requestId, const stats::SecondTaxiLegStats &stats) {
+            writeTaxiPerformanceLogs(requestId, "second_leg.", stats.taxiSecondLegStats);
+            logPerformance(requestId, "second_leg.", stats.updateStats);
         }
 
         void writeRoadCatLogs() {
@@ -275,6 +219,32 @@ namespace karri {
         }
 
     private:
+        void writeTaxiPerformanceLogs(const int requestId, const std::string &name_prefix,
+                                      const stats::TaxiPerformanceStats &stats) const {
+            logPerformance(requestId, name_prefix,
+                           stats,
+                           stats.initializationStats,
+                           stats.ellipticBchStats,
+                           stats.pdDistancesStats,
+                           stats.ordAssignmentsStats,
+                           stats.pbnsAssignmentsStats,
+                           stats.palsAssignmentsStats,
+                           stats.dalsAssignmentsStats,
+                           stats.stationBchStats);
+        }
+
+#define GET_RAW_TYPE_OF(x) std::remove_reference_t<decltype(x)>
+
+        template<typename... PerfStatssT>
+        void logPerformance(const int requestId, const std::string &name_prefix, PerfStatssT... perfStatss) const {
+            RUN_FORALL(
+                LogManager<LoggerT>::getLogger(name_prefix + std::string(GET_RAW_TYPE_OF(perfStatss)::LOGGER_NAME),
+                    "request_id," + std::string(GET_RAW_TYPE_OF(perfStatss)::LOGGER_COLS)) << requestId << "," <<
+                perfStatss.getLoggerRow() << "\n"
+            );
+        }
+
+
         // If vehicle is rerouted from its current position to a newly inserted stop (PBNS assignment), create new
         // intermediate stop at the vehicle's current position to maintain the invariant of the schedule for the
         // first stop, i.e. dist(s[i], s[i+1]) = schedArrTime(s[i+1]) - schedDepTime(s[i]).
@@ -386,16 +356,6 @@ namespace karri {
 
         // Performance Loggers
         LoggerT &bestAssignmentsLogger;
-        LoggerT &overallPerfLogger;
-        LoggerT &initializationPerfLogger;
-        LoggerT &ellipticBchPerfLogger;
-        LoggerT &pdDistancesPerfLogger;
-        LoggerT &ordPerfLogger;
-        LoggerT &pbnsPerfLogger;
-        LoggerT &palsPerfLogger;
-        LoggerT &dalsPerfLogger;
-        LoggerT &stationBchPerfLogger;
-        LoggerT &updatePerfLogger;
         LoggerT &roadCatLogger;
 
         // Road Category Stats
