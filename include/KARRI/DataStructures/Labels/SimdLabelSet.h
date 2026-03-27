@@ -192,6 +192,20 @@ public:
                 values[i] = val;
         }
 
+        // Copy K integer values starting at ptr into distance label. Make sure that there is no overlap between
+        // [ptr, ptr+K) and this label.
+        void load(int const * const ptr) {
+            for (int i = 0; i < NUM_VECTORS; ++i)
+                values[i].load(ptr + i * VECTOR_SIZE);
+        }
+
+        // Copy K integer values from this distance label into ptr. Make sure that there is no overlap between
+        // [ptr, ptr+K) and this label.
+        void store(int * const ptr) const {
+            for (int i = 0; i < NUM_VECTORS; ++i)
+                values[i].store(ptr + i * VECTOR_SIZE);
+        }
+
         // Returns a reference to the i-th distance value in this label.
         Reference operator[](const int i) {
             assert(i >= 0);

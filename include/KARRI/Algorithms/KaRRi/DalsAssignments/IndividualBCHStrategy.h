@@ -25,8 +25,14 @@
 
 #pragma once
 
+#include "../../../../../PTaxi/FirstTaxiLeg/FirstTaxiLegResult.h"
 #include "../LastStopSearches/LastStopBCHQuery.h"
 #include "../LastStopSearches/TentativeLastStopDistances.h"
+#include "KARRI/Algorithms/KaRRi/CostCalculator.h"
+#include "KARRI/Algorithms/KaRRi/RequestState/RelevantPDLocs.h"
+#include "KARRI/Algorithms/KaRRi/RequestState/RequestState.h"
+#include "KARRI/DataStructures/Containers/FastResetFlagArray.h"
+#include "KARRI/DataStructures/Containers/LightweightSubset.h"
 
 namespace karri::DropoffAfterLastStopStrategies {
 
@@ -147,23 +153,24 @@ namespace karri::DropoffAfterLastStopStrategies {
 
         void tryDropoffAfterLastStop(const RelevantPDLocs &relevantOrdinaryPickups,
                                      const RelevantPDLocs &relevantPickupsBeforeNextStop,
-                                     RequestState& requestState,
-                                     const PDLocs& pdLocs, stats::DalsAssignmentsPerformanceStats& stats) {
+                                     const RequestState& requestState, const PDLocs& pdLocs,
+                                     TaxiResult &result,
+                                     stats::DalsAssignmentsPerformanceStats& stats) {
             curReqState = &requestState;
             curRelOrdinaryPickups = &relevantOrdinaryPickups;
             curRelPickupsBns = &relevantPickupsBeforeNextStop;
 
-            runBchQueries(requestState, pdLocs, stats);
+            runBchQueries(pdLocs, result, stats);
             enumerateAssignments(relevantOrdinaryPickups, relevantPickupsBeforeNextStop, requestState, pdLocs, stats);
         }
 
     private:
 
         // Run BCH queries that obtain distances from last stops to dropoffs
-        void runBchQueries(RequestState& requestState, const PDLocs& pdLocs, stats::DalsAssignmentsPerformanceStats& stats) {
+        void runBchQueries(const PDLocs& pdLocs, const TaxiResult &result, stats::DalsAssignmentsPerformanceStats& stats) {
             KaRRiTimer timer;
 
-            initDropoffSearches(requestState, pdLocs);
+            initDropoffSearches(pdLocs, result);
             for (unsigned int i = 0; i < pdLocs.numDropoffs(); i += K)
                 runSearchesForDropoffBatch(i, pdLocs);
 
@@ -178,15 +185,16 @@ namespace karri::DropoffAfterLastStopStrategies {
         // Enumerate DALS assignments
         void enumerateAssignments(const RelevantPDLocs &relevantOrdinaryPickups,
                                   const RelevantPDLocs &relevantPickupsBeforeNextStop,
-                                  RequestState& requestState,
-                                  const PDLocs& pdLocs, stats::DalsAssignmentsPerformanceStats& stats) {
+                                  const RequestState& requestState, const PDLocs& pdLocs,
+                                  TaxiResult &result,
+                                  stats::DalsAssignmentsPerformanceStats& stats) {
             int numAssignmentsTried = 0;
             const int64_t pbnsTimeBefore = curVehLocToPickupSearches.getTotalLocatingVehiclesTimeForRequest() +
                                            curVehLocToPickupSearches.getTotalVehicleToPickupSearchTimeForRequest();
             KaRRiTimer timer;
 
-            enumerateAssignmentsWithOrdinaryPickup(numAssignmentsTried, relevantOrdinaryPickups, requestState, pdLocs);
-            enumerateAssignmentsWithPBNS(numAssignmentsTried, relevantPickupsBeforeNextStop, requestState, pdLocs);
+            enumerateAssignmentsWithOrdinaryPickup(numAssignmentsTried, relevantOrdinaryPickups, requestState, pdLocs, result);
+            enumerateAssignmentsWithPBNS(numAssignmentsTried, relevantPickupsBeforeNextStop, requestState, pdLocs, result);
 
             // Time spent to locate vehicles and compute distances from current vehicle locations to pickups is counted
             // into PBNS time so subtract it here.
@@ -209,8 +217,9 @@ namespace karri::DropoffAfterLastStopStrategies {
         // Enumerate assignments where pickup is after next stop (ordinary pickup):
         void enumerateAssignmentsWithOrdinaryPickup(int &numAssignmentsTried,
                                                     const RelevantPDLocs &relevantOrdinaryPickups,
-                                                    RequestState& requestState,
-                                                    const PDLocs& pdLocs) {
+                                                    const RequestState& requestState,
+                                                    const PDLocs& pdLocs,
+                                                    TaxiResult &result) {
             Assignment asgn;
 
             checkPBNSForVehicle.reset();
@@ -252,7 +261,7 @@ namespace karri::DropoffAfterLastStopStrategies {
 
                             const auto minCostFromHere = calculator.calcVehicleIndependentCostLowerBoundForDALSWithKnownMinDistToDropoff(
                                     asgn.dropoff.walkingDist, asgn.distToDropoff, minTripTimeToLastStop, requestState);
-                            if (minCostFromHere > requestState.getBestCost())
+                            if (minCostFromHere > result.getBestCost())
                                 break;
 
                             curPickupIndex = entry.stopIndex;
@@ -265,7 +274,7 @@ namespace karri::DropoffAfterLastStopStrategies {
                         asgn.pickupStopIdx = entry.stopIndex;
                         asgn.distToPickup = entry.distToPDLoc;
                         asgn.distFromPickup = entry.distFromPDLocToNextStop;
-                        requestState.tryAssignmentWithKnownCost(asgn, calculator.calc(asgn, requestState));
+                        result.tryAssignmentWithKnownCost(asgn, calculator.calc(asgn, requestState));
                     }
 
                     if (pickupIt == relevantPickupsInRevOrder.end()) {
@@ -280,8 +289,9 @@ namespace karri::DropoffAfterLastStopStrategies {
         // Enumerate assignments where the pickup is before the next stop (PBNS + DALS):
         void enumerateAssignmentsWithPBNS(int &numAssignmentsTried,
                                           const RelevantPDLocs &relevantPickupsBeforeNextStop,
-                                          RequestState& requestState,
-                                          const PDLocs& pdLocs) {
+                                          const RequestState& requestState,
+                                          const PDLocs& pdLocs,
+                                          TaxiResult &result) {
             Assignment asgn;
             asgn.pickupStopIdx = 0;
 
@@ -318,14 +328,14 @@ namespace karri::DropoffAfterLastStopStrategies {
 
                         if (curVehLocToPickupSearches.knowsDistance(vehId, asgn.pickup.id)) {
                             asgn.distToPickup = curVehLocToPickupSearches.getDistance(vehId, asgn.pickup.id);
-                            requestState.tryAssignmentWithKnownCost(asgn, calculator.calc(asgn, requestState));
+                            result.tryAssignmentWithKnownCost(asgn, calculator.calc(asgn, requestState));
                             ++numAssignmentsTried;
                         } else {
                             asgn.distToPickup = entry.distToPDLoc;
                             const auto lowerBoundCost = calculator.calc(asgn, requestState);
-                            if (lowerBoundCost < requestState.getBestCost() ||
-                                (lowerBoundCost == requestState.getBestCost() &&
-                                 breakCostTie(asgn, requestState.getBestAssignment()))) {
+                            if (lowerBoundCost < result.getBestCost() ||
+                                (lowerBoundCost == result.getBestCost() &&
+                                 breakCostTie(asgn, result.getBestAssignment()))) {
                                 // In this case, we need the exact distance to the pickup via the current location of the
                                 // vehicle. We postpone computation of that distance to be able to bundle it with the
                                 // computation of distances to other pickups via the vehicle location. Then all remaining
@@ -363,7 +373,7 @@ namespace karri::DropoffAfterLastStopStrategies {
 
                         ++numAssignmentsTried;
                         asgn.dropoffStopIdx = numStops - 1;
-                        requestState.tryAssignmentWithKnownCost(asgn, calculator.calc(asgn, requestState));
+                        result.tryAssignmentWithKnownCost(asgn, calculator.calc(asgn, requestState));
                     }
                 }
             }
@@ -373,12 +383,12 @@ namespace karri::DropoffAfterLastStopStrategies {
             return lastStopDistances.getDistance(vehId, dropoffId);
         }
 
-        void initDropoffSearches(const RequestState& requestState, const PDLocs& pdLocs) {
+        void initDropoffSearches(const PDLocs& pdLocs, const TaxiResult& result) {
             totalNumEdgeRelaxations = 0;
             totalNumVerticesSettled = 0;
             totalNumEntriesScanned = 0;
 
-            upperBoundCost = requestState.getBestCost();
+            upperBoundCost = result.getBestCost();
             vehiclesSeenForDropoffs.clear();
 
             // Construct more space for dropoff labels if needed.

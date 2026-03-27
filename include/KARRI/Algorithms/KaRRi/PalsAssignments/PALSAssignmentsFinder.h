@@ -33,7 +33,7 @@
 namespace karri {
 
 // Finds pickup-after-last-stop (PALS) insertions using the encapsulated strategy.
-    template<typename InputGraphT, typename PDDistancesT, typename StrategyT, typename LastStopsAtVerticesT>
+    template<typename InputGraphT, typename StrategyT, typename LastStopsAtVerticesT>
     class PALSAssignmentsFinder {
 
     public:
@@ -48,9 +48,11 @@ namespace karri {
                   lastStopsAtVertices(lastStopsAtVertices),
                   routeState(routeState) {}
 
-        void findAssignments(RequestState& requestState, const PDDistancesT& pdDistances, const PDLocs& pdLocs, stats::PalsAssignmentsPerformanceStats& stats) {
-            findAssignmentsWherePickupCoincidesWithLastStop(requestState, pdDistances, pdLocs, stats);
-            strategy.tryPickupAfterLastStop(requestState, pdDistances, pdLocs, stats);
+        void findAssignments(const RequestState& requestState, const PDDistances& pdDistances, const PDLocs& pdLocs,
+            TaxiResult &result,
+            stats::PalsAssignmentsPerformanceStats& stats) {
+            findAssignmentsWherePickupCoincidesWithLastStop(requestState, pdDistances, pdLocs, result, stats);
+            strategy.tryPickupAfterLastStop(requestState, pdDistances, pdLocs, result, stats);
         }
 
         void init(const RequestState&, const PDLocs&, stats::PalsAssignmentsPerformanceStats&) {
@@ -61,7 +63,11 @@ namespace karri {
 
         // Simple case for pickups that coincide with last stops of vehicles is the same regardless of strategy, so it
         // is treated here.
-        void findAssignmentsWherePickupCoincidesWithLastStop(RequestState& requestState, const PDDistancesT& pdDistances, const PDLocs& pdLocs, stats::PalsAssignmentsPerformanceStats& stats) {
+        void findAssignmentsWherePickupCoincidesWithLastStop(const RequestState& requestState,
+            const PDDistances& pdDistances,
+            const PDLocs& pdLocs,
+            TaxiResult &result,
+            stats::PalsAssignmentsPerformanceStats& stats) {
             int numInsertionsForCoinciding = 0;
             int numCandidateVehiclesForCoinciding = 0;
             KaRRiTimer timer;
@@ -80,8 +86,8 @@ namespace karri {
 
                     // Calculate lower bound on insertion cost with this pickup and vehicle
                     const auto lowerBoundCost = calculator.calcCostLowerBoundForPickupAfterLastStop(
-                            fleet[vehId], asgn.pickup, 0, requestState.minDirectPDDist, requestState);
-                    if (lowerBoundCost > requestState.getBestCost())
+                            fleet[vehId], asgn.pickup, 0, pdDistances.getMinDirectDistance(), requestState);
+                    if (lowerBoundCost > result.getBestCost())
                         continue;
 
                     // If necessary, check paired insertion with each dropoff
@@ -93,7 +99,7 @@ namespace karri {
                         asgn.dropoff = d;
                         asgn.distToDropoff = pdDistances.getDirectDistance(asgn.pickup, asgn.dropoff);
                         ++numInsertionsForCoinciding;
-                        requestState.tryAssignmentWithKnownCost(asgn, calculator.calc(asgn, requestState));
+                        result.tryAssignmentWithKnownCost(asgn, calculator.calc(asgn, requestState));
                     }
                 }
             }

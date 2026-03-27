@@ -86,6 +86,13 @@
 #include <KARRI/Algorithms/KaRRi/EventSimulation.h>
 #include <KARRI/Algorithms/KaRRi/RequestState/PDLocsFinder.h>
 
+#include "../PTaxi/KaRRiBaseInfoPreparator.h"
+#include "../PTaxi/TaxiTripFinder.h"
+#include "../PTaxi/PTJourneyFinder.h"
+#include "../PTaxi/WalkingTripFinder.h"
+#include <../PTaxi/RiderModeChoice/ModeChoice.h>
+#include <../PTaxi/RiderModeChoice/UtilityLogitCriterion.h>
+
 #ifdef KARRI_USE_CCHS
 #include <KARRI/Algorithms/KaRRi/CCHEnvironment.h>
 #else
@@ -509,11 +516,10 @@ int main(int argc, char *argv[]) {
         using PDDistancesLabelSet = std::conditional_t<KARRI_PD_DISTANCES_USE_SIMD,
                 SimdLabelSet<KARRI_PD_DISTANCES_LOG_K, ParentInfo::NO_PARENT_INFO>,
                 BasicLabelSet<KARRI_PD_DISTANCES_LOG_K, ParentInfo::NO_PARENT_INFO>>;
-        using PDDistancesImpl = PDDistances<PDDistancesLabelSet>;
 
 #if KARRI_PD_STRATEGY == KARRI_BCH_PD_STRAT
-        using FFPDDistanceQueryImpl = PDDistanceQueryStrategies::BCHStrategy<VehicleInputGraph, VehCHEnv, PDDistancesLabelSet>;
-        FFPDDistanceQueryImpl ffPDDistanceQuery(vehicleInputGraph, *vehChEnv);
+        using PDDistanceQueryImpl = PDDistanceQueryStrategies::BCHStrategy<VehicleInputGraph, VehCHEnv, PDDistancesLabelSet>;
+        PDDistanceQueryImpl pdDistanceSearches(vehicleInputGraph, *vehChEnv);
 
 #else // KARRI_PD_STRATEGY == KARRI_CH_PD_STRAT
         using FFPDDistanceQueryImpl = PDDistanceQueryStrategies::CHStrategy<VehicleInputGraph, VehCHEnv, PDDistancesLabelSet>;
@@ -521,7 +527,7 @@ int main(int argc, char *argv[]) {
 #endif
 
         // Construct ordinary assignments finder:
-        using OrdinaryAssignmentsFinderImpl = OrdinaryAssignmentsFinder<PDDistancesImpl>;
+        using OrdinaryAssignmentsFinderImpl = OrdinaryAssignmentsFinder;
         OrdinaryAssignmentsFinderImpl ordinaryInsertionsFinder(fleet, routeState);
 
         // Construct PBNS assignments finder:
@@ -530,7 +536,7 @@ int main(int argc, char *argv[]) {
         CurVehLocToPickupSearchesImpl curVehLocToPickupSearches(vehicleInputGraph, locator, *vehChEnv, routeState, fleet.size());
 
 
-        using PBNSInsertionsFinderImpl = PBNSAssignmentsFinder<PDDistancesImpl, CurVehLocToPickupSearchesImpl>;
+        using PBNSInsertionsFinderImpl = PBNSAssignmentsFinder<CurVehLocToPickupSearchesImpl>;
         PBNSInsertionsFinderImpl pbnsInsertionsFinder(curVehLocToPickupSearches, fleet, routeState);
 
         // Construct PALS strategy and assignment finder:
@@ -541,7 +547,7 @@ int main(int argc, char *argv[]) {
 
 #if KARRI_PALS_STRATEGY == KARRI_COL
         // Use Collective-BCH PALS Strategy
-        using PALSStrategy = PickupAfterLastStopStrategies::CollectiveBCHStrategy<VehicleInputGraph, VehCHEnv, LastStopBucketsEnv, VehicleToPDLocQueryImpl, PDDistancesImpl, PALSLabelSet>;
+        using PALSStrategy = PickupAfterLastStopStrategies::CollectiveBCHStrategy<VehicleInputGraph, VehCHEnv, LastStopBucketsEnv, VehicleToPDLocQueryImpl, PDDistancesLabelSet, PALSLabelSet>;
         PALSStrategy palsStrategy(vehicleInputGraph, fleet, *vehChEnv,
                                   vehicleToPdLocQuery, lastStopBucketsEnv, routeState);
 #elif KARRI_PALS_STRATEGY == KARRI_IND
@@ -555,7 +561,7 @@ int main(int argc, char *argv[]) {
         PALSStrategy palsStrategy(vehicleInputGraph, revVehicleGraph, fleet, routeState, lastStopBucketsEnv);
 #endif
 
-        using PALSInsertionsFinderImpl = PALSAssignmentsFinder<VehicleInputGraph, PDDistancesImpl, PALSStrategy, LastStopAtVerticesInfo>;
+        using PALSInsertionsFinderImpl = PALSAssignmentsFinder<VehicleInputGraph, PALSStrategy, LastStopAtVerticesInfo>;
         PALSInsertionsFinderImpl palsInsertionsFinder(palsStrategy, vehicleInputGraph, fleet, lastStopBucketsEnv, routeState);
 
 
@@ -590,10 +596,9 @@ int main(int argc, char *argv[]) {
         using PDLocsFinderImpl = PDLocsFinder<VehicleInputGraph, PsgInputGraph, VehicleToPDLocQueryImpl>;
         PDLocsFinderImpl pdLocsFinder(vehicleInputGraph, psgInputGraph, revPsgGraph, vehicleToPdLocQuery);
 
-        FeasibleEllipticDistancesImpl feasibleEllipticPickups(fleet.size(), routeState);
-        FeasibleEllipticDistancesImpl feasibleEllipticDropoffs(fleet.size(), routeState);
+        // FeasibleEllipticDistancesImpl feasibleEllipticPickups(fleet.size(), routeState);
+        // FeasibleEllipticDistancesImpl feasibleEllipticDropoffs(fleet.size(), routeState);
 
-        
         // Read the RAPTOR data
         std::cout << "Reading RAPTOR data from file... " << std::flush;
         RAPTOR::Data raptor(raptorFileName);
@@ -650,7 +655,7 @@ int main(int argc, char *argv[]) {
         TaxiInitialTransfersType taxiInitialTransfers(psgInputGraph, *psgChEnv, psgStationBucketsEnv, stations.size());
 
         // Create TaxiULTRARAPTOR with our custom TaxiInitialTransfers
-        using PTAlgorithmWithTaxi = RAPTOR::TaxiULTRARAPTOR<BasicLabelSet<0, ParentInfo::FULL_PARENT_INFO>, RAPTOR::NoProfiler, false, TaxiInitialTransfersType>;
+        using PTAlgorithmWithTaxi = RAPTOR::TaxiULTRARAPTOR<BasicLabelSet<0, ParentInfo::FULL_PARENT_INFO>, RAPTOR::NoProfiler, true, TaxiInitialTransfersType>;
 
         PTAlgorithmWithTaxi ptAlgorithmWithTaxi(raptor, taxiInitialTransfers, stations, psgInputGraph.numEdges());
 
@@ -675,21 +680,24 @@ int main(int argc, char *argv[]) {
         PBNSToStationsImpl pbnsToStations(curVehLocToPickupSearches, fleet, routeState);
 
         using TaxiLegApproximationImpl = TaxiLegApproximation<VehicleInputGraph, VehCHEnv, StationBucketsEnv>;
-        
+
+
+
+        using KaRRiBaseInfoPreparatorImpl = KaRRiBaseInfoPreparator<VehicleInputGraph, VehCHEnv, FeasibleEllipticDistancesImpl, PDLocsFinderImpl, PDLocsAtExistingStopsFinderImpl, EllipticBCHSearchesImpl, PDDistanceQueryImpl, RelevantPDLocsFilterImpl>;
+        KaRRiBaseInfoPreparatorImpl kaRRiBaseInfoPreparator(vehicleInputGraph, *vehChEnv, fleet, routeState, pdLocsFinder, pdLocsAtExistingStops, ellipticSearches, pdDistanceSearches);
+
+        using WalkTripFinderImpl = WalkingTripFinder<VehicleInputGraph, PsgInputGraph, PsgCHEnv>;
+        WalkTripFinderImpl walkTripFinder(vehicleInputGraph, psgInputGraph, *psgChEnv, routeState);
+
+        using TaxiTripFinderImpl = TaxiTripFinder<OrdinaryAssignmentsFinderImpl, PBNSInsertionsFinderImpl, PALSInsertionsFinderImpl, DALSInsertionsFinderImpl>;
+        TaxiTripFinderImpl taxiTripFinder(ordinaryInsertionsFinder, pbnsInsertionsFinder, palsInsertionsFinder, dalsInsertionsFinder);
+
+        using PTTripFinderImpl = PTJourneyFinder<EdgeQuery, PTAlgorithmWithTaxi>;
+        PTTripFinderImpl ptTripFinder(queries, ptAlgorithmWithTaxi);
+
         // -> pass ULTRA algorithm instance and stationBucketsEnv, palsToStations to PTAndTaxiTripFinder
         using PTAndTaxiTripFinderImpl = PTAndTaxiTripFinder<
-                FeasibleEllipticDistancesImpl,
-                RequestStateInitializerImpl,
-                PDLocsFinderImpl,
-                PDLocsAtExistingStopsFinderImpl,
-                EllipticBCHSearchesImpl,
-                FFPDDistanceQueryImpl,
-                OrdinaryAssignmentsFinderImpl,
-                PBNSInsertionsFinderImpl,
-                PALSInsertionsFinderImpl,
-                DALSInsertionsFinderImpl,
-                RelevantPDLocsFilterImpl, 
-                VehicleInputGraph, 
+                VehicleInputGraph,
                 VehCHEnv, 
                 StationBucketsEnv,
                 StationBCH,
@@ -701,15 +709,13 @@ int main(int argc, char *argv[]) {
                 EdgeQuery,
                 PTAlgorithmWithTaxi,
                 TaxiLegApproximationImpl>;
-        PTAndTaxiTripFinderImpl ptAndTaxiTripFinder(requestStateInitializer, pdLocsFinder, pdLocsAtExistingStops,
-                                                    feasibleEllipticPickups, feasibleEllipticDropoffs, ellipticSearches, 
-                                                    ffPDDistanceQuery, ordinaryInsertionsFinder, pbnsInsertionsFinder, 
-                                                    palsInsertionsFinder, dalsInsertionsFinder, relevantPdLocsFilter, 
-                                                    vehicleInputGraph, *vehChEnv, fleet, routeState,
+        PTAndTaxiTripFinderImpl ptAndTaxiTripFinder(vehicleInputGraph, *vehChEnv, fleet, routeState,
                                                     stations, queries, stationBucketsEnv, palsToStations, stationsInEllipse, dalsToStations, pbnsToStations,
                                                     ptAlgorithmWithTaxi);
 
 
+        using ModeChoiceImpl = mode_choice::ModeChoice<mode_choice::UtilityLogitCriterion, std::ofstream>;
+        ModeChoiceImpl modeChoice(routeState);
 
 #if KARRI_OUTPUT_VEHICLE_PATHS
         using VehPathTracker = PathTracker<VehicleInputGraph, VehCHEnv, std::ofstream>;
@@ -732,8 +738,8 @@ int main(int argc, char *argv[]) {
         }
 
         // Run simulation:
-        using EventSimulationImpl = EventSimulation<PTAndTaxiTripFinderImpl, SystemStateUpdaterImpl, RouteState>;
-        EventSimulationImpl eventSimulation(fleet, requests, ptAndTaxiTripFinder, systemStateUpdater,
+        using EventSimulationImpl = EventSimulation<RequestStateInitializerImpl, KaRRiBaseInfoPreparatorImpl, WalkTripFinderImpl, TaxiTripFinderImpl, PTTripFinderImpl, PTAndTaxiTripFinderImpl, ModeChoiceImpl, SystemStateUpdaterImpl, RouteState>;
+        EventSimulationImpl eventSimulation(fleet, requests, requestStateInitializer, kaRRiBaseInfoPreparator, walkTripFinder, taxiTripFinder, ptTripFinder, ptAndTaxiTripFinder, modeChoice, systemStateUpdater,
                                             routeState, stations, true);
         eventSimulation.run();
 

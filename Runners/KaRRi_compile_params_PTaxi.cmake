@@ -181,3 +181,11 @@ if (KARRI_COL_PALS_ONLY_PROMISING_DROPOFFS)
 else(KARRI_COL_PALS_ONLY_PROMISING_DROPOFFS)
     target_compile_definitions(PTaxi PRIVATE KARRI_COL_PALS_ONLY_PROMISING_DROPOFFS=false)
 endif (KARRI_COL_PALS_ONLY_PROMISING_DROPOFFS)
+
+
+# Logit settings
+
+# If set, use this value as fixed seed for RNG. Use for debugging.
+if (DEFINED KARRI_LOGIT_FIXED_SEED)
+    target_compile_definitions(PTaxi PRIVATE KARRI_LOGIT_FIXED_SEED=${KARRI_LOGIT_FIXED_SEED})
+endif (DEFINED KARRI_LOGIT_FIXED_SEED)

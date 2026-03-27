@@ -55,15 +55,15 @@ namespace karri::PickupAfterLastStopStrategies {
     template<typename InputGraphT,
         typename CHEnvT,
         typename LastStopBucketsEnvT,
-        typename PDDistancesT,
+        typename PDLabelSetT,
         typename QueueT = AddressableQuadHeap,
         bool STALL_LABELS = false>
     class MinCostPairAfterLastStopQuery {
         using BucketContainer = LabelBucketContainer<PDPairAfterLastStopLabel>;
 
-        using PDDistanceLabel = typename PDDistancesT::DistanceLabel;
-        using PDLabelMask = typename PDDistancesT::LabelMask;
-        static constexpr int PD_K = PDDistancesT::K;
+        using PDDistanceLabel = typename PDLabelSetT::DistanceLabel;
+        using PDLabelMask = typename PDLabelSetT::LabelMask;
+        static constexpr int PD_K = PDLabelSetT::K;
         static constexpr int INVALID_DIST = -1;
 
     public:
@@ -88,7 +88,7 @@ namespace karri::PickupAfterLastStopStrategies {
         }
 
         void run(const std::vector<int> &promisingDropoffIds, const int &bestKnownCost,
-                 const RequestState &requestState, const PDDistancesT &pdDistances, const PDLocs &pdLocs) {
+                 const RequestState &requestState, const PDDistances &pdDistances, const PDLocs &pdLocs) {
             KaRRiTimer timer;
 
             initQueryForRun(promisingDropoffIds, bestKnownCost, requestState, pdDistances, pdLocs);
@@ -164,7 +164,7 @@ namespace karri::PickupAfterLastStopStrategies {
         }
 
         void initQueryForRun(const std::vector<int> &promisingDropoffIds, const int &bestKnownCost,
-                             const RequestState &requestState, const PDDistancesT &pdDistances, const PDLocs &pdLocs) {
+                             const RequestState &requestState, const PDDistances &pdDistances, const PDLocs &pdLocs) {
             numLabelsRelaxed = 0;
             numEntriesScanned = 0;
             numInitialLabelsGenerated = 0;
@@ -189,7 +189,7 @@ namespace karri::PickupAfterLastStopStrategies {
                 directDistsForInitialLabels.clear();
                 for (const auto &dropoffId: promisingDropoffIds) {
                     const auto &dropoff = pdLocs.dropoffs[dropoffId];
-                    const auto &directDistBatch = pdDistances.getDirectDistancesForBatchOfPickups(
+                    const auto &directDistBatch = pdDistances.getDirectDistancesForBatchOfPickups<PDDistanceLabel>(
                         pickupBatchIdx * PD_K, dropoffId);
                     checkDropoffForInitialLabelWithGivenPickupBatch(dropoff, directDistBatch, pdLocs);
                 }

@@ -71,20 +71,20 @@ namespace karri::DropoffAfterLastStopStrategies {
                   vehicleLabelBuckets(fleet.size()),
                   vehiclesSeen(fleet.size()) {}
 
-        void run(const RequestState& requestState, const PDLocs& pdLocs) {
+        void run(const RequestState& requestState, const PDLocs& pdLocs, const TaxiResult& result) {
             KaRRiTimer timer;
 
-            init(requestState, pdLocs);
+            init(requestState, pdLocs, result);
 
             initializationTime = timer.elapsed<std::chrono::nanoseconds>();
             timer.restart();
 
             int v;
             DropoffLabel label;
-            while (!stopSearch(requestState)) {
+            while (!stopSearch(result)) {
                 const bool unpruned = settleNextLabel(v, label, requestState, pdLocs);
                 if (unpruned)
-                    scanVehicleBucket(v, label, requestState, pdLocs);
+                    scanVehicleBucket(v, label, requestState, pdLocs, result);
             }
 
             runTime = timer.elapsed<std::chrono::nanoseconds>() + initializationTime;
@@ -126,16 +126,16 @@ namespace karri::DropoffAfterLastStopStrategies {
 
     private:
 
-       inline bool stopSearch(const RequestState& requestState) const {
+       inline bool stopSearch(const TaxiResult& result) const {
 
             if (reverseQueue.empty()) return true;
 
             int v, minCostLowerBound;
             reverseQueue.min(v, minCostLowerBound);
-            return minCostLowerBound > requestState.getBestCost();
+            return minCostLowerBound > result.getBestCost();
         }
 
-        void init(const RequestState& requestState, const PDLocs& pdLocs) {
+        void init(const RequestState& requestState, const PDLocs& pdLocs, const TaxiResult &result) {
             numEdgeRelaxations = 0;
             numLabelsRelaxed = 0;
             numEntriesScanned = 0;
@@ -157,7 +157,7 @@ namespace karri::DropoffAfterLastStopStrategies {
                 const auto offset = inputGraph.travelTime(dropoff.loc);
                 const DropoffLabel initialLabel = {dropoff.id, offset};
                 const auto initialCost = costOf(initialLabel, requestState, pdLocs);
-                if (initialCost > requestState.getBestCost())
+                if (initialCost > result.getBestCost())
                     continue;
 
                 if (insertLabelAtVertexAndClean(tailRank, vertexLabelBuckets, initialLabel, requestState, pdLocs)) {
@@ -333,7 +333,8 @@ namespace karri::DropoffAfterLastStopStrategies {
             return true;
         }
 
-        void scanVehicleBucket(const int v, const DropoffLabel &label, const RequestState& requestState, const PDLocs& pdLocs) {
+        void scanVehicleBucket(const int v, const DropoffLabel &label, const RequestState& requestState, const PDLocs& pdLocs,
+            const TaxiResult &result) {
             using namespace time_utils;
 
             const auto &dropoff = pdLocs.dropoffs[label.dropoffId];
@@ -351,7 +352,7 @@ namespace karri::DropoffAfterLastStopStrategies {
                     const auto costFromLastStop = calculator.calcVehicleIndependentCostLowerBoundForDALSWithKnownMinDistToDropoff(
                             fullDistToDropoff, dropoff, requestState);
 
-                    if (costFromLastStop > requestState.getBestCost())
+                    if (costFromLastStop > result.getBestCost())
                         continue;
 
                     // If vehicle is not eligible for dropoff after last stop assignments, it does not need to be regarded.
@@ -362,7 +363,7 @@ namespace karri::DropoffAfterLastStopStrategies {
                     // vehicle and dropoff does not need to be regarded.
                     const int vehDepTimeAtLastStop = getVehDepTimeAtStopForRequest(vehId,
                                                                                    routeState.numStopsOf(vehId) - 1,
-                                                                                   requestState, routeState);
+                                                                                   requestState.now(), routeState);
                     if (fleet[vehId].endOfServiceTime < vehDepTimeAtLastStop + fullDistToDropoff + InputConfig::getInstance().stopTime)
                         continue;
 
@@ -389,7 +390,7 @@ namespace karri::DropoffAfterLastStopStrategies {
                     // Entries of idle bucket are sorted by arrival time at v. The vehicle-independent lower
                     // bound costFromLastStop increases monotonously with this arrival time. So once we find an entry
                     // where the lower bound exceeds the best known cost, all remaining entries in the bucket will, too.
-                    if (costFromLastStop > requestState.getBestCost())
+                    if (costFromLastStop > result.getBestCost())
                         break;
 
                     // If vehicle is not eligible for dropoff after last stop assignments, it does not need to be regarded.

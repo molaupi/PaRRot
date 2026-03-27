@@ -1,0 +1,39 @@
+#pragma once
+#include "InsertionType.h"
+
+namespace karri {
+    struct TaxiResult {
+        TaxiResult() noexcept = default;
+
+        TaxiResult(const int cost, const int arrivalTime, const Assignment &asgn, InsertionType insertionType) noexcept
+            : bestCost(cost), arrivalTime(arrivalTime), bestAssignment(asgn), insertionType(insertionType) {
+        }
+
+        int bestCost = INFTY;
+        int arrivalTime = INFTY;
+        Assignment bestAssignment;
+        InsertionType insertionType = UNDEFINED;
+
+        bool tryAssignmentWithKnownCost(const Assignment &asgn, const int cost) {
+            if (cost < INFTY && (cost < bestCost || (cost == bestCost &&
+                                                     breakCostTie(asgn, bestAssignment)))) {
+                bestAssignment = asgn;
+                bestCost = cost;
+                return true;
+                                                     }
+            return false;
+        }
+
+        const int &getBestCost() const {
+            return bestCost;
+        }
+
+        const Assignment & getBestAssignment() const {
+            return bestAssignment;
+        }
+
+        bool isValid() const {
+            return bestAssignment.vehicle && bestAssignment.pickup.id != INVALID_ID && bestAssignment.dropoff.id != INVALID_ID;
+        }
+    };
+}

@@ -2,66 +2,53 @@
 
 #include <vector>
 #include <ULTRA/DataStructures/RAPTOR/Entities/Journey.h>
+#include "../util.h"
 
 namespace karri {
 
 class PTResult {
     using Journey = RAPTOR::Journey;
-public:
-    PTResult() : valid(false), bestCost(INFTY) {}
 
-    PTResult(std::vector<Journey> &journeyParetoFront, const int &maxTripTime)
-        : bestCost(INFTY), valid(false) {
-            int cost;
-            for (Journey &journey: journeyParetoFront) {
-                cost = CostCalculator::calcPTJourneyCost(
-                                                getTotalTripTime(journey), 
-                                                getTotalTransferTime(journey), 
-                                                getNumberOfTransfers(journey),
-                                                maxTripTime);
-                if (cost < bestCost) {
-                    valid = true;
-                    bestCost = cost;
-                    bestJourney = journey;
-                };
-            }
+    static int computeCost(const Journey &journey, const int maxTripTime) {
+        if (journey.empty())
+            return INFTY;
+        return CostCalculator::calcPTJourneyCost(getTotalTripTime(journey),
+                                            getTotalTransferTime(journey),
+                                            getNumberOfTransfers(journey),
+                                            maxTripTime);
+    }
+
+public:
+    PTResult() : valid(false), cost(INFTY) {}
+
+    PTResult(const Journey &journey, const int maxTripTime)
+    : journey(journey), cost(computeCost(journey, maxTripTime)), valid(!journey.empty()) {
+        for (const auto& leg :journey) {
+            KASSERT(!leg.usesTaxi);
         }
+    }
     
     // Flag to indicate if this PT result is valid or not
     bool isValid() const { return valid; }
     void setValid(bool isValid) { valid = isValid; }
 
-    const int &getBestCost() const { return bestCost; }
-
-    const int getCostWithoutTripTime() const { 
-        return valid && !bestJourney.empty() ? 
-        CostCalculator::calcPTJourneyCostWithoutTripTime(
-            getTotalTransferTime(bestJourney), 
-            getNumberOfTransfers(bestJourney)
-        ) : 0;
-    }
+    const int &getCost() const { return cost; }
 
     const Journey &getBestJourney() const {
-        return bestJourney;
-    }
-
-    const bool isJourneyWalking() const { 
-        return bestJourney.size() == 1 && 
-               !bestJourney.front().usesRoute && 
-               !bestJourney.front().usesTaxi; 
+        return journey;
     }
 
     // at Destination
-    const int getArrivalTime() const {
-        return valid && !bestJourney.empty() ? 
-            convertToKaRRiTime(bestJourney.back().arrivalTime) : 
+    int getArrivalTime() const {
+        return valid && !journey.empty() ?
+            convertToKaRRiTime(journey.back().arrivalTime) :
             INFTY;
     }
 
-    const int getArrivalTimeAtLastStation() const {
+    int getArrivalTimeAtLastStation() const {
         if (!valid)
             return INFTY;
-        for (auto it = bestJourney.rbegin(); it != bestJourney.rend(); ++it) {
+        for (auto it = journey.rbegin(); it != journey.rend(); ++it) {
             if (it->usesRoute) {
                 return convertToKaRRiTime(it->arrivalTime);
             }
@@ -70,14 +57,14 @@ public:
     }
 
     // at Origin
-    const int getDepartureTime() const {
-        return valid && !bestJourney.empty() ? 
-            convertToKaRRiTime(bestJourney.front().departureTime) : 
+    int getDepartureTime() const {
+        return valid && !journey.empty() ?
+            convertToKaRRiTime(journey.front().departureTime) :
             INFTY;
     }
 
-    const int getDepartureTimeAtFirstStation() const {
-        for (const auto &leg : bestJourney) {
+    int getDepartureTimeAtFirstStation() const {
+        for (const auto &leg : journey) {
             if (leg.usesRoute) {
                 return convertToKaRRiTime(leg.departureTime);
             }
@@ -85,54 +72,46 @@ public:
         return INFTY;
     }
 
-    const int getWalkingTimeToFirstStation() const {
-        return valid && !bestJourney.empty() ? 
-            convertToKaRRiTime(bestJourney.front().arrivalTime - bestJourney.front().departureTime) : 
+    int getWalkingTimeToFirstStation() const {
+        return valid && !journey.empty() ?
+            convertToKaRRiTime(journey.front().arrivalTime - journey.front().departureTime) :
             INFTY;
     }
 
-    const int getWalkingTimeFromLastStation() const {
-        return valid && !bestJourney.empty() ? 
-            convertToKaRRiTime(bestJourney.back().arrivalTime - bestJourney.back().departureTime) : 
+    int getWalkingTimeFromLastStation() const {
+        return valid && !journey.empty() ?
+            convertToKaRRiTime(journey.back().arrivalTime - journey.back().departureTime) :
             INFTY;
     }
 
-    const int getFirstStation() const {
-        return bestJourney.empty() ? INVALID_ID : bestJourney.front().to.value();
+    int getFirstStation() const {
+        return journey.empty() ? INVALID_ID : journey.front().usesRoute? journey.front().from.value() : journey.front().to.value();
     }
 
-    const int getLastStation() const {
-        return bestJourney.empty() ? INVALID_ID : bestJourney.back().from.value();
+    int getLastStation() const {
+        return journey.empty() ? INVALID_ID : journey.back().usesRoute? journey.back().to.value() : journey.back().from.value();
     }
 
-    const bool isInitialTransferByTaxi() const {
-        return bestJourney.empty() ? false : bestJourney.front().usesTaxi;
+    int getAccessEgressTransferTime() const {
+        return convertToKaRRiTime(RAPTOR::initialTransferTime(journey));
     }
 
-    const bool isFinalTransferByTaxi() const {
-        return bestJourney.empty() ? false : bestJourney.back().usesTaxi;
+    int getIntermediateTransferTime() const {
+        return convertToKaRRiTime(RAPTOR::intermediateTransferTime(journey));
     }
 
-    inline const int getTotalTransferTime(Journey journey) const {
-        return convertToKaRRiTime(RAPTOR::totalTransferTime(journey));
-    }
-
-    inline const int getTotalTripTime(Journey journey) const {
-        return convertToKaRRiTime(journey.back().arrivalTime - journey.front().departureTime);
-    }
-
-    inline const int getNumberOfTransfers(Journey journey) const {
-        const int numTrips = RAPTOR::countTrips(journey);
-        return numTrips == 0 ? 0 : numTrips - 1;
-    }
-    
-private:
-    const int convertToKaRRiTime(const int timeInSeconds) const {
-        return timeInSeconds * 10;
+    int getTotalInVehicleTime() const {
+        int totalSeconds = 0;
+        for (const auto &leg: journey) {
+            if (leg.usesRoute) {
+                totalSeconds += leg.arrivalTime - leg.departureTime;
+            }
+        }
+        return convertToKaRRiTime(totalSeconds);
     }
 
     bool valid;
-    int bestCost;
-    Journey bestJourney;
+    int cost;
+    Journey journey;
 };
 } // namespace karri

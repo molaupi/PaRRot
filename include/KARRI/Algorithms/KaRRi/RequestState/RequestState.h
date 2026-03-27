@@ -40,27 +40,19 @@
 
 namespace karri {
 
-// Holds information relating to a specific request like its pickups and dropoffs and the best known assignment.
+// Holds information relating to a specific request.
     struct RequestState {
 
         RequestState()
                 : originalRequest(),
-                  originalReqDirectDist(-1),
-                  minDirectPDDist(-1),
-                  bestAssignment(),
-                  bestCost(INFTY),
-                  bestArrivalTime(INFTY),
-                  notUsingVehicleIsBest(false),
-                  notUsingVehicleDist(INFTY),
-                  earliestDepartureTime(INFTY),
-                  maxArrivalTimeAtDropoffStation(0),
-                  currentWaitTime(0) {}
+                  originalReqDirectDist(-1)
+        // , currentWaitTime(0)
+        {}
 
 
         // Information about current request itself
         Request originalRequest;
         int originalReqDirectDist;
-        int minDirectPDDist;
         int requestIssueTime;
 
         // Shorthand for requestIssueTime
@@ -87,113 +79,37 @@ namespace karri {
         }
 
         int getMaxArrTimeAtDropoff(const PDLoc& dropoff) const {
-            return std::min(
-                originalRequest.requestTime + getOriginalReqMaxTripTime() - dropoff.walkingDist, 
-                maxArrivalTimeAtDropoffStation
-            );
+            return originalRequest.requestTime + getOriginalReqMaxTripTime() - dropoff.walkingDist;
         }
 
-        void setMaxArrTimeAtDropoffStation(const int maxTime) {
-            maxArrivalTimeAtDropoffStation = maxTime;
-        }
 
         int getMaxDepTimeAtPickup() const {
-            return originalRequest.requestTime + InputConfig::getInstance().maxWaitTime - currentWaitTime;
+            // return originalRequest.requestTime + InputConfig::getInstance().maxWaitTime - currentWaitTime;
+            return originalRequest.requestTime + InputConfig::getInstance().maxWaitTime ;
         }
 
-        void setCurrentWaitTime(const int waitTime) {
-            currentWaitTime = waitTime;
-        }
+        // void setCurrentWaitTime(const int waitTime) {
+        //     currentWaitTime = waitTime;
+        // }
 
-        // Information about best known assignment for current request
 
-        const Assignment &getBestAssignment() const {
-            return bestAssignment;
-        }
-
-        const int &getBestCost() const {
-            return bestCost;
-        }
-
-        bool isNotUsingVehicleBest() const {
-            return notUsingVehicleIsBest;
-        }
-
-        const int &getNotUsingVehicleDist() const {
-            return notUsingVehicleDist;
-        }
-
-        int getArrivalTime(RouteState &routeState) {
-            if (notUsingVehicleIsBest) return originalRequest.requestTime + notUsingVehicleDist;
-            return calcArrivalTime(bestAssignment, routeState);
-        }
-
-        bool tryAssignmentWithKnownCost(const Assignment &asgn, const int cost) {         
-            if (cost < INFTY && (cost < bestCost || (cost == bestCost &&
-                                    breakCostTie(asgn, bestAssignment)))) {
-
-                bestAssignment = asgn;
-                bestCost = cost;
-                notUsingVehicleIsBest = false;
-                notUsingVehicleDist = INFTY;
-                return true;
-            }
-            return false;
-        }
-
-        bool tryAssignmentWithArrivalTime(const Assignment &asgn, const RouteState &routeState) {
-            const int arrivalTime = calcArrivalTime(asgn, routeState);
-            if (arrivalTime < INFTY && (arrivalTime < bestArrivalTime ||
-                                        (arrivalTime == bestArrivalTime &&
-                                         breakCostTie(asgn, bestAssignment)))) {
-                bestAssignment = asgn;
-                bestArrivalTime = arrivalTime;
-                notUsingVehicleIsBest = false;
-                notUsingVehicleDist = INFTY;
-                return true;
-            }
-            return false;
-        }
-
-        void tryNotUsingVehicleAssignment(const int notUsingVehDist, const int travelTimeOfDestEdge) {
-            const int cost = CostCalculator::calcCostForNotUsingVehicle(notUsingVehDist, travelTimeOfDestEdge, *this);
-            if (cost < bestCost) {
-                bestAssignment = Assignment();
-                bestCost = cost;
-                notUsingVehicleIsBest = true;
-                notUsingVehicleDist = notUsingVehDist;
-            }
+        int getArrivalTime(const Assignment &asgn, const RouteState &routeState) const {
+            using namespace time_utils;
+            const int actualDepTimeAtPickup = getActualDepTimeAtPickup(asgn, *this, routeState);
+            const int initialPickupDetour = calcInitialPickupDetour(asgn, actualDepTimeAtPickup, *this, routeState);
+            const bool dropoffAtExistingStop = isDropoffAtExistingStop(asgn, routeState);
+            return getArrTimeAtDropoff(actualDepTimeAtPickup, asgn, initialPickupDetour, dropoffAtExistingStop, routeState);
         }
 
         void reset() {
             originalRequest = {};
             originalReqDirectDist = INFTY;
-            minDirectPDDist = INFTY;
-
-            bestAssignment = Assignment();
-            bestCost = INFTY;
-            notUsingVehicleIsBest = false;
-            notUsingVehicleDist = INFTY;
+            // currentWaitTime = 0;
         }
 
-    private:
+    // private:
 
-        int calcArrivalTime(const Assignment &asgn, const RouteState &routeState) {
-        using namespace time_utils;
-        const int actualDepTimeAtPickup = getActualDepTimeAtPickup(asgn, *this, routeState);
-        const int initialPickupDetour = calcInitialPickupDetour(asgn, actualDepTimeAtPickup, *this, routeState);
-        const bool dropoffAtExistingStop = isDropoffAtExistingStop(asgn, routeState);
-        return getArrTimeAtDropoff(actualDepTimeAtPickup, asgn, initialPickupDetour, dropoffAtExistingStop, routeState);
-        }
+        // int currentWaitTime;
 
-        // Information about best known assignment for current request
-        Assignment bestAssignment;
-        int bestCost;
-        int bestArrivalTime;
-        bool notUsingVehicleIsBest;
-        int notUsingVehicleDist;
-        int earliestDepartureTime;
-        int maxArrivalTimeAtDropoffStation;
-        int currentWaitTime;
     };
 }

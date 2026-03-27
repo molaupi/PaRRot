@@ -1,3 +1,5 @@
+#pragma once
+
 #include <limits>
 
 // A special value representing infinity.

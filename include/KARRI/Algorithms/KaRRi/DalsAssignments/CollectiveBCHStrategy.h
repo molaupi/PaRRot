@@ -84,21 +84,23 @@ namespace karri::DropoffAfterLastStopStrategies {
 
         void tryDropoffAfterLastStop(const RelevantPDLocs &relevantOrdinaryPickups,
                                      const RelevantPDLocs &relevantPickupsBeforeNextStop,
-                                     RequestState& requestState, const PDLocs& pdLocs, stats::DalsAssignmentsPerformanceStats& stats) {
+                                     const RequestState& requestState, const PDLocs& pdLocs,
+                                     TaxiResult &result,
+                                     stats::DalsAssignmentsPerformanceStats& stats) {
             curRelOrdinaryPickups = &relevantOrdinaryPickups;
             curRelPickupsBns = &relevantPickupsBeforeNextStop;
 
-            runCollectiveSearch(requestState, pdLocs, stats);
-            enumerateAssignments(relevantOrdinaryPickups, relevantPickupsBeforeNextStop, requestState, pdLocs, stats);
+            runCollectiveSearch(requestState, pdLocs, result, stats);
+            enumerateAssignments(relevantOrdinaryPickups, relevantPickupsBeforeNextStop, requestState, pdLocs, result, stats);
         }
 
 
     private:
 
-        void runCollectiveSearch(const RequestState& requestState, const PDLocs& pdLocs, stats::DalsAssignmentsPerformanceStats& stats) {
+        void runCollectiveSearch(const RequestState& requestState, const PDLocs& pdLocs, TaxiResult &result, stats::DalsAssignmentsPerformanceStats& stats) {
             KaRRiTimer timer;
 
-            minCostSearch.run(requestState, pdLocs);
+            minCostSearch.run(requestState, pdLocs, result);
 
             stats.searchTime += minCostSearch.getRunTime();
             stats.numEdgeRelaxationsInSearchGraph += minCostSearch.getNumEdgeRelaxations();
@@ -122,8 +124,9 @@ namespace karri::DropoffAfterLastStopStrategies {
         // stop of veh to all dropoffs and try every assignment explicitly.
         void enumerateAssignments(const RelevantPDLocs &relevantOrdinaryPickups,
                                   const RelevantPDLocs &relevantPickupsBeforeNextStop,
-                                  RequestState& requestState,
-                                  const PDLocs& pdLocs, stats::DalsAssignmentsPerformanceStats& stats) {
+                                  const RequestState& requestState, const PDLocs& pdLocs,
+                                  TaxiResult &result,
+                                  stats::DalsAssignmentsPerformanceStats& stats) {
             const int64_t pbnsTimeBefore = curVehLocToPickupSearches.getTotalLocatingVehiclesTimeForRequest() +
                                            curVehLocToPickupSearches.getTotalVehicleToPickupSearchTimeForRequest();
             int numAssignmentsTried = 0;
@@ -136,9 +139,9 @@ namespace karri::DropoffAfterLastStopStrategies {
             constraintBreakers.clear();
 
             enumerateAssignmentsWithOrdinaryPickup(numAssignmentsTried, numParetoBestLabels, numFallBackChSearches,
-                                                   ranClosestDropoffSearch, relevantOrdinaryPickups, requestState, pdLocs);
+                                                   ranClosestDropoffSearch, relevantOrdinaryPickups, requestState, pdLocs, result);
             enumerateAssignmentsWithPBNS(numAssignmentsTried, numParetoBestLabels, numFallBackChSearches,
-                                         ranClosestDropoffSearch, relevantPickupsBeforeNextStop, requestState, pdLocs);
+                                         ranClosestDropoffSearch, relevantPickupsBeforeNextStop, requestState, pdLocs, result);
 
             // Time spent to locate vehicles and compute distances from current vehicle locations to pickups is counted
             // into PBNS time so subtract it here.
@@ -162,8 +165,8 @@ namespace karri::DropoffAfterLastStopStrategies {
         void enumerateAssignmentsWithOrdinaryPickup(int &numAssignmentsTried, int &numParetoBestLabels,
                                                     int &numFallBackChSearches, bool &ranClosestDropoffSearch,
                                                     const RelevantPDLocs &relevantOrdinaryPickups,
-                                                    RequestState& requestState,
-                                                    const PDLocs& pdLocs) {
+                                                    const RequestState& requestState, const PDLocs& pdLocs,
+                                                    TaxiResult &result) {
             using namespace time_utils;
             Assignment asgn;
 
@@ -187,7 +190,7 @@ namespace karri::DropoffAfterLastStopStrategies {
                     // additionally sorted by increasing dropoff side cost, so if one is worse than the best known assignment
                     // all other labels for this vehicle can also be skipped.
                     if (calculator.calcVehicleIndependentCostLowerBoundForDALSWithKnownMinDistToDropoff(
-                            distFromLastStopToDropoff, asgn.dropoff, requestState) > requestState.getBestCost())
+                            distFromLastStopToDropoff, asgn.dropoff, requestState) > result.getBestCost())
                         break;  // no need to check pickup before next stop
 
                     const auto &numStops = routeState.numStopsOf(vehId);
@@ -220,7 +223,7 @@ namespace karri::DropoffAfterLastStopStrategies {
                             const auto minCostFromHere = calculator.calcVehicleIndependentCostLowerBoundForDALSWithKnownMinDistToDropoff(
                                     asgn.dropoff.walkingDist, distFromLastStopToDropoff, minTripTimeToLastStop,
                                     requestState);
-                            if (minCostFromHere > requestState.getBestCost())
+                            if (minCostFromHere > result.getBestCost())
                                 break;
 
                             curPickupIndex = entry.stopIndex;
@@ -242,7 +245,7 @@ namespace karri::DropoffAfterLastStopStrategies {
                         if (!isServiceTimeConstraintViolated(fleet[vehId], requestState, residualDetourAtEnd,
                                                              routeState)) {
                             ++numAssignmentsTried;
-                            requestState.tryAssignmentWithKnownCost(asgn, calculator.calc(asgn, requestState));
+                            result.tryAssignmentWithKnownCost(asgn, calculator.calc(asgn, requestState));
                         } else {
                             // In the unlikely case that the assignment breaks the service time constraint of this
                             // vehicle, mark this combination of pareto best dropoff label and ordinary pickup label as
@@ -261,7 +264,7 @@ namespace karri::DropoffAfterLastStopStrategies {
                 }
             }
 
-            filterConstraintBreakersBasedOnCost(requestState);
+            filterConstraintBreakersBasedOnCost(requestState, result);
             if (!constraintBreakers.empty()) {
                 closestDropoffSearch.run(pdLocs.dropoffs);
                 ranClosestDropoffSearch = true;
@@ -270,15 +273,15 @@ namespace karri::DropoffAfterLastStopStrategies {
                 // For every remaining constraint breaker, we know that the cost ignoring the constraint is better than
                 // the best known cost and that there is a dropoff for which the constraint is held.
                 // Therefore, we have to try all dropoffs to see if there is one for which both of those aspects are true.
-                evaluateConstraintBreakersWithAllDropoffs(numAssignmentsTried, numFallBackChSearches, requestState, pdLocs);
+                evaluateConstraintBreakersWithAllDropoffs(numAssignmentsTried, numFallBackChSearches, requestState, pdLocs, result);
             }
         }
 
         void
         enumerateAssignmentsWithPBNS(int &numAssignmentsTried, int &, int &numFallBackChSearches,
                                      bool &ranClosestDropoffSearch, const RelevantPDLocs &relevantPickupsBeforeNextStop,
-                                     RequestState& requestState,
-                                     const PDLocs& pdLocs) {
+                                     const RequestState& requestState, const PDLocs& pdLocs,
+                                     TaxiResult &result) {
             using namespace time_utils;
 
             Assignment asgn;
@@ -322,7 +325,7 @@ namespace karri::DropoffAfterLastStopStrategies {
                     // cost for this vehicle, then cost of any PBNS assignment will be worse for this and all remaining
                     // labels.
                     if (calculator.calcVehicleIndependentCostLowerBoundForDALSWithKnownMinDistToDropoff(
-                            distFromLastStopToDropoff, asgn.dropoff, requestState) > requestState.getBestCost())
+                            distFromLastStopToDropoff, asgn.dropoff, requestState) > result.getBestCost())
                         break;  // no need to check pickup before next stop
 
 
@@ -336,7 +339,7 @@ namespace karri::DropoffAfterLastStopStrategies {
                     const auto minCostFromHere = calculator.calcVehicleIndependentCostLowerBoundForDALSWithKnownMinDistToDropoff(
                             asgn.dropoff.walkingDist, distFromLastStopToDropoff, minTripTimeToLastStop, requestState);
 
-                    if (minCostFromHere > requestState.getBestCost()) {
+                    if (minCostFromHere > result.getBestCost()) {
                         continue;
                     }
 
@@ -355,7 +358,7 @@ namespace karri::DropoffAfterLastStopStrategies {
                             const auto lowerBoundCost = calculator.calcWithoutHardConstraints(asgn, requestState);
                             // If the cost lower bound is worse than the best known cost, this pickup/dropoff
                             // combination is not relevant.
-                            if (lowerBoundCost > requestState.getBestCost())
+                            if (lowerBoundCost > result.getBestCost())
                                 continue;
 
                             // Otherwise, calculate the exact distance from the vehicle's location to the pickup.
@@ -391,14 +394,14 @@ namespace karri::DropoffAfterLastStopStrategies {
                     if (!isServiceTimeConstraintViolated(fleet[vehId], requestState, residualDetourAtEnd,
                                                          routeState)) {
                         ++numAssignmentsTried;
-                        requestState.tryAssignmentWithKnownCost(asgn, calculator.calc(asgn, requestState));
+                        result.tryAssignmentWithKnownCost(asgn, calculator.calc(asgn, requestState));
                     } else {
                         constraintBreakers.push_back(asgn);
                     }
                 }
             }
 
-            filterConstraintBreakersBasedOnCost(requestState);
+            filterConstraintBreakersBasedOnCost(requestState, result);
             if (!constraintBreakers.empty()) {
                 if (!ranClosestDropoffSearch) {
                     closestDropoffSearch.run(pdLocs.dropoffs);
@@ -409,7 +412,7 @@ namespace karri::DropoffAfterLastStopStrategies {
                 // For every remaining constraint breaker, we know that the cost ignoring the constraint is better than
                 // the best known cost and that there is a dropoff for which the constraint is held.
                 // Therefore, we have to try all dropoffs to see if there is one for which both of those aspects are true.
-                evaluateConstraintBreakersWithAllDropoffs(numAssignmentsTried, numFallBackChSearches, requestState, pdLocs);
+                evaluateConstraintBreakersWithAllDropoffs(numAssignmentsTried, numFallBackChSearches, requestState, pdLocs, result);
             }
         }
 
@@ -419,7 +422,7 @@ namespace karri::DropoffAfterLastStopStrategies {
         // constraint. We now filter out the constraint breakers that lead to cost worse than that.
         // Constraint breakers have to be given ordered by vehicles.
         // We maintain the order of constraint breakers.
-        void filterConstraintBreakersBasedOnCost(const RequestState& requestState) {
+        void filterConstraintBreakersBasedOnCost(const RequestState& requestState, const TaxiResult &result) {
             int cur = 0;
             int nextGoodOffset = 0;
             while (cur + nextGoodOffset < constraintBreakers.size()) {
@@ -428,7 +431,7 @@ namespace karri::DropoffAfterLastStopStrategies {
 
                 const auto &constraintBreaker = constraintBreakers[cur];
                 const auto lowerBoundCost = calculator.calcWithoutHardConstraints(constraintBreaker, requestState);
-                if (lowerBoundCost > requestState.getBestCost()) {
+                if (lowerBoundCost > result.getBestCost()) {
                     // Lower bound is worse than best known => actual cost is worse than best known => remove
                     ++nextGoodOffset;
                 } else {
@@ -481,8 +484,8 @@ namespace karri::DropoffAfterLastStopStrategies {
         // constraint breaker with each dropoff.
         // Constraint breakers have to be given ordered by vehicles.
         void evaluateConstraintBreakersWithAllDropoffs(int &numAssignmentsTried, int &numFallbackChSearchesRun,
-                                                       RequestState& requestState,
-                                                       const PDLocs& pdLocs) {
+                                                       const RequestState& requestState, const PDLocs& pdLocs,
+                                                       TaxiResult &result) {
 
             int lastVehId = constraintBreakers.empty() ? INVALID_ID : constraintBreakers[0].vehicle->vehicleId;
             int startOfLastVehId = 0;
@@ -515,7 +518,7 @@ namespace karri::DropoffAfterLastStopStrategies {
 
                             asgn.distToDropoff = distsFromLastStopToDropoffs[asgn.dropoff.id];
                             ++numAssignmentsTried;
-                            requestState.tryAssignmentWithKnownCost(asgn, calculator.calc(asgn, requestState));
+                            result.tryAssignmentWithKnownCost(asgn, calculator.calc(asgn, requestState));
                         }
                     }
 

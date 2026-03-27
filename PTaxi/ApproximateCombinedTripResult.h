@@ -1,17 +1,20 @@
 #pragma once
 
-#include <vector>
-#include <ULTRA/DataStructures/RAPTOR/Entities/Journey.h>
 #include "FirstTaxiLeg/FirstTaxiLegResult.h"
 #include "PTLeg/PTResult.h"
 
 namespace karri {
 
-template<typename TaxiLegApproximationT>
-class IntermediateResult {
+class ApproximateCombinedTripResult {
 public:
-    IntermediateResult(const int requestTime, const int maxTripTime, const FirstTaxiLegResult &firstTaxiLegResult, 
-                       const PTResult &ptLeg, const TaxiLegApproximationT &taxiLegApproximation)
+    ApproximateCombinedTripResult(const int requestTime,
+        const int maxTripTime,
+        const bool firstLegByTaxi,
+        const bool lastLegByTaxi,
+        const FirstTaxiLegResult &firstTaxiLegResult,
+                       const PTResult &ptLeg,
+                       const int secondLegApproximationCost,
+                       const int secondLegApproximationTravelTime)
                         : requestTime(requestTime),
                         maxTripTime(maxTripTime),
                         firstTaxiLeg(), 
@@ -19,47 +22,51 @@ public:
                         firstStationId(ptLeg.getFirstStation()), 
                         lastStationId(ptLeg.getLastStation()), 
                         firstTaxiLegCost(),
-                        secondTaxiLegCost(),
-                        ptLegCost(ptLeg.getBestCost()),
-                        arrivalTime(ptLeg.getArrivalTime()),
-                        bestCost() {
+                        secondTaxiLegCost(INFTY),
+                        ptLegCost(ptLeg.getCost()),
+                        bestCost(),
+                        arrivalTime(ptLeg.getArrivalTime()) {
 
         if (!ptLeg.isValid()) {
             bestCost = INFTY;
             return;
         }
 
-        if (isInitialTransferByTaxi()) {
+        if (firstLegByTaxi) {
             firstTaxiLeg = firstTaxiLegResult.getResultForStation(firstStationId);
             firstTaxiLegCost = firstTaxiLeg.bestCost;
             bestCost += firstTaxiLegResult.getCostWithoutTripTimeForStation(firstStationId); 
         }
 
-        bestCost += ptLeg.getCostWithoutTripTime();
+        bestCost += ptLeg.getCost();
 
-        if (isFinalTransferByTaxi()) {
-            secondTaxiLegCost = taxiLegApproximation.getCostForStation(lastStationId);
-            arrivalTime += taxiLegApproximation.getDistanceFromStation(lastStationId);
+        if (lastLegByTaxi) {
+            secondTaxiLegCost = secondLegApproximationCost;
+            arrivalTime += secondLegApproximationTravelTime;
         }
 
         int totalTripCost = CostCalculator::calcTripCost(arrivalTime - requestTime, maxTripTime);
         bestCost += totalTripCost;
     }
 
-    const bool isInitialTransferByTaxi() const {
-        return ptLeg.isInitialTransferByTaxi();
+    bool isInitialTransferByTaxi() const {
+        return firstTaxiLeg.isValid();
     }
         
-    const bool isFinalTransferByTaxi() const {
-        return ptLeg.isFinalTransferByTaxi();
+    bool isFinalTransferByTaxi() const {
+        return secondTaxiLegCost != INFTY;
     }
 
-    const InsertionType getFirstTaxiLegInsertionType() const {
+    InsertionType getFirstTaxiLegInsertionType() const {
         return firstTaxiLeg.insertionType;
     }
 
     const TaxiResult &getFirstTaxiLeg() const {
         return firstTaxiLeg;
+    }
+
+    const PTResult &getPTLeg() const {
+        return ptLeg;
     }
 
     const int &getFirstTaxiLegCost() const { return firstTaxiLegCost; }
@@ -71,6 +78,10 @@ public:
     const int &getBestCost() const { return bestCost; }
 
     const int &getArrivalTime() const { return arrivalTime; }
+
+    bool isValid() const {
+        return ptLeg.isValid() && firstTaxiLeg.isValid();
+    }
 
 private:
     const int requestTime;

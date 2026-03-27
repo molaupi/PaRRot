@@ -54,6 +54,8 @@ namespace karri {
         using It = typename RelevantPDLocVector::const_iterator;
         using RevIt = typename RelevantPDLocVector::const_reverse_iterator;
 
+        RelevantPDLocs() = default;
+
         explicit RelevantPDLocs(const int fleetSize)
                 : fleetSize(fleetSize),
                   relevantSpots(),

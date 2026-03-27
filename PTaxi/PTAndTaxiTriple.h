@@ -3,7 +3,7 @@
 #include <utility>
 #include <limits>
 #include <KARRI/Algorithms/KaRRi/RequestState/RequestState.h>
-#include "Results.h"
+#include "ApproximateCombinedTripResult.h"
 
 namespace karri {
 
@@ -25,11 +25,11 @@ public:
           ptLegCost(ptLegCost),
           secondTaxiLegApproxCost(secondTaxiLegApproxCost) {}
     
-    RequestState& getFirstTaxiLeg() { return firstTaxiLeg; }
-    PTResult& getPTLeg() { return ptLeg; }
+    const RequestState& getFirstTaxiLeg() const { return firstTaxiLeg; }
+    const PTResult& getPTLeg() const { return ptLeg; }
     
     bool hasValidFirstTaxiLeg() const { 
-        return firstTaxiLeg.getBestAssignment().vehicle != nullptr || firstTaxiLeg.isNotUsingVehicleBest();
+        return firstTaxiLeg.getBestAssignment().vehicle != nullptr && !firstTaxiLeg.isNotUsingVehicleBest();
     }
     
     bool hasValidPTLeg() const { 

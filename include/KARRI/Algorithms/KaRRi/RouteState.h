@@ -319,7 +319,8 @@ namespace karri {
 
         template<typename RequestStateT>
         std::pair<int, int>
-        insert(const Assignment &asgn, const RequestStateT &requestState) {
+        insert(const Assignment &asgn, const RequestStateT &requestState,
+            const int externalMaxArrTimeAtDropoff = INFTY) {
             KASSERT(checkAssignmentDistances(asgn, requestState));
             const auto vehId = asgn.vehicle->vehicleId;
             const auto &pickup = asgn.pickup;
@@ -385,9 +386,10 @@ namespace karri {
                 propagateSchedArrAndDepForward(start + pickupIndex + 1, start + dropoffIndex, asgn.distFromPickup);
             }
 
+            const int maxArrTimeAtDropoff = std::min(requestState.getMaxArrTimeAtDropoff(dropoff), externalMaxArrTimeAtDropoff);
+
             if (pickup.loc != dropoff.loc && dropoff.loc == stopLocations[start + dropoffIndex]) {
-                maxArrTimes[start + dropoffIndex] = std::min(maxArrTimes[start + dropoffIndex],
-                                                             requestState.getMaxArrTimeAtDropoff(dropoff));
+                maxArrTimes[start + dropoffIndex] = std::min(maxArrTimes[start + dropoffIndex], maxArrTimeAtDropoff);
             } else {
                 ++dropoffIndex;
                 stableInsertion(vehId, dropoffIndex, getUnusedStopId(),
@@ -399,7 +401,7 @@ namespace karri {
                 schedArrTimes[start + dropoffIndex] =
                         schedDepTimes[start + dropoffIndex - 1] + asgn.distToDropoff;
                 schedDepTimes[start + dropoffIndex] = schedArrTimes[start + dropoffIndex] + InputConfig::getInstance().stopTime;
-                maxArrTimes[start + dropoffIndex] = requestState.getMaxArrTimeAtDropoff(dropoff);
+                maxArrTimes[start + dropoffIndex] = maxArrTimeAtDropoff;
                 occupancies[start + dropoffIndex] = occupancies[start + dropoffIndex - 1];
                 numDropoffsPrefixSum[start + dropoffIndex] = numDropoffsPrefixSum[start + dropoffIndex - 1];
                 dropoffInsertedAsNewStop = true;

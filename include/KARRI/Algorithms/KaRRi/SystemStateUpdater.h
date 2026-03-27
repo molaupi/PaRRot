@@ -74,20 +74,27 @@ namespace karri {
                                                                    "veh_dep_time_at_stop_before_dropoff, "
                                                                    "not_using_vehicle, "
                                                                    "cost\n")),
+              // tripTypeLogger(LogManager<LoggerT>::getLogger("triptypes.csv",
+              //                                               "request_id,"
+              //                                               "is_taxi_only,"
+              //                                               "is_pt_only,"
+              //                                               "is_walking_only,"
+              //                                               "is_combined,"
+              //                                               "has_first_taxi_leg,"
+              //                                               "has_pt_leg,"
+              //                                               "has_second_taxi_leg\n")),
               roadCatLogger(LogManager<LoggerT>::getLogger(karri::stats::OsmRoadCategoryStats::LOGGER_NAME,
                                                            "type," +
                                                            karri::stats::OsmRoadCategoryStats::getLoggerCols())) {
         }
 
 
-        void insertBestAssignment(RequestState &requestState, stats::UpdatePerformanceStats &stats) {
+        void insertBestAssignment(const RequestState &requestState, const TaxiResult &result,
+                                  stats::UpdatePerformanceStats &stats,
+                                  const int externalMaxArrTimeAtDropoff = INFTY) {
             KaRRiTimer timer;
 
-            if (requestState.isNotUsingVehicleBest()) {
-                return;
-            }
-
-            const auto &asgn = requestState.getBestAssignment();
+            const auto &asgn = result.getBestAssignment();
             chosenPDLocsRoadCatStats.incCountForCat(inputGraph.osmRoadCategory(asgn.pickup.loc));
             chosenPDLocsRoadCatStats.incCountForCat(inputGraph.osmRoadCategory(asgn.dropoff.loc));
             assert(asgn.vehicle != nullptr);
@@ -97,7 +104,7 @@ namespace karri {
             const auto depTimeAtLastStopBefore = routeState.schedDepTimesFor(vehId)[numStopsBefore - 1];
 
             timer.restart();
-            auto [pickupIndex, dropoffIndex] = routeState.insert(asgn, requestState);
+            auto [pickupIndex, dropoffIndex] = routeState.insert(asgn, requestState, externalMaxArrTimeAtDropoff);
             const auto routeUpdateTime = timer.elapsed<std::chrono::nanoseconds>();
             stats.updateRoutesTime += routeUpdateTime;
 
@@ -106,8 +113,8 @@ namespace karri {
 
             // If the vehicle has to be rerouted at its current location for a PBNS assignment, we introduce an
             // intermediate stop at its current location representing the rerouting.
-            if (asgn.pickupStopIdx == 0 && numStopsBefore > 1 && routeState.schedDepTimesFor(vehId)[0] < requestState.
-                now()) {
+            if (asgn.pickupStopIdx == 0 && numStopsBefore > 1 &&
+                routeState.schedDepTimesFor(vehId)[0] < requestState.now()) {
                 createIntermediateStopAtCurrentLocationForReroute(*asgn.vehicle, requestState.now(), stats);
                 ++pickupIndex;
                 ++dropoffIndex;
@@ -153,32 +160,26 @@ namespace karri {
         }
 
 
-        void writeBestAssignmentToLogger(const RequestState &requestState) {
+        void writeBestAssignmentToLogger(const RequestState &requestState, const TaxiResult &result) {
             bestAssignmentsLogger
                     << requestState.originalRequest.requestId << ", "
                     << requestState.originalRequest.requestTime << ", "
                     << requestState.originalReqDirectDist << ", ";
 
-            if (requestState.getBestCost() == INFTY) {
+            if (result.getBestCost() == INFTY) {
                 bestAssignmentsLogger << "-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,inf\n";
                 return;
             }
 
-            if (requestState.isNotUsingVehicleBest()) {
-                bestAssignmentsLogger << "-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1, true, "
-                        << requestState.getBestCost() << "\n";
-                return;
-            }
-
-            const auto &bestAsgn = requestState.getBestAssignment();
+            const auto &bestAsgn = result.getBestAssignment();
 
             const auto &vehId = bestAsgn.vehicle->vehicleId;
             const auto &numStops = routeState.numStopsOf(vehId);
             using time_utils::getVehDepTimeAtStopForRequest;
             const auto &vehDepTimeBeforePickup = getVehDepTimeAtStopForRequest(vehId, bestAsgn.pickupStopIdx,
-                                                                               requestState, routeState);
+                                                                               requestState.now(), routeState);
             const auto &vehDepTimeBeforeDropoff = getVehDepTimeAtStopForRequest(vehId, bestAsgn.dropoffStopIdx,
-                requestState, routeState);
+                requestState.now(), routeState);
             bestAssignmentsLogger
                     << vehId << ", "
                     << bestAsgn.pickupStopIdx << ", "
@@ -195,10 +196,10 @@ namespace karri {
                     << vehDepTimeBeforePickup << ", "
                     << vehDepTimeBeforeDropoff << ", "
                     << "false, "
-                    << requestState.getBestCost() << "\n";
+                    << result.getBestCost() << "\n";
         }
 
-        void writeReceiveRequestLogs(const int requestId, const stats::RequestReceiveStats &stats) {
+        void writeReceiveRequestLogs(const int requestId, const stats::RequestReceiveStats &stats) const {
             logPerformance(requestId, "", stats);
             writeTaxiPerformanceLogs(requestId, "taxi_only.", stats.taxiOnlyStats);
             writeTaxiPerformanceLogs(requestId, "first_leg.", stats.taxiFirstLegStats);
@@ -206,7 +207,23 @@ namespace karri {
             logPerformance(requestId, "pt_with_taxi.", stats.ptWithTaxiStats);
         }
 
-        void writeSecondTaxiLegLogs(const int requestId, const stats::SecondTaxiLegStats &stats) {
+        // template<typename PtAndTaxiTripFinderResponse>
+        // void writeTripTypeLogs(const int requestId, const PtAndTaxiTripFinderResponse &response) {
+        //     const bool isTaxiOnly = response.isValidTaxiOnlyTrip();
+        //     const bool isPtOnly = response.isValidPTOnlyTrip() && !response.getPTLeg().isJourneyWalking();
+        //     const bool isWalkingOnly = response.isValidPTOnlyTrip() && response.getPTLeg().isJourneyWalking();
+        //     const bool isCombined = !isTaxiOnly && !isPtOnly && !isWalkingOnly;
+        //     tripTypeLogger << requestId << ", "
+        //             << isTaxiOnly << ", "
+        //             << isPtOnly << ", "
+        //             << isWalkingOnly << ", "
+        //             << isCombined << ", "
+        //             << response.hasValidFirstTaxiLeg() << ", "
+        //             << response.hasValidPTLeg() << ", "
+        //             << (response.hasValidPTLeg() && response.getPTLeg().isFinalTransferByTaxi()) << "\n";
+        // }
+
+        void writeSecondTaxiLegLogs(const int requestId, const stats::SecondTaxiLegStats &stats) const {
             writeTaxiPerformanceLogs(requestId, "second_leg.", stats.taxiSecondLegStats);
             logPerformance(requestId, "second_leg.", stats.updateStats);
         }
@@ -356,6 +373,7 @@ namespace karri {
 
         // Performance Loggers
         LoggerT &bestAssignmentsLogger;
+        // LoggerT &tripTypeLogger;
         LoggerT &roadCatLogger;
 
         // Road Category Stats

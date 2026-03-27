@@ -49,14 +49,17 @@ namespace karri {
                   vehiclesWithFeasibleDistances(fleet.size()) {}
 
         RelevantPDLocs
-        filterOrdinaryPickups(FeasibleDistancesT &feasiblePickupDistances, const RequestState &requestState,
+        filterOrdinaryPickups(FeasibleDistancesT &feasiblePickupDistances,
+            const RequestState &requestState,
                               const PDLocs &pdLocs,
-                              stats::OrdAssignmentsPerformanceStats &stats) {
+                              const int minDirectPdDist,
+                              stats::OrdAssignmentsPerformanceStats &stats,
+                                                    const int globalBestCost = INFTY) {
             KaRRiTimer timer;
 
             int numRelStops = 0;
             const auto rel = filter<false, false>(feasiblePickupDistances, pdLocs.numPickups(), numRelStops,
-                                                  requestState, pdLocs);
+                                                  requestState, pdLocs, minDirectPdDist, globalBestCost);
 
             const int64_t time = timer.elapsed<std::chrono::nanoseconds>();
             stats.filterRelevantPDLocsTime += time;
@@ -69,12 +72,14 @@ namespace karri {
         RelevantPDLocs
         filterOrdinaryDropoffs(FeasibleDistancesT &feasibleDropoffDistances, const RequestState &requestState,
                                const PDLocs &pdLocs,
-                               stats::OrdAssignmentsPerformanceStats &stats) {
+                              const int minDirectPdDist,
+                               stats::OrdAssignmentsPerformanceStats &stats,
+                                                    const int globalBestCost = INFTY) {
             KaRRiTimer timer;
 
             int numRelStops = 0;
             const auto rel = filter<false, true>(feasibleDropoffDistances, pdLocs.numDropoffs(), numRelStops,
-                                                 requestState, pdLocs);
+                                                 requestState, pdLocs, minDirectPdDist, globalBestCost);
 
             const int64_t time = timer.elapsed<std::chrono::nanoseconds>();
             stats.filterRelevantPDLocsTime += time;
@@ -86,12 +91,14 @@ namespace karri {
         RelevantPDLocs
         filterPickupsBeforeNextStop(FeasibleDistancesT &feasiblePickupDistances, const RequestState &requestState,
                                     const PDLocs &pdLocs,
-                                    stats::PbnsAssignmentsPerformanceStats &stats) {
+                              const int minDirectPdDist,
+                                    stats::PbnsAssignmentsPerformanceStats &stats,
+                                                    const int globalBestCost = INFTY) {
             KaRRiTimer timer;
 
             int numRelStops = 0;
             const auto rel = filter<true, false>(feasiblePickupDistances, pdLocs.numPickups(), numRelStops,
-                                                 requestState, pdLocs);
+                                                 requestState, pdLocs, minDirectPdDist,  globalBestCost);
 
             const int64_t time = timer.elapsed<std::chrono::nanoseconds>();
             stats.filterRelevantPDLocsTime += time;
@@ -100,13 +107,16 @@ namespace karri {
         }
 
         RelevantPDLocs filterDropoffsBeforeNextStop(FeasibleDistancesT &feasibleDropoffDistances,
-                                                    const RequestState &requestState, const PDLocs &pdLocs,
-                                                    stats::PbnsAssignmentsPerformanceStats &stats) {
+                                                    const RequestState &requestState,
+                                                    const PDLocs &pdLocs,
+                              const int minDirectPdDist,
+                                                    stats::PbnsAssignmentsPerformanceStats &stats,
+                                                    const int globalBestCost = INFTY) {
             KaRRiTimer timer;
 
             int numRelStops = 0;
             const auto rel = filter<true, true>(feasibleDropoffDistances, pdLocs.numDropoffs(), numRelStops,
-                                                requestState, pdLocs);
+                                                requestState, pdLocs, minDirectPdDist, globalBestCost);
 
             const int64_t time = timer.elapsed<std::chrono::nanoseconds>();
             stats.filterRelevantPDLocsTime += time;
@@ -120,7 +130,10 @@ namespace karri {
 
         template<bool beforeNextStop, bool isDropoff>
         RelevantPDLocs filter(FeasibleDistancesT &feasible, const int numPDLocs, int &numStopsRelevant,
-                              const RequestState &requestState, const PDLocs &pdLocs) {
+                              const RequestState &requestState,
+                              const PDLocs &pdLocs,
+                              const int minDirectPdDist,
+                              const int globalBestCost = INFTY) {
 
             // For each stop s, prune the pickups and dropoffs deemed relevant for an ordinary assignment after s by
             // checking them against constraints and lower bounds.
@@ -185,14 +198,14 @@ namespace karri {
                         // Compute lower bound cost based on whether we are dealing with pickups or dropoffs
                         int minCost;
                         if constexpr (isDropoff) {
-                            minCost = getMinCostForDropoff(veh, i, minDistToPDLoc, minDistFromPDLoc,
+                            minCost = getMinCostForDropoff(veh, i, minDistToPDLoc, minDistFromPDLoc, minDirectPdDist,
                                                            requestState);
                         } else {
-                            minCost = getMinCostForPickup(veh, i, minDistToPDLoc, minDistFromPDLoc,
+                            minCost = getMinCostForPickup(veh, i, minDistToPDLoc, minDistFromPDLoc, minDirectPdDist,
                                                           requestState);
                         }
 
-                        if (minCost > requestState.getBestCost())
+                        if (minCost > globalBestCost)
                             continue;
                     }
 
@@ -208,10 +221,10 @@ namespace karri {
                         bool isRelevant;
                         if constexpr (isDropoff) {
                             isRelevant = isDropoffRelevant(veh, i, id, distToPDLoc, distFromPDLoc,
-                                                           requestState, pdLocs);
+                                                           requestState, pdLocs, minDirectPdDist, globalBestCost);
                         } else {
                             isRelevant = isPickupRelevant(veh, i, id, distToPDLoc, distFromPDLoc,
-                                                          requestState, pdLocs);
+                                                          requestState, pdLocs, minDirectPdDist, globalBestCost);
                         }
 
                         if (isRelevant) {
@@ -241,7 +254,9 @@ namespace karri {
                                      const int distFromStopToPickup,
                                      const int distFromPickupToNextStop,
                                      const RequestState &requestState,
-                                     const PDLocs &pdLocs) const {
+                                     const PDLocs &pdLocs,
+                              const int minDirectPdDist,
+                                     const int globalBestCost = INFTY) const {
             using namespace time_utils;
 
             const int &vehId = veh.vehicleId;
@@ -268,11 +283,12 @@ namespace karri {
 
             const int curKnownCost = calculator.calcMinKnownPickupSideCost(veh, stopIndex, initialPickupDetour,
                                                                            p.walkingDist, depTimeAtPickup,
+                                                                           minDirectPdDist,
                                                                            requestState);
 
             // If cost for only pickup side is already worse than best known cost for a whole assignment, then
             // this pickup is not relevant at this stop.
-            if (curKnownCost > requestState.getBestCost())
+            if (curKnownCost > globalBestCost)
                 return false;
 
             return true;
@@ -282,7 +298,9 @@ namespace karri {
                                       const int distFromStopToDropoff,
                                       const int distFromDropoffToNextStop,
                                       const RequestState &requestState,
-                                      const PDLocs &pdLocs) {
+                                      const PDLocs &pdLocs,
+                                      const int minDirectPdDist,
+                                      const int globalBestCost = INFTY) const {
             using namespace time_utils;
 
             const int &vehId = veh.vehicleId;
@@ -315,21 +333,21 @@ namespace karri {
                 return false;
 
             const int curMinCost = calculator.calcMinKnownDropoffSideCost(veh, stopIndex, initialDropoffDetour,
-                                                                          d.walkingDist, requestState);
+                                                                          d.walkingDist, minDirectPdDist, requestState);
 
             // If cost for only dropoff side is already worse than best known cost for a whole assignment, then
             // this dropoff is not relevant at this stop.
-            if (curMinCost > requestState.getBestCost())
+            if (curMinCost > globalBestCost)
                 return false;
 
             return true;
         }
 
         inline int getMinCostForPickup(const Vehicle &veh, const int stopIndex, const int minDistToPickup,
-                                       const int minDistFromPickup, const RequestState &requestState) const {
+                                       const int minDistFromPickup, const int minDirectPdDist, const RequestState &requestState) const {
             using namespace time_utils;
             const int minVehDepTimeAtPickup =
-                    getVehDepTimeAtStopForRequest(veh.vehicleId, stopIndex, requestState, routeState)
+                    getVehDepTimeAtStopForRequest(veh.vehicleId, stopIndex, requestState.now(), routeState)
                     + minDistToPickup;
             const int minDepTimeAtPickup = std::max(requestState.earliestDeparture(), minVehDepTimeAtPickup);
             int minInitialPickupDetour = calcInitialPickupDetour(veh.vehicleId, stopIndex, INVALID_INDEX,
@@ -337,16 +355,16 @@ namespace karri {
                                                                  routeState);
             minInitialPickupDetour = std::max(minInitialPickupDetour, 0);
             return calculator.calcMinKnownPickupSideCost(veh, stopIndex, minInitialPickupDetour, 0, minDepTimeAtPickup,
-                                                         requestState);
+                minDirectPdDist, requestState);
         }
 
         inline int getMinCostForDropoff(const Vehicle &veh, const int stopIndex, const int minDistToDropoff,
-                                        const int minDistFromDropoff, const RequestState &requestState) const {
+                                        const int minDistFromDropoff, const int minDirectPdDist, const RequestState &requestState) const {
             using namespace time_utils;
             int minInitialDropoffDetour = calcInitialDropoffDetour(veh.vehicleId, stopIndex, minDistToDropoff,
                                                                    minDistFromDropoff, false, routeState);
             minInitialDropoffDetour = std::max(minInitialDropoffDetour, 0);
-            return calculator.calcMinKnownDropoffSideCost(veh, stopIndex, minInitialDropoffDetour, 0, requestState);
+            return calculator.calcMinKnownDropoffSideCost(veh, stopIndex, minInitialDropoffDetour, 0, minDirectPdDist, requestState);
         }
 
         int recomputeDistToPDLocDirectly(const int vehId, const int stopIdxBefore, const int pdLocLocation) {

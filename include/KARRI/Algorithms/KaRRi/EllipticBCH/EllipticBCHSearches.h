@@ -260,13 +260,13 @@ namespace karri {
             totalNumVerticesSettled = 0;
             totalNumEntriesScanned = 0;
 
-            // Set an upper bound distance for the searches comprised of the maximum leeway or an upper bound based on the
-            // current best costs (we compute the maximum detour that would still allow an assignment with costs smaller
-            // than the best known and add the maximum leg length since a distance to a PD loc dist cannot lead to a
-            // better assignment than the best known if dist - max leg length > max allowed detour).
-            const int maxDistBasedOnVehCost = CostFunctionT::calcMinDistFromOrToPDLocSuchThatVehCostReachesMinCost(
-                    requestState.getBestCost(), routeState.getMaxLegLength());
-            distUpperBound = std::min(maxDistBasedOnVehCost, routeState.getMaxLeeway());
+            // // Set an upper bound distance for the searches comprised of the maximum leeway or an upper bound based on the
+            // // current best costs (we compute the maximum detour that would still allow an assignment with costs smaller
+            // // than the best known and add the maximum leg length since a distance to a PD loc dist cannot lead to a
+            // // better assignment than the best known if dist - max leg length > max allowed detour).
+            // const int maxDistBasedOnVehCost = CostFunctionT::calcMinDistFromOrToPDLocSuchThatVehCostReachesMinCost(
+            //         requestState.getBestCost(), routeState.getMaxLegLength());
+            distUpperBound = routeState.getMaxLeeway();
 
             // Process in batches of size K
             for (int i = 0; i < pdLocs.size(); i += K) {

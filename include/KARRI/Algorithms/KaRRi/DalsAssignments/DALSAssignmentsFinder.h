@@ -24,6 +24,9 @@
 
 
 #pragma once
+
+#include <KARRI/Algorithms/KaRRi/RequestState/RelevantPDLocs.h>
+
 namespace karri {
 
 // Wrapper around DALS strategy.
@@ -36,9 +39,11 @@ namespace karri {
 
         void findAssignments(const RelevantPDLocs &relevantOrdinaryPickups,
                              const RelevantPDLocs &relevantPickupsBeforeNextStop,
-                             RequestState& requestState,
-                             const PDLocs& pdLocs, stats::DalsAssignmentsPerformanceStats& stats) {
-            strategy.tryDropoffAfterLastStop(relevantOrdinaryPickups, relevantPickupsBeforeNextStop, requestState, pdLocs, stats);
+                             const RequestState& requestState,
+                             const PDLocs& pdLocs,
+                             TaxiResult &result,
+                             stats::DalsAssignmentsPerformanceStats& stats) {
+            strategy.tryDropoffAfterLastStop(relevantOrdinaryPickups, relevantPickupsBeforeNextStop, requestState, pdLocs, result, stats);
         }
 
         void init(const RequestState&, const PDLocs&, stats::DalsAssignmentsPerformanceStats&) {
