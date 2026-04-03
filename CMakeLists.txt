@@ -70,6 +70,12 @@ add_subdirectory(External)
 
 set(PARROT_INCLUDE_DIR ${CMAKE_SOURCE_DIR}/include)
 
+if (CMAKE_BUILD_TYPE STREQUAL "Debug")
+    set(KASSERT_ASSERTION_LEVEL 40)
+else ()
+    set(KASSERT_ASSERTION_LEVEL 20)
+endif ()
+message("Using kassert assertion level ${KASSERT_ASSERTION_LEVEL}")
 
 # Directories containing .cc source files.
 set(SOURCE_DIRECTORIES Runners RawData ULTRA_Runnables)

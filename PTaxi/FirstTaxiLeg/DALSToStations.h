@@ -133,7 +133,7 @@ namespace karri {
                        CurVehLocToPickupSearchesT &curVehLocToPickupSearchesT,
                        const RouteState &routeState,
                        const StationBucketsEnvT &stationBucketsEnv,
-                       PTStations &ptStations)
+                       const PTStations &ptStations)
             : inputGraph(inputGraph),
               ch(chEnv.getCH()),
               fleet(fleet),
@@ -595,7 +595,7 @@ namespace karri {
         CurVehLocToPickupSearchesT &curVehLocToPickupSearches;
         const RouteState &routeState;
 
-        PTStations &ptStations;
+        const PTStations &ptStations;
 
         // Flag per vehicle that tells us if we still have to consider a pickup before the next stop of the vehicle.
         FastResetFlagArray<> checkPBNSForVehicle;

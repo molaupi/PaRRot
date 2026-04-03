@@ -25,13 +25,6 @@
 # ******************************************************************************
 
 
-if (CMAKE_BUILD_TYPE STREQUAL "Debug")
-    set(KASSERT_ASSERTION_LEVEL 40)
-else ()
-    set(KASSERT_ASSERTION_LEVEL 20)
-endif ()
-message("Using kassert assertion level ${KASSERT_ASSERTION_LEVEL}")
-
 add_executable(PTaxi RunPTaxi.cpp)
 target_compile_definitions(PTaxi PRIVATE CSV_IO_NO_THREAD)
 set_target_properties(PTaxi PROPERTIES KASSERT_ASSERTION_LEVEL ${KASSERT_ASSERTION_LEVEL})

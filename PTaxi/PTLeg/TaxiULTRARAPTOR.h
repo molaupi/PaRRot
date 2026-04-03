@@ -368,6 +368,8 @@ private:
 
     inline void initializeEdgeToStationMappings() noexcept {
         for (const auto& station : stations) {
+            if (station.psgEdgeId == INVALID_EDGE)
+                continue;
             psgEdgeToStation[station.psgEdgeId] = station.stationId;
         }
     }
@@ -594,7 +596,7 @@ private:
             // Extension for second taxi leg
             if (!distFromStations.empty()) {
                 const int stationId = stop.value();
-                auto station = stations[stationId];
+                const auto &station = stations[stationId];
                 // ensure that no second taxi leg is used if station edge id == destination edge id
                 if (stationId != INVALID_ID && station.vehEdgeId != destinationVehEdge) {
                     const int taxiTravelDistance = convertToULTRATime(distFromStations[stationId][0]);

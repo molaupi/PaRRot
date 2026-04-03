@@ -4,6 +4,7 @@
 #include <vector>
 
 #include "../../Helpers/Types.h"
+#include "../../../Common/Constants.h"
 
 struct VertexQuery {
     VertexQuery(const Vertex source = noVertex, const Vertex target = noVertex, const int departureTime = never) :

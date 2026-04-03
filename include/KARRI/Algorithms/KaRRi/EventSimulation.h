@@ -37,6 +37,7 @@ namespace karri {
     template<typename RequestStateInitializerT,
         typename KaRRiPreparatorT,
         typename WalkTripFinderT,
+        typename CarTripFinderT,
         typename TaxiTripFinderT,
         typename PTTripFinderT,
         typename PTAndTaxiTripFinderT,
@@ -123,6 +124,7 @@ namespace karri {
             RequestStateInitializerT &requestStateInitializer,
             KaRRiPreparatorT &preparator,
             WalkTripFinderT &walkTripFinder,
+            CarTripFinderT &carTripFinder,
             TaxiTripFinderT &taxiTripFinder,
             PTTripFinderT &ptTripFinder,
             PTAndTaxiTripFinderT &ptAndTaxiTripFinder,
@@ -136,6 +138,7 @@ namespace karri {
               rsInitializer(requestStateInitializer),
               karriPrep(preparator),
               walkTripFinder(walkTripFinder),
+              carTripFinder(carTripFinder),
               taxiTripFinder(taxiTripFinder),
               ptTripFinder(ptTripFinder),
               ptAndTaxiTripFinder(ptAndTaxiTripFinder),
@@ -407,6 +410,7 @@ namespace karri {
                                                                      stats.taxiOnlyStats.initializationStats);
             const auto baseInfo = karriPrep.prepareBaseInfo(requestState, stats.taxiOnlyStats);
             const auto walkOnlyResult = walkTripFinder.findWalkingTrip(requestState);
+            const auto carOnlyResult = carTripFinder.findCarTrip(requestState);
             const auto taxiOnlyResult = taxiTripFinder.findBestAssignment(requestState, baseInfo, stats.taxiOnlyStats);
             const auto ptOnlyResult = ptTripFinder.findBestJourney(requestState, stats.ptOnlyStats);
 
@@ -425,7 +429,7 @@ namespace karri {
             KASSERT(id == reqId && key == occTime);
             nextRiderEvents[reqId] = RIDER_NO_EVENT;
 
-            const auto mode = modeChoice.chooseMode(requestState, walkOnlyResult, taxiOnlyResult, ptOnlyResult,
+            const auto mode = modeChoice.chooseMode(requestState, walkOnlyResult, carOnlyResult, taxiOnlyResult, ptOnlyResult,
                                                     ptAndTaxiResult);
 
             using mode_choice::TransportMode;
@@ -599,9 +603,11 @@ namespace karri {
 
             karri::stats::SecondTaxiLegStats secondTaxiLegStats;
             auto requestState = rsInitializer.initializeRequestState(newReq, occTime,
-                                                                     secondTaxiLegStats.taxiSecondLegStats.initializationStats);
+                                                                     secondTaxiLegStats.taxiSecondLegStats.
+                                                                     initializationStats);
             const auto baseInfo = karriPrep.prepareBaseInfo(requestState, secondTaxiLegStats.taxiSecondLegStats);
-            const auto secondLegResult = taxiTripFinder.findBestAssignment(requestState, baseInfo, secondTaxiLegStats.taxiSecondLegStats);
+            const auto secondLegResult = taxiTripFinder.findBestAssignment(
+                requestState, baseInfo, secondTaxiLegStats.taxiSecondLegStats);
             // auto asgnFinderResponse = ptAndTaxiTripFinder.findBestSecondTaxiLeg(
             //     newReq, occTime, secondTaxiLegStats.taxiSecondLegStats);
 
@@ -661,6 +667,7 @@ namespace karri {
         RequestStateInitializerT &rsInitializer;
         KaRRiPreparatorT &karriPrep;
         WalkTripFinderT &walkTripFinder;
+        CarTripFinderT &carTripFinder;
         TaxiTripFinderT &taxiTripFinder;
         PTTripFinderT &ptTripFinder;
         PTAndTaxiTripFinderT &ptAndTaxiTripFinder;

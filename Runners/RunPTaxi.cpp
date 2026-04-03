@@ -93,6 +93,8 @@
 #include <../PTaxi/RiderModeChoice/ModeChoice.h>
 #include <../PTaxi/RiderModeChoice/UtilityLogitCriterion.h>
 
+#include "../PTaxi/CarTripFinder.h"
+
 #ifdef KARRI_USE_CCHS
 #include <KARRI/Algorithms/KaRRi/CCHEnvironment.h>
 #else
@@ -164,7 +166,6 @@ inline void printUsage() {
               "  -o <file>                generate output files at name <file> (specify name without file suffix).\n"
               "  -raptor-data <file>      file with the precomputed RAPTOR data.\n"
               "  -station-mapping <file>  file which maps the station to edge-ids in the given passenger road graph.\n"
-              "  -ch <file>                 contraction hierarchy for the transfer graph of ULTRA in binary format.\n"
               "  -station-buckets <file>  precomputed station buckets (vehicle) for use in KaRRi in binary format.\n"
               "  -psg-station-buckets <file>  precomputed station buckets (pedestrian) for walking transfers in binary format.\n"
               "  -help                    show usage help text.\n";
@@ -186,6 +187,7 @@ int main(int argc, char *argv[]) {
         inputConfig.maxWaitTime = clp.getValue<int>("w", 300) * 10;
         inputConfig.pickupRadius = clp.getValue<int>("p-radius", inputConfig.maxWaitTime / 10) * 10;
         inputConfig.dropoffRadius = clp.getValue<int>("d-radius", inputConfig.maxWaitTime / 10) * 10;
+        const double defaultWalkingSpeed = clp.getValue<double>("walk-speed", 1.3889); // 5 km/h = 1.3889 m/s
         inputConfig.maxNumPickups = clp.getValue<int>("max-num-p", INFTY);
         inputConfig.maxNumDropoffs = clp.getValue<int>("max-num-d", INFTY);
         if (inputConfig.maxNumPickups == 0) inputConfig.maxNumPickups = INFTY;
@@ -324,18 +326,32 @@ int main(int argc, char *argv[]) {
         std::cout << "Reading request data from file... " << std::flush;
         std::vector<Request> requests;
         std::vector<EdgeQuery> queries;
-        int origin, destination, requestTime, numRiders;
-        io::CSVReader<4, io::trim_chars<' '>> reqFileReader(requestFileName);
+        int origin, destination, requestTime, numRiders, pickupWalkingRadiusInM, dropoffWalkingRadiusInM;
+        double walkingSpeedInMps, allowPrivateCarProbability;
+        io::CSVReader<8, io::trim_chars<' '> > reqFileReader(requestFileName);
 
         if (csvFilesInLoudFormat) {
             reqFileReader.read_header(io::ignore_missing_column, "pickup_spot", "dropoff_spot", "min_dep_time",
-                                      "num_riders");
+                                      "num_riders", "pickup_walking_radius", "dropoff_walking_radius", "walking_speed",
+                                      "allow_private_car_probability");
         } else {
-            reqFileReader.read_header(io::ignore_missing_column, "origin", "destination", "req_time", "num_riders");
+            reqFileReader.read_header(io::ignore_missing_column, "origin", "destination", "req_time", "num_riders",
+                                      "pickup_walking_radius", "dropoff_walking_radius", "walking_speed",
+                                      "allow_private_car_probability");
         }
 
-        numRiders = -1;
-        while (reqFileReader.read_row(origin, destination, requestTime, numRiders)) {
+        const int defaultPickupWalkRadius = inputConfig.pickupRadius;
+        const int defaultDropoffWalkRadius = inputConfig.dropoffRadius;
+
+        numRiders = 1; // If number of riders was not specified, assume one rider
+        pickupWalkingRadiusInM = defaultPickupWalkRadius;
+        dropoffWalkingRadiusInM = defaultDropoffWalkRadius;
+        walkingSpeedInMps = defaultWalkingSpeed;
+        allowPrivateCarProbability = 1.0; // If not specified, assume that all riders can use private car
+        const bool forceDefaultRadius = clp.isSet("force-default-radius");
+        const bool forceDefaultWalkingSpeed = clp.isSet("force-default-walk-speed");
+        while (reqFileReader.read_row(origin, destination, requestTime, numRiders, pickupWalkingRadiusInM,
+                                      dropoffWalkingRadiusInM, walkingSpeedInMps, allowPrivateCarProbability)) {
             if (origin < 0 || origin >= vehGraphOrigIdToSeqId.size() || vehGraphOrigIdToSeqId[origin] == INVALID_ID)
                 throw std::invalid_argument("invalid location -- '" + std::to_string(origin) + "'");
             if (destination < 0 || destination >= vehGraphOrigIdToSeqId.size() ||
@@ -343,23 +359,36 @@ int main(int argc, char *argv[]) {
                 throw std::invalid_argument("invalid location -- '" + std::to_string(destination) + "'");
             if (numRiders > maxCapacity)
                 throw std::invalid_argument(
-                        "number of riders '" + std::to_string(numRiders) + "' is larger than max vehicle capacity (" +
-                        std::to_string(maxCapacity) + ")");
+                    "number of riders '" + std::to_string(numRiders) + "' is larger than max vehicle capacity (" +
+                    std::to_string(maxCapacity) + ")");
             const auto originSeqId = vehGraphOrigIdToSeqId[origin];
             assert(vehicleInputGraph.toPsgEdge(originSeqId) != CarEdgeToPsgEdgeAttribute::defaultValue());
             const auto destSeqId = vehGraphOrigIdToSeqId[destination];
             assert(vehicleInputGraph.toPsgEdge(destSeqId) != CarEdgeToPsgEdgeAttribute::defaultValue());
+            if (forceDefaultRadius) {
+                pickupWalkingRadiusInM = defaultPickupWalkRadius;
+                dropoffWalkingRadiusInM = defaultDropoffWalkRadius;
+            }
+            if (forceDefaultWalkingSpeed) {
+                walkingSpeedInMps = defaultWalkingSpeed;
+            }
+
             const int requestId = static_cast<int>(requests.size());
-            if (numRiders == -1) // If number of riders was not specified, assume one rider
-                numRiders = 1;
-            requests.push_back({requestId, originSeqId, destSeqId, requestTime * 10, numRiders});
-            
+            requests.push_back({
+                requestId, originSeqId, destSeqId, requestTime * 10, numRiders, pickupWalkingRadiusInM,
+                dropoffWalkingRadiusInM, walkingSpeedInMps, allowPrivateCarProbability
+            });
+            // Reset defaults in case next request does not specify all values
+            numRiders = 1;
+            pickupWalkingRadiusInM = defaultPickupWalkRadius;
+            dropoffWalkingRadiusInM = defaultDropoffWalkRadius;
+            walkingSpeedInMps = defaultWalkingSpeed;
+            allowPrivateCarProbability = 1.0;
+
             // Create EdgeQuery with both vehicle and passenger edge IDs
             const int originPsgEdge = vehicleInputGraph.toPsgEdge(originSeqId);
             const int destPsgEdge = vehicleInputGraph.toPsgEdge(destSeqId);
             queries.push_back(EdgeQuery(originSeqId, originPsgEdge, destSeqId, destPsgEdge, requestTime));
-            
-            numRiders = -1;
         }
         std::cout << "done.\n";
 
@@ -614,7 +643,7 @@ int main(int argc, char *argv[]) {
         int stationId = 0;
         io::CSVReader<1> stationMappingFileReader(stationMappingFileName);
 
-        stationMappingFileReader.read_header(io::ignore_no_column, "initial_location");
+        stationMappingFileReader.read_header(io::ignore_extra_column, "initial_location");
 
         while (stationMappingFileReader.read_row(edgeId)) {
             if (edgeId < 0) {
@@ -623,6 +652,9 @@ int main(int argc, char *argv[]) {
 
             // edge id in the station mapping file is the edge id in the road network
             int psgEdgeId = vehicleInputGraph.toPsgEdge(edgeId);
+            if (psgEdgeId == CarEdgeToPsgEdgeAttribute::defaultValue()) {
+                psgEdgeId = INVALID_EDGE;
+            }
             stations.push_back({stationId, psgEdgeId, edgeId});
             stationId++;
         }
@@ -689,6 +721,9 @@ int main(int argc, char *argv[]) {
         using WalkTripFinderImpl = WalkingTripFinder<VehicleInputGraph, PsgInputGraph, PsgCHEnv>;
         WalkTripFinderImpl walkTripFinder(vehicleInputGraph, psgInputGraph, *psgChEnv, routeState);
 
+        using CarTripFinderImpl = CarTripFinder;
+        CarTripFinderImpl carTripFinder;
+
         using TaxiTripFinderImpl = TaxiTripFinder<OrdinaryAssignmentsFinderImpl, PBNSInsertionsFinderImpl, PALSInsertionsFinderImpl, DALSInsertionsFinderImpl>;
         TaxiTripFinderImpl taxiTripFinder(ordinaryInsertionsFinder, pbnsInsertionsFinder, palsInsertionsFinder, dalsInsertionsFinder);
 
@@ -738,8 +773,8 @@ int main(int argc, char *argv[]) {
         }
 
         // Run simulation:
-        using EventSimulationImpl = EventSimulation<RequestStateInitializerImpl, KaRRiBaseInfoPreparatorImpl, WalkTripFinderImpl, TaxiTripFinderImpl, PTTripFinderImpl, PTAndTaxiTripFinderImpl, ModeChoiceImpl, SystemStateUpdaterImpl, RouteState>;
-        EventSimulationImpl eventSimulation(fleet, requests, requestStateInitializer, kaRRiBaseInfoPreparator, walkTripFinder, taxiTripFinder, ptTripFinder, ptAndTaxiTripFinder, modeChoice, systemStateUpdater,
+        using EventSimulationImpl = EventSimulation<RequestStateInitializerImpl, KaRRiBaseInfoPreparatorImpl, WalkTripFinderImpl, CarTripFinderImpl, TaxiTripFinderImpl, PTTripFinderImpl, PTAndTaxiTripFinderImpl, ModeChoiceImpl, SystemStateUpdaterImpl, RouteState>;
+        EventSimulationImpl eventSimulation(fleet, requests, requestStateInitializer, kaRRiBaseInfoPreparator, walkTripFinder, carTripFinder, taxiTripFinder, ptTripFinder, ptAndTaxiTripFinder, modeChoice, systemStateUpdater,
                                             routeState, stations, true);
         eventSimulation.run();
 

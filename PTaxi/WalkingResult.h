@@ -1,6 +1,10 @@
 #pragma once
 
 struct WalkingResult {
-    int walkingDist;
-    int cost;
+    int walkingDist = INFTY;
+    int cost = INFTY;
+
+    bool isValid() const {
+        return walkingDist != INFTY;
+    }
 };

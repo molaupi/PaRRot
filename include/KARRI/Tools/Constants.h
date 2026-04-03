@@ -28,7 +28,6 @@
 #include <limits>
 
 // Special values representing an invalid (vertex/edge) ID.
-constexpr int INVALID_ID = -1;
 constexpr int INVALID_INDEX = -1;
 constexpr int INVALID_VERTEX = -1;
 constexpr int INVALID_EDGE = -1;

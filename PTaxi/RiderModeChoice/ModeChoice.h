@@ -15,18 +15,13 @@
 #include "../PTLeg/PTResult.h"
 #include "../FirstTaxiLeg/FirstTaxiLegResult.h"
 #include "../ApproximateCombinedTripResult.h"
+#include "../CarResult.h"
 #include "Common/Constants.h"
 #include "KARRI/Algorithms/KaRRi/RequestState/RequestState.h"
 
 namespace karri::mode_choice {
     template<typename CriterionT, typename LoggerT = NullLogger>
     class ModeChoice {
-        static bool isCarAllowed(const Request &) {
-            // todo: replace with car probability read from file
-            return false;
-            // return req.allowPrivateCarProbability > 0.0 && ThreadSafeRandom::randomNumber() < req.
-            //        allowPrivateCarProbability;
-        }
 
         static double tenthsOfSecondsToMinutes(int tenthsOfSeconds) {
             return static_cast<double>(tenthsOfSeconds) / 600.0;
@@ -53,6 +48,7 @@ namespace karri::mode_choice {
 
         TransportMode chooseMode(const RequestState &requestState,
                                  const WalkingResult &walkOnlyResult,
+                                 const CarResult &carOnlyResult,
                                  const TaxiResult &taxiOnlyResult,
                                  const PTResult &ptOnlyResult,
                                  const ApproximateCombinedTripResult &approxCombinedResult) const {
@@ -61,14 +57,17 @@ namespace karri::mode_choice {
 
             std::vector<Alternative<TransportMode> > entries;
 
-            int walkTravelTime = walkOnlyResult.walkingDist;
-            entries.push_back({TransportMode::Ped, constructAttributesForTimesInTenthsOfSeconds(walkTravelTime, 0, 0)});
+            int walkTravelTime = INFTY;
+            if (walkOnlyResult.isValid()) {
+                walkTravelTime = walkOnlyResult.walkingDist;
+                entries.push_back({TransportMode::Ped, constructAttributesForTimesInTenthsOfSeconds(walkTravelTime, 0, 0)});
+            }
 
-            // todo: allow once we have sensible criterion
             int carTravelTime = INFTY;
-            // if (isCarAllowed(req)) {
-            //     entries.push_back({TransportMode::Car, Attributes{resp.odCarDist, 0, 0}});
-            // }
+            if (carOnlyResult.isValid()) {
+                carTravelTime = carOnlyResult.carDist;
+                entries.push_back({TransportMode::Car, constructAttributesForTimesInTenthsOfSeconds(carTravelTime, 0, 0)});
+            }
 
             int ptOnlyTravelTime = INFTY;
             int ptOnlyWaitTime = INFTY;

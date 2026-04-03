@@ -183,7 +183,7 @@ int main(int argc, char *argv[]) {
         int stationId = 0;
         io::CSVReader<1> stationMappingFileReader(stationMappingFileName);
 
-        stationMappingFileReader.read_header(io::ignore_no_column, "initial_location");
+        stationMappingFileReader.read_header(io::ignore_extra_column, "initial_location");
 
         while (stationMappingFileReader.read_row(edgeId)) {
             if (edgeId < 0) {
@@ -218,6 +218,9 @@ int main(int argc, char *argv[]) {
 
         std::cout << "Building pedestrian buckets for stations... " << std::flush;
         for (const auto& station : stations) {
+            // Stations that are not accessible on foot do not get bucket entries for pedestrians
+            if (station.psgEdgeId == PsgEdgeToCarEdgeAttribute::defaultValue())
+                continue;
             psgStationBucketsEnv.generateBucketEntries(station);
         }
         std::cout << "done.\n";

@@ -105,6 +105,7 @@ using PsgVertexAttributes = VertexAttrs<
 using PsgEdgeAttributes = EdgeAttrs<
         PsgEdgeToCarEdgeAttribute,
         TravelTimeAttribute,
+        LengthAttribute,
         OsmRoadCategoryAttribute
 >;
 using PsgGraphT = KaRRiStaticGraph<PsgVertexAttributes, PsgEdgeAttributes>;

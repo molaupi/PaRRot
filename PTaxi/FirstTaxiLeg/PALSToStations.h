@@ -267,7 +267,7 @@ namespace karri {
 
                     // Consider only stations with feasible distances from StationBCH
                     for (const auto &stationId: stationsSeen) {
-                        const auto station = stations[stationId];
+                        const auto &station = stations[stationId];
                         KASSERT(station.stationId == stationId);
                         asgn.dropoff = {
                             station.stationId, // PDLoc ID

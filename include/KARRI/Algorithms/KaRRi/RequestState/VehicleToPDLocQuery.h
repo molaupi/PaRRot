@@ -128,7 +128,8 @@ namespace karri {
                 vertexHasPDLoc.set(vertexOfSpot);
             }
 
-            reverseSearch.runWithOffset(center, offset);
+            if (pdLocs.size() > 1)
+                reverseSearch.runWithOffset(center, offset);
 
             for (int i = 1; i < pdLocs.size(); ++i) {
                 auto &pdLoc = pdLocs[i];

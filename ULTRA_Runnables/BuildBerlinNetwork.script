@@ -7,6 +7,7 @@ reduceGraph ../Networks/Berlin/ULTRA/intermediate.binary ../Networks/Berlin/ULTR
 makeOneHopTransfers ../Networks/Berlin/ULTRA/intermediate.binary 86400 ../Networks/Berlin/ULTRA/intermediate.binary true
 addGraph ../Networks/Berlin/ULTRA/intermediate.binary ../Networks/Berlin/ULTRA/OSM/Berlin_pedestrian_psg_graph ../Networks/Berlin/ULTRA/intermediate.binary
 reduceToMaximumConnectedComponent ../Networks/Berlin/ULTRA/intermediate.binary ../Networks/Berlin/ULTRA/intermediate.binary
+applyMaxTransferSpeed ../Networks/Berlin/ULTRA/intermediate.binary 5.0 ../Networks/Berlin/ULTRA/intermediate.binary
 reduceGraph ../Networks/Berlin/ULTRA/intermediate.binary ../Networks/Berlin/ULTRA/intermediate.binary
 intermediateToRAPTOR ../Networks/Berlin/ULTRA/intermediate.binary ../Networks/Berlin/ULTRA/Berlin-1pct_raptor.binary
 raptorToCSV ../Networks/Berlin/ULTRA/Berlin-1pct_raptor.binary ../Networks/Berlin/CSV/1pct/

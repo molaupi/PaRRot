@@ -33,6 +33,7 @@
 #include "KARRI/Algorithms/KaRRi/InputConfig.h"
 #include "KARRI/DataStructures/Labels/BasicLabelSet.h"
 #include "KARRI/Algorithms/KaRRi/Stats/PerformanceStats.h"
+#include "KARRI/DataStructures/Graph/Attributes/CarEdgeToPsgEdgeAttribute.h"
 
 namespace karri {
 
@@ -87,26 +88,30 @@ namespace karri {
                   searchSpace(),
                   rand(seed) {}
 
-        // Pickups will be collected into the given pickups vector and dropoffs will be collected into the given dropoffs vector
-        void findPDLocs(const int origin, const int destination, std::vector<PDLoc>& pickups, std::vector<PDLoc>& dropoffs) {
-            assert(origin < forwardGraph.numEdges() && destination < forwardGraph.numEdges());
+        void findPickups(const int origin, std::vector<PDLoc>& pickups) {
+            assert(origin < forwardGraph.numEdges());
             pickups.clear();
-            dropoffs.clear();
 
             searchSpace.clear();
             auto headOfOriginEdge = forwardGraph.edgeHead(origin);
             pickupSearch.run(headOfOriginEdge);
             turnSearchSpaceIntoPickupLocations(pickups);
 
-            searchSpace.clear();
-            auto tailOfDestEdge = forwardGraph.edgeTail(destination);
-            auto destOffset = forwardGraph.travelTime(destination);
-            dropoffSearch.runWithOffset(tailOfDestEdge, destOffset);
-            turnSearchSpaceIntoDropoffLocations(dropoffs);
-
             finalizePDLocs(origin, pickups, InputConfig::getInstance().maxNumPickups);
-            finalizePDLocs(destination, dropoffs, InputConfig::getInstance().maxNumDropoffs);
         }
+
+            void findDropoffs(const int destination, std::vector<PDLoc>& dropoffs) {
+                assert(destination < forwardGraph.numEdges());
+                dropoffs.clear();
+
+                searchSpace.clear();
+                auto tailOfDestEdge = forwardGraph.edgeTail(destination);
+                auto destOffset = forwardGraph.travelTime(destination);
+                dropoffSearch.runWithOffset(tailOfDestEdge, destOffset);
+                turnSearchSpaceIntoDropoffLocations(dropoffs);
+
+                finalizePDLocs(destination, dropoffs, InputConfig::getInstance().maxNumDropoffs);
+            }
 
     private:
 
@@ -231,15 +236,24 @@ namespace karri {
         PDLocs findPDLocs(const int origin, const int destination, stats::InitializationPerformanceStats& stats) {
             KaRRiTimer timer;
 
-            KASSERT(psgInputGraph.toCarEdge(vehInputGraph.toPsgEdge(origin)) == origin);
-            const auto originInPsgGraph = vehInputGraph.toPsgEdge(origin);
-
-            KASSERT(psgInputGraph.toCarEdge(vehInputGraph.toPsgEdge(destination)) == destination);
-            const auto destInPsgGraph = vehInputGraph.toPsgEdge(destination);
-
             PDLocs pdLocs;
-            findPdLocsInRadiusQuery.findPDLocs(originInPsgGraph, destInPsgGraph, pdLocs.pickups, pdLocs.dropoffs);
+            if (vehInputGraph.toPsgEdge(origin) != CarEdgeToPsgEdgeAttribute::defaultValue()) {
+                KASSERT(psgInputGraph.toCarEdge(vehInputGraph.toPsgEdge(origin)) == origin);
+                const auto originInPsgGraph = vehInputGraph.toPsgEdge(origin);
+                findPdLocsInRadiusQuery.findPickups(originInPsgGraph, pdLocs.pickups);
+            } else {
+                // If the origin is not accessible on foot, the origin is the only pickup location.
+                pdLocs.pickups = {{0, origin, INVALID_EDGE, 0, INFTY, INFTY}};
+            }
 
+            if (vehInputGraph.toPsgEdge(destination) != CarEdgeToPsgEdgeAttribute::defaultValue()) {
+                KASSERT(psgInputGraph.toCarEdge(vehInputGraph.toPsgEdge(destination)) == destination);
+                const auto destInPsgGraph = vehInputGraph.toPsgEdge(destination);
+                findPdLocsInRadiusQuery.findDropoffs(destInPsgGraph, pdLocs.dropoffs);
+            } else {
+                // If the destination is not accessible on foot, the destination is the only dropoff location.
+                pdLocs.dropoffs = {{0, destination, INVALID_EDGE, 0, INFTY, INFTY}};
+            }
 
             const auto findHaltingSpotsTime = timer.elapsed<std::chrono::nanoseconds>();
             stats.findPDLocsInRadiusTime = findHaltingSpotsTime;
