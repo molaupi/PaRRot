@@ -30,13 +30,15 @@
 #include <KARRI/DataStructures/Labels/BasicLabelSet.h>
 #include <KARRI/DataStructures/Containers/LightweightSubset.h>
 #include <KARRI/Tools/Constants.h>
+
+#include "StationsAtLocations.h"
 #include "../Station/TentativeStationDistances.h"
 
 namespace karri {
     template<typename InputGraphT, typename CHEnvT,
         typename StationBucketsEnvT,
         typename LabelSetT = BasicLabelSet<0, ParentInfo::FULL_PARENT_INFO> >
-    class StationBCHQuery {
+    class StationDistanceFinder {
     private:
         static constexpr int K = LabelSetT::K;
         using DistanceLabel = typename LabelSetT::DistanceLabel;
@@ -44,7 +46,7 @@ namespace karri {
 
         struct ScanBucket {
         public:
-            explicit ScanBucket(StationBCHQuery &search) : search(search) {
+            explicit ScanBucket(StationDistanceFinder &search) : search(search) {
             }
 
             template<typename DistLabelT, typename DistLabelContainerT>
@@ -102,12 +104,12 @@ namespace karri {
             }
 
 
-            StationBCHQuery &search;
+            StationDistanceFinder &search;
         };
 
 
         struct StopStationBCH {
-            explicit StopStationBCH(const StationBCHQuery &search) : search(search) {
+            explicit StopStationBCH(const StationDistanceFinder &search) : search(search) {
             }
 
             template<typename DistLabelT, typename DistLabelContainerT>
@@ -119,7 +121,7 @@ namespace karri {
             }
 
         private:
-            const StationBCHQuery &search;
+            const StationDistanceFinder &search;
         };
 
     public:
@@ -130,27 +132,31 @@ namespace karri {
         // 2. from origin to v
         // 3. consider the routes of the taxi before origin
 
-        StationBCHQuery(
+        StationDistanceFinder(
             const InputGraphT &inputGraph,
             const CHEnvT &chEnv,
             RouteState &routeState,
             const StationBucketsEnvT &stationBucketsEnv,
-            const int numberOfStations)
+            const PTStations &stations,
+            const StationsAtLocations &stationsAtLocations)
             : inputGraph(inputGraph),
               ch(chEnv.getCH()),
               calc(CostCalculator(routeState)),
               upwardSearch(chEnv.template getForwardSearch<ScanBucket, StopStationBCH, LabelSetT>(
                   ScanBucket(*this), StopStationBCH(*this))),
               bucketContainer(stationBucketsEnv.getTargetBuckets()),
-              tentativeDistances(numberOfStations),
-              stationsSeen(numberOfStations),
+              stations(stations),
+              stationsAtLocations(stationsAtLocations),
+              tentativeDistances(stations.size()),
+              stationsSeen(stations.size()),
               numVerticesSettled(0),
-              numEntriesVisitedThisRun(0),
-              externalUpperBoundCost(INFTY) {
+              numEntriesVisitedThisRun(0), totalNumEdgeRelaxations(0), totalNumVerticesSettled(0),
+              totalNumEntriesScanned(0),
+              externalUpperBoundCost(INFTY), curReqState(nullptr) {
         }
 
         // Run BCH queries that obtain distances from pickups to stations
-        void runBchQueries(const RequestState &requestState, const PDLocs &pdLocs, stats::StationBchPerformanceStats& stats) {
+        void run(const RequestState &requestState, const PDLocs &pdLocs, stats::StationBchPerformanceStats& stats) {
 
             KaRRiTimer timer;
             initPickupSearches(pdLocs, requestState);
@@ -168,7 +174,7 @@ namespace karri {
             stats.pickupNumStationsSeen += stationsSeen.size();
         }
 
-        StationDistances &getTentativeDistances() {
+        StationDistances &getDistancesToStations() {
             return tentativeDistances;
         }
 
@@ -204,6 +210,18 @@ namespace karri {
             stationsSeen.clear();
             const int numPickupBatches = pdLocs.numPickups() / K + (pdLocs.numPickups() % K != 0);
             tentativeDistances.init(numPickupBatches);
+
+
+            // Initialize distance to zero where pickup is at a station
+            for (const auto & pickup : pdLocs.pickups) {
+                for (const auto &stationId : stationsAtLocations.getIdsOfStationsAtVehEdge(pickup.loc)) {
+                    stationsSeen.insert(stationId);
+                    DistanceLabel dist = INFTY;
+                    tentativeDistances.setCurBatchIdx(pickup.id / K);
+                    dist[pickup.id % K] = 0;
+                    tentativeDistances.setDistancesForCurBatchIf(stationId, dist, dist == 0);
+                }
+            }
         }
 
         void runSearchesForPickupBatch(const int firstPickupId, const PDLocs &pdLocs) {
@@ -245,7 +263,7 @@ namespace karri {
                 return ~(distancesToPickups < INFTY);
             }
 
-            DistanceLabel costLowerBound = calc.template calcLowerBoundCostForKPALSAssignmentsWithPTStations<LabelSetT>(
+            DistanceLabel costLowerBound = calc.template calcLowerBoundCostForKPairedAssignmentsToPTStations<LabelSetT>(
                 distancesToPickups, currentPickupWalkingDists, *curReqState);
 
             costLowerBound.setIf(DistanceLabel(INFTY), ~(distancesToPickups < INFTY));
@@ -258,6 +276,10 @@ namespace karri {
         const InputGraphT &inputGraph;
         const CH &ch;
         const typename StationBucketsEnvT::BucketContainer &bucketContainer;
+
+        const PTStations &stations;
+        const StationsAtLocations &stationsAtLocations;
+
         CostCalculator calc;
 
         StationDistances tentativeDistances;

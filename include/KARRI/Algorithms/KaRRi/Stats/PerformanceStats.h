@@ -157,12 +157,40 @@ namespace karri::stats {
         }
     };
 
-    struct OrdAssignmentsPerformanceStats {
-        int64_t initializationTime = 0;
-
+    struct FilterRelevantPdLocsPerformanceStats {
         int64_t numRelevantStopsForPickups = 0;
         int64_t numRelevantStopsForDropoffs = 0;
         int64_t filterRelevantPDLocsTime = 0;
+
+        int64_t getTotalTime() const {
+            return filterRelevantPDLocsTime;
+        }
+
+        void clear() {
+            numRelevantStopsForPickups = 0;
+            numRelevantStopsForDropoffs = 0;
+            filterRelevantPDLocsTime = 0;
+        }
+
+        static constexpr auto LOGGER_NAME = "perf_filterrelevantpdlocs.csv";
+        static constexpr auto LOGGER_COLS =
+                "num_relevant_stops_for_pickups,"
+                "num_relevant_stops_for_dropoffs,"
+                "filter_relevant_pd_locs_time,"
+                "total_time\n";
+
+        std::string getLoggerRow() const {
+            std::stringstream ss;
+            ss << numRelevantStopsForPickups << ","
+                    << numRelevantStopsForDropoffs << ","
+                    << filterRelevantPDLocsTime << ","
+                    << getTotalTime();
+            return ss.str();
+        }
+    };
+
+    struct OrdAssignmentsPerformanceStats {
+        int64_t initializationTime = 0;
 
         int64_t numCandidateVehicles = 0;
         int64_t numAssignmentsTried = 0;
@@ -170,15 +198,12 @@ namespace karri::stats {
         int64_t tryPairedAssignmentsTime = 0;
 
         int64_t getTotalTime() const {
-            return initializationTime + filterRelevantPDLocsTime + tryNonPairedAssignmentsTime +
+            return initializationTime + tryNonPairedAssignmentsTime +
                    tryPairedAssignmentsTime;
         }
 
         void clear() {
             initializationTime = 0;
-            numRelevantStopsForPickups = 0;
-            numRelevantStopsForDropoffs = 0;
-            filterRelevantPDLocsTime = 0;
 
             numCandidateVehicles = 0;
             numAssignmentsTried = 0;
@@ -189,9 +214,6 @@ namespace karri::stats {
         static constexpr auto LOGGER_NAME = "perf_ord.csv";
         static constexpr auto LOGGER_COLS =
                 "initialization_time,"
-                "num_relevant_stops_for_pickups,"
-                "num_relevant_stops_for_dropoffs,"
-                "filter_relevant_pd_locs_time,"
                 "num_candidate_vehicles,"
                 "num_assignments_tried,"
                 "try_non_paired_assignments_time,"
@@ -202,9 +224,6 @@ namespace karri::stats {
         std::string getLoggerRow() const {
             std::stringstream ss;
             ss << initializationTime << ","
-                    << numRelevantStopsForPickups << ","
-                    << numRelevantStopsForDropoffs << ","
-                    << filterRelevantPDLocsTime << ","
                     << numCandidateVehicles << ","
                     << numAssignmentsTried << ","
                     << tryNonPairedAssignmentsTime << ","
@@ -217,10 +236,6 @@ namespace karri::stats {
     struct PbnsAssignmentsPerformanceStats {
         int64_t initializationTime = 0;
 
-        int64_t numRelevantStopsForPickups = 0;
-        int64_t numRelevantStopsForDropoffs = 0;
-        int64_t filterRelevantPDLocsTime = 0;
-
         int64_t locatingVehiclesTime = 0;
         int64_t numCHSearches = 0;
         int64_t directCHSearchTime = 0;
@@ -230,14 +245,11 @@ namespace karri::stats {
         int64_t tryAssignmentsTime = 0;
 
         int64_t getTotalTime() const {
-            return initializationTime + filterRelevantPDLocsTime + tryAssignmentsTime + locatingVehiclesTime;
+            return initializationTime + tryAssignmentsTime + locatingVehiclesTime;
         }
 
         void clear() {
             initializationTime = 0;
-            numRelevantStopsForPickups = 0;
-            numRelevantStopsForDropoffs = 0;
-            filterRelevantPDLocsTime = 0;
 
             locatingVehiclesTime = 0;
             numCHSearches = 0;
@@ -251,9 +263,6 @@ namespace karri::stats {
         static constexpr auto LOGGER_NAME = "perf_pbns.csv";
         static constexpr auto LOGGER_COLS =
                 "initialization_time,"
-                "num_relevant_stops_for_pickups,"
-                "num_relevant_stops_for_dropoffs,"
-                "filter_relevant_pd_locs_time,"
                 "locating_vehicles_time,"
                 "num_ch_searches,"
                 "direct_ch_search_time,"
@@ -266,9 +275,6 @@ namespace karri::stats {
         std::string getLoggerRow() const {
             std::stringstream ss;
             ss << initializationTime << ","
-                    << numRelevantStopsForPickups << ","
-                    << numRelevantStopsForDropoffs << ","
-                    << filterRelevantPDLocsTime << ","
                     << locatingVehiclesTime << ","
                     << numCHSearches << ","
                     << directCHSearchTime << ","
@@ -529,28 +535,21 @@ namespace karri::stats {
         }
     };
 
-    struct TaxiPerformanceStats {
+    struct TaxiPrepStats {
         int32_t numPickups = 0;
         int32_t numDropoffs = 0;
-
         InitializationPerformanceStats initializationStats{};
         EllipticBCHPerformanceStats ellipticBchStats{};
         PDDistancesPerformanceStats pdDistancesStats{};
-        OrdAssignmentsPerformanceStats ordAssignmentsStats{};
-        PbnsAssignmentsPerformanceStats pbnsAssignmentsStats{};
-        PalsAssignmentsPerformanceStats palsAssignmentsStats{};
-        DalsAssignmentsPerformanceStats dalsAssignmentsStats{};
-        StationBchPerformanceStats stationBchStats{};
+        FilterRelevantPdLocsPerformanceStats filterOrdinaryPdLocsStats{};
+        FilterRelevantPdLocsPerformanceStats filterBnsPdLocsStats{};
 
         int64_t getTotalTime() const {
             return initializationStats.getTotalTime() +
                    ellipticBchStats.getTotalTime() +
                    pdDistancesStats.getTotalTime() +
-                   ordAssignmentsStats.getTotalTime() +
-                   pbnsAssignmentsStats.getTotalTime() +
-                   palsAssignmentsStats.getTotalTime() +
-                   dalsAssignmentsStats.getTotalTime() +
-                   stationBchStats.getTotalTime();
+                   filterOrdinaryPdLocsStats.getTotalTime() +
+                   filterBnsPdLocsStats.getTotalTime();
         }
 
         void clear() {
@@ -559,27 +558,20 @@ namespace karri::stats {
             initializationStats.clear();
             ellipticBchStats.clear();
             pdDistancesStats.clear();
-            ordAssignmentsStats.clear();
-            pbnsAssignmentsStats.clear();
-            palsAssignmentsStats.clear();
-            dalsAssignmentsStats.clear();
-            stationBchStats.clear();
+            filterOrdinaryPdLocsStats.clear();
+            filterBnsPdLocsStats.clear();
         }
 
-        static constexpr auto LOGGER_NAME = "perf_overall.csv";
+        static constexpr auto LOGGER_NAME = "perf_taxi_prep.csv";
         static constexpr auto LOGGER_COLS =
                 "num_pickups,"
                 "num_dropoffs,"
                 "initialization_time,"
                 "elliptic_bch_time,"
                 "pd_distances_time,"
-                "ord_assignments_time,"
-                "pbns_assignments_time,"
-                "pals_assignments_time,"
-                "dals_assignments_time,"
-                "station_bch_time,"
+                "filter_ordinary_pd_locs_time,"
+                "filter_bns_pd_locs_time,"
                 "total_time\n";
-
 
         std::string getLoggerRow() const {
             std::stringstream ss;
@@ -588,11 +580,8 @@ namespace karri::stats {
                     << initializationStats.getTotalTime() << ","
                     << ellipticBchStats.getTotalTime() << ","
                     << pdDistancesStats.getTotalTime() << ","
-                    << ordAssignmentsStats.getTotalTime() << ","
-                    << pbnsAssignmentsStats.getTotalTime() << ","
-                    << palsAssignmentsStats.getTotalTime() << ","
-                    << dalsAssignmentsStats.getTotalTime() << ","
-                    << stationBchStats.getTotalTime() << ","
+                    << filterOrdinaryPdLocsStats.getTotalTime() << ","
+                    << filterBnsPdLocsStats.getTotalTime() << ","
                     << getTotalTime();
             return ss.str();
         }
@@ -679,6 +668,95 @@ namespace karri::stats {
         }
     };
 
+    struct WalkPerformanceStats {
+        int64_t time = 0;
+
+        int64_t getTotalTime() const {
+            return time;
+        }
+
+        void clear() {
+            time = 0;
+        }
+
+        static constexpr auto LOGGER_NAME = "perf_walk.csv";
+        static constexpr auto LOGGER_COLS =
+                "time,"
+                "total_time\n";
+
+        std::string getLoggerRow() const {
+            std::stringstream ss;
+            ss << time << ","
+                    << getTotalTime();
+            return ss.str();
+        }
+    };
+
+    // Dummy car performance stats
+    struct CarPerformanceStats {
+        int64_t time = 0;
+
+        int64_t getTotalTime() const {
+            return time;
+        }
+
+        void clear() {
+            time = 0;
+        }
+
+        static constexpr auto LOGGER_NAME = "perf_car.csv";
+        static constexpr auto LOGGER_COLS =
+                "time,"
+                "total_time\n";
+
+        std::string getLoggerRow() const {
+            std::stringstream ss;
+            ss << time << ","
+                    << getTotalTime();
+            return ss.str();
+        }
+    };
+
+    struct TaxiPerformanceStats {
+        OrdAssignmentsPerformanceStats ordAssignmentsStats{};
+        PbnsAssignmentsPerformanceStats pbnsAssignmentsStats{};
+        PalsAssignmentsPerformanceStats palsAssignmentsStats{};
+        DalsAssignmentsPerformanceStats dalsAssignmentsStats{};
+
+        int64_t getTotalTime() const {
+            return ordAssignmentsStats.getTotalTime() +
+                   pbnsAssignmentsStats.getTotalTime() +
+                   palsAssignmentsStats.getTotalTime() +
+                   dalsAssignmentsStats.getTotalTime();
+        }
+
+        void clear() {
+            ordAssignmentsStats.clear();
+            pbnsAssignmentsStats.clear();
+            palsAssignmentsStats.clear();
+            dalsAssignmentsStats.clear();
+        }
+
+        static constexpr auto LOGGER_NAME = "perf_overall.csv";
+        static constexpr auto LOGGER_COLS =
+                "ord_assignments_time,"
+                "pbns_assignments_time,"
+                "pals_assignments_time,"
+                "dals_assignments_time,"
+                "total_time\n";
+
+
+        std::string getLoggerRow() const {
+            std::stringstream ss;
+            ss << ordAssignmentsStats.getTotalTime() << ","
+                    << pbnsAssignmentsStats.getTotalTime() << ","
+                    << palsAssignmentsStats.getTotalTime() << ","
+                    << dalsAssignmentsStats.getTotalTime() << ","
+                    << getTotalTime();
+            return ss.str();
+        }
+    };
+
     struct PtPerformanceStats {
         int64_t roundInitializationTime = 0;
         int64_t collectRoutesTime = 0;
@@ -746,45 +824,89 @@ namespace karri::stats {
         }
     };
 
-    struct RequestReceiveStats {
-        TaxiPerformanceStats taxiOnlyStats{};
-        PtPerformanceStats ptOnlyStats{};
+    struct TaxiAndPtPerformanceStats {
+        StationBchPerformanceStats stationBchStats{};
         TaxiPerformanceStats taxiFirstLegStats{};
         PtPerformanceStats ptWithTaxiStats{};
+
+        int64_t getTotalTime() const {
+            return stationBchStats.getTotalTime() +
+                   taxiFirstLegStats.getTotalTime() +
+                   ptWithTaxiStats.getTotalTime();
+        }
+
+        void clear() {
+            stationBchStats.clear();
+            taxiFirstLegStats.clear();
+            ptWithTaxiStats.clear();
+        }
+
+        static constexpr auto LOGGER_NAME = "perf_taxi_and_pt.csv";
+        static constexpr auto LOGGER_COLS =
+                "station_bch_time,"
+                "taxi_first_leg_time,"
+                "pt_with_taxi_time,"
+                "total_time\n";
+
+        std::string getLoggerRow() const {
+            std::stringstream ss;
+            ss << stationBchStats.getTotalTime() << ","
+                    << taxiFirstLegStats.getTotalTime() << ","
+                    << ptWithTaxiStats.getTotalTime() << ","
+                    << getTotalTime();
+            return ss.str();
+        }
+    };
+
+    struct RequestReceiveStats {
+        WalkPerformanceStats walkOnlyStats{};
+        CarPerformanceStats carOnlyStats{};
+        TaxiPrepStats taxiPrepStats{};
+        TaxiPerformanceStats taxiOnlyStats{};
+        PtPerformanceStats ptOnlyStats{};
+        TaxiAndPtPerformanceStats taxiAndPtPerformanceStats{};
         UpdatePerformanceStats updateStats{};
 
 
         int64_t getTotalTime() const {
-            return taxiOnlyStats.getTotalTime() +
+            return walkOnlyStats.getTotalTime() +
+                   carOnlyStats.getTotalTime() +
+                   taxiPrepStats.getTotalTime() +
+                   taxiOnlyStats.getTotalTime() +
                    ptOnlyStats.getTotalTime() +
-                   taxiFirstLegStats.getTotalTime() +
-                   ptWithTaxiStats.getTotalTime() +
-                       updateStats.getTotalTime();
+                   taxiAndPtPerformanceStats.getTotalTime() +
+                   updateStats.getTotalTime();
         }
 
         void clear() {
+            walkOnlyStats.clear();
+            carOnlyStats.clear();
+            taxiPrepStats.clear();
             taxiOnlyStats.clear();
             ptOnlyStats.clear();
-            taxiFirstLegStats.clear();
-            ptWithTaxiStats.clear();
+            taxiAndPtPerformanceStats.clear();
             updateStats.clear();
         }
 
         static constexpr auto LOGGER_NAME = "perf_request_receive.csv";
         static constexpr auto LOGGER_COLS =
+                "walk_only_time,"
+                "car_only_time,"
+                "taxi_prep_time,"
                 "taxi_only_time,"
                 "pt_only_time,"
-                "taxi_first_leg_time,"
-                "pt_with_taxi_time,"
+                "taxi_and_pt_time,"
                 "update_time,"
                 "total_time\n";
 
         std::string getLoggerRow() const {
             std::stringstream ss;
-            ss << taxiOnlyStats.getTotalTime() << ","
+            ss << walkOnlyStats.getTotalTime() << ","
+                    << carOnlyStats.getTotalTime() << ","
+                    << taxiPrepStats.getTotalTime() << ","
+                    << taxiOnlyStats.getTotalTime() << ","
                     << ptOnlyStats.getTotalTime() << ","
-                    << taxiFirstLegStats.getTotalTime() << ","
-                    << ptWithTaxiStats.getTotalTime() << ","
+                    << taxiAndPtPerformanceStats.getTotalTime() << ","
                     << updateStats.getTotalTime() << ","
                     << getTotalTime();
             return ss.str();
@@ -792,32 +914,35 @@ namespace karri::stats {
     };
 
     struct SecondTaxiLegStats {
+        TaxiPrepStats taxiPrepStats{};
         TaxiPerformanceStats taxiSecondLegStats{};
         UpdatePerformanceStats updateStats{};
 
         int64_t getTotalTime() const {
-            return taxiSecondLegStats.getTotalTime() +
+            return taxiPrepStats.getTotalTime() + taxiSecondLegStats.getTotalTime() +
                    updateStats.getTotalTime();
         }
+
         void clear() {
+            taxiPrepStats.clear();
             taxiSecondLegStats.clear();
             updateStats.clear();
         }
 
         static constexpr auto LOGGER_NAME = "perf_second_taxi_leg.csv";
         static constexpr auto LOGGER_COLS =
+                "taxi_prep_time,"
                 "taxi_second_leg_time,"
                 "update_time,"
                 "total_time\n";
 
         std::string getLoggerRow() const {
             std::stringstream ss;
-            ss << taxiSecondLegStats.getTotalTime() << ","
-               << updateStats.getTotalTime() << ","
-               << getTotalTime();
+            ss << taxiPrepStats.getTotalTime() << ","
+                    << taxiSecondLegStats.getTotalTime() << ","
+                    << updateStats.getTotalTime() << ","
+                    << getTotalTime();
             return ss.str();
         }
     };
-
-
 }

@@ -15,7 +15,7 @@ namespace karri {
     public:
         CarTripFinder() = default;
 
-        CarResult findCarTrip(const RequestState &requestState) {
+        CarResult findCarTrip(const RequestState &requestState, stats::CarPerformanceStats &) {
             if (!isCarAllowed(requestState.originalRequest))
                 return {INFTY};
             return {requestState.originalReqDirectDist};

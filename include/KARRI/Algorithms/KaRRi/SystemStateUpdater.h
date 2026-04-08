@@ -201,31 +201,21 @@ namespace karri {
 
         void writeReceiveRequestLogs(const int requestId, const stats::RequestReceiveStats &stats) const {
             logPerformance(requestId, "", stats);
+            logPerformance(requestId, "", stats.walkOnlyStats);
+            logPerformance(requestId, "", stats.carOnlyStats);
+            writeTaxiPrepStats(requestId, "", stats.taxiPrepStats);
+
             writeTaxiPerformanceLogs(requestId, "taxi_only.", stats.taxiOnlyStats);
-            writeTaxiPerformanceLogs(requestId, "first_leg.", stats.taxiFirstLegStats);
             logPerformance(requestId, "pt_only.", stats.ptOnlyStats);
-            logPerformance(requestId, "pt_with_taxi.", stats.ptWithTaxiStats);
+            writeTaxiAndPtPerformanceLogs(requestId, stats.taxiAndPtPerformanceStats);
+
+            logPerformance(requestId, "", stats.updateStats);
         }
 
-        // template<typename PtAndTaxiTripFinderResponse>
-        // void writeTripTypeLogs(const int requestId, const PtAndTaxiTripFinderResponse &response) {
-        //     const bool isTaxiOnly = response.isValidTaxiOnlyTrip();
-        //     const bool isPtOnly = response.isValidPTOnlyTrip() && !response.getPTLeg().isJourneyWalking();
-        //     const bool isWalkingOnly = response.isValidPTOnlyTrip() && response.getPTLeg().isJourneyWalking();
-        //     const bool isCombined = !isTaxiOnly && !isPtOnly && !isWalkingOnly;
-        //     tripTypeLogger << requestId << ", "
-        //             << isTaxiOnly << ", "
-        //             << isPtOnly << ", "
-        //             << isWalkingOnly << ", "
-        //             << isCombined << ", "
-        //             << response.hasValidFirstTaxiLeg() << ", "
-        //             << response.hasValidPTLeg() << ", "
-        //             << (response.hasValidPTLeg() && response.getPTLeg().isFinalTransferByTaxi()) << "\n";
-        // }
-
         void writeSecondTaxiLegLogs(const int requestId, const stats::SecondTaxiLegStats &stats) const {
-            writeTaxiPerformanceLogs(requestId, "second_leg.", stats.taxiSecondLegStats);
-            logPerformance(requestId, "second_leg.", stats.updateStats);
+            writeTaxiPrepStats(requestId, "taxi_and_pt.second_leg.", stats.taxiPrepStats);
+            writeTaxiPerformanceLogs(requestId, "taxi_and_pt.second_leg.", stats.taxiSecondLegStats);
+            logPerformance(requestId, "taxi_and_pt.second_leg.", stats.updateStats);
         }
 
         void writeRoadCatLogs() {
@@ -236,18 +226,31 @@ namespace karri {
         }
 
     private:
+
+        void writeTaxiPrepStats(const int requestId, const std::string &name_prefix, const stats::TaxiPrepStats &stats) const {
+            logPerformance(requestId, name_prefix, stats);
+            logPerformance(requestId, name_prefix, stats.initializationStats);
+            logPerformance(requestId, name_prefix, stats.ellipticBchStats);
+            logPerformance(requestId, name_prefix, stats.pdDistancesStats);
+            logPerformance(requestId, name_prefix, stats.filterOrdinaryPdLocsStats);
+            logPerformance(requestId, name_prefix, stats.filterBnsPdLocsStats);
+        }
+
+        void writeTaxiAndPtPerformanceLogs(const int requestId, const stats::TaxiAndPtPerformanceStats &stats) const {
+            logPerformance(requestId, "", stats);
+            logPerformance(requestId, "taxi_and_pt.", stats.stationBchStats);
+            writeTaxiPerformanceLogs(requestId, "taxi_and_pt.first_leg.", stats.taxiFirstLegStats);
+            logPerformance(requestId, "taxi_and_pt.pt_with_taxi.", stats.ptWithTaxiStats);
+        }
+
         void writeTaxiPerformanceLogs(const int requestId, const std::string &name_prefix,
                                       const stats::TaxiPerformanceStats &stats) const {
             logPerformance(requestId, name_prefix,
                            stats,
-                           stats.initializationStats,
-                           stats.ellipticBchStats,
-                           stats.pdDistancesStats,
                            stats.ordAssignmentsStats,
                            stats.pbnsAssignmentsStats,
                            stats.palsAssignmentsStats,
-                           stats.dalsAssignmentsStats,
-                           stats.stationBchStats);
+                           stats.dalsAssignmentsStats);
         }
 
 #define GET_RAW_TYPE_OF(x) std::remove_reference_t<decltype(x)>

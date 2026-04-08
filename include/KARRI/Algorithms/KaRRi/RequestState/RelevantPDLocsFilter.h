@@ -53,7 +53,7 @@ namespace karri {
             const RequestState &requestState,
                               const PDLocs &pdLocs,
                               const int minDirectPdDist,
-                              stats::OrdAssignmentsPerformanceStats &stats,
+                              stats::FilterRelevantPdLocsPerformanceStats &stats,
                                                     const int globalBestCost = INFTY) {
             KaRRiTimer timer;
 
@@ -73,7 +73,7 @@ namespace karri {
         filterOrdinaryDropoffs(FeasibleDistancesT &feasibleDropoffDistances, const RequestState &requestState,
                                const PDLocs &pdLocs,
                               const int minDirectPdDist,
-                               stats::OrdAssignmentsPerformanceStats &stats,
+                               stats::FilterRelevantPdLocsPerformanceStats &stats,
                                                     const int globalBestCost = INFTY) {
             KaRRiTimer timer;
 
@@ -92,7 +92,7 @@ namespace karri {
         filterPickupsBeforeNextStop(FeasibleDistancesT &feasiblePickupDistances, const RequestState &requestState,
                                     const PDLocs &pdLocs,
                               const int minDirectPdDist,
-                                    stats::PbnsAssignmentsPerformanceStats &stats,
+                                    stats::FilterRelevantPdLocsPerformanceStats &stats,
                                                     const int globalBestCost = INFTY) {
             KaRRiTimer timer;
 
@@ -109,8 +109,8 @@ namespace karri {
         RelevantPDLocs filterDropoffsBeforeNextStop(FeasibleDistancesT &feasibleDropoffDistances,
                                                     const RequestState &requestState,
                                                     const PDLocs &pdLocs,
-                              const int minDirectPdDist,
-                                                    stats::PbnsAssignmentsPerformanceStats &stats,
+                                                    const int minDirectPdDist,
+                                                    stats::FilterRelevantPdLocsPerformanceStats &stats,
                                                     const int globalBestCost = INFTY) {
             KaRRiTimer timer;
 

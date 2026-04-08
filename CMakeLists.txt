@@ -32,23 +32,23 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 # Flags when building for the Devel configuration.
-if(CMAKE_CXX_COMPILER_ID MATCHES GNU|Clang)
-  set(CMAKE_CXX_FLAGS_DEVEL -O3)
-endif()
-if(NOT CMAKE_BUILD_TYPE)
-  set(CMAKE_BUILD_TYPE Devel)
-endif()
+if (CMAKE_CXX_COMPILER_ID MATCHES GNU|Clang)
+    set(CMAKE_CXX_FLAGS_DEVEL -O3)
+endif ()
+if (NOT CMAKE_BUILD_TYPE)
+    set(CMAKE_BUILD_TYPE Devel)
+endif ()
 
 # Enable the compiler to use extended instructions in generated code.
-if(CMAKE_CXX_COMPILER_ID MATCHES GNU|Clang)
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -march=native")
-endif()
+if (CMAKE_CXX_COMPILER_ID MATCHES GNU|Clang)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -march=native")
+endif ()
 option(DISABLE_AVX "Disable use of instructions in the AVX extended instruction set.")
-if(DISABLE_AVX)
-  if(CMAKE_CXX_COMPILER_ID MATCHES GNU|Clang)
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -mno-avx")
-  endif()
-endif()
+if (DISABLE_AVX)
+    if (CMAKE_CXX_COMPILER_ID MATCHES GNU|Clang)
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -mno-avx")
+    endif ()
+endif ()
 
 # Request warnings.
 if (CMAKE_CXX_COMPILER_ID MATCHES GNU)
@@ -58,7 +58,7 @@ elseif (CMAKE_CXX_COMPILER_ID MATCHES Clang)
 endif ()
 
 if (CMAKE_BUILD_TYPE STREQUAL "Debug")
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -ftemplate-backtrace-limit=0")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -ftemplate-backtrace-limit=0")
 endif (CMAKE_BUILD_TYPE STREQUAL "Debug")
 
 # Dependencies installed via package manager
@@ -70,16 +70,18 @@ add_subdirectory(External)
 
 set(PARROT_INCLUDE_DIR ${CMAKE_SOURCE_DIR}/include)
 
-if (CMAKE_BUILD_TYPE STREQUAL "Debug")
-    set(KASSERT_ASSERTION_LEVEL 40)
-else ()
-    set(KASSERT_ASSERTION_LEVEL 20)
+if (NOT KASSERT_ASSERTION_LEVEL)
+    if (CMAKE_BUILD_TYPE STREQUAL "Debug")
+        set(KASSERT_ASSERTION_LEVEL 40)
+    else ()
+        set(KASSERT_ASSERTION_LEVEL 20)
+    endif ()
 endif ()
 message("Using kassert assertion level ${KASSERT_ASSERTION_LEVEL}")
 
 # Directories containing .cc source files.
 set(SOURCE_DIRECTORIES Runners RawData ULTRA_Runnables)
 
-foreach(SRC_DIR ${SOURCE_DIRECTORIES})
-  add_subdirectory(${SRC_DIR})
-endforeach()
+foreach (SRC_DIR ${SOURCE_DIRECTORIES})
+    add_subdirectory(${SRC_DIR})
+endforeach ()

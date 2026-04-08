@@ -34,7 +34,7 @@ namespace karri {
               pdDistanceSearches(pdDistanceSearches) {
         }
 
-        KaRRiBaseInfo prepareBaseInfo(const RequestState &requestState, stats::TaxiPerformanceStats &stats) {
+        KaRRiBaseInfo prepareBaseInfo(const RequestState &requestState, stats::TaxiPrepStats &stats) {
             KaRRiBaseInfo bi;
 
             const auto &req = requestState.originalRequest;
@@ -56,20 +56,20 @@ namespace karri {
             // Filter elliptic BCH search results
             const int minDirectPdDist = bi.pdDistances.getMinDirectDistance();
             bi.relOrdinaryPickups = relevantPdLocsFilter.filterOrdinaryPickups(
-                feasibleEllipticPickups, requestState, bi.pdLocs, minDirectPdDist, stats.ordAssignmentsStats);
+                feasibleEllipticPickups, requestState, bi.pdLocs, minDirectPdDist, stats.filterOrdinaryPdLocsStats);
             bi.relPickupsBeforeNextStop = relevantPdLocsFilter.filterPickupsBeforeNextStop(
-                feasibleEllipticPickups, requestState, bi.pdLocs, minDirectPdDist, stats.pbnsAssignmentsStats);
+                feasibleEllipticPickups, requestState, bi.pdLocs, minDirectPdDist, stats.filterBnsPdLocsStats);
             bi.relOrdinaryDropoffs = relevantPdLocsFilter.filterOrdinaryDropoffs(
-                feasibleEllipticDropoffs, requestState, bi.pdLocs, minDirectPdDist, stats.ordAssignmentsStats);
+                feasibleEllipticDropoffs, requestState, bi.pdLocs, minDirectPdDist, stats.filterOrdinaryPdLocsStats);
             bi.relDropoffsBeforeNextStop = relevantPdLocsFilter.filterDropoffsBeforeNextStop(
-                feasibleEllipticDropoffs, requestState, bi.pdLocs, minDirectPdDist, stats.pbnsAssignmentsStats);
+                feasibleEllipticDropoffs, requestState, bi.pdLocs, minDirectPdDist, stats.filterBnsPdLocsStats);
 
             return bi;
         }
 
     private:
         void initializeForRequest(const RequestState &requestState, const PDLocs &pdLocs,
-                                  stats::TaxiPerformanceStats &stats) {
+                                  stats::TaxiPrepStats &stats) {
             feasibleEllipticPickups.init(pdLocs.numPickups(), stats.ellipticBchStats);
             auto pickupsAtExistingStops = pdLocsAtExistingStopsFinder.template findPDLocsAtExistingStops<PICKUP>(
                 pdLocs.pickups, stats.ellipticBchStats);

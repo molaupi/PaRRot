@@ -32,6 +32,7 @@
 #include "../../Tools/Timer.h"
 #include "BaseObjects/Request.h"
 #include "BaseObjects/Vehicle.h"
+#include "Stats/PerformanceStats.h"
 
 namespace karri {
     template<typename RequestStateInitializerT,
@@ -406,18 +407,19 @@ namespace karri {
 
             // todo: prep and walk-only should have their own stats
             // todo: add car mode once we have sensible mode choice
+            if (request.requestId == 1677) {
+                std::cout << "";
+            }
             auto requestState = rsInitializer.initializeRequestState(request, request.requestTime,
-                                                                     stats.taxiOnlyStats.initializationStats);
-            const auto baseInfo = karriPrep.prepareBaseInfo(requestState, stats.taxiOnlyStats);
-            const auto walkOnlyResult = walkTripFinder.findWalkingTrip(requestState);
-            const auto carOnlyResult = carTripFinder.findCarTrip(requestState);
+                                                                     stats.taxiPrepStats.initializationStats);
+            const auto baseInfo = karriPrep.prepareBaseInfo(requestState, stats.taxiPrepStats);
+            const auto walkOnlyResult = walkTripFinder.findWalkingTrip(requestState, stats.walkOnlyStats);
+            const auto carOnlyResult = carTripFinder.findCarTrip(requestState, stats.carOnlyStats);
             const auto taxiOnlyResult = taxiTripFinder.findBestAssignment(requestState, baseInfo, stats.taxiOnlyStats);
             const auto ptOnlyResult = ptTripFinder.findBestJourney(requestState, stats.ptOnlyStats);
 
             const auto ptAndTaxiResult = ptAndTaxiTripFinder.findBestAssignment(
-                requestState, baseInfo, taxiOnlyResult.getBestCost(), stats);
-            // const auto &firstTaxiLeg = ptAndTaxiTripFinderResponse.getFirstTaxiLeg();
-            // const auto &ptLeg = ptAndTaxiTripFinderResponse.getPTLeg();
+                requestState, baseInfo, taxiOnlyResult.getBestCost(), stats.taxiAndPtPerformanceStats);
 
             // Calculated costs
             requestData[reqId].taxiLegCost = ptAndTaxiResult.getFirstTaxiLegCost();
@@ -450,19 +452,6 @@ namespace karri {
             } else {
                 KASSERT(false);
             }
-
-            // if (ptAndTaxiTripFinderResponse.isValidTaxiOnlyTrip()) {
-            //     systemStateUpdater.writeBestAssignmentToLogger(firstTaxiLeg);
-            //     riderState[reqId] = WAITING_FOR_PICKUP;
-            //     applyAssignment(firstTaxiLeg, reqId, occTime, stats.updateStats);
-            // } else if (ptAndTaxiTripFinderResponse.isValidPTOnlyTrip()) {
-            //     applyPtOnlyJourney(ptLeg, reqId, occTime);
-            // } else {
-            //     riderState[reqId] = WAITING_FOR_PICKUP;
-            //     applyCombinedTrip(firstTaxiLeg, ptLeg, reqId, occTime,
-            //                       ptAndTaxiTripFinderResponse.hasValidFirstTaxiLeg(),
-            //                       stats.updateStats);
-            // }
 
             // systemStateUpdater.writeTripTypeLogs(reqId, ptAndTaxiTripFinderResponse);
             systemStateUpdater.writeReceiveRequestLogs(reqId, stats);
@@ -603,9 +592,8 @@ namespace karri {
 
             karri::stats::SecondTaxiLegStats secondTaxiLegStats;
             auto requestState = rsInitializer.initializeRequestState(newReq, occTime,
-                                                                     secondTaxiLegStats.taxiSecondLegStats.
-                                                                     initializationStats);
-            const auto baseInfo = karriPrep.prepareBaseInfo(requestState, secondTaxiLegStats.taxiSecondLegStats);
+                                                                     secondTaxiLegStats.taxiPrepStats.initializationStats);
+            const auto baseInfo = karriPrep.prepareBaseInfo(requestState, secondTaxiLegStats.taxiPrepStats);
             const auto secondLegResult = taxiTripFinder.findBestAssignment(
                 requestState, baseInfo, secondTaxiLegStats.taxiSecondLegStats);
             // auto asgnFinderResponse = ptAndTaxiTripFinder.findBestSecondTaxiLeg(

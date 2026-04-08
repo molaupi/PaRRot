@@ -42,4 +42,19 @@ namespace karri {
         double walkingSpeed = 1.3889; // Walking speed in m/s (default: 5 km/h)
         double allowPrivateCarProbability = 1.0; // Probability of allowing private car as an option for this request in mode choice. Should be between 0 and 1.
     };
+
+    inline std::ostream& operator<<(std::ostream &os, const Request &request) {
+        os << "Request("
+        << "\n\trequestId=" << request.requestId
+           << ",\n\torigin=" << request.origin
+           << ",\n\tdestination=" << request.destination
+           << ",\n\trequestTime=" << request.requestTime
+           << ",\n\tnumRiders=" << request.numRiders
+           << ",\n\tmaxPickupWalkingDist=" << request.maxPickupWalkingDist
+           << ",\n\tmaxDropoffWalkingDist=" << request.maxDropoffWalkingDist
+           << ",\n\twalkingSpeed=" << request.walkingSpeed
+           << ",\n\tallowPrivateCarProbability=" << request.allowPrivateCarProbability
+           << "\n)";
+        return os;
+    }
 }

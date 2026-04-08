@@ -32,6 +32,8 @@
 #include <KARRI/DataStructures/Containers/FastResetFlagArray.h>
 #include <sys/stat.h>
 
+#include "StationsAtLocations.h"
+
 namespace karri {
     template<typename InputGraphT,
         typename CHEnvT,
@@ -51,8 +53,8 @@ namespace karri {
 
             template<typename DistLabelT, typename DistLabelContainerT>
             bool operator()(const int v, DistLabelT &distToV, const DistLabelContainerT & /*distLabels*/) {
-                // Check if we can prune at this vertex based only on the distance to v
-                if (allSet(search.canPrune(distToV)))
+                // Check if we can prune at this vertex based on the distance to v
+                if (allSet(search.canPrune(distToV, search.curMinTripTimesToLastStop)))
                     return true;
 
                 int numEntriesScannedHere = 0;
@@ -75,7 +77,7 @@ namespace karri {
 
                         const int &stationId = entry.targetId;
                         const DistanceLabel distViaV = distToV + DistanceLabel(entry.distToTarget);
-                        const auto atLeastAsGoodAsCurBest = ~search.canPrune(distViaV);
+                        const auto atLeastAsGoodAsCurBest = ~search.canPrune(distViaV, search.curMinTripTimesToLastStop);
 
                         if (!anySet(atLeastAsGoodAsCurBest))
                             break;
@@ -119,12 +121,15 @@ namespace karri {
                 if constexpr (!StationBucketsEnvT::SORTED) {
                     return false;
                 }
-                return allSet(search.canPrune(distToV));
+                return allSet(search.canPrune(distToV, search.curMinTripTimesToLastStop));
             }
 
         private:
             const DALSToStations &search;
         };
+
+        friend ScanBucket;
+        friend StopStationBCH;
 
     public:
         DALSToStations(const InputGraphT &inputGraph,
@@ -133,7 +138,8 @@ namespace karri {
                        CurVehLocToPickupSearchesT &curVehLocToPickupSearchesT,
                        const RouteState &routeState,
                        const StationBucketsEnvT &stationBucketsEnv,
-                       const PTStations &ptStations)
+                       const PTStations &ptStations,
+                       const StationsAtLocations &stationsAtLocations)
             : inputGraph(inputGraph),
               ch(chEnv.getCH()),
               fleet(fleet),
@@ -145,12 +151,10 @@ namespace karri {
               checkPBNSForVehicle(fleet.size()),
               bucketContainer(stationBucketsEnv.getTargetBuckets()),
               ptStations(ptStations),
+        stationsAtLocations(stationsAtLocations),
               stationsWithValidDistances(),
-              currentLastStopDistances(ptStations.size(), DistanceLabel(INFTY)),
-              stationsAtVehEdgeIndex(inputGraph.numEdges() + 1) {
+              currentLastStopDistances(ptStations.size(), DistanceLabel(INFTY)) {
             stationsWithValidDistances.reserve(ptStations.size());
-
-            initializeEdgeToStationMapping();
         }
 
         void tryDropoffAfterLastStop(const RequestState &requestState, const PDLocs &pdLocs,
@@ -178,6 +182,27 @@ namespace karri {
 
 
             for (unsigned int i = 0; i < relevantVehicleIdsForRequest.size(); i += K) {
+
+                KaRRiTimer timer;
+                // TODO: not sure whether this is faster than std::fill on the entire distances vector since
+                //  there seem to be around 8000/26000 stations with valid distances on average, even with K=1
+                for (const auto &s: stationsWithValidDistances)
+                    currentLastStopDistances[s] = INFTY;
+                stationsWithValidDistances.clear();
+
+                curMinTripTimesToLastStop = INFTY;
+                for (int j = 0; j < K; ++j) {
+                    if (i + j >= relevantVehicleIdsForRequest.size())
+                        break;
+                    const auto &veh = fleet[relevantVehicleIdsForRequest[i + j]];
+                    const int lastStopIndex = routeState.numStopsOf(veh.vehicleId) - 1;
+                    const int depTimeAtLastStop = routeState.schedDepTimesFor(veh.vehicleId)[lastStopIndex];
+                    // TODO could improve upon this bound by factoring in smallest relevant pickup detour for each vehicle
+                    curMinTripTimesToLastStop[j] = depTimeAtLastStop - requestState.earliestDeparture();
+                    KASSERT(curMinTripTimesToLastStop[j] >= 0);
+                }
+                stats.searchTime += timer.elapsed<std::chrono::nanoseconds>();
+
                 initializeDistancesForStationsAtLastStops(i, stats);
                 runSearchesForVehicleBatch(i, stats);
                 enumerateAssignmentsForVehicleBatch(i, relevantOrdinaryPickups, relevantPickupsBeforeNextStop,
@@ -205,7 +230,9 @@ namespace karri {
             upperBoundCost = std::min(worstCostForAllStations, externalUpperBoundCost);
         }
 
-        LabelMask canPrune(const DistanceLabel &distancesToDropoffs) const {
+    private:
+
+        LabelMask canPrune(const DistanceLabel &distancesToDropoffs, const DistanceLabel &minTripTimeToLastStop) const {
             if (upperBoundCost >= INFTY) {
                 // If current best is INFTY, only indices i with distancesToPickups[i] >= INFTY or
                 // minDirectDistances[i] >= INFTY are worse than the current best.
@@ -214,41 +241,11 @@ namespace karri {
 
             const DistanceLabel costLowerBound = calculator.template
                     calcKVehicleIndependentCostLowerBoundsForDALSWithKnownMinDistToDropoff<LabelSet>(
-                        0, distancesToDropoffs, 0, *curReqState);
+                        0, distancesToDropoffs, minTripTimeToLastStop, *curReqState);
 
             return upperBoundCost < costLowerBound;
         }
 
-    private:
-        void initializeEdgeToStationMapping() {
-            // Count stations per vehicle edge to get offsets
-            for (const auto &station: ptStations) {
-                ++stationsAtVehEdgeIndex[station.vehEdgeId];
-            }
-
-            // Compute offsets as prefix sum of counts
-            int offset = 0;
-            for (size_t i = 0; i < stationsAtVehEdgeIndex.size(); ++i) {
-                int count = stationsAtVehEdgeIndex[i];
-                stationsAtVehEdgeIndex[i] = offset;
-                offset += count;
-            }
-
-            // Fill stationsAtVehEdge according to offsets
-            stationsAtVehEdge.resize(ptStations.size());
-            for (const auto &station: ptStations) {
-                int edgeId = station.vehEdgeId;
-                int index = stationsAtVehEdgeIndex[edgeId]++;
-                stationsAtVehEdge[index] = station.stationId;
-            }
-
-            // Restore correct offsets
-            for (size_t i = stationsAtVehEdgeIndex.size() - 1; i > 0; --i) {
-                stationsAtVehEdgeIndex[i] = stationsAtVehEdgeIndex[i - 1];
-            }
-            stationsAtVehEdgeIndex[0] = 0;
-            KASSERT(stationsAtVehEdgeIndex.back() == ptStations.size());
-        }
 
         void initLastStopSearches(const RequestState &requestState) {
             totalNumberOfCandidateDropoffs = 0;
@@ -263,13 +260,10 @@ namespace karri {
                                                        stats::DalsAssignmentsPerformanceStats &stats) {
             KaRRiTimer timer;
 
-            // TODO: not sure whether this is faster than std::fill on the entire distances vector since
-            //  there seem to be around 8000/26000 stations with valid distances on average, even with K=1
-            for (const auto &s: stationsWithValidDistances)
-                currentLastStopDistances[s] = INFTY;
-            stationsWithValidDistances.clear();
-
+            const auto zeroDistCanPrune = canPrune(DistanceLabel(0), curMinTripTimesToLastStop);
             for (int i = 0; i < K; ++i) {
+                if (zeroDistCanPrune[i])
+                    continue;
                 const auto &veh = indexOfFirstVeh + i < relevantVehicleIdsForRequest.size()
                                       ? fleet[relevantVehicleIdsForRequest[indexOfFirstVeh + i]]
                                       : fleet[relevantVehicleIdsForRequest[indexOfFirstVeh]];
@@ -279,10 +273,7 @@ namespace karri {
                 DistanceLabel zeroAtI = INFTY;
                 zeroAtI[i] = 0;
 
-                const int stationsAtEdgeStart = stationsAtVehEdgeIndex[lastStopLocation];
-                const int stationsAtEdgeEnd = stationsAtVehEdgeIndex[lastStopLocation + 1];
-                for (int j = stationsAtEdgeStart; j < stationsAtEdgeEnd; ++j) {
-                    const int stationId = stationsAtVehEdge[j];
+                for (const int stationId : stationsAtLocations.getIdsOfStationsAtVehEdge(lastStopLocation)) {
                     const auto &station = ptStations[stationId];
 
                     // Mark station as having valid distance if seen for the first time
@@ -374,7 +365,11 @@ namespace karri {
             Assignment asgn;
 
             checkPBNSForVehicle.reset();
+            const auto zeroDistCanPrune = canPrune(DistanceLabel(0), curMinTripTimesToLastStop);
             for (int i = 0; i < K; ++i) {
+                if (zeroDistCanPrune[i])
+                    continue;
+
                 const auto &veh = indexOfFirstVeh + i < relevantVehicleIdsForRequest.size()
                             ? fleet[relevantVehicleIdsForRequest[indexOfFirstVeh + i]]
                             : fleet[relevantVehicleIdsForRequest[indexOfFirstVeh]];
@@ -468,7 +463,11 @@ namespace karri {
             Assignment asgn;
             asgn.pickupStopIdx = 0;
 
+            const auto zeroDistCanPrune = canPrune(DistanceLabel(0), curMinTripTimesToLastStop);
             for (int i = 0; i < K; ++i) {
+                if (zeroDistCanPrune[i])
+                    continue;
+
                 const auto &veh = indexOfFirstVeh + i < relevantVehicleIdsForRequest.size()
                             ? fleet[relevantVehicleIdsForRequest[indexOfFirstVeh + i]]
                             : fleet[relevantVehicleIdsForRequest[indexOfFirstVeh]];
@@ -596,6 +595,7 @@ namespace karri {
         const RouteState &routeState;
 
         const PTStations &ptStations;
+        const StationsAtLocations &stationsAtLocations;
 
         // Flag per vehicle that tells us if we still have to consider a pickup before the next stop of the vehicle.
         FastResetFlagArray<> checkPBNSForVehicle;
@@ -622,6 +622,10 @@ namespace karri {
         RelevantPDLocs const *curRelOrdinaryPickups;
         RelevantPDLocs const *curRelPickupsBns;
 
+        // Minimum trip time for any DALS insertion on current vehicles needed to get to last stop.
+        // Can be used for cost lower bounds when pruning BCH query.
+        DistanceLabel curMinTripTimesToLastStop;
+
         int numVerticesSettled;
         int numEntriesVisited;
 
@@ -630,10 +634,5 @@ namespace karri {
         int totalNumEntriesScanned;
 
         int totalNumberOfCandidateDropoffs;
-
-        // stationsAtVehEdge[stationsAtVehEdgeIndex[e]..stationsAtVehEdgeIndex[e+1]) are the stations at edge e.
-        // This is used to efficiently find stations at the last stop edge of a vehicle.
-        std::vector<int> stationsAtVehEdgeIndex;
-        std::vector<int> stationsAtVehEdge;
     };
 }

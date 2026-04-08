@@ -112,4 +112,14 @@ namespace karri {
         // int currentWaitTime;
 
     };
+
+
+    inline std::ostream &operator<<(std::ostream &os, const RequestState &requestState) {
+        os << "RequestState("
+        << "\n\toriginalRequest=" << requestState.originalRequest
+           << ",\n\toriginalReqDirectDist=" << requestState.originalReqDirectDist
+           << ",\n\trequestIssueTime=" << requestState.requestIssueTime
+           << "\n)";
+        return os;
+    }
 }

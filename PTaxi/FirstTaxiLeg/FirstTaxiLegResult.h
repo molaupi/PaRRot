@@ -5,18 +5,19 @@
 #include <KARRI/Algorithms/KaRRi/BaseObjects/Assignment.h>
 
 namespace karri {
-
     class FirstTaxiLegResult {
     public:
         explicit FirstTaxiLegResult(const RouteState &routeState, const RequestState &requestState,
-                                    const int numStations)
-            : results(numStations), routeState(routeState), requestState(requestState), calculator(routeState),
+                                    const int numStations, const int &externalUpperBoundCost = INFTY)
+            : results(numStations), routeState(routeState), requestState(requestState),
+              externalUpperBoundCost(externalUpperBoundCost), calculator(routeState),
               worstCostForAllStations(INFTY), worstAssignmentForAllStations() {
             assert(numStations >= 0);
         }
 
         bool tryAssignmentWithKnownCostForStation(const int stationId, const Assignment &asgn, const int cost,
                                                   InsertionType insertionType) {
+            if (cost >= externalUpperBoundCost) return false;
             if (stationId < 0 || stationId >= results.size()) return false;
             TaxiResult &taxiResult = results[stationId];
 
@@ -74,6 +75,7 @@ namespace karri {
 
         const RouteState &routeState;
         const RequestState &requestState;
+        const int &externalUpperBoundCost;
         CostCalculator calculator;
         std::vector<TaxiResult> results;
         int worstCostForAllStations;

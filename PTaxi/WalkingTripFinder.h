@@ -12,7 +12,6 @@ namespace karri {
         typename PsgCHEnvT
     >
     class WalkingTripFinder {
-
     public:
         WalkingTripFinder(const VehInputGraphT &vehInputGraph,
                           const PsgInputGraphT &psgInputGraph,
@@ -25,7 +24,8 @@ namespace karri {
               calc(routeState) {
         }
 
-        WalkingResult findWalkingTrip(const RequestState &requestState) {
+        WalkingResult findWalkingTrip(const RequestState &requestState, stats::WalkPerformanceStats &stats) {
+            KaRRiTimer timer;
             const auto &request = requestState.originalRequest;
             const int originPsgEdge = vehInputGraph.toPsgEdge(request.origin);
             const int destPsgEdge = vehInputGraph.toPsgEdge(request.destination);
@@ -34,7 +34,10 @@ namespace karri {
             const int offset = psgInputGraph.travelTime(originPsgEdge);
             psgChQuery.run(psgCh.rank(source), psgCh.rank(target));
             const auto walkingDist = psgChQuery.getDistance() + offset;
-            return {walkingDist, calc.calcCostForNotUsingVehicle(walkingDist, offset, requestState)};
+            const WalkingResult res = {walkingDist, calc.calcCostForNotUsingVehicle(walkingDist, offset, requestState)};
+            const int64_t time = timer.elapsed<std::chrono::nanoseconds>();
+            stats.time += time;
+            return res;
         }
 
     private:

@@ -29,21 +29,18 @@
 #include <KARRI/Algorithms/KaRRi/PbnsAssignments/CurVehLocToPickupSearches.h>
 
 namespace karri {
-
-
-// Finds pickup before next stop assignments, i.e. assignments where the pickup is inserted before the vehicle's next
-// stop, which means the vehicle is rerouted at its current location. Dropoff station may be inserted before the next stop or
-// at ordinary locations, i.e. after the next stop but before the last stop.
-// (The case of pickup before next stop and dropoff station after last stop is considered by the DALSToStation.)
-//
-// Works based on filtered relevant pickups before next stop as well as stations in ellipse and station distances to pickups.
+    // Finds pickup before next stop assignments, i.e. assignments where the pickup is inserted before the vehicle's next
+    // stop, which means the vehicle is rerouted at its current location. Dropoff station may be inserted before the next stop or
+    // at ordinary locations, i.e. after the next stop but before the last stop.
+    // (The case of pickup before next stop and dropoff station after last stop is considered by the DALSToStation.)
+    //
+    // Works based on filtered relevant pickups before next stop as well as stations in ellipse and station distances to pickups.
     template<typename CurVehLocToPickupSearchesT, typename StationsInEllipseT, typename StationDistancesT>
     class PBNSToStations {
-
         // Algorithm iterates through combinations of pickups and dropoffs and filters based on lower bound cost.
         // If exact distance from vehicle's current location to a pickup is ever needed, we delay the computation of that
         // distance, so it can be bundled with other such computations. In this case, a continuation marks the combination
-        // of pickup and a stop index in the vehicle's route where the exact distance was first needed for this pickup, 
+        // of pickup and a stop index in the vehicle's route where the exact distance was first needed for this pickup,
         // so the iteration of combinations can continue after the bundled computation of exact distances.
         struct Continuation {
             int pickupId = INVALID_ID;
@@ -52,39 +49,42 @@ namespace karri {
         };
 
     public:
-
         PBNSToStations(CurVehLocToPickupSearchesT &curVehLocToPickupSearches,
-                              const Fleet &fleet, const RouteState &routeState)
-                : curVehLocToPickupSearches(curVehLocToPickupSearches),
-                  fleet(fleet),
-                  calculator(routeState),
-                  routeState(routeState) {}
+                       const Fleet &fleet, const RouteState &routeState)
+            : curVehLocToPickupSearches(curVehLocToPickupSearches),
+              fleet(fleet),
+              calculator(routeState),
+              routeState(routeState) {
+        }
 
-        void findAssignments(const RequestState& requestState, const PDLocs& pdLocs,
-                             const RelevantPDLocs &relPickupsBns, 
-                             const PTStations& stations, StationsInEllipseT &stationsInEllipse, StationDistancesT &stationDistances,
-                             stats::PbnsAssignmentsPerformanceStats& stats,
+        void findAssignments(const RequestState &requestState, const PDLocs &pdLocs,
+                             const RelevantPDLocs &relPickupsBns,
+                             const PTStations &stations, StationsInEllipseT &stationsInEllipse,
+                             StationDistancesT &stationDistances,
+                             stats::PbnsAssignmentsPerformanceStats &stats,
                              FirstTaxiLegResult &firstTaxiLegResult) {
-            
             numAssignmentsTriedWithPickupBeforeNextStop = 0;
-            
+
             KaRRiTimer timer;
 
             int numCandidateVehicles = 0;
             for (const auto &vehId: relPickupsBns.getVehiclesWithRelevantPDLocs()) {
-
                 ++numCandidateVehicles;
 
                 ordinaryContinuations.clear();
                 pairedContinuations.clear();
 
-                assert(routeState.occupanciesFor(vehId)[0]  + requestState.originalRequest.numRiders <= fleet[vehId].capacity);
+                assert(
+                    routeState.occupanciesFor(vehId)[0] + requestState.originalRequest.numRiders <= fleet[vehId].
+                    capacity);
 
-                determineNecessaryExactDistances(fleet[vehId], relPickupsBns, stations, stationsInEllipse, stationDistances, requestState, pdLocs, firstTaxiLegResult);
+                determineNecessaryExactDistances(fleet[vehId], relPickupsBns, stations, stationsInEllipse,
+                                                 stationDistances, requestState, pdLocs, firstTaxiLegResult);
 
                 curVehLocToPickupSearches.computeExactDistancesVia(fleet[vehId], pdLocs);
 
-                finishContinuations(fleet[vehId], stations, stationsInEllipse, stationDistances, requestState, pdLocs, firstTaxiLegResult);
+                finishContinuations(fleet[vehId], stations, stationsInEllipse, stationDistances, requestState, pdLocs,
+                                    firstTaxiLegResult);
             }
 
             const auto time = timer.elapsed<std::chrono::nanoseconds>() -
@@ -104,16 +104,16 @@ namespace karri {
         }
 
     private:
-
         // Filters combinations of pickups and dropoffs using a cost lower bound.
         // If a combination is found for a pickup that cannot be filtered, we need the exact distance from the vehicle
         // location to the pickup.
         // These pickups are added to the queue of curVehLocToPickupSearches and continuations are stored to restart
         // the iteration of combinations for that pickup after the computation of exact distances.
         void determineNecessaryExactDistances(const Vehicle &veh, const RelevantPDLocs &relPickupsBns,
-                                              const PTStations& stations, StationsInEllipseT &stationsInEllipse , StationDistancesT &stationDistances,
-                                              const RequestState& requestState, const PDLocs& pdLocs, const FirstTaxiLegResult &firstTaxiLegResult) {
-
+                                              const PTStations &stations, StationsInEllipseT &stationsInEllipse,
+                                              StationDistancesT &stationDistances,
+                                              const RequestState &requestState, const PDLocs &pdLocs,
+                                              const FirstTaxiLegResult &firstTaxiLegResult) {
             Assignment asgn(&veh);
 
             for (const auto &entry: relPickupsBns.relevantSpotsFor(veh.vehicleId)) {
@@ -126,11 +126,14 @@ namespace karri {
                 const int distFromPickup = entry.distFromPDLocToNextStop;
 
                 // For paired assignments before next stop, first try a lower bound with the smallest distance to a station
-                const auto lowerBoundCostPairedAssignment = calculator.calcCostLowerBoundForPairedAssignmentBeforeNextStop(
-                        veh, asgn.pickup, asgn.distToPickup, stationDistances.getMinDistanceForPDLoc(asgn.pickup.id),
-                        distFromPickup, requestState);
+                const auto lowerBoundCostPairedAssignment = calculator.
+                        calcCostLowerBoundForPairedAssignmentBeforeNextStop(
+                            veh, asgn.pickup, asgn.distToPickup,
+                            stationDistances.getMinDistanceForPDLoc(asgn.pickup.id),
+                            distFromPickup, requestState);
                 if (lowerBoundCostPairedAssignment < upperBoundCost) {
-                    const auto requireExactDistance = tryLowerBoundsForPaired(asgn, stations, stationsInEllipse, stationDistances, requestState, pdLocs, firstTaxiLegResult);
+                    const auto requireExactDistance = tryLowerBoundsForPaired(
+                        asgn, stations, stationsInEllipse, stationDistances, requestState, pdLocs, firstTaxiLegResult);
                     if (requireExactDistance) {
                         // In this case some paired assignment before the next stop needs the exact distance to pickup via
                         // the vehicle. Postpone computation of the yet unknown exact distance and the rest of the paired
@@ -140,12 +143,14 @@ namespace karri {
                         pairedContinuations.push_back({asgn.pickup.id, 0, INVALID_INDEX});
                         ++numAssignmentsTriedWithPickupBeforeNextStop; // Count first ordinary continuation
                         ordinaryContinuations.push_back({asgn.pickup.id, distFromPickup, 1});
-                        continue; // Continue with next pickup, rest of assignments for this pickup later with exact distance
+                        continue;
+                        // Continue with next pickup, rest of assignments for this pickup later with exact distance
                     }
                 }
 
                 asgn.distFromPickup = distFromPickup;
-                const auto scannedUntilIndex = tryLowerBoundsForOrdinary(asgn, stations, stationsInEllipse, requestState, pdLocs, firstTaxiLegResult);
+                const auto scannedUntilIndex = tryLowerBoundsForOrdinary(
+                    asgn, stations, stationsInEllipse, requestState, pdLocs, firstTaxiLegResult);
 
                 if (scannedUntilIndex < routeState.numStopsOf(veh.vehicleId)) {
                     // In this case some assignment with the pickup before the next stop and an ordinary dropoff
@@ -161,14 +166,14 @@ namespace karri {
 
 
         // Examines combinations of a given pickup and all stations before the next stop of a given vehicle until a
-        // paired assignment needs the exact distance to the pickup via the vehicle. Returns true if the exact distance is needed 
+        // paired assignment needs the exact distance to the pickup via the vehicle. Returns true if the exact distance is needed
         // or false if all combinations could be filtered.
-        bool tryLowerBoundsForPaired(Assignment &asgn, 
-                                     const PTStations& stations, 
-                                     StationsInEllipseT &stationsInEllipse, 
-                                     StationDistancesT &stationDistances, 
-                                     const RequestState& requestState,
-                                     const PDLocs& pdLocs,
+        bool tryLowerBoundsForPaired(Assignment &asgn,
+                                     const PTStations &stations,
+                                     StationsInEllipseT &stationsInEllipse,
+                                     StationDistancesT &stationDistances,
+                                     const RequestState &requestState,
+                                     const PDLocs &pdLocs,
                                      const FirstTaxiLegResult &firstTaxiLegResult) {
             assert(asgn.vehicle && asgn.pickup.id != INVALID_ID);
             const auto vehId = asgn.vehicle->vehicleId;
@@ -203,7 +208,8 @@ namespace karri {
                 asgn.distFromDropoff = entry.distFromStationToStop;
                 const auto cost = calculator.calc(asgn, requestState);
                 if (cost < upperBoundCost || (cost == firstTaxiLegResult.getWorstCostForAllStations() &&
-                                                          breakCostTie(asgn, firstTaxiLegResult.getWorstAssignmentForAllStations()))) {
+                                              breakCostTie(
+                                                  asgn, firstTaxiLegResult.getWorstAssignmentForAllStations()))) {
                     // Lower bound is better than best known cost => We need the exact distance to pickup.
                     // Return and postpone remaining combinations.
 
@@ -217,11 +223,11 @@ namespace karri {
         // Examines combinations of a given pickup before the next stop and all relevant stations after later stops of a given
         // vehicle until an assignment requires the exact distance to the pickup via the vehicle. Returns a stop index in the vehicle's route
         // at which the exact distance is first needed or the vehicle's number of stops if all combinations could be filtered.
-        int tryLowerBoundsForOrdinary(Assignment &asgn, 
-                                      const PTStations& stations, 
-                                      StationsInEllipseT &stationsInEllipse, 
-                                      const RequestState& requestState,
-                                      const PDLocs& pdLocs,
+        int tryLowerBoundsForOrdinary(Assignment &asgn,
+                                      const PTStations &stations,
+                                      StationsInEllipseT &stationsInEllipse,
+                                      const RequestState &requestState,
+                                      const PDLocs &pdLocs,
                                       const FirstTaxiLegResult &firstTaxiLegResult) {
             using namespace time_utils;
             assert(asgn.vehicle && asgn.pickup.id != INVALID_ID);
@@ -258,7 +264,8 @@ namespace karri {
                     ++numAssignmentsTriedWithPickupBeforeNextStop;
                     const auto cost = calculator.calc(asgn, requestState);
                     if (cost < upperBoundCost || (cost == firstTaxiLegResult.getWorstCostForAllStations() &&
-                                                              breakCostTie(asgn, firstTaxiLegResult.getWorstAssignmentForAllStations()))) {
+                                                  breakCostTie(
+                                                      asgn, firstTaxiLegResult.getWorstAssignmentForAllStations()))) {
                         // Lower bound is better than best known cost => We need the exact distance to pickup.
                         // Return and postpone remaining combinations.
 
@@ -270,14 +277,13 @@ namespace karri {
             return numStops;
         }
 
-        void finishContinuations(const Vehicle &veh, 
-                                 const PTStations& stations, 
-                                 StationsInEllipseT &stationsInEllipse, 
+        void finishContinuations(const Vehicle &veh,
+                                 const PTStations &stations,
+                                 StationsInEllipseT &stationsInEllipse,
                                  StationDistancesT &stationDistances,
-                                 const RequestState& requestState,
-                                 const PDLocs& pdLocs,
+                                 const RequestState &requestState,
+                                 const PDLocs &pdLocs,
                                  FirstTaxiLegResult &firstTaxiLegResult) {
-            
             const auto stopLocations = routeState.stopLocationsFor(veh.vehicleId);
             const auto numStops = routeState.numStopsOf(veh.vehicleId);
             const auto stopIds = routeState.stopIdsFor(veh.vehicleId);
@@ -297,7 +303,7 @@ namespace karri {
                 for (auto stopIndex = continuation.continueStopIndex;
                      stopIndex < numStops - 1; ++stopIndex) {
                     asgn.dropoffStopIdx = stopIndex;
-                
+
                     const auto curStopId = stopIds[stopIndex];
                     const auto &relevantOrdinaryStations = stationsInEllipse.getStationsInEllipse(curStopId);
 
@@ -317,21 +323,32 @@ namespace karri {
 
                         if (asgn.dropoff.loc == asgn.pickup.loc)
                             continue;
-                        
+
                         asgn.dropoffStopIdx = stopIndex;
                         asgn.distToDropoff = entry.distFromStopToStation;
                         asgn.distFromDropoff = entry.distFromStationToStop;
 
-                        // requestState.tryAssignmentWithKnownCost(asgn, calculator.calc(asgn, requestState));
-                        firstTaxiLegResult.tryAssignmentWithKnownCostForStation(station.stationId, asgn, calculator.calc(asgn, requestState), InsertionType::PBNS);
+                        const auto cost = calculator.calc(asgn, requestState);
+                        if (cost < upperBoundCost || (cost == firstTaxiLegResult.getWorstCostForAllStations() &&
+                                                      breakCostTie(
+                                                          asgn, firstTaxiLegResult.
+                                                          getWorstAssignmentForAllStations()))) {
+                            // Cost is better than best known cost => Update best known cost and assignment.
 
-                        if (stopIndex > continuation.continueStopIndex) { // Do not count assignment at continuation twice
+                            // requestState.tryAssignmentWithKnownCost(asgn, cost);
+                            firstTaxiLegResult.
+                                    tryAssignmentWithKnownCostForStation(station.stationId, asgn, cost, PBNS);
+                        }
+
+
+                        if (stopIndex > continuation.continueStopIndex) {
+                            // Do not count assignment at continuation twice
                             ++numAssignmentsTriedWithPickupBeforeNextStop;
                         }
                     }
                 }
             }
-            
+
             // Finish all paired assignments.
             asgn.distFromPickup = 0;
             for (const auto &continuation: pairedContinuations) {
@@ -366,8 +383,17 @@ namespace karri {
                         continue;
 
                     asgn.distToDropoff = stationDistances.getDistance(asgn.dropoff.id, asgn.pickup.id);
-                    // requestState.tryAssignmentWithKnownCost(asgn, calculator.calc(asgn, requestState));
-                    firstTaxiLegResult.tryAssignmentWithKnownCostForStation(station.stationId, asgn, calculator.calc(asgn, requestState), InsertionType::PBNS);
+
+                    const auto cost = calculator.calc(asgn, requestState);
+                    if (cost < upperBoundCost || (cost == firstTaxiLegResult.getWorstCostForAllStations() &&
+                                                  breakCostTie(
+                                                      asgn, firstTaxiLegResult.getWorstAssignmentForAllStations()))) {
+                        // Cost is better than best known cost => Update best known cost and assignment
+
+                        // requestState.tryAssignmentWithKnownCost(asgn, calculator.calc(asgn, requestState));
+                        firstTaxiLegResult.tryAssignmentWithKnownCostForStation(
+                            station.stationId, asgn, calculator.calc(asgn, requestState), PBNS);
+                    }
                 }
             }
         }
@@ -383,6 +409,5 @@ namespace karri {
         int numAssignmentsTriedWithPickupBeforeNextStop;
         std::vector<Continuation> ordinaryContinuations;
         std::vector<Continuation> pairedContinuations;
-
     };
 }

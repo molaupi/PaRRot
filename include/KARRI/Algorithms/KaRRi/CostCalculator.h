@@ -282,18 +282,17 @@ namespace karri {
         }
 
         template<typename LabelSet, typename RequestContext>
-        typename LabelSet::DistanceLabel
-        calcLowerBoundCostForKPALSAssignmentsWithPTStations(
-                const typename LabelSet::DistanceLabel &distancesToPickups,
-                const typename LabelSet::DistanceLabel &pickupWalkingDists,
+        LabelSet::DistanceLabel
+        calcLowerBoundCostForKPairedAssignmentsToPTStations(
+                const LabelSet::DistanceLabel &distsFromPickupsToStation,
+                const LabelSet::DistanceLabel &pickupWalkingDists,
                 const RequestContext &context) const {
-            using DistanceLabel = typename LabelSet::DistanceLabel;
-            using LabelMask = typename LabelSet::LabelMask;
-            assert(distancesToPickups.horizontalMin() >= 0 && distancesToPickups.horizontalMax() < INFTY);
-            assert(pickupWalkingDists.horizontalMin() >= 0 && pickupWalkingDists.horizontalMax() < INFTY);
+            using DistanceLabel = LabelSet::DistanceLabel;
+            KASSERT(distsFromPickupsToStation.horizontalMin() >= 0 && distsFromPickupsToStation.horizontalMax() < INFTY);
+            KASSERT(pickupWalkingDists.horizontalMin() >= 0 && pickupWalkingDists.horizontalMax() < INFTY);
 
-            const DistanceLabel detourCost = F::calcKVehicleCosts(distancesToPickups + stopTime);
-            const DistanceLabel tripCost = F::calcKTripCosts(distancesToPickups + pickupWalkingDists, context);
+            const DistanceLabel detourCost = F::calcKVehicleCosts(distsFromPickupsToStation + stopTime);
+            const DistanceLabel tripCost = F::calcKTripCosts(distsFromPickupsToStation + pickupWalkingDists, context);
             const DistanceLabel walkingCost = F::calcKWalkingCosts(pickupWalkingDists,
                                                                    InputConfig::getInstance().pickupRadius);
             // Pickup after last stop so no added trip costs for existing passengers.

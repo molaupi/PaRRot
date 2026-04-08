@@ -246,17 +246,17 @@ namespace karri {
             if (!distanceChecker) return true;
 
             const auto start = pos[vehId].start;
-            auto &curDistance = distancesToNextStop[start + stopIndex];
-            if (curDistance != INFTY) {
-                KASSERT(curDistance == expectedTravelTime);
-                return curDistance == expectedTravelTime;
+            auto &cachedDistance = distancesToNextStop[start + stopIndex];
+            if (cachedDistance != INFTY) {
+                KASSERT(cachedDistance == expectedTravelTime, "Cached distance does not match expected travel time. vehId = " << vehId << ", stopIndex = " << stopIndex);
+                return cachedDistance == expectedTravelTime;
             }
             
             const auto curStop = stopLocationsFor(vehId)[stopIndex];
             const auto nextStop = stopLocationsFor(vehId)[stopIndex + 1];
             int actualTravelTime = distanceChecker(curStop, nextStop);
-            curDistance = actualTravelTime;  // Cache the computed distance
-            KASSERT(actualTravelTime == expectedTravelTime);
+            cachedDistance = actualTravelTime;  // Cache the computed distance
+            KASSERT(actualTravelTime == expectedTravelTime, "Cached distance does not match expected travel time. vehId = " << vehId << ", stopIndex = " << stopIndex);
             return actualTravelTime == expectedTravelTime;
         }
 
@@ -282,36 +282,36 @@ namespace karri {
                 // TODO: Check from current vehicle location to pickup
             } else if (pickup.loc == stopLocations[start + pickupIndex]) {
                 // Pickup at existing stop
-                KASSERT(asgn.distToPickup == 0, "Assignment = " << asgn << ", num stops = " << numStops);
+                KASSERT(asgn.distToPickup == 0, "RequestState = " << requestState << ", Assignment = " << asgn << ", num stops = " << numStops);
             } else if (pickupIndex > 0 || (numStops == 1 && pickupIndex == 0)) {
                 // New pickup stop
                 const int actualDist = distanceChecker(stopLocations[start + pickupIndex], pickup.loc);
-                KASSERT(asgn.distToPickup == actualDist, "Assignment = " << asgn << ", num stops = " << numStops);
+                KASSERT(asgn.distToPickup == actualDist, "RequestState = " << requestState << ", Assignment = " << asgn << ", num stops = " << numStops);
             }
 
             if (dropoffIndex == pickupIndex) {
-                KASSERT(asgn.distFromPickup == 0, "Assignment = " << asgn << ", num stops = " << numStops);
+                KASSERT(asgn.distFromPickup == 0, "RequestState = " << requestState << ", Assignment = " << asgn << ", num stops = " << numStops);
             } else {
                 const int actualDist = distanceChecker(pickup.loc, stopLocations[start + pickupIndex + 1]);
-                KASSERT(asgn.distFromPickup == actualDist, "Assignment = " << asgn << ", num stops = " << numStops);
+                KASSERT(asgn.distFromPickup == actualDist, "RequestState = " << requestState << ", Assignment = " << asgn << ", num stops = " << numStops);
             }
 
             if (dropoffIndex == pickupIndex) {
                 const int actualDist = distanceChecker(pickup.loc, dropoff.loc);
-                KASSERT(asgn.distToDropoff == actualDist, "Assignment = " << asgn << ", num stops = " << numStops);
+                KASSERT(asgn.distToDropoff == actualDist, "RequestState = " << requestState << ", Assignment = " << asgn << ", num stops = " << numStops);
             } else if (dropoff.loc == stopLocations[start + dropoffIndex]) {
                 // Dropoff at existing stop
-                KASSERT(asgn.distToDropoff == 0, "Assignment = " << asgn << ", num stops = " << numStops);
+                KASSERT(asgn.distToDropoff == 0, "RequestState = " << requestState << ", Assignment = " << asgn << ", num stops = " << numStops);
             } else {
                 const int actualDist = distanceChecker(stopLocations[start + dropoffIndex], dropoff.loc);
-                KASSERT(asgn.distToDropoff == actualDist, "Assignment = " << asgn << ", num stops = " << numStops);
+                KASSERT(asgn.distToDropoff == actualDist, "RequestState = " << requestState << ", Assignment = " << asgn << ", num stops = " << numStops);
             }
 
             if (dropoffIndex == numStops - 1) {
-                KASSERT(asgn.distFromDropoff == 0, "Assignment = " << asgn << ", num stops = " << numStops);
+                KASSERT(asgn.distFromDropoff == 0, "RequestState = " << requestState << ", Assignment = " << asgn << ", num stops = " << numStops);
             } else {
                 const int actualDist = distanceChecker(dropoff.loc, stopLocations[start + dropoffIndex + 1]);
-                KASSERT(asgn.distFromDropoff == actualDist, "Assignment = " << asgn << ", num stops = " << numStops);
+                KASSERT(asgn.distFromDropoff == actualDist, "RequestState = " << requestState << ", Assignment = " << asgn << ", num stops = " << numStops);
             }
 
             return true;

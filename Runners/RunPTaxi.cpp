@@ -34,7 +34,7 @@
 #include <Common/Constants.h>
 
 #include "../PTaxi/PTAndTaxiTripFinder.h"
-#include "../PTaxi/FirstTaxiLeg/StationBCHQuery.h"
+#include "../PTaxi/FirstTaxiLeg/StationDistanceFinder.h"
 #include "../PTaxi/FirstTaxiLeg/PALSToStations.h"
 #include "../PTaxi/FirstTaxiLeg/DALSToStations.h"
 #include "../PTaxi/FirstTaxiLeg/OrdinaryToStations.h"
@@ -70,8 +70,6 @@
 #include <KARRI/Algorithms/KaRRi/EllipticBCH/PDLocsAtExistingStopsFinder.h>
 #include <KARRI/Algorithms/KaRRi/CostCalculator.h>
 #include <KARRI/Algorithms/KaRRi/RequestState/RequestState.h>
-#include <KARRI/Algorithms/KaRRi/RequestState/RelevantPDLocs.h>
-#include <KARRI/Algorithms/KaRRi/PDDistanceQueries/PDDistances.h>
 #include <KARRI/Algorithms/KaRRi/RequestState/RelevantPDLocsFilter.h>
 #include <KARRI/Algorithms/KaRRi/OrdinaryAssignments/OrdinaryAssignmentsFinder.h>
 #include <KARRI/Algorithms/KaRRi/PbnsAssignments/PBNSAssignmentsFinder.h>
@@ -81,7 +79,6 @@
 #include <KARRI/Algorithms/KaRRi/LastStopSearches/UnsortedLastStopBucketsEnvironment.h>
 #include <KARRI/Algorithms/KaRRi/RequestState/VehicleToPDLocQuery.h>
 #include <KARRI/Algorithms/KaRRi/RequestState/RequestStateInitializer.h>
-#include <KARRI/Algorithms/KaRRi/AssignmentFinder.h>
 #include <KARRI/Algorithms/KaRRi/SystemStateUpdater.h>
 #include <KARRI/Algorithms/KaRRi/EventSimulation.h>
 #include <KARRI/Algorithms/KaRRi/RequestState/PDLocsFinder.h>
@@ -660,6 +657,8 @@ int main(int argc, char *argv[]) {
         }
         std::cout << "done.\n";
 
+        StationsAtLocations stationsAtLocations(stations, vehicleInputGraph.numEdges());
+
         // Buckets for PT stations (vehicle graph)
         using StationBucketsEnv = StationBucketsEnvironment<VehicleInputGraph, VehCHEnv, false>;
         
@@ -691,7 +690,7 @@ int main(int argc, char *argv[]) {
 
         PTAlgorithmWithTaxi ptAlgorithmWithTaxi(raptor, taxiInitialTransfers, stations, psgInputGraph.numEdges());
 
-        using StationBCH = StationBCHQuery<VehicleInputGraph, VehCHEnv, StationBucketsEnv, PALSLabelSet>;
+        using StationBCH = StationDistanceFinder<VehicleInputGraph, VehCHEnv, StationBucketsEnv, PALSLabelSet>;
 
         // PALS for stations
         using PALSToStationsImpl = PALSToStations<VehicleInputGraph, VehCHEnv, LastStopBucketsEnv, LastStopAtVerticesInfo, StationBCH::StationDistances, PALSLabelSet>;
@@ -699,7 +698,7 @@ int main(int argc, char *argv[]) {
 
         // DALS for stations
         using DALSToStationsImpl = DALSToStations<VehicleInputGraph, VehCHEnv, CurVehLocToPickupSearchesImpl, StationBucketsEnv, DALSLabelSet>;
-        DALSToStationsImpl dalsToStations(vehicleInputGraph, fleet, *vehChEnv, curVehLocToPickupSearches, routeState, stationBucketsEnv, stations);
+        DALSToStationsImpl dalsToStations(vehicleInputGraph, fleet, *vehChEnv, curVehLocToPickupSearches, routeState, stationBucketsEnv, stations, stationsAtLocations);
 
         using StationsInEllipseImpl = StationsInEllipse<VehicleInputGraph, VehCHEnv, StationBucketsEnv>;
         StationsInEllipseImpl stationsInEllipse(vehicleInputGraph, *vehChEnv, routeState, stationBucketsEnv, stations);
@@ -745,7 +744,7 @@ int main(int argc, char *argv[]) {
                 PTAlgorithmWithTaxi,
                 TaxiLegApproximationImpl>;
         PTAndTaxiTripFinderImpl ptAndTaxiTripFinder(vehicleInputGraph, *vehChEnv, fleet, routeState,
-                                                    stations, queries, stationBucketsEnv, palsToStations, stationsInEllipse, dalsToStations, pbnsToStations,
+                                                    stations, queries, stationBucketsEnv, stationsAtLocations, palsToStations, stationsInEllipse, dalsToStations, pbnsToStations,
                                                     ptAlgorithmWithTaxi);
 
 
