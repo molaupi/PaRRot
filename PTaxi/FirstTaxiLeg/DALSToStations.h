@@ -77,7 +77,8 @@ namespace karri {
 
                         const int &stationId = entry.targetId;
                         const DistanceLabel distViaV = distToV + DistanceLabel(entry.distToTarget);
-                        const auto atLeastAsGoodAsCurBest = ~search.canPrune(distViaV, search.curMinTripTimesToLastStop);
+                        const auto atLeastAsGoodAsCurBest = ~search.
+                                canPrune(distViaV, search.curMinTripTimesToLastStop);
 
                         if (!anySet(atLeastAsGoodAsCurBest))
                             break;
@@ -149,9 +150,10 @@ namespace karri {
               curVehLocToPickupSearches(curVehLocToPickupSearchesT),
               routeState(routeState),
               checkPBNSForVehicle(fleet.size()),
+              idxOfVehicleInRelevant(fleet.size(), INVALID_INDEX),
               bucketContainer(stationBucketsEnv.getTargetBuckets()),
               ptStations(ptStations),
-        stationsAtLocations(stationsAtLocations),
+              stationsAtLocations(stationsAtLocations),
               stationsWithValidDistances(),
               currentLastStopDistances(ptStations.size(), DistanceLabel(INFTY)) {
             stationsWithValidDistances.reserve(ptStations.size());
@@ -171,18 +173,9 @@ namespace karri {
             const int64_t pbnsTimeBefore = curVehLocToPickupSearches.getTotalLocatingVehiclesTimeForRequest() +
                                            curVehLocToPickupSearches.getTotalVehicleToPickupSearchTimeForRequest();
 
-            // Collect all vehicles for which a pickup can be made along the route (ordinary or before-next-stop).
-            // Only these vehicles can make a dropoff-after-last-stop assignment.
-            relevantVehicleIdsForRequest.clear();
-            for (const auto &vehId: relevantOrdinaryPickups.getVehiclesWithRelevantPDLocs())
-                relevantVehicleIdsForRequest.push_back(vehId);
-            for (const auto &vehId: relevantPickupsBeforeNextStop.getVehiclesWithRelevantPDLocs())
-                if (!relevantOrdinaryPickups.hasRelevantSpotsFor(vehId))
-                    relevantVehicleIdsForRequest.push_back(vehId);
-
+            initRelevantVehicles(relevantOrdinaryPickups, relevantPickupsBeforeNextStop, requestState, pdLocs, stats);
 
             for (unsigned int i = 0; i < relevantVehicleIdsForRequest.size(); i += K) {
-
                 KaRRiTimer timer;
                 // TODO: not sure whether this is faster than std::fill on the entire distances vector since
                 //  there seem to be around 8000/26000 stations with valid distances on average, even with K=1
@@ -190,16 +183,12 @@ namespace karri {
                     currentLastStopDistances[s] = INFTY;
                 stationsWithValidDistances.clear();
 
-                curMinTripTimesToLastStop = INFTY;
+                curMinTripTimesToLastStop = DistanceLabel(INFTY);
                 for (int j = 0; j < K; ++j) {
                     if (i + j >= relevantVehicleIdsForRequest.size())
                         break;
-                    const auto &veh = fleet[relevantVehicleIdsForRequest[i + j]];
-                    const int lastStopIndex = routeState.numStopsOf(veh.vehicleId) - 1;
-                    const int depTimeAtLastStop = routeState.schedDepTimesFor(veh.vehicleId)[lastStopIndex];
-                    // TODO could improve upon this bound by factoring in smallest relevant pickup detour for each vehicle
-                    curMinTripTimesToLastStop[j] = depTimeAtLastStop - requestState.earliestDeparture();
-                    KASSERT(curMinTripTimesToLastStop[j] >= 0);
+                    curMinTripTimesToLastStop[j] = relevantVehiclesMinTripTimesToLastStop[i];
+                    KASSERT(curMinTripTimesToLastStop[j] >= 0 && curMinTripTimesToLastStop[j] < INFTY);
                 }
                 stats.searchTime += timer.elapsed<std::chrono::nanoseconds>();
 
@@ -231,7 +220,6 @@ namespace karri {
         }
 
     private:
-
         LabelMask canPrune(const DistanceLabel &distancesToDropoffs, const DistanceLabel &minTripTimeToLastStop) const {
             if (upperBoundCost >= INFTY) {
                 // If current best is INFTY, only indices i with distancesToPickups[i] >= INFTY or
@@ -256,6 +244,51 @@ namespace karri {
             curReqState = &requestState;
         }
 
+        void initSingleRelevantVehicle(const int vehId, const RelevantPDLocs &relPdLocs,
+                                       const RequestState &rs, const PDLocs &pdLocs) {
+            using namespace time_utils;
+            if (idxOfVehicleInRelevant[vehId] == INVALID_INDEX) {
+                idxOfVehicleInRelevant[vehId] = relevantVehicleIdsForRequest.size();
+                relevantVehicleIdsForRequest.push_back(vehId);
+                relevantVehiclesMinTripTimesToLastStop.push_back(INFTY);
+            }
+
+            // Find minimum residual detour at end of route for any relevant pickups and set min trip time to last stop accordingly
+            const auto numStops = routeState.numStopsOf(vehId);
+            const auto schedDepTimeAtLastStop = routeState.schedDepTimesFor(vehId)[numStops - 1];
+            auto &bestTripTimeToLastStop = relevantVehiclesMinTripTimesToLastStop[idxOfVehicleInRelevant[vehId]];
+            for (const auto &e: relPdLocs.relevantSpotsFor(vehId)) {
+                const auto &p = pdLocs.pickups[e.pdId];
+                const auto depTime = getActualDepTimeAtPickup(vehId, e.stopIndex, e.distToPDLoc, p, rs, routeState);
+                const auto initialPickupDetour = calcInitialPickupDetour(
+                    vehId, e.stopIndex, numStops - 1, depTime, e.distFromPDLocToNextStop, rs, routeState);
+                const auto residualDetourAtEnd = calcResidualPickupDetour(
+                    vehId, e.stopIndex, numStops - 1, initialPickupDetour, routeState);
+                const auto minTripTimeToLastStop =
+                        schedDepTimeAtLastStop + residualDetourAtEnd - rs.earliestDeparture();
+                bestTripTimeToLastStop = std::min(bestTripTimeToLastStop, minTripTimeToLastStop);
+            }
+        }
+
+        void initRelevantVehicles(const RelevantPDLocs &relevantOrdinaryPickups,
+                                  const RelevantPDLocs &relevantPickupsBeforeNextStop,
+                                  const RequestState &requestState, const PDLocs &pdLocs,
+                                  stats::DalsAssignmentsPerformanceStats &stats) {
+            KaRRiTimer timer;
+            for (const auto &vehId: relevantVehicleIdsForRequest)
+                idxOfVehicleInRelevant[vehId] = INVALID_INDEX;
+            relevantVehicleIdsForRequest.clear();
+            relevantVehiclesMinTripTimesToLastStop.clear();
+
+            for (const auto &vehId: relevantOrdinaryPickups.getVehiclesWithRelevantPDLocs()) {
+                initSingleRelevantVehicle(vehId, relevantOrdinaryPickups, requestState, pdLocs);
+            }
+            for (const auto &vehId: relevantPickupsBeforeNextStop.getVehiclesWithRelevantPDLocs()) {
+                initSingleRelevantVehicle(vehId, relevantPickupsBeforeNextStop, requestState, pdLocs);
+            }
+            stats.initializationTime += timer.elapsed<std::chrono::nanoseconds>();
+        }
+
         void initializeDistancesForStationsAtLastStops(const int indexOfFirstVeh,
                                                        stats::DalsAssignmentsPerformanceStats &stats) {
             KaRRiTimer timer;
@@ -273,7 +306,7 @@ namespace karri {
                 DistanceLabel zeroAtI = INFTY;
                 zeroAtI[i] = 0;
 
-                for (const int stationId : stationsAtLocations.getIdsOfStationsAtVehEdge(lastStopLocation)) {
+                for (const int stationId: stationsAtLocations.getIdsOfStationsAtVehEdge(lastStopLocation)) {
                     const auto &station = ptStations[stationId];
 
                     // Mark station as having valid distance if seen for the first time
@@ -347,7 +380,8 @@ namespace karri {
             enumerateAssignmentsWithOrdinaryPickupForVehicleBatch(indexOfFirstVeh, numAssignmentsTried,
                                                                   relevantOrdinaryPickups, requestState, pdLocs,
                                                                   firstTaxiLegResult);
-            enumerateAssignmentsWithPBNSForVehicleBatch(indexOfFirstVeh, numAssignmentsTried, relevantPickupsBeforeNextStop,
+            enumerateAssignmentsWithPBNSForVehicleBatch(indexOfFirstVeh, numAssignmentsTried,
+                                                        relevantPickupsBeforeNextStop,
                                                         requestState, pdLocs, firstTaxiLegResult);
 
             const int64_t tryAssignmentsTime = timer.elapsed<std::chrono::nanoseconds>();
@@ -371,8 +405,8 @@ namespace karri {
                     continue;
 
                 const auto &veh = indexOfFirstVeh + i < relevantVehicleIdsForRequest.size()
-                            ? fleet[relevantVehicleIdsForRequest[indexOfFirstVeh + i]]
-                            : fleet[relevantVehicleIdsForRequest[indexOfFirstVeh]];
+                                      ? fleet[relevantVehicleIdsForRequest[indexOfFirstVeh + i]]
+                                      : fleet[relevantVehicleIdsForRequest[indexOfFirstVeh]];
                 const int vehId = veh.vehicleId;
 
                 if (!relevantOrdinaryPickups.hasRelevantSpotsFor(vehId)) {
@@ -469,8 +503,8 @@ namespace karri {
                     continue;
 
                 const auto &veh = indexOfFirstVeh + i < relevantVehicleIdsForRequest.size()
-                            ? fleet[relevantVehicleIdsForRequest[indexOfFirstVeh + i]]
-                            : fleet[relevantVehicleIdsForRequest[indexOfFirstVeh]];
+                                      ? fleet[relevantVehicleIdsForRequest[indexOfFirstVeh + i]]
+                                      : fleet[relevantVehicleIdsForRequest[indexOfFirstVeh]];
                 const int vehId = veh.vehicleId;
 
                 if (!relevantPickupsBeforeNextStop.hasRelevantSpotsFor(vehId))
@@ -613,7 +647,11 @@ namespace karri {
         int upperBoundCost;
         int externalUpperBoundCost; // External upper bound on the cost of a PALS insertion
 
+        std::vector<int> idxOfVehicleInRelevant;
+        // Maps every vehicle to its index in relevantVehicleIdsForRequest and in relevantVehiclesMinTripTimesToLastStop
         std::vector<int> relevantVehicleIdsForRequest;
+        std::vector<int> relevantVehiclesMinTripTimesToLastStop;
+
         std::vector<int> stationsWithValidDistances;
         std::vector<DistanceLabel> currentLastStopDistances;
 

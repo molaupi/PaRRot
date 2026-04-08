@@ -256,7 +256,7 @@ namespace karri {
             const auto nextStop = stopLocationsFor(vehId)[stopIndex + 1];
             int actualTravelTime = distanceChecker(curStop, nextStop);
             cachedDistance = actualTravelTime;  // Cache the computed distance
-            KASSERT(actualTravelTime == expectedTravelTime, "Cached distance does not match expected travel time. vehId = " << vehId << ", stopIndex = " << stopIndex);
+            KASSERT(actualTravelTime == expectedTravelTime, "Computed distance does not match expected travel time. vehId = " << vehId << ", stopIndex = " << stopIndex);
             return actualTravelTime == expectedTravelTime;
         }
 
