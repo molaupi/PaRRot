@@ -380,7 +380,7 @@ namespace karri::DropoffAfterLastStopStrategies {
 
                     const int &vehId = entry.targetId;
                     const int &depTimeAtLastStop = routeState.schedDepTimesFor(vehId)[routeState.numStopsOf(vehId) - 1];
-                    KASSERT(entry.distToTarget >= depTimeAtLastStop, "Num stops = " << routeState.numStopsOf(vehId) << ", now = " << requestState.now());
+                    KASSERT(entry.distToTarget >= depTimeAtLastStop, "vehId = " << vehId << ", route = " << routeState.printRouteOf(vehId) << "\n, RequestState = " << requestState);
 
                     const int arrTimeAtDropoff = entry.distToTarget + label.distToDropoff;
 

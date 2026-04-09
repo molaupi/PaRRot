@@ -55,6 +55,9 @@ namespace karri {
             for (const auto &vehId: relPickups.getVehiclesWithRelevantPDLocs()) {
                 KASSERT(relPickups.hasRelevantSpotsFor(vehId));
                 ++numCandidateVehicles;
+                const auto numStops = routeState.numStopsOf(vehId);
+                const auto stopLocations = routeState.stopLocationsFor(vehId);
+
 
                 Assignment asgn(&fleet[vehId]);
 
@@ -73,6 +76,13 @@ namespace karri {
                         for (const auto &stationEntry: stationsInEllipse.getStationsInEllipse(curStopId)) {
                             const auto &station = stations[stationEntry.targetId];
 
+                            if (i + 1 < numStops && stopLocations[i + 1] == station.vehEdgeId) {
+                                // If the station is at the location of the following stop, do not try an assignment here as it would
+                                // introduce a new stop after dropoffIndex that is at the same location as dropoffIndex + 1.
+                                // Instead, this will be dealt with as an assignment at dropoffIndex + 1 afterwards.
+                                continue;
+                            }
+
                             asgn.dropoff = {
                                 station.stationId, // PDLoc ID
                                 station.vehEdgeId, // Location in road network
@@ -83,6 +93,7 @@ namespace karri {
                             };
 
                             asgn.dropoffStopIdx = i;
+
                             asgn.distFromDropoff = stationEntry.distFromStationToStop;
 
                             // In case of paired assignment:
