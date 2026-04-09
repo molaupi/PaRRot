@@ -127,7 +127,7 @@ namespace karri {
 
             updateEllipticBucketsForSingleAssignment(asgn, pickupIndex, dropoffIndex, rerouteVehicle, stats);
             updateLastStopBucketsForSingleAssignment(asgn, pickupIndex, dropoffIndex, rerouteVehicle,
-                                                     depTimeAtLastStopBefore,stats);
+                                                     depTimeAtLastStopBefore,stats, requestState.now());
             // updateBucketState(asgn, pickupIndex, dropoffIndex, rerouteVehicle, depTimeAtLastStopBefore, requestState.now(),
             //                   stats);
 
@@ -148,11 +148,6 @@ namespace karri {
             // remove the stations from the ellipse that are no longer relevant
             stationsInEllipse.removeStationsForStop(0, veh.vehicleId);
             routeState.removeStartOfCurrentLeg(veh.vehicleId);
-        }
-
-
-        void notifyStopCompleted(const Vehicle &veh) {
-            pathTracker.logCompletedStop(veh);
 
             // If vehicle has become idle, update last stop bucket entries
             if (routeState.numStopsOf(veh.vehicleId) == 1) {
@@ -161,12 +156,17 @@ namespace karri {
             }
         }
 
+
+        void notifyStopCompleted(const Vehicle &veh) {
+            pathTracker.logCompletedStop(veh);
+        }
+
         void notifyVehicleReachedEndOfServiceTime(const Vehicle &veh) {
             const auto vehId = veh.vehicleId;
             assert(routeState.numStopsOf(vehId) == 1);
 
             stats::UpdatePerformanceStats finalRemovalStatsPlaceholder;
-            lastStopBucketsEnv.removeIdleBucketEntries(veh, 0, finalRemovalStatsPlaceholder);
+            lastStopBucketsEnv.removeIdleBucketEntries(veh, 0, finalRemovalStatsPlaceholder, veh.endOfServiceTime);
 
             routeState.removeStartOfCurrentLeg(vehId);
         }
@@ -355,7 +355,8 @@ void updateEllipticBucketsForSingleAssignment(const Assignment &asgn,
                                                       const int pickupIndex, const int dropoffIndex,
                                                       const bool insertedIntermediateStopForReroute,
                                                       const int depTimeAtLastStopBefore,
-                                                      stats::UpdatePerformanceStats &stats) {
+                                                      stats::UpdatePerformanceStats &stats,
+                                                      const int now) {
             const auto vehId = asgn.vehicle->vehicleId;
             const auto &numStops = routeState.numStopsOf(vehId);
             const bool pickupAtExistingStop = pickupIndex == asgn.pickupStopIdx + insertedIntermediateStopForReroute;
@@ -364,14 +365,21 @@ void updateEllipticBucketsForSingleAssignment(const Assignment &asgn,
             const auto depTimeAtLastStopAfter = routeState.schedDepTimesFor(vehId)[numStops - 1];
             const bool depTimeAtLastChanged = depTimeAtLastStopAfter != depTimeAtLastStopBefore;
 
+            const int formerNumStops = numStops - insertedIntermediateStopForReroute - !pickupAtExistingStop - !dropoffAtExistingStop;
+            int formerLastStopIdx = formerNumStops - 1;
+            if (insertedIntermediateStopForReroute)
+                ++formerLastStopIdx;
+            if (asgn.pickupStopIdx < formerNumStops - 1 && !pickupAtExistingStop)
+                ++formerLastStopIdx;
+            if (asgn.dropoffStopIdx < formerNumStops - 1 && !dropoffAtExistingStop)
+                ++formerLastStopIdx;
+
             if (dropoffIndex == numStops - 1 && !dropoffAtExistingStop) {
                 // If dropoff is the new last stop, remove entries for former last stop, and generate for dropoff
-                const auto pickupAtEnd = pickupIndex + 1 == dropoffIndex && pickupIndex > asgn.pickupStopIdx;
-                const int formerLastStopIdx = dropoffIndex - pickupAtEnd - 1;
                 if (formerLastStopIdx == 0) {
-                    lastStopBucketsEnv.removeIdleBucketEntries(*asgn.vehicle, formerLastStopIdx, stats);
+                    lastStopBucketsEnv.removeIdleBucketEntries(*asgn.vehicle, formerLastStopIdx, stats, now);
                 } else {
-                    lastStopBucketsEnv.removeNonIdleBucketEntries(*asgn.vehicle, formerLastStopIdx, stats);
+                    lastStopBucketsEnv.removeNonIdleBucketEntries(*asgn.vehicle, formerLastStopIdx, stats, now);
                 }
                 lastStopBucketsEnv.generateNonIdleBucketEntries(*asgn.vehicle, stats);
             } else if (depTimeAtLastChanged) {

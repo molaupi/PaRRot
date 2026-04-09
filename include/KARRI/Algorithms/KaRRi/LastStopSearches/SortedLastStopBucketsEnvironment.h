@@ -283,13 +283,15 @@ namespace karri {
         }
 
         void removeIdleBucketEntries(const Vehicle &veh, const int prevLastStopIdx,
-                                     karri::stats::UpdatePerformanceStats &stats) {
-            removeBucketEntries<true>(veh, prevLastStopIdx, stats);
+                                     karri::stats::UpdatePerformanceStats &stats,
+                                     const int now) {
+            removeBucketEntries<true>(veh, prevLastStopIdx, stats, now);
         }
 
         void removeNonIdleBucketEntries(const Vehicle &veh, const int prevLastStopIdx,
-                                         karri::stats::UpdatePerformanceStats &stats) {
-            removeBucketEntries<false>(veh, prevLastStopIdx, stats);
+                                         karri::stats::UpdatePerformanceStats &stats,
+                                         const int now) {
+            removeBucketEntries<false>(veh, prevLastStopIdx, stats, now);
         }
 
         // Implement the last stops at vertices interface.
@@ -336,13 +338,16 @@ namespace karri {
 
         template<bool wasIdle>
         void removeBucketEntries(const Vehicle &veh, const int stopIndex,
-                                 karri::stats::UpdatePerformanceStats &stats) {
-            assert(stopIndex >= 0);
-            assert(stopIndex < routeState.numStopsOf(veh.vehicleId));
+                                 karri::stats::UpdatePerformanceStats &stats,
+                                 const int now) {
+            unused(now);
+            KASSERT(stopIndex >= 0);
+            KASSERT(stopIndex < routeState.numStopsOf(veh.vehicleId));
 
             KaRRiTimer timer;
             const auto stopLoc = routeState.stopLocationsFor(veh.vehicleId)[stopIndex];
             const auto stopVertex = inputGraph.edgeHead(stopLoc);
+            KASSERT(verifyBucketAtStopHasEntry<wasIdle>(stopVertex, veh.vehicleId), "vehId = " << veh.vehicleId << ", stopIndex = " << stopIndex << ", " << (wasIdle? "idle" : "non-idle") << ", now = " << now << ", Route = " << routeState.printRouteOf(veh.vehicleId));
 
             vehicleId = veh.vehicleId;
             const auto &numStops = routeState.numStopsOf(veh.vehicleId);
@@ -358,6 +363,14 @@ namespace karri {
             }
             const auto time = timer.elapsed<std::chrono::nanoseconds>();
             stats.lastStopBucketsDeleteEntriesTime += time;
+        }
+
+        template<bool wasIdle>
+        bool verifyBucketAtStopHasEntry(const int stopVertex, const int vehId) {
+            const auto bucket = wasIdle ? bucketContainer.getIdleBucketOf(ch.rank(stopVertex)) : bucketContainer.getNonIdleBucketOf(ch.rank(stopVertex));
+            return std::any_of(bucket.begin(), bucket.end(), [vehId](const LastStopEntry &entry) {
+                return entry.targetId == vehId;
+            });
         }
 
         using GenerateIdleEntriesSearch = typename CHEnvT::template UpwardSearch<GenerateIdleEntry, StopWhenDistanceExceeded>;

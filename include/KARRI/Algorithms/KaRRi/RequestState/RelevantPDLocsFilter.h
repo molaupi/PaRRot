@@ -261,15 +261,19 @@ namespace karri {
 
             const int &vehId = veh.vehicleId;
 
-            assert(routeState.occupanciesFor(vehId)[stopIndex] + requestState.originalRequest.numRiders <=
+            KASSERT(routeState.occupanciesFor(vehId)[stopIndex] + requestState.originalRequest.numRiders <=
                    veh.capacity);
             if (distFromStopToPickup >= INFTY || distFromPickupToNextStop >= INFTY)
                 return false;
 
-            assert(distFromStopToPickup + distFromPickupToNextStop >=
+            KASSERT(distFromStopToPickup + distFromPickupToNextStop >=
                    calcLengthOfLegStartingAt(stopIndex, vehId, routeState));
 
             const auto &p = pdLocs.pickups[pickupId];
+            KASSERT(stopIndex < routeState.numStopsOf(vehId) - 1);
+            // If the pickup coincides with the location of the next stop, we will consider it at the next stop. Skip here
+            if (p.loc == routeState.stopLocationsFor(vehId)[stopIndex + 1])
+                return false;
 
             const auto depTimeAtPickup = getActualDepTimeAtPickup(vehId, stopIndex, distFromStopToPickup, p,
                                                                   requestState, routeState);
@@ -312,7 +316,7 @@ namespace karri {
             const auto &numStops = routeState.numStopsOf(vehId);
             const auto &occupancy = routeState.occupanciesFor(vehId)[stopIndex];
             const auto &stopLocations = routeState.stopLocationsFor(vehId);
-            assert(d.loc != stopLocations[stopIndex] || distFromStopToDropoff == 0);
+            KASSERT(d.loc != stopLocations[stopIndex] || distFromStopToDropoff == 0);
             if (stopIndex == numStops - 1 || occupancy + requestState.originalRequest.numRiders > veh.capacity)
                 return d.loc == stopLocations[stopIndex];
 
@@ -327,7 +331,7 @@ namespace karri {
                                                                       distFromDropoffToNextStop,
                                                                       isDropoffAtExistingStop,
                                                                       routeState);
-            assert(initialDropoffDetour >= 0);
+            KASSERT(initialDropoffDetour >= 0);
             if (doesDropoffDetourViolateHardConstraints(veh, requestState, stopIndex, initialDropoffDetour,
                                                         routeState))
                 return false;
