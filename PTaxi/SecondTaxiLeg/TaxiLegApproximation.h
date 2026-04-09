@@ -164,18 +164,22 @@ namespace karri {
             upperBoundCost = c;
         }
 
-        std::vector<DistanceLabel> getDistancesFromStations() const {
+        const std::vector<DistanceLabel> &getDistancesFromStations() const {
             return distFromStations;
         }
 
         const int getDistanceFromStation(const int stationId) const {
-            assert(stationId >= 0 && stationId < distFromStations.size());
+            assert(stationId >= -1 && stationId < static_cast<int>(distFromStations.size()));
+            if (stationId == INVALID_ID)
+                return INFTY;
             return distFromStations[stationId][0];
         }
 
         // trip time to the station
         const int getCostForStation(const int stationId) const {
-            assert(stationId >= 0 && stationId < distFromStations.size());
+            assert(stationId >= -1 && stationId < static_cast<int>(distFromStations.size()));
+            if (stationId == INVALID_ID)
+                return INFTY;
             const DistanceLabel &dist = distFromStations[stationId];
             return CostCalculator::calcTripCost(dist[0], curMaxTripTime);
         }

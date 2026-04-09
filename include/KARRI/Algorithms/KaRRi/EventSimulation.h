@@ -405,11 +405,6 @@ namespace karri {
             // Find best assignment -> PTAndTaxiTripFinder
             karri::stats::RequestReceiveStats stats;
 
-            // todo: prep and walk-only should have their own stats
-            // todo: add car mode once we have sensible mode choice
-            if (request.requestId == 1677) {
-                std::cout << "";
-            }
             auto requestState = rsInitializer.initializeRequestState(request, request.requestTime,
                                                                      stats.taxiPrepStats.initializationStats);
             const auto baseInfo = karriPrep.prepareBaseInfo(requestState, stats.taxiPrepStats);

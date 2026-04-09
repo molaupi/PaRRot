@@ -248,7 +248,7 @@ namespace karri {
             const auto start = pos[vehId].start;
             auto &cachedDistance = distancesToNextStop[start + stopIndex];
             if (cachedDistance != INFTY) {
-                KASSERT(cachedDistance == expectedTravelTime, "Cached distance does not match expected travel time. vehId = " << vehId << ", stopIndex = " << stopIndex);
+                KASSERT(cachedDistance == expectedTravelTime, "Cached distance does not match expected travel time. vehId = " << vehId << ", stopIndex = " << stopIndex << ", " << printRouteOf(vehId));
                 return cachedDistance == expectedTravelTime;
             }
             
@@ -256,7 +256,7 @@ namespace karri {
             const auto nextStop = stopLocationsFor(vehId)[stopIndex + 1];
             int actualTravelTime = distanceChecker(curStop, nextStop);
             cachedDistance = actualTravelTime;  // Cache the computed distance
-            KASSERT(actualTravelTime == expectedTravelTime, "Computed distance does not match expected travel time. vehId = " << vehId << ", stopIndex = " << stopIndex);
+            KASSERT(actualTravelTime == expectedTravelTime, "Computed distance does not match expected travel time. vehId = " << vehId << ", stopIndex = " << stopIndex << ", " << printRouteOf(vehId));
             return actualTravelTime == expectedTravelTime;
         }
 
@@ -481,6 +481,11 @@ namespace karri {
             insertion(stopIds[start + dropoffIndex], requestState.originalRequest.requestId,
                       rangeOfRequestsDroppedOffAtStop, requestsDroppedOffAtStop);
 
+            // if (pickupIndex > 0) checkDirectDistance(pickupIndex - 1, vehId, schedArrTimes[start + pickupIndex] - schedDepTimes[start + pickupIndex - 1]);
+            // if (pickupIndex < numStopsOf(vehId) - 1) checkDirectDistance(pickupIndex, vehId, schedArrTimes[start + pickupIndex + 1] - schedDepTimes[start + pickupIndex]);
+            // if (dropoffIndex > 0) checkDirectDistance(dropoffIndex - 1, vehId, schedArrTimes[start + dropoffIndex] - schedDepTimes[start + dropoffIndex - 1]);
+            // if (dropoffIndex < numStopsOf(vehId) - 1) checkDirectDistance(dropoffIndex, vehId, schedArrTimes[start + dropoffIndex + 1] - schedDepTimes[start + dropoffIndex]);
+
             return {pickupIndex, dropoffIndex};
         }
 
@@ -533,9 +538,9 @@ namespace karri {
             distancesToNextStop[start + 1] = INFTY;  // Initialize cached distance
             distancesToNextStop[start] = INFTY;  // Invalidate cached distance from previous stop
             stopLocations[start + 1] = location;
-            schedArrTimes[start + 1] = now;
+            schedArrTimes[start + 1] = depTime;
             schedDepTimes[start + 1] = depTime;
-            maxArrTimes[start + 1] = now;
+            maxArrTimes[start + 1] = depTime;
             occupancies[start + 1] = occupancies[start];
             numDropoffsPrefixSum[start + 1] = numDropoffsPrefixSum[start];
             vehWaitTimesPrefixSum[start + 1] = vehWaitTimesPrefixSum[start];
@@ -606,6 +611,20 @@ namespace karri {
             return {id, arrTime, depTime, occ, pickups, dropoffs};
         }
 
+
+        std::string printRouteOf(const int vehId) const {
+            std::stringstream ss;
+            ss << "Route of vehicle " << vehId << ":\n";
+            const auto start = pos[vehId].start;
+            const auto end = pos[vehId].end;
+            for (int i = start; i < end; ++i) {
+                ss << "  Stop " << stopIds[i] << " at location " << stopLocations[i] << ": arrTime = "
+                   << schedArrTimes[i] << ", depTime = " << schedDepTimes[i] << ", maxArrTime = "
+                   << maxArrTimes[i] << ", occupancy = " << occupancies[i] << "\n";
+            }
+            return ss.str();
+        }
+
     private:
         int getUnusedStopId() {
             if (!unusedStopIds.empty()) {
@@ -645,9 +664,7 @@ namespace karri {
             for (int l = fromIdx; l >= toIdx; --l) {
                 const auto distToNext = schedArrTimes[l + 1] - schedDepTimes[l];
                 const auto propagatedMaxArrTime = maxArrTimes[l + 1] - distToNext - InputConfig::getInstance().stopTime;
-                if (maxArrTimes[l] <= propagatedMaxArrTime)
-                    break; // Stop propagating if known maxArrTime at l is stricter already
-                maxArrTimes[l] = propagatedMaxArrTime;
+                maxArrTimes[l] = std::min(maxArrTimes[l], propagatedMaxArrTime);
             }
         }
 
@@ -665,7 +682,7 @@ namespace karri {
                         std::max(maxArrTimes[idx + 1], schedDepTimes[idx + 1]) - schedDepTimes[idx] - InputConfig::getInstance().stopTime;
                 // The leeway is only allowed to be negative if the stop at idx 1 is an intermediate stop that has
                 // just been created but is not considered reached yet as multiple requests are being inserted at the same time.
-                KASSERT((idx == start && schedArrTimes[start + 1] == now) || leeway >= 0);
+                KASSERT((idx == start && schedDepTimes[start + 1] == schedArrTimes[start + 1]) || leeway >= 0);
                 stopIdToLeeway[stopId] = leeway;
 
                 if (leeway > maxLeeway) {

@@ -701,7 +701,7 @@ int main(int argc, char *argv[]) {
         DALSToStationsImpl dalsToStations(vehicleInputGraph, fleet, *vehChEnv, curVehLocToPickupSearches, routeState, stationBucketsEnv, stations, stationsAtLocations);
 
         using StationsInEllipseImpl = StationsInEllipse<VehicleInputGraph, VehCHEnv, StationBucketsEnv>;
-        StationsInEllipseImpl stationsInEllipse(vehicleInputGraph, *vehChEnv, routeState, stationBucketsEnv, stations);
+        StationsInEllipseImpl stationsInEllipse(vehicleInputGraph, *vehChEnv, routeState, stationBucketsEnv, stations, stationsAtLocations);
 
         // Ordinary for stations
         using OrdinaryToStationsImpl =  OrdinaryToStations<StationsInEllipseImpl, StationBCH::StationDistances>;
