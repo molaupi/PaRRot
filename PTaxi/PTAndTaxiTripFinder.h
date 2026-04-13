@@ -50,7 +50,8 @@ namespace karri {
               stations(stations),
               queries(queries),
               stationBucketsEnv(stationBucketsEnv),
-              stationDistanceFinder(vehInputGraph, vehChEnv, routeState, stationBucketsEnv, stations, stationsAtLocations),
+              stationDistanceFinder(vehInputGraph, vehChEnv, routeState, stationBucketsEnv, stations,
+                                    stationsAtLocations),
               palsToStations(palsToStations),
               stationsInEllipse(stationsInEllipse),
               ordinaryToStations(fleet, routeState),
@@ -58,11 +59,9 @@ namespace karri {
               pbnsToStations(pbnsToStations),
               ptAlgorithmWithTaxi(ptAlgorithmWithTaxi),
               taxiLegApproximation(vehInputGraph, vehChEnv, stationBucketsEnv, stations.size()),
-              intermediateLogger(LogManager<std::ofstream>::getLogger(stats::IntermediateResultStats::LOGGER_NAME,
-                                                                      "request_id,"
-                                                                      "request_time," +
+              intermediateLogger(LogManager<std::ofstream>::getLogger(IntermediateResultStats::LOGGER_NAME,
                                                                       std::string(
-                                                                          stats::IntermediateResultStats::LOGGER_COLS))),
+                                                                          IntermediateResultStats::LOGGER_COLS))),
               firstTaxiLegLogger(LogManager<std::ofstream>::getLogger(stats::FirstTaxiLegResultStats::LOGGER_NAME,
                                                                       "request_id," +
                                                                       std::string(
@@ -125,17 +124,7 @@ namespace karri {
             );
 
 
-            constexpr const char *InsertionTypes[] = {"PALS", "DALS", "DALS_PBNS", "ORDINARY", "PBNS", "UNDEFINED"};
-            // LOGS: Cost of taxi, PT, combined; arrivalTimes
-
-            intermediateLogger << req.requestId << ", "
-                    << req.requestTime << ", "
-                    << intermediateResult.getBestCost() << ", "
-                    << intermediateResult.getFirstTaxiLegCost() << ", "
-                    << intermediateResult.getPTLegCost() << ", "
-                    << intermediateResult.getSecondTaxiLegCost() << ", "
-                    << InsertionTypes[intermediateResult.getFirstTaxiLegInsertionType()] << ", "
-                    << intermediateResult.getArrivalTime() << "\n";
+            writeIntermediateResultToLogger(requestState, intermediateResult);
 
             const auto firstTaxiLegResults = firstTaxiLeg.getValidResults();
             const size_t validResultsCount = firstTaxiLegResults.size();
@@ -206,14 +195,16 @@ namespace karri {
             // PALS Individual BCH
             palsToStations.setExternalCostUpperBound(taxiOnlyCost, firstTaxiLegResult.getWorstCostForAllStations());
             palsToStations.tryPickupAfterLastStop(rs, pdLocs, stationDistanceFinder.getDistancesToStations(),
-                                                  stationDistanceFinder.getStationsSeen(), stations, stats, firstTaxiLegResult);
+                                                  stationDistanceFinder.getStationsSeen(), stations, stats,
+                                                  firstTaxiLegResult);
         }
 
         void runOrdinary(const RequestState &rs, const PDLocs &pdLocs,
                          const RelevantPDLocs &relOrdinaryPickpus, stats::OrdAssignmentsPerformanceStats &stats,
                          FirstTaxiLegResult &firstTaxiLegResult) {
             ordinaryToStations.enumerateAssignments(rs, pdLocs, relOrdinaryPickpus, stations, stationsInEllipse,
-                                                    stationDistanceFinder.getDistancesToStations(), stats, firstTaxiLegResult);
+                                                    stationDistanceFinder.getDistancesToStations(), stats,
+                                                    firstTaxiLegResult);
         }
 
         void runDALS(const RequestState &rs, const PDLocs &pdLocs,
@@ -234,6 +225,82 @@ namespace karri {
             pbnsToStations.setExternalCostUpperBound(taxiOnlyCost, firstTaxiLegResult.getWorstCostForAllStations());
             pbnsToStations.findAssignments(rs, pdLocs, relPickupsBns, stations, stationsInEllipse,
                                            stationDistanceFinder.getDistancesToStations(), stats, firstTaxiLegResult);
+        }
+
+
+        struct IntermediateResultStats {
+            static constexpr auto LOGGER_NAME = "intermediate_results.csv";
+            static constexpr auto LOGGER_COLS =
+                    "request_id,"
+                    "request_time,"
+                    "direct_od_dist,"
+                    "cost,"
+                    "cost_1st_taxi_leg,"
+                    "cost_pt_leg,"
+                    "cost_2nd_taxi_leg,"
+                    "1st_taxi_leg_type,"
+                    "arrival_time,"
+                    "vehicle_id,"
+                    "pickup_insertion_point,"
+                    "dropoff_insertion_point,"
+                    "dist_to_pickup,"
+                    "dist_from_pickup,"
+                    "dist_to_dropoff,"
+                    "dist_from_dropoff,"
+                    "pickup_id,"
+                    "pickup_walking_dist,"
+                    "dropoff_id,"
+                    "dropoff_walking_dist,"
+                    "num_stops,"
+                    "veh_dep_time_at_stop_before_pickup,"
+                    "veh_dep_time_at_stop_before_dropoff\n";
+        };
+
+        void writeIntermediateResultToLogger(const RequestState &rs, const ApproximateCombinedTripResult &r) {
+            constexpr const char *InsertionTypes[] = {"PALS", "DALS", "DALS_PBNS", "ORDINARY", "PBNS", "UNDEFINED"};
+            // LOGS: Cost of taxi, PT, combined; arrivalTimes
+            const auto &req = rs.originalRequest;
+
+            intermediateLogger << req.requestId << ","
+                    << req.requestTime << ","
+                    << rs.originalReqDirectDist << ","
+                    << r.getBestCost() << ","
+                    << r.getFirstTaxiLegCost() << ","
+                    << r.getPTLegCost() << ","
+                    << r.getSecondTaxiLegCost() << ","
+                    << InsertionTypes[r.getFirstTaxiLegInsertionType()] << ","
+                    << r.getArrivalTime() << ",";
+
+            if (!r.isInitialTransferByTaxi()) {
+                intermediateLogger << "-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1\n";
+                return;
+            }
+
+            const auto &firstLegResult = r.getFirstTaxiLeg();
+            const auto &bestAsgn = firstLegResult.getBestAssignment();
+
+            const auto &vehId = bestAsgn.vehicle->vehicleId;
+            const auto &numStops = routeState.numStopsOf(vehId);
+            using time_utils::getVehDepTimeAtStopForRequest;
+            const auto &vehDepTimeBeforePickup = getVehDepTimeAtStopForRequest(vehId, bestAsgn.pickupStopIdx,
+                                                                               rs.now(), routeState);
+            const auto &vehDepTimeBeforeDropoff = getVehDepTimeAtStopForRequest(vehId, bestAsgn.dropoffStopIdx,
+                rs.now(), routeState);
+            intermediateLogger
+                    << vehId << ", "
+                    << bestAsgn.pickupStopIdx << ", "
+                    << bestAsgn.dropoffStopIdx << ", "
+                    << bestAsgn.distToPickup << ", "
+                    << bestAsgn.distFromPickup << ", "
+                    << bestAsgn.distToDropoff << ", "
+                    << bestAsgn.distFromDropoff << ", "
+                    << bestAsgn.pickup.id << ", "
+                    << bestAsgn.pickup.walkingDist << ", "
+                    << bestAsgn.dropoff.id << ", "
+                    << bestAsgn.dropoff.walkingDist << ", "
+                    << numStops << ", "
+                    << vehDepTimeBeforePickup << ", "
+                    << vehDepTimeBeforeDropoff << "\n";
         }
 
         const VehicleInputGraphT &vehInputGraph;
