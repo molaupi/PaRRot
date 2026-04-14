@@ -145,6 +145,21 @@ inline void removalOfSortedCols(
     }
 }
 
+// Removes given number of entries from end of bucket.
+template<typename IndexArray, typename ValueArray, typename... ExtraValueArrays>
+inline void removalOfTail(
+        const int row, const int numToRemove,
+        IndexArray &indexArray, ValueArray &valueArray, ExtraValueArrays &... extraValueArrays) {
+    assert(row >= 0);
+    assert(row < indexArray.size());
+    auto &start = indexArray[row].start;
+    auto &end = indexArray[row].end;
+    assert(end - start >= numToRemove);
+    std::fill(valueArray.begin() + end - numToRemove, valueArray.begin() + end,
+              std::numeric_limits<typename ValueArray::value_type>::max());
+    end -= numToRemove;
+}
+
 // Removes all columns at a given row. No need to explicitly change extra value arrays since the validity of values in
 // those is defined only via indexArray.
 template<typename IndexArray, typename ValueArray>

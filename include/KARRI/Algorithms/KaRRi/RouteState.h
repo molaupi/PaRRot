@@ -365,16 +365,16 @@ namespace karri {
             auto pickupIndex = asgn.pickupStopIdx;
             auto dropoffIndex = asgn.dropoffStopIdx;
 
-            assert(pickupIndex >= 0);
-            assert(pickupIndex < end - start);
-            assert(dropoffIndex >= 0);
-            assert(dropoffIndex < end - start);
+            KASSERT(pickupIndex >= 0);
+            KASSERT(pickupIndex < end - start);
+            KASSERT(dropoffIndex >= 0);
+            KASSERT(dropoffIndex < end - start);
 
             bool pickupInsertedAsNewStop = false;
             bool dropoffInsertedAsNewStop = false;
 
             if ((pickupIndex > 0 || schedDepTimes[start] > now) && pickup.loc == stopLocations[start + pickupIndex]) {
-                assert(start + pickupIndex == end - 1 || pickupIndex == dropoffIndex ||
+                KASSERT(start + pickupIndex == end - 1 || pickupIndex == dropoffIndex ||
                     asgn.distFromPickup ==
                     schedArrTimes[start + pickupIndex + 1] - schedDepTimes[start + pickupIndex]);
 
@@ -419,7 +419,7 @@ namespace karri {
 
             if (pickupIndex != dropoffIndex) {
                 // Propagate changes to minArrTime/minDepTime forward from inserted pickup stop until dropoff stop
-                assert(asgn.distFromPickup > 0);
+                KASSERT(asgn.distFromPickup > 0);
                 propagateSchedArrAndDepForward(start + pickupIndex + 1, start + dropoffIndex, asgn.distFromPickup);
             }
 
@@ -464,7 +464,7 @@ namespace karri {
             // Update occupancies and prefix sums
             for (int idx = start + pickupIndex; idx < start + dropoffIndex; ++idx) {
                 occupancies[idx] += numRiders;
-                assert(occupancies[idx] <= asgn.vehicle->capacity);
+                KASSERT(occupancies[idx] <= asgn.vehicle->capacity);
             }
 
             for (int idx = start + dropoffIndex; idx < end; ++idx) {
@@ -488,15 +488,15 @@ namespace karri {
                 rangeOfRequestsPickedUpAtStop.resize(newMinSize);
                 rangeOfRequestsDroppedOffAtStop.resize(newMinSize);
             }
-            assert(start == pos[vehId].start && end == pos[vehId].end);
+            KASSERT(start == pos[vehId].start && end == pos[vehId].end);
             if (pickupInsertedAsNewStop) {
-                assert(pickupIndex >= 1 && start + pickupIndex < end - 1);
+                KASSERT(pickupIndex >= 1 && start + pickupIndex < end - 1);
                 stopIdToVehicleId[stopIds[start + pickupIndex]] = vehId;
                 stopIdToIdOfPrevStop[stopIds[start + pickupIndex]] = stopIds[start + pickupIndex - 1];
                 stopIdToIdOfPrevStop[stopIds[start + pickupIndex + 1]] = stopIds[start + pickupIndex];
             }
             if (dropoffInsertedAsNewStop) {
-                assert(dropoffIndex > pickupIndex && start + dropoffIndex < end);
+                KASSERT(dropoffIndex > pickupIndex && start + dropoffIndex < end);
                 stopIdToVehicleId[stopIds[start + dropoffIndex]] = vehId;
                 stopIdToIdOfPrevStop[stopIds[start + dropoffIndex]] = stopIds[start + dropoffIndex - 1];
                 if (start + dropoffIndex != end - 1)

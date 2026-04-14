@@ -605,6 +605,7 @@ namespace karri::stats {
         int64_t elliptic_delete_time = 0;
 
         int64_t stationsInEllipse_generate_time = 0;
+        int64_t stationsInEllipse_update_time = 0;
         int64_t stationsInEllipse_remove_time = 0;
 
         int64_t lastStopBucketsGenerateEntriesTime = 0;
@@ -617,7 +618,7 @@ namespace karri::stats {
 
         int64_t getTotalTime() const {
             return elliptic_generate_time + elliptic_update_time +  elliptic_delete_time +
-                stationsInEllipse_generate_time + stationsInEllipse_remove_time +
+                stationsInEllipse_generate_time + stationsInEllipse_update_time + stationsInEllipse_remove_time +
                  lastStopBucketsGenerateEntriesTime +
                    lastStopBucketsDeleteEntriesTime + lastStopsAtVerticesUpdateTime + updateRoutesTime;
         }
@@ -633,6 +634,7 @@ namespace karri::stats {
             elliptic_delete_numEntriesScanned = 0;
             elliptic_delete_time = 0;
             stationsInEllipse_generate_time = 0;
+            stationsInEllipse_update_time = 0;
             stationsInEllipse_remove_time = 0;
             lastStopBucketsGenerateEntriesTime = 0;
             lastStopBucketsDeleteEntriesTime = 0;
@@ -652,6 +654,7 @@ namespace karri::stats {
                 "elliptic.delete.numEntriesScanned,"
                 "elliptic.delete.time,"
         "stations_in_ellipse_generate_time,"
+        "stations_in_ellipse_update_time,"
         "stations_in_ellipse_remove_time,"
                 "last_stop_buckets_generate_entries_time,"
                 "last_stop_buckets_delete_entries_time,"
@@ -672,6 +675,7 @@ namespace karri::stats {
                     << elliptic_delete_numEntriesScanned << ","
                     << elliptic_delete_time << ","
                     << stationsInEllipse_generate_time << ","
+                    << stationsInEllipse_update_time << ","
                     << stationsInEllipse_remove_time << ","
                     << lastStopBucketsGenerateEntriesTime << ","
                     << lastStopBucketsDeleteEntriesTime << ","

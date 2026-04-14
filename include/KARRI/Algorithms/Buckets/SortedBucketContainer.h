@@ -123,8 +123,25 @@ public:
         return true;
     }
 
+    // Removes the given number of entries from the end of the bucket of the specified vertex.
+    void removeTail(const int v, const int numToRemove) {
+        KASSERT(v >= 0);
+        KASSERT(v < bucketPositions.size());
+        const auto &pos = bucketPositions[v];
+        KASSERT(numToRemove >= 0);
+        KASSERT(pos.end - pos.start >= numToRemove);
+        removalOfTail(v, numToRemove, bucketPositions, entries);
+    }
+
     int getNumEntriesVisitedInLastUpdateOrRemove() const {
         return numEntriesVisited;
+    }
+
+    bool isBucketEmpty(const int entityId) const {
+        assert(entityId >= 0);
+        assert(entityId < bucketPositions.size());
+        const auto &bucketPos = bucketPositions[entityId];
+        return bucketPos.end == bucketPos.start;
     }
 
     void clearBucket(const int entityId) {

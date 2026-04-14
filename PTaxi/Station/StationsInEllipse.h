@@ -207,7 +207,6 @@ namespace karri {
               numEntriesVisited(0) {
         }
 
-        // TODO: ADD TO UPDATE STATS
         void computeNewStationsInEllipsesForStop(const int stopIndex, const int vehId,
                                                  stats::UpdatePerformanceStats &stats) {
             KaRRiTimer timer;
@@ -250,10 +249,38 @@ namespace karri {
             stats.stationsInEllipse_generate_time += timer.elapsed<std::chrono::nanoseconds>();
         }
 
-        void recomputeStationsInEllipseForStop(const int stopIndex, const int vehId,
-                                               stats::UpdatePerformanceStats &stats) {
+        void recomputeStationsInEllipseForStop(const int stopIndex, const int vehId, stats::UpdatePerformanceStats &stats) {
+            KASSERT(!stopBucketContainer.isBucketEmpty(routeState.stopIdsFor(vehId)[stopIndex]));
             removeStationsForStop(stopIndex, vehId, stats);
             computeNewStationsInEllipsesForStop(stopIndex, vehId, stats);
+        }
+
+        // If the leeway of a stop becomes smaller, some stations may no longer be in the ellipse.
+        void updateStationsInEllipseForChangedLeeway(const int stopIndex, const int vehId,
+                                               stats::UpdatePerformanceStats &stats) {
+            KaRRiTimer timer;
+            const auto stopId = routeState.stopIdsFor(vehId)[stopIndex];
+
+            // Remove all stations that are no longer reachable in new leeway.
+            const auto leeway = routeState.leewayOfLegStartingAt(stopId);
+            const auto &bucket = stopBucketContainer.getBucketOf(stopId);
+            int i = static_cast<int>(bucket.size()) - 1;
+            while (i >= 0 && bucket[i].distFromStopToStation + bucket[i].distFromStationToStop + InputConfig::getInstance().stopTime > leeway) {
+                --i;
+            }
+            const auto numToRemove = bucket.size() - 1 - i;
+            stopBucketContainer.removeTail(stopId, numToRemove);
+
+            // For stations at stop, update distance to next stop since it may have changed
+
+            stats.stationsInEllipse_update_time += timer.elapsed<std::chrono::nanoseconds>();
+        }
+
+        void updateStationsInEllipseForChangedLeewayForAllStopsOf(const int vehId, stats::UpdatePerformanceStats &stats) {
+            const auto numStops = routeState.numStopsOf(vehId);
+            for (int stopIndex = 0; stopIndex < numStops - 1; ++stopIndex) {
+                updateStationsInEllipseForChangedLeeway(stopIndex, vehId, stats);
+            }
         }
 
         void removeStationsForStop(const int stopIndex, const int vehId, stats::UpdatePerformanceStats &stats) {
@@ -262,10 +289,6 @@ namespace karri {
             stopBucketContainer.checkAndResize(stopId);
             stopBucketContainer.clearBucket(stopId);
             stats.stationsInEllipse_remove_time += timer.elapsed<std::chrono::nanoseconds>();
-        }
-
-        bool exceedsLeewayForStop(const int &distanceToStop) const {
-            return curLeeway < distanceToStop;
         }
 
         ConstantVectorRange<StationEntry> getStationsInEllipse(const int stopId) const {
@@ -295,6 +318,10 @@ namespace karri {
                 distFromStopToStations[stationId] = 0;
                 distFromStationsToStop[stationId] = lengthOfLegStartingAtStop;
             }
+        }
+
+        bool exceedsLeewayForStop(const int &distanceToStopWithoutStopTime) const {
+            return distanceToStopWithoutStopTime + InputConfig::getInstance().stopTime > curLeeway;
         }
 
         int getNumEdgeRelaxations() const {

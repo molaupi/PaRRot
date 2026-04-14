@@ -124,7 +124,7 @@ namespace karri {
                                       originalRequest.requestTime;
             const auto constraintMaxArrTimeAtDropoff = requestState.getHardConstraintMaxArrTimeAtDropoff(
                 asgn.dropoff, asgnTripTime);
-            const int latestVehArrTimeAtDropoff = std::max(externalMaxArrTimeAtDropoff, constraintMaxArrTimeAtDropoff);
+            const int latestVehArrTimeAtDropoff = std::min(externalMaxArrTimeAtDropoff, constraintMaxArrTimeAtDropoff);
 
             auto [pickupIndex, dropoffIndex] = routeState.insert(asgn, requestState, latestVehDepTimeAtPickup,
                                                                  latestVehArrTimeAtDropoff);
@@ -307,6 +307,7 @@ namespace karri {
             LIGHT_KASSERT(loc.depTimeAtHead >= now);
             routeState.createIntermediateStopForReroute(veh.vehicleId, loc.location, now, loc.depTimeAtHead);
             ellipticBucketsEnv.generateSourceBucketEntries(veh, 1, stats);
+            stationsInEllipse.computeNewStationsInEllipsesForStop(1, veh.vehicleId, stats);
         }
 
         void updateEllipticBucketsForSingleAssignment(const Assignment &asgn,
@@ -336,8 +337,10 @@ namespace karri {
                 ellipticBucketsEnv.generateTargetBucketEntries(*asgn.vehicle, pickupIndex, stats);
                 ellipticBucketsEnv.generateSourceBucketEntries(*asgn.vehicle, pickupIndex, stats);
                 // calculate the relevant stations for this new pickup stop
-                if (pickupIndex - 1 != formerLastStopIdx)
-                    stationsInEllipse.recomputeStationsInEllipseForStop(pickupIndex - 1, vehId, stats);
+                if (pickupIndex - 1 != formerLastStopIdx) {
+                    if (!(insertedIntermediateStopForReroute && pickupIndex == 2))
+                        stationsInEllipse.recomputeStationsInEllipseForStop(pickupIndex - 1, vehId, stats);
+                }
                 stationsInEllipse.computeNewStationsInEllipsesForStop(pickupIndex, vehId, stats);
             }
 
@@ -359,6 +362,8 @@ namespace karri {
                     stationsInEllipse.computeNewStationsInEllipsesForStop(formerLastStopIdx, vehId, stats);
                 }
             }
+
+            stationsInEllipse.updateStationsInEllipseForChangedLeewayForAllStopsOf(vehId, stats);
 
             // If we use buckets sorted by remaining leeway, we have to update the leeway of all
             // entries for stops of this vehicle.
