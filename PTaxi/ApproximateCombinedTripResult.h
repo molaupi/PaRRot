@@ -21,7 +21,7 @@ public:
                         ptLeg(ptLeg), 
                         firstStationId(ptLeg.getFirstStation()), 
                         lastStationId(ptLeg.getLastStation()), 
-                        firstTaxiLegCost(),
+                        firstTaxiLegCost(INFTY),
                         secondTaxiLegCost(INFTY),
                         ptLegCost(ptLeg.getCost()),
                         bestCost(),

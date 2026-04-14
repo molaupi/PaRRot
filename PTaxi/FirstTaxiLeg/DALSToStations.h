@@ -53,9 +53,9 @@ namespace karri {
 
             template<typename DistLabelT, typename DistLabelContainerT>
             bool operator()(const int v, DistLabelT &distToV, const DistLabelContainerT & /*distLabels*/) {
-                // Check if we can prune at this vertex based on the distance to v
-                if (allSet(search.canPrune(distToV, search.curMinTripTimesToLastStop)))
-                    return true;
+                // // Check if we can prune at this vertex based on the distance to v
+                // if (allSet(search.canPrune(distToV, search.curMinTripTimesToLastStop, search.curMinResidualPickupDetours)))
+                //     return true;
 
                 int numEntriesScannedHere = 0;
 
@@ -78,12 +78,12 @@ namespace karri {
                         const int &stationId = entry.targetId;
                         const DistanceLabel distViaV = distToV + DistanceLabel(entry.distToTarget);
                         const auto atLeastAsGoodAsCurBest = ~search.
-                                canPrune(distViaV, search.curMinTripTimesToLastStop);
+                                canPrune(distViaV, search.curMinCostToLastStop);
 
                         if (!anySet(atLeastAsGoodAsCurBest))
                             break;
 
-                        tryUpdatingDistance(stationId, distViaV);
+                        tryUpdatingDistance(stationId, distViaV, atLeastAsGoodAsCurBest);
                     }
                 }
 
@@ -94,19 +94,22 @@ namespace karri {
             }
 
         private:
-            void tryUpdatingDistance(const int stationId, const DistanceLabel &distToStation) {
+            void tryUpdatingDistance(const int stationId, const DistanceLabel &distToStation,
+                                     LabelMask needToUpdate) {
+                KASSERT(allSet((distToStation < INFTY) | needToUpdate));
                 // Update tentative distances to v for any searches where distViaV admits a possible better assignment
                 // than the current best and where distViaV is at least as good as the current tentative distance.
-                LabelMask curMask = ~(search.currentLastStopDistances[stationId] < distToStation);
-                curMask &= distToStation < INFTY;
-                if (!anySet(curMask))
+                auto &cur = search.currentLastStopDistances[stationId];
+                needToUpdate &= ~(cur < distToStation);
+                // needToUpdate &= distToStation < INFTY;
+                if (!anySet(needToUpdate))
                     return;
 
                 // Mark station as having valid distance if seen for the first time
-                if (allSet(search.currentLastStopDistances[stationId] == INFTY))
+                if (allSet(cur == INFTY))
                     search.stationsWithValidDistances.push_back(stationId);
 
-                search.currentLastStopDistances[stationId].setIf(distToStation, curMask);
+                cur.setIf(distToStation, needToUpdate);
             }
 
             DALSToStations &search;
@@ -119,10 +122,7 @@ namespace karri {
 
             template<typename DistLabelT, typename DistLabelContainerT>
             bool operator()(const int, DistLabelT &distToV, const DistLabelContainerT & /*distLabels*/) const {
-                if constexpr (!StationBucketsEnvT::SORTED) {
-                    return false;
-                }
-                return allSet(search.canPrune(distToV, search.curMinTripTimesToLastStop));
+                return allSet(search.canPrune(distToV, search.curMinCostToLastStop));
             }
 
         private:
@@ -183,12 +183,12 @@ namespace karri {
                     currentLastStopDistances[s] = INFTY;
                 stationsWithValidDistances.clear();
 
-                curMinTripTimesToLastStop = DistanceLabel(INFTY);
+                curMinCostToLastStop = DistanceLabel(INFTY);
                 for (int j = 0; j < K; ++j) {
                     if (i + j >= relevantVehicleIdsForRequest.size())
                         break;
-                    curMinTripTimesToLastStop[j] = relevantVehiclesMinTripTimesToLastStop[i];
-                    KASSERT(curMinTripTimesToLastStop[j] >= 0 && curMinTripTimesToLastStop[j] < INFTY);
+                    curMinCostToLastStop[j] = relevantVehiclesMinCostToLastStop[i];
+                    KASSERT(curMinCostToLastStop[j] >= 0 && curMinCostToLastStop[j] < INFTY);
                 }
                 stats.searchTime += timer.elapsed<std::chrono::nanoseconds>();
 
@@ -220,18 +220,38 @@ namespace karri {
         }
 
     private:
-        LabelMask canPrune(const DistanceLabel &distancesToDropoffs, const DistanceLabel &minTripTimeToLastStop) const {
-            if (upperBoundCost >= INFTY) {
-                // If current best is INFTY, only indices i with distancesToPickups[i] >= INFTY or
-                // minDirectDistances[i] >= INFTY are worse than the current best.
-                return ~(distancesToDropoffs < INFTY);
-            }
+        LabelMask canPrune(const DistanceLabel &distancesToDropoffs, const DistanceLabel &minCostToLastStop) const {
+            using F = CostCalculator::CostFunction;
+            // if (upperBoundCost >= INFTY) {
+            //     // If current best is INFTY, only indices i with distancesToPickups[i] >= INFTY or
+            //     // minDirectDistances[i] >= INFTY are worse than the current best.
+            //     return ~(distancesToDropoffs < INFTY);
+            // }
 
-            const DistanceLabel costLowerBound = calculator.template
-                    calcKVehicleIndependentCostLowerBoundsForDALSWithKnownMinDistToDropoff<LabelSet>(
-                        0, distancesToDropoffs, minTripTimeToLastStop, *curReqState);
+            DistanceLabel costLowerBound = minCostToLastStop +
+                                           F::calcKVehicleCosts(distancesToDropoffs) +
+                                           F::calcKTripCosts(distancesToDropoffs, *curReqState);
+            return distancesToDropoffs >= INFTY | costLowerBound > upperBoundCost;
 
-            return upperBoundCost < costLowerBound;
+            // // For dropoffs with a distanceToDropoff of INFTY, set cost to INFTY later.
+            // const LabelMask inftyMask = ~(distancesToDropoffs < INFTY);
+            //
+            // const DistanceLabel minDetours = minResidualPickupDetour + distancesToDropoffs + InputConfig::getInstance().
+            //                                  stopTime;
+            // DistanceLabel minTripTimes = minTripTimeToLastStop + distancesToDropoffs;
+            // const DistanceLabel minTripCosts = F::calcKTripCosts(minTripTimes, *curReqState);
+            //
+            // // Independent of pickup so we cannot know here which existing passengers may be affected by pickup detour
+            // // const DistanceLabel minAddedTripCostOfOthers = 0;
+            //
+            // DistanceLabel costLowerBound = F::calcKVehicleCosts(minDetours) + minTripCosts;
+            // costLowerBound.setIf(DistanceLabel(INFTY), inftyMask);
+            // //
+            // // const DistanceLabel costLowerBound = calculator.template
+            // //         calcKCostLowerBoundsForStationDALSWithKnownMinDistToStation<LabelSet>(
+            // //             distancesToDropoffs, minTripTimeToLastStop, minResidualPickupDetour, *curReqState);
+
+            // return upperBoundCost < costLowerBound;
         }
 
 
@@ -247,16 +267,12 @@ namespace karri {
         void initSingleRelevantVehicle(const int vehId, const RelevantPDLocs &relPdLocs,
                                        const RequestState &rs, const PDLocs &pdLocs) {
             using namespace time_utils;
-            if (idxOfVehicleInRelevant[vehId] == INVALID_INDEX) {
-                idxOfVehicleInRelevant[vehId] = relevantVehicleIdsForRequest.size();
-                relevantVehicleIdsForRequest.push_back(vehId);
-                relevantVehiclesMinTripTimesToLastStop.push_back(INFTY);
-            }
+            using F = CostCalculator::CostFunction;
 
             // Find minimum residual detour at end of route for any relevant pickups and set min trip time to last stop accordingly
             const auto numStops = routeState.numStopsOf(vehId);
-            const auto schedDepTimeAtLastStop = routeState.schedDepTimesFor(vehId)[numStops - 1];
-            auto &bestTripTimeToLastStop = relevantVehiclesMinTripTimesToLastStop[idxOfVehicleInRelevant[vehId]];
+            const auto schedArrTimeAtLastStop = routeState.schedArrTimesFor(vehId)[numStops - 1];
+            int bestCostToLastStop = INFTY;
             for (const auto &e: relPdLocs.relevantSpotsFor(vehId)) {
                 const auto &p = pdLocs.pickups[e.pdId];
                 const auto depTime = getActualDepTimeAtPickup(vehId, e.stopIndex, e.distToPDLoc, p, rs, routeState);
@@ -265,8 +281,28 @@ namespace karri {
                 const auto residualDetourAtEnd = calcResidualPickupDetour(
                     vehId, e.stopIndex, numStops - 1, initialPickupDetour, routeState);
                 const auto minTripTimeToLastStop =
-                        schedDepTimeAtLastStop + residualDetourAtEnd - rs.earliestDeparture();
-                bestTripTimeToLastStop = std::min(bestTripTimeToLastStop, minTripTimeToLastStop);
+                        schedArrTimeAtLastStop + residualDetourAtEnd - rs.earliestDeparture();
+
+                const auto costLowerBound = F::calcVehicleCost(residualDetourAtEnd) +
+                                            F::calcTripCost(minTripTimeToLastStop, *curReqState) +
+                                            F::calcChangeInTripCostsOfExistingPassengers(
+                                                calcAddedTripTimeInInterval(
+                                                    vehId, e.stopIndex, numStops - 1, initialPickupDetour, routeState));
+                bestCostToLastStop = std::min(bestCostToLastStop, costLowerBound);
+            }
+
+            if (idxOfVehicleInRelevant[vehId] != INVALID_INDEX) {
+                // If this vehicle is already in the relevant set, possibly update its best cost.
+                auto &best = relevantVehiclesMinCostToLastStop[idxOfVehicleInRelevant[vehId]];
+                KASSERT(best <= upperBoundCost);
+                best = std::min(best, bestCostToLastStop);
+            } else {
+                // If this vehicle is not in the relevant set, add it if its best cost to last stop is within the upper bound.
+                if (bestCostToLastStop <= upperBoundCost) {
+                    idxOfVehicleInRelevant[vehId] = relevantVehicleIdsForRequest.size();
+                    relevantVehicleIdsForRequest.push_back(vehId);
+                    relevantVehiclesMinCostToLastStop.push_back(bestCostToLastStop);
+                }
             }
         }
 
@@ -278,7 +314,7 @@ namespace karri {
             for (const auto &vehId: relevantVehicleIdsForRequest)
                 idxOfVehicleInRelevant[vehId] = INVALID_INDEX;
             relevantVehicleIdsForRequest.clear();
-            relevantVehiclesMinTripTimesToLastStop.clear();
+            relevantVehiclesMinCostToLastStop.clear();
 
             for (const auto &vehId: relevantOrdinaryPickups.getVehiclesWithRelevantPDLocs()) {
                 initSingleRelevantVehicle(vehId, relevantOrdinaryPickups, requestState, pdLocs);
@@ -293,10 +329,7 @@ namespace karri {
                                                        stats::DalsAssignmentsPerformanceStats &stats) {
             KaRRiTimer timer;
 
-            const auto zeroDistCanPrune = canPrune(DistanceLabel(0), curMinTripTimesToLastStop);
             for (int i = 0; i < K; ++i) {
-                if (zeroDistCanPrune[i])
-                    continue;
                 const auto &veh = indexOfFirstVeh + i < relevantVehicleIdsForRequest.size()
                                       ? fleet[relevantVehicleIdsForRequest[indexOfFirstVeh + i]]
                                       : fleet[relevantVehicleIdsForRequest[indexOfFirstVeh]];
@@ -399,11 +432,7 @@ namespace karri {
             Assignment asgn;
 
             checkPBNSForVehicle.reset();
-            const auto zeroDistCanPrune = canPrune(DistanceLabel(0), curMinTripTimesToLastStop);
             for (int i = 0; i < K; ++i) {
-                if (zeroDistCanPrune[i])
-                    continue;
-
                 const auto &veh = indexOfFirstVeh + i < relevantVehicleIdsForRequest.size()
                                       ? fleet[relevantVehicleIdsForRequest[indexOfFirstVeh + i]]
                                       : fleet[relevantVehicleIdsForRequest[indexOfFirstVeh]];
@@ -497,11 +526,7 @@ namespace karri {
             Assignment asgn;
             asgn.pickupStopIdx = 0;
 
-            const auto zeroDistCanPrune = canPrune(DistanceLabel(0), curMinTripTimesToLastStop);
             for (int i = 0; i < K; ++i) {
-                if (zeroDistCanPrune[i])
-                    continue;
-
                 const auto &veh = indexOfFirstVeh + i < relevantVehicleIdsForRequest.size()
                                       ? fleet[relevantVehicleIdsForRequest[indexOfFirstVeh + i]]
                                       : fleet[relevantVehicleIdsForRequest[indexOfFirstVeh]];
@@ -650,7 +675,10 @@ namespace karri {
         std::vector<int> idxOfVehicleInRelevant;
         // Maps every vehicle to its index in relevantVehicleIdsForRequest and in relevantVehiclesMinTripTimesToLastStop
         std::vector<int> relevantVehicleIdsForRequest;
-        std::vector<int> relevantVehiclesMinTripTimesToLastStop;
+        // std::vector<int> relevantVehiclesMinTripTimesToLastStop;
+        // std::vector<int> relevantVehiclesMinResidualPickupDetours;
+        // TODO: replace min trip times and residual detours with straight min cost (take proportional lower bound wrt trip cost).
+        std::vector<int> relevantVehiclesMinCostToLastStop;
 
         std::vector<int> stationsWithValidDistances;
         std::vector<DistanceLabel> currentLastStopDistances;
@@ -660,9 +688,17 @@ namespace karri {
         RelevantPDLocs const *curRelOrdinaryPickups;
         RelevantPDLocs const *curRelPickupsBns;
 
-        // Minimum trip time for any DALS insertion on current vehicles needed to get to last stop.
+        // // Minimum trip time for any DALS insertion on current vehicles needed to get to last stop.
+        // // Can be used for cost lower bounds when pruning BCH query.
+        // DistanceLabel curMinTripTimesToLastStop;
+        //
+        // // Minimum residual detour at last stop for any DALS insertion on current vehicles.
+        // // Can be used for cost lower bounds when pruning BCH query.
+        // DistanceLabel curMinResidualPickupDetours;
+
+        // Minimum cost for part of route until last stop for any DALS insertion on current vehicles.
         // Can be used for cost lower bounds when pruning BCH query.
-        DistanceLabel curMinTripTimesToLastStop;
+        DistanceLabel curMinCostToLastStop;
 
         int numVerticesSettled;
         int numEntriesVisited;

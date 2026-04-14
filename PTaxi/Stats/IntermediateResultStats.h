@@ -28,19 +28,6 @@
 #include <cstdint>
 
 namespace karri::stats {
-
-    struct IntermediateResultStats {
-
-        static constexpr auto LOGGER_NAME = "intermediate_results.csv";
-        static constexpr auto LOGGER_COLS =
-            "cost,"
-            "cost_1st_taxi_leg,"
-            "cost_pt_leg,"
-            "cost_2nd_taxi_leg,"
-            "1st_taxi_leg_type,"
-            "arrival_time\n";
-    };
-
     
     struct FirstTaxiLegResultStats {
 

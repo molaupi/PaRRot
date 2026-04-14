@@ -193,7 +193,8 @@ namespace karri::stats {
         int64_t initializationTime = 0;
 
         int64_t numCandidateVehicles = 0;
-        int64_t numAssignmentsTried = 0;
+        int64_t numNonPairedAssignmentsTried = 0;
+        int64_t numPairedAssignmentsTried = 0;
         int64_t tryNonPairedAssignmentsTime = 0;
         int64_t tryPairedAssignmentsTime = 0;
 
@@ -206,7 +207,8 @@ namespace karri::stats {
             initializationTime = 0;
 
             numCandidateVehicles = 0;
-            numAssignmentsTried = 0;
+            numNonPairedAssignmentsTried = 0;
+            numPairedAssignmentsTried = 0;
             tryNonPairedAssignmentsTime = 0;
             tryPairedAssignmentsTime = 0;
         }
@@ -215,7 +217,8 @@ namespace karri::stats {
         static constexpr auto LOGGER_COLS =
                 "initialization_time,"
                 "num_candidate_vehicles,"
-                "num_assignments_tried,"
+                "num_non_paired_assignments_tried,"
+                "num_paired_assignments_tried,"
                 "try_non_paired_assignments_time,"
                 "try_paired_assignments_time,"
                 "total_time\n";
@@ -225,7 +228,8 @@ namespace karri::stats {
             std::stringstream ss;
             ss << initializationTime << ","
                     << numCandidateVehicles << ","
-                    << numAssignmentsTried << ","
+                    << numNonPairedAssignmentsTried << ","
+                    << numPairedAssignmentsTried << ","
                     << tryNonPairedAssignmentsTime << ","
                     << tryPairedAssignmentsTime << ","
                     << getTotalTime();
@@ -600,6 +604,9 @@ namespace karri::stats {
         int64_t elliptic_delete_numEntriesScanned = 0;
         int64_t elliptic_delete_time = 0;
 
+        int64_t stationsInEllipse_generate_time = 0;
+        int64_t stationsInEllipse_remove_time = 0;
+
         int64_t lastStopBucketsGenerateEntriesTime = 0;
         int64_t lastStopBucketsUpdateEntriesTime = 0;
         int64_t lastStopBucketsDeleteEntriesTime = 0;
@@ -609,8 +616,9 @@ namespace karri::stats {
         int64_t updateRoutesTime = 0;
 
         int64_t getTotalTime() const {
-            return elliptic_generate_time + elliptic_update_time +
-                   elliptic_delete_time + lastStopBucketsGenerateEntriesTime +
+            return elliptic_generate_time + elliptic_update_time +  elliptic_delete_time +
+                stationsInEllipse_generate_time + stationsInEllipse_remove_time +
+                 lastStopBucketsGenerateEntriesTime +
                    lastStopBucketsDeleteEntriesTime + lastStopsAtVerticesUpdateTime + updateRoutesTime;
         }
 
@@ -624,6 +632,8 @@ namespace karri::stats {
             elliptic_delete_numVerticesVisited = 0;
             elliptic_delete_numEntriesScanned = 0;
             elliptic_delete_time = 0;
+            stationsInEllipse_generate_time = 0;
+            stationsInEllipse_remove_time = 0;
             lastStopBucketsGenerateEntriesTime = 0;
             lastStopBucketsDeleteEntriesTime = 0;
             lastStopsAtVerticesUpdateTime = 0;
@@ -641,6 +651,8 @@ namespace karri::stats {
                 "elliptic.delete.numVerticesVisited,"
                 "elliptic.delete.numEntriesScanned,"
                 "elliptic.delete.time,"
+        "stations_in_ellipse_generate_time,"
+        "stations_in_ellipse_remove_time,"
                 "last_stop_buckets_generate_entries_time,"
                 "last_stop_buckets_delete_entries_time,"
                 "last_stop_at_vertices_update_time,"
@@ -659,6 +671,8 @@ namespace karri::stats {
                     << elliptic_delete_numVerticesVisited << ","
                     << elliptic_delete_numEntriesScanned << ","
                     << elliptic_delete_time << ","
+                    << stationsInEllipse_generate_time << ","
+                    << stationsInEllipse_remove_time << ","
                     << lastStopBucketsGenerateEntriesTime << ","
                     << lastStopBucketsDeleteEntriesTime << ","
                     << lastStopsAtVerticesUpdateTime << ","

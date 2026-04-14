@@ -171,7 +171,7 @@ namespace karri {
 
             runStationBCH(rs, pdLocs, taxiOnlyCost, stationBchStats);
             runPALS(rs, pdLocs, taxiOnlyCost, stats.palsAssignmentsStats, firstTaxiLegResult);
-            runOrdinary(rs, pdLocs, relOrdinaryPickups, stats.ordAssignmentsStats, firstTaxiLegResult);
+            runOrdinary(rs, pdLocs, relOrdinaryPickups, stats.ordAssignmentsStats, firstTaxiLegResult, taxiOnlyCost);
             runDALS(rs, pdLocs, relOrdinaryPickups, relPickupsBeforeNextStop, taxiOnlyCost,
                     stats.dalsAssignmentsStats, firstTaxiLegResult);
             runPBNS(rs, pdLocs, relPickupsBeforeNextStop, taxiOnlyCost, stats.pbnsAssignmentsStats, firstTaxiLegResult);
@@ -201,10 +201,10 @@ namespace karri {
 
         void runOrdinary(const RequestState &rs, const PDLocs &pdLocs,
                          const RelevantPDLocs &relOrdinaryPickpus, stats::OrdAssignmentsPerformanceStats &stats,
-                         FirstTaxiLegResult &firstTaxiLegResult) {
+                         FirstTaxiLegResult &firstTaxiLegResult, const int taxiOnlyCost) {
             ordinaryToStations.enumerateAssignments(rs, pdLocs, relOrdinaryPickpus, stations, stationsInEllipse,
                                                     stationDistanceFinder.getDistancesToStations(), stats,
-                                                    firstTaxiLegResult);
+                                                    firstTaxiLegResult, taxiOnlyCost);
         }
 
         void runDALS(const RequestState &rs, const PDLocs &pdLocs,

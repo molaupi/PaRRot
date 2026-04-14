@@ -127,12 +127,31 @@ public:
         return numEntriesVisited;
     }
 
+    void clearBucket(const int entityId) {
+        assert(entityId >= 0);
+        assert(entityId < bucketPositions.size());
+        auto &bucketPos = bucketPositions[entityId];
+        std::fill(entries.begin() + bucketPos.start, entries.begin() + bucketPos.end, BucketEntryT());
+        bucketPos.end = bucketPos.start;
+    }
+
     // Removes all entries from all buckets.
     void clear() {
         for (auto &bucketPos: bucketPositions)
             bucketPos.end = bucketPos.start;
         std::fill(entries.begin(), entries.end(), BucketEntryT());
     }
+
+    void checkAndResize(const int maxEntityId) {
+        if (maxEntityId >= bucketPositions.size()) {
+            bucketPositions.resize(maxEntityId + 1, BucketPosition{0, 0});
+        }
+    }
+
+    int getBucketPositionsSize() const noexcept {
+        return bucketPositions.size();
+    }
+
 
 private:
 

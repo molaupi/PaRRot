@@ -697,7 +697,8 @@ int main(int argc, char *argv[]) {
         PALSToStationsImpl palsToStations(vehicleInputGraph, fleet, *vehChEnv, lastStopBucketsEnv, lastStopBucketsEnv, routeState);
 
         // DALS for stations
-        using DALSToStationsImpl = DALSToStations<VehicleInputGraph, VehCHEnv, CurVehLocToPickupSearchesImpl, StationBucketsEnv, DALSLabelSet>;
+        using DALSToStationsLabelSet = BasicLabelSet<0, ParentInfo::NO_PARENT_INFO>;
+        using DALSToStationsImpl = DALSToStations<VehicleInputGraph, VehCHEnv, CurVehLocToPickupSearchesImpl, StationBucketsEnv, DALSToStationsLabelSet>;
         DALSToStationsImpl dalsToStations(vehicleInputGraph, fleet, *vehChEnv, curVehLocToPickupSearches, routeState, stationBucketsEnv, stations, stationsAtLocations);
 
         using StationsInEllipseImpl = StationsInEllipse<VehicleInputGraph, VehCHEnv, StationBucketsEnv>;

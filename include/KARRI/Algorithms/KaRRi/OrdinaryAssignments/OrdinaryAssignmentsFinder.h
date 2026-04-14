@@ -107,7 +107,7 @@ namespace karri {
 
             const auto time = timer.elapsed<std::chrono::nanoseconds>();
             stats.tryNonPairedAssignmentsTime += time;
-            stats.numAssignmentsTried += numAssignmentsTried;
+            stats.numNonPairedAssignmentsTried += numAssignmentsTried;
             stats.numCandidateVehicles += numCandidateVehicles;
         }
 
@@ -288,7 +288,7 @@ namespace karri {
 
             const auto pairedTime = timer.elapsed<std::chrono::nanoseconds>();
             stats.tryPairedAssignmentsTime += pairedTime;
-            stats.numAssignmentsTried += numAssignmentsTried;
+            stats.numPairedAssignmentsTried += numAssignmentsTried;
         }
 
         const Fleet &fleet;

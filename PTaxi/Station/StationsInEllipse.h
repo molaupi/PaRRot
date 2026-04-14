@@ -31,15 +31,22 @@
 #include <KARRI/DataStructures/Containers/LightweightSubset.h>
 #include <KARRI/Tools/Constants.h>
 #include "StationEntry.h"
+#include "KARRI/Algorithms/Buckets/SortedBucketContainer.h"
 
 namespace karri {
     template<typename InputGraphT, typename CHEnvT,
         typename StationBucketsEnvT>
     class StationsInEllipse {
     private:
-
         using StationBucketContainer = typename StationBucketsEnvT::BucketContainer;
-        using StopBucketContainer = DynamicBucketContainer<StationEntry>;
+
+        struct IsDetourSmaller {
+            bool operator()(const StationEntry &e1, const StationEntry &e2) const {
+                return e1.distFromStopToStation + e1.distFromStationToStop < e2.distFromStopToStation + e2.distFromStationToStop;
+            }
+        };
+
+        using StopBucketContainer = SortedBucketContainer<StationEntry, IsDetourSmaller>;
 
         struct ScanSourceBucket {
         public:
@@ -147,9 +154,8 @@ namespace karri {
 
         private:
             void tryUpdatingDistance(const int stationId, const int &distFromStopToStation) {
-
                 search.stationsSeen.insert(stationId);
-                auto& cur = search.distFromStopToStations[stationId];
+                auto &cur = search.distFromStopToStations[stationId];
                 if (distFromStopToStation < cur) {
                     cur = distFromStopToStation;
                 }
@@ -189,7 +195,7 @@ namespace karri {
               ch(chEnv.getCH()),
               routeState(routeState),
               stations(stations),
-                stationsAtLocations(stationsAtLocations),
+              stationsAtLocations(stationsAtLocations),
               stationSourceBucketContainer(stationBucketsEnv.getSourceBuckets()),
               stationTargetBucketContainer(stationBucketsEnv.getTargetBuckets()),
               stopBucketContainer(routeState.getMaxStopId()),
@@ -202,7 +208,9 @@ namespace karri {
         }
 
         // TODO: ADD TO UPDATE STATS
-        void computeNewStationsInEllipsesForStop(const int stopIndex, const int vehId) {
+        void computeNewStationsInEllipsesForStop(const int stopIndex, const int vehId,
+                                                 stats::UpdatePerformanceStats &stats) {
+            KaRRiTimer timer;
             const int stopId = routeState.stopIdsFor(vehId)[stopIndex];
             const int stopLoc = routeState.stopLocationsFor(vehId)[stopIndex];
             const int stopVertex = inputGraph.edgeHead(stopLoc);
@@ -239,17 +247,21 @@ namespace karri {
                     stopBucketContainer.insert(stopId, entry);
                 }
             }
+            stats.stationsInEllipse_generate_time += timer.elapsed<std::chrono::nanoseconds>();
         }
 
-        void recomputeStationsInEllipseForStop(const int stopIndex, const int vehId) {
-            removeStationsForStop(stopIndex, vehId);
-            computeNewStationsInEllipsesForStop(stopIndex, vehId);
+        void recomputeStationsInEllipseForStop(const int stopIndex, const int vehId,
+                                               stats::UpdatePerformanceStats &stats) {
+            removeStationsForStop(stopIndex, vehId, stats);
+            computeNewStationsInEllipsesForStop(stopIndex, vehId, stats);
         }
 
-        void removeStationsForStop(const int stopIndex, const int vehId) {
+        void removeStationsForStop(const int stopIndex, const int vehId, stats::UpdatePerformanceStats &stats) {
+            KaRRiTimer timer;
             const int stopId = routeState.stopIdsFor(vehId)[stopIndex];
             stopBucketContainer.checkAndResize(stopId);
             stopBucketContainer.clearBucket(stopId);
+            stats.stationsInEllipse_remove_time += timer.elapsed<std::chrono::nanoseconds>();
         }
 
         bool exceedsLeewayForStop(const int &distanceToStop) const {
@@ -278,7 +290,7 @@ namespace karri {
         }
 
         void initStationsAtStop(const int stopLoc, const int lengthOfLegStartingAtStop) {
-            for (const auto &stationId : stationsAtLocations.getIdsOfStationsAtVehEdge(stopLoc)) {
+            for (const auto &stationId: stationsAtLocations.getIdsOfStationsAtVehEdge(stopLoc)) {
                 stationsSeen.insert(stationId);
                 distFromStopToStations[stationId] = 0;
                 distFromStationsToStop[stationId] = lengthOfLegStartingAtStop;
