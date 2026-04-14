@@ -157,7 +157,7 @@ public:
     inline void runWithTaxi(const int originPsgEdge, const int originVehEdge,
         const int destPsgEdge, const int destVehEdge,
         const int departureTime,
-        const karri::FirstTaxiLegResult &firstTaxiLeg, const std::vector<DistanceLabel> &distFromStations,
+        const karri::FirstTaxiLegResult &firstTaxiLeg, const std::vector<int> &distFromStations,
         karri::stats::PtPerformanceStats &stats,
         const size_t maxRounds = INFTY) noexcept
     {
@@ -555,7 +555,7 @@ private:
     }
 
     inline void relaxIntermediateTransfers(karri::stats::PtPerformanceStats &stats,
-        const std::vector<DistanceLabel> &distFromStations = {}) noexcept
+        const std::vector<int> &distFromStations = {}) noexcept
     {
         stopsUpdatedByTransfer.clear();
         routesServingUpdatedStops.clear();
@@ -599,7 +599,7 @@ private:
                 const auto &station = stations[stationId];
                 // ensure that no second taxi leg is used if station edge id == destination edge id
                 if (stationId != INVALID_ID && station.vehEdgeId != destinationVehEdge) {
-                    const int taxiTravelDistance = convertToULTRATime(distFromStations[stationId][0]);
+                    const int taxiTravelDistance = convertToULTRATime(distFromStations[stationId]);
                     const int arrivalTime = earliestArrivalTime + taxiTravelDistance;
                     if (arrivalByTransfer(targetStop, arrivalTime, stats)) {
                         EarliestArrivalLabel& label = currentRound()[targetStop];

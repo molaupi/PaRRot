@@ -34,7 +34,7 @@ namespace karri {
             const int offset = psgInputGraph.travelTime(originPsgEdge);
             psgChQuery.run(psgCh.rank(source), psgCh.rank(target));
             const auto walkingDist = psgChQuery.getDistance() + offset;
-            const WalkingResult res = {walkingDist, calc.calcCostForNotUsingVehicle(walkingDist, offset, requestState)};
+            const WalkingResult res = {walkingDist, calc.calcCostForNotUsingVehicle(walkingDist, offset)};
             const int64_t time = timer.elapsed<std::chrono::nanoseconds>();
             stats.time += time;
             return res;

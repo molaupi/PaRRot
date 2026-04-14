@@ -8,7 +8,6 @@ namespace karri {
 class ApproximateCombinedTripResult {
 public:
     ApproximateCombinedTripResult(const int requestTime,
-        const int maxTripTime,
         const bool firstLegByTaxi,
         const bool lastLegByTaxi,
         const FirstTaxiLegResult &firstTaxiLegResult,
@@ -16,7 +15,6 @@ public:
                        const int secondLegApproximationCost,
                        const int secondLegApproximationTravelTime)
                         : requestTime(requestTime),
-                        maxTripTime(maxTripTime),
                         firstTaxiLeg(), 
                         ptLeg(ptLeg), 
                         firstStationId(ptLeg.getFirstStation()), 
@@ -45,7 +43,7 @@ public:
             arrivalTime += secondLegApproximationTravelTime;
         }
 
-        int totalTripCost = CostCalculator::calcTripCost(arrivalTime - requestTime, maxTripTime);
+        int totalTripCost = CostCalculator::CostFunction::calcTripCost(arrivalTime - requestTime);
         bestCost += totalTripCost;
     }
 
@@ -85,7 +83,6 @@ public:
 
 private:
     const int requestTime;
-    const int maxTripTime;
 
     TaxiResult firstTaxiLeg;
     PTResult ptLeg;

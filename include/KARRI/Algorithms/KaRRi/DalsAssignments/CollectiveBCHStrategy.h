@@ -190,7 +190,7 @@ namespace karri::DropoffAfterLastStopStrategies {
                     // additionally sorted by increasing dropoff side cost, so if one is worse than the best known assignment
                     // all other labels for this vehicle can also be skipped.
                     if (calculator.calcVehicleIndependentCostLowerBoundForDALSWithKnownMinDistToDropoff(
-                            distFromLastStopToDropoff, asgn.dropoff, requestState) > result.getBestCost())
+                            distFromLastStopToDropoff, asgn.dropoff) > result.getBestCost())
                         break;  // no need to check pickup before next stop
 
                     const auto &numStops = routeState.numStopsOf(vehId);
@@ -221,8 +221,7 @@ namespace karri::DropoffAfterLastStopStrategies {
                                                                routeState.schedArrTimesFor(vehId)[entry.stopIndex + 1];
 
                             const auto minCostFromHere = calculator.calcVehicleIndependentCostLowerBoundForDALSWithKnownMinDistToDropoff(
-                                    asgn.dropoff.walkingDist, distFromLastStopToDropoff, minTripTimeToLastStop,
-                                    requestState);
+                                    asgn.dropoff.walkingDist, distFromLastStopToDropoff, minTripTimeToLastStop);
                             if (minCostFromHere > result.getBestCost())
                                 break;
 
@@ -325,7 +324,7 @@ namespace karri::DropoffAfterLastStopStrategies {
                     // cost for this vehicle, then cost of any PBNS assignment will be worse for this and all remaining
                     // labels.
                     if (calculator.calcVehicleIndependentCostLowerBoundForDALSWithKnownMinDistToDropoff(
-                            distFromLastStopToDropoff, asgn.dropoff, requestState) > result.getBestCost())
+                            distFromLastStopToDropoff, asgn.dropoff) > result.getBestCost())
                         break;  // no need to check pickup before next stop
 
 
@@ -337,7 +336,7 @@ namespace karri::DropoffAfterLastStopStrategies {
                     const auto minTripTimeToLastStop = routeState.schedDepTimesFor(vehId)[numStops - 1] -
                                                        routeState.schedArrTimesFor(vehId)[1];
                     const auto minCostFromHere = calculator.calcVehicleIndependentCostLowerBoundForDALSWithKnownMinDistToDropoff(
-                            asgn.dropoff.walkingDist, distFromLastStopToDropoff, minTripTimeToLastStop, requestState);
+                            asgn.dropoff.walkingDist, distFromLastStopToDropoff, minTripTimeToLastStop);
 
                     if (minCostFromHere > result.getBestCost()) {
                         continue;

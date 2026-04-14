@@ -110,7 +110,24 @@ namespace karri {
                                   routeState.schedDepTimesFor(vehId)[0] < requestState.now();
 
             timer.restart();
-            auto [pickupIndex, dropoffIndex] = routeState.insert(asgn, requestState, externalMaxArrTimeAtDropoff);
+            using namespace time_utils;
+            const auto asgnDepTimeAtPickup = getActualDepTimeAtPickup(asgn, requestState, routeState);
+            const auto asgnInitialPickupDetour = calcInitialPickupDetour(
+                asgn, asgnDepTimeAtPickup, requestState, routeState);
+            const auto asgnDropoffAtExistingStop = isDropoffAtExistingStop(asgn, routeState);
+            const auto asgnArrTimeAtDropoff = getArrTimeAtDropoff(asgnDepTimeAtPickup, asgn,
+                                                                  asgnInitialPickupDetour,
+                                                                  asgnDropoffAtExistingStop, routeState);
+            const auto latestVehDepTimeAtPickup = requestState.getHardConstraintMaxDepTimeAtPickup(
+                asgnDepTimeAtPickup);
+            const auto asgnTripTime = asgnArrTimeAtDropoff + asgn.dropoff.walkingDist - requestState.
+                                      originalRequest.requestTime;
+            const auto constraintMaxArrTimeAtDropoff = requestState.getHardConstraintMaxArrTimeAtDropoff(
+                asgn.dropoff, asgnTripTime);
+            const int latestVehArrTimeAtDropoff = std::max(externalMaxArrTimeAtDropoff, constraintMaxArrTimeAtDropoff);
+
+            auto [pickupIndex, dropoffIndex] = routeState.insert(asgn, requestState, latestVehDepTimeAtPickup,
+                                                                 latestVehArrTimeAtDropoff);
             const auto routeUpdateTime = timer.elapsed<std::chrono::nanoseconds>();
             stats.updateRoutesTime += routeUpdateTime;
 
@@ -127,7 +144,7 @@ namespace karri {
 
             updateEllipticBucketsForSingleAssignment(asgn, pickupIndex, dropoffIndex, rerouteVehicle, stats);
             updateLastStopBucketsForSingleAssignment(asgn, pickupIndex, dropoffIndex, rerouteVehicle,
-                                                     depTimeAtLastStopBefore,stats, requestState.now());
+                                                     depTimeAtLastStopBefore, stats, requestState.now());
             // updateBucketState(asgn, pickupIndex, dropoffIndex, rerouteVehicle, depTimeAtLastStopBefore, requestState.now(),
             //                   stats);
 
@@ -239,8 +256,8 @@ namespace karri {
         }
 
     private:
-
-        void writeTaxiPrepStats(const int requestId, const std::string &name_prefix, const stats::TaxiPrepStats &stats) const {
+        void writeTaxiPrepStats(const int requestId, const std::string &name_prefix,
+                                const stats::TaxiPrepStats &stats) const {
             logPerformance(requestId, name_prefix, stats);
             logPerformance(requestId, name_prefix, stats.initializationStats);
             logPerformance(requestId, name_prefix, stats.ellipticBchStats);
@@ -292,7 +309,7 @@ namespace karri {
             ellipticBucketsEnv.generateSourceBucketEntries(veh, 1, stats);
         }
 
-void updateEllipticBucketsForSingleAssignment(const Assignment &asgn,
+        void updateEllipticBucketsForSingleAssignment(const Assignment &asgn,
                                                       const int pickupIndex, const int dropoffIndex,
                                                       const bool insertedIntermediateStopForReroute,
                                                       stats::UpdatePerformanceStats &stats) {
@@ -300,9 +317,10 @@ void updateEllipticBucketsForSingleAssignment(const Assignment &asgn,
             const auto numStops = routeState.numStopsOf(vehId);
             const bool pickupAtExistingStop = pickupIndex == (asgn.pickupStopIdx + insertedIntermediateStopForReroute);
             const bool dropoffAtExistingStop = dropoffIndex == (asgn.dropoffStopIdx + insertedIntermediateStopForReroute
-                                               + !pickupAtExistingStop);
+                                                                + !pickupAtExistingStop);
 
-            const int formerNumStops = numStops - insertedIntermediateStopForReroute - !pickupAtExistingStop - !dropoffAtExistingStop;
+            const int formerNumStops = numStops - insertedIntermediateStopForReroute - !pickupAtExistingStop - !
+                                       dropoffAtExistingStop;
             int formerLastStopIdx = formerNumStops - 1;
             if (insertedIntermediateStopForReroute)
                 ++formerLastStopIdx;
@@ -338,7 +356,7 @@ void updateEllipticBucketsForSingleAssignment(const Assignment &asgn,
                     // If dropoff is the new last stop, the former last stop becomes a regular stop:
                     // Generate elliptic source bucket entries for former last stop
                     ellipticBucketsEnv.generateSourceBucketEntries(*asgn.vehicle, formerLastStopIdx, stats);
-            stationsInEllipse.computeNewStationsInEllipsesForStop(formerLastStopIdx, vehId, stats);
+                    stationsInEllipse.computeNewStationsInEllipsesForStop(formerLastStopIdx, vehId, stats);
                 }
             }
 
@@ -352,7 +370,7 @@ void updateEllipticBucketsForSingleAssignment(const Assignment &asgn,
             }
         }
 
-         void updateLastStopBucketsForSingleAssignment(const Assignment &asgn,
+        void updateLastStopBucketsForSingleAssignment(const Assignment &asgn,
                                                       const int pickupIndex, const int dropoffIndex,
                                                       const bool insertedIntermediateStopForReroute,
                                                       const int depTimeAtLastStopBefore,
@@ -366,7 +384,8 @@ void updateEllipticBucketsForSingleAssignment(const Assignment &asgn,
             const auto depTimeAtLastStopAfter = routeState.schedDepTimesFor(vehId)[numStops - 1];
             const bool depTimeAtLastChanged = depTimeAtLastStopAfter != depTimeAtLastStopBefore;
 
-            const int formerNumStops = numStops - insertedIntermediateStopForReroute - !pickupAtExistingStop - !dropoffAtExistingStop;
+            const int formerNumStops = numStops - insertedIntermediateStopForReroute - !pickupAtExistingStop - !
+                                       dropoffAtExistingStop;
             int formerLastStopIdx = formerNumStops - 1;
             if (insertedIntermediateStopForReroute)
                 ++formerLastStopIdx;
@@ -386,7 +405,8 @@ void updateEllipticBucketsForSingleAssignment(const Assignment &asgn,
             } else if (depTimeAtLastChanged) {
                 // If last stop does not change but departure time at last changes, update last stop bucket entries
                 // accordingly.
-                lastStopBucketsEnv.updateBucketEntries(*asgn.vehicle, numStops - 1, stats.lastStopBucketsUpdateEntriesTime);
+                lastStopBucketsEnv.updateBucketEntries(*asgn.vehicle, numStops - 1,
+                                                       stats.lastStopBucketsUpdateEntriesTime);
             }
         }
 

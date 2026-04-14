@@ -7,15 +7,14 @@
 namespace karri {
 
     template<typename Journeys>
-    RAPTOR::Journey chooseBestJourney(const Journeys &journeys, const int maxTripTime) {
+    RAPTOR::Journey chooseBestJourney(const Journeys &journeys) {
         int bestCost = INFTY;
         RAPTOR::Journey bestJourney;
         for (const auto &journey: journeys) {
             const int cost = CostCalculator::calcPTJourneyCost(
                                             getTotalTripTime(journey),
                                             getTotalTransferTime(journey),
-                                            getNumberOfTransfers(journey),
-                                            maxTripTime);
+                                            getNumberOfTransfers(journey));
             if (cost < bestCost) {
                 bestCost = cost;
                 bestJourney = journey;

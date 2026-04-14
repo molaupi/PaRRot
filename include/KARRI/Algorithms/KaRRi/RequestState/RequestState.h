@@ -53,15 +53,15 @@ namespace karri {
         // Information about current request itself
         Request originalRequest;
         int originalReqDirectDist;
-        int requestIssueTime;
+        int dispatchingTime;
 
         // Shorthand for requestIssueTime
         int now() const {
-            return requestIssueTime;
+            return dispatchingTime;
         }
 
         void setRequestIssueTime(const int issueTime) {
-            requestIssueTime = issueTime;
+            dispatchingTime = issueTime;
         }
 
         // requestTime
@@ -69,23 +69,21 @@ namespace karri {
             return originalRequest.requestTime;
         }
 
-        int getOriginalReqMaxTripTime() const {
-            assert(originalReqDirectDist >= 0);
-            return static_cast<int>(InputConfig::getInstance().alpha * static_cast<double>(originalReqDirectDist)) + InputConfig::getInstance().beta;
-        }
-
         int getPassengerArrAtPickup(const PDLoc& pickup) const {
             return originalRequest.requestTime + pickup.walkingDist;
         }
 
-        int getMaxArrTimeAtDropoff(const PDLoc& dropoff) const {
-            return originalRequest.requestTime + getOriginalReqMaxTripTime() - dropoff.walkingDist;
+        int getHardConstraintMaxTripTime(const int asgnTripTime) const {
+            return static_cast<int>(InputConfig::getInstance().hardConstraintAlpha * static_cast<double>(asgnTripTime)) + InputConfig::getInstance().hardConstraintBeta;
         }
 
+        int getHardConstraintMaxArrTimeAtDropoff(const PDLoc& dropoff, const int asgnTripTime) const {
+            return originalRequest.requestTime + getHardConstraintMaxTripTime(asgnTripTime) - dropoff.walkingDist;
+        }
 
-        int getMaxDepTimeAtPickup() const {
-            // return originalRequest.requestTime + InputConfig::getInstance().maxWaitTime - currentWaitTime;
-            return originalRequest.requestTime + InputConfig::getInstance().maxWaitTime ;
+        int getHardConstraintMaxDepTimeAtPickup(const int asgnDepTimeAtPickup) const {
+            KASSERT(asgnDepTimeAtPickup >= originalRequest.requestTime);
+            return asgnDepTimeAtPickup + InputConfig::getInstance().hardConstraintMaxAddedWaitTime;
         }
 
         // void setCurrentWaitTime(const int waitTime) {
@@ -118,7 +116,7 @@ namespace karri {
         os << "RequestState("
         << "\n\toriginalRequest=" << requestState.originalRequest
            << ",\n\toriginalReqDirectDist=" << requestState.originalReqDirectDist
-           << ",\n\trequestIssueTime=" << requestState.requestIssueTime
+           << ",\n\trequestIssueTime=" << requestState.dispatchingTime
            << "\n)";
         return os;
     }

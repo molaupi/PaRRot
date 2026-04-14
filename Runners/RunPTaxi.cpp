@@ -181,16 +181,16 @@ int main(int argc, char *argv[]) {
         // Parse the command-line options.
         InputConfig &inputConfig = InputConfig::getInstance();
         inputConfig.stopTime = clp.getValue<int>("s", 60) * 10;
-        inputConfig.maxWaitTime = clp.getValue<int>("w", 300) * 10;
-        inputConfig.pickupRadius = clp.getValue<int>("p-radius", inputConfig.maxWaitTime / 10) * 10;
-        inputConfig.dropoffRadius = clp.getValue<int>("d-radius", inputConfig.maxWaitTime / 10) * 10;
+        inputConfig.hardConstraintMaxAddedWaitTime = clp.getValue<int>("w", 600) * 10;
+        inputConfig.hardConstraintAlpha = clp.getValue<double>("a", 1.4);
+        inputConfig.hardConstraintBeta = clp.getValue<int>("b", 600) * 10;
+        inputConfig.pickupRadius = clp.getValue<int>("p-radius", 300) * 10;
+        inputConfig.dropoffRadius = clp.getValue<int>("d-radius", 300) * 10;
         const double defaultWalkingSpeed = clp.getValue<double>("walk-speed", 1.3889); // 5 km/h = 1.3889 m/s
         inputConfig.maxNumPickups = clp.getValue<int>("max-num-p", INFTY);
         inputConfig.maxNumDropoffs = clp.getValue<int>("max-num-d", INFTY);
         if (inputConfig.maxNumPickups == 0) inputConfig.maxNumPickups = INFTY;
         if (inputConfig.maxNumDropoffs == 0) inputConfig.maxNumDropoffs = INFTY;
-        inputConfig.alpha = clp.getValue<double>("a", 1.7);
-        inputConfig.beta = clp.getValue<int>("b", 120) * 10;
         const auto vehicleNetworkFileName = clp.getValue<std::string>("veh-g");
         const auto passengerNetworkFileName = clp.getValue<std::string>("psg-g");
         const auto vehicleFileName = clp.getValue<std::string>("v");

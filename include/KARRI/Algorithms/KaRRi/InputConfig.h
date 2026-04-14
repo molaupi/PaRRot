@@ -44,14 +44,15 @@ namespace karri {
         InputConfig(InputConfig const&) = delete;
         void operator=(InputConfig const&) = delete;
 
-        int maxWaitTime = -1;
         int stopTime = -1;
         int pickupRadius = -1;
         int dropoffRadius = -1;
         int maxNumPickups = -1;
         int maxNumDropoffs = -1;
-        double alpha = -1;
-        int beta = -1;
+
+        int hardConstraintMaxAddedWaitTime = -1;
+        double hardConstraintAlpha = -1.0;
+        int hardConstraintBeta = -1;
     };
 
 }

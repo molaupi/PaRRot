@@ -264,7 +264,7 @@ namespace karri {
             }
 
             DistanceLabel costLowerBound = calc.template calcLowerBoundCostForKPairedAssignmentsToPTStations<LabelSetT>(
-                distancesToPickups, currentPickupWalkingDists, *curReqState);
+                distancesToPickups, currentPickupWalkingDists);
 
             costLowerBound.setIf(DistanceLabel(INFTY), ~(distancesToPickups < INFTY));
 

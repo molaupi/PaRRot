@@ -28,32 +28,30 @@
 namespace karri {
 
 
-    template<int PASSENGER_COST_SCALE = 1, int WALKING_COST_SCALE = 0, int VEHICLE_COST_SCALE = 1, int WAIT_TIME_VIOLATION_WEIGHT = 1, int TRIP_TIME_VIOLATION_WEIGHT = 10, 
+    template<int PASSENGER_COST_SCALE = 1, int WALKING_COST_SCALE = 0, int VEHICLE_COST_SCALE = 1,
              int TRANSFER_COST_SCALE = 0, int TRANSFER_INCONVENIENCE_WEIGHT = 10>
     struct TimeIsMoneyCostFunction {
 
         static constexpr int PSG_WEIGHT = PASSENGER_COST_SCALE;
         static constexpr int WALK_WEIGHT = WALKING_COST_SCALE;
         static constexpr int VEH_WEIGHT = VEHICLE_COST_SCALE;
-        static constexpr int WAIT_VIO_WEIGHT = WAIT_TIME_VIOLATION_WEIGHT;
-        static constexpr int TRIP_VIO_WEIGHT = TRIP_TIME_VIOLATION_WEIGHT;
 
         template<typename RequestContext>
         static inline int calcUpperBoundTripCostDifference(const int tripTimeDifference, const RequestContext &) {
-            return (PASSENGER_COST_SCALE + TRIP_TIME_VIOLATION_WEIGHT) * tripTimeDifference;
+            return PASSENGER_COST_SCALE * tripTimeDifference;
         }
 
         template<typename DistanceLabel, typename RequestContext>
         static inline DistanceLabel
         calcKUpperBoundTripCostDifferences(const DistanceLabel &tripTimeDifference, const RequestContext &) {
             auto diff = tripTimeDifference;
-            diff.multiplyWithScalar(PASSENGER_COST_SCALE + TRIP_TIME_VIOLATION_WEIGHT);
+            diff.multiplyWithScalar(PASSENGER_COST_SCALE);
             return diff;
         }
 
         static inline int calcUpperBoundTripViolationCostDifference(const int tripTimeDifference) {
             assert(tripTimeDifference >= 0);
-            return TRIP_TIME_VIOLATION_WEIGHT * tripTimeDifference;
+            return PASSENGER_COST_SCALE * tripTimeDifference;
         }
 
         template<typename RequestContext>
@@ -69,37 +67,17 @@ namespace karri {
             return diff;
         }
 
-        template<typename RequestContext>
-        static inline int calcTripCost(const int tripTime, const RequestContext &context) {
-
-            const auto maxTripTime = context.getOriginalReqMaxTripTime();
+        static inline int calcTripCost(const int tripTime) {
             const auto regularCost = PASSENGER_COST_SCALE * tripTime;
-            const auto violationPenalty = TRIP_TIME_VIOLATION_WEIGHT * std::max(tripTime - maxTripTime, 0);
-
-            return regularCost + violationPenalty;
+            return regularCost;
         }
 
-        static inline int calcTripCost(const int tripTime, const int maxTripTime) {
-
-            const auto regularCost = PASSENGER_COST_SCALE * tripTime;
-            const auto violationPenalty = TRIP_TIME_VIOLATION_WEIGHT * std::max(tripTime - maxTripTime, 0);
-
-            return regularCost + violationPenalty;
-        }
-
-        template<typename DistanceLabel, typename RequestContext>
-        static inline DistanceLabel calcKTripCosts(const DistanceLabel &tripTime, const RequestContext &context) {
+        template<typename DistanceLabel>
+        static inline DistanceLabel calcKTripCosts(const DistanceLabel &tripTime) {
 
             DistanceLabel regularCost = tripTime;
             regularCost.multiplyWithScalar(PASSENGER_COST_SCALE);
-
-            const DistanceLabel maxTripTime = DistanceLabel(context.getOriginalReqMaxTripTime());
-            DistanceLabel violationCost = tripTime - maxTripTime;
-            violationCost.max(0);
-            violationCost.multiplyWithScalar(TRIP_TIME_VIOLATION_WEIGHT);
-
-            const DistanceLabel cost = regularCost + violationCost;
-            return cost;
+            return regularCost;
         }
 
         static constexpr inline int calcWalkingCost(const int walkingDist, const int) {
@@ -116,22 +94,26 @@ namespace karri {
         }
 
         template<typename RequestContext>
-        static inline int calcWaitViolationCost(const int actualDepTimeAtPickup, const RequestContext &context) {
-            return WAIT_TIME_VIOLATION_WEIGHT * std::max(actualDepTimeAtPickup - context.getMaxDepTimeAtPickup(), 0);
+        static inline int calcWaitViolationCost(const int, const RequestContext &) {
+            // No wait time soft constraint considered
+            return 0;
+            // return WAIT_TIME_VIOLATION_WEIGHT * std::max(actualDepTimeAtPickup - context.getMaxDepTimeAtPickup(), 0);
         }
 
         template<typename DistanceLabel, typename RequestContext>
-        static inline DistanceLabel calcKWaitViolationCosts(const DistanceLabel &actualDepTimeAtPickup,
-                                                            const RequestContext &context) {
-            DistanceLabel violationCost = actualDepTimeAtPickup - DistanceLabel(context.getMaxDepTimeAtPickup());
-            violationCost.max(0);
-            violationCost.multiplyWithScalar(WAIT_TIME_VIOLATION_WEIGHT);
-            return violationCost;
+        static inline DistanceLabel calcKWaitViolationCosts(const DistanceLabel &,
+                                                            const RequestContext &) {
+            // No wait time soft constraint considered
+            return 0;
+            // DistanceLabel violationCost = actualDepTimeAtPickup - DistanceLabel(context.getMaxDepTimeAtPickup());
+            // violationCost.max(0);
+            // violationCost.multiplyWithScalar(WAIT_TIME_VIOLATION_WEIGHT);
+            // return violationCost;
         }
 
         static inline int calcUpperBoundWaitViolationCostDifference(const int diffInTimeTillDepAtPickup) {
             assert(diffInTimeTillDepAtPickup >= 0);
-            return WAIT_TIME_VIOLATION_WEIGHT * diffInTimeTillDepAtPickup;
+            return 0;
         }
 
         static inline int calcChangeInTripCostsOfExistingPassengers(const int addedTripTimeForExistingPassengers) {

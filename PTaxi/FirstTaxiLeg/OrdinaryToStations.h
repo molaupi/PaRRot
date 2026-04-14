@@ -129,7 +129,7 @@ namespace karri {
                             const int addedTripTime = addedTripTimeUntilJ + calcAddedTripTimeAffectedByPickupAndDropoff(
                                                           vehId, j, detourRightAfterStation, routeState);
                             const int minCost = calculator.calcMinCostForOrdinaryToStations(
-                                totalResDetour, minTripTime, addedTripTime, requestState);
+                                totalResDetour, minTripTime, addedTripTime);
                             if (minCost >= externalUpperBoundCost)
                                 break;
 

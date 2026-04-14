@@ -9,20 +9,19 @@ namespace karri {
 class PTResult {
     using Journey = RAPTOR::Journey;
 
-    static int computeCost(const Journey &journey, const int maxTripTime) {
+    static int computeCost(const Journey &journey) {
         if (journey.empty())
             return INFTY;
         return CostCalculator::calcPTJourneyCost(getTotalTripTime(journey),
                                             getTotalTransferTime(journey),
-                                            getNumberOfTransfers(journey),
-                                            maxTripTime);
+                                            getNumberOfTransfers(journey));
     }
 
 public:
     PTResult() : valid(false), cost(INFTY) {}
 
-    PTResult(const Journey &journey, const int maxTripTime)
-    : journey(journey), cost(computeCost(journey, maxTripTime)), valid(!journey.empty()) {
+    PTResult(const Journey &journey)
+    : journey(journey), cost(computeCost(journey)), valid(!journey.empty()) {
         for (const auto& leg :journey) {
             KASSERT(!leg.usesTaxi);
         }

@@ -260,7 +260,7 @@ namespace karri::DropoffAfterLastStopStrategies {
                                                                routeState.schedArrTimesFor(vehId)[entry.stopIndex + 1];
 
                             const auto minCostFromHere = calculator.calcVehicleIndependentCostLowerBoundForDALSWithKnownMinDistToDropoff(
-                                    asgn.dropoff.walkingDist, asgn.distToDropoff, minTripTimeToLastStop, requestState);
+                                    asgn.dropoff.walkingDist, asgn.distToDropoff, minTripTimeToLastStop);
                             if (minCostFromHere > result.getBestCost())
                                 break;
 

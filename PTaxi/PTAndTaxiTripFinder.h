@@ -86,8 +86,7 @@ namespace karri {
                 requestState, baseInfo.pdLocs, baseInfo.relOrdinaryPickups, baseInfo.relPickupsBeforeNextStop,
                 taxiOnlyCost, stats.stationBchStats, stats.taxiFirstLegStats);
 
-            const int maxTripTime = requestState.getOriginalReqMaxTripTime();
-            taxiLegApproximation.findDistancesFromStationsToDest(req.destination, maxTripTime,
+            taxiLegApproximation.findDistancesFromStationsToDest(req.destination,
                                                                  stats.stationBchStats);
             const auto &distFromStations = taxiLegApproximation.getDistancesFromStations();
 
@@ -95,7 +94,7 @@ namespace karri {
                                             query.departureTime, firstTaxiLeg, distFromStations, stats.ptWithTaxiStats);
             auto ptLegParetoFront = ptAlgorithmWithTaxi.getJourneys();
 
-            auto journey = chooseBestJourney(ptLegParetoFront, maxTripTime);
+            auto journey = chooseBestJourney(ptLegParetoFront);
             const bool firstLegByTaxi = !journey.empty() && journey.front().usesTaxi;
             const bool lastLegByTaxi = !journey.empty() && journey.back().usesTaxi;
             if (lastLegByTaxi) {
@@ -106,13 +105,12 @@ namespace karri {
                 // remove taxi leg in beginning
                 journey.erase(journey.begin());
             }
-            PTResult ptLegResponse(journey, maxTripTime);
+            PTResult ptLegResponse(journey);
 
             // size_t ptLegCount = ptLegResponse.getBestJourney().size();
 
             // first taxi leg + PT journey + 2nd taxi leg approximation
             ApproximateCombinedTripResult intermediateResult(req.requestTime,
-                                                             maxTripTime,
                                                              firstLegByTaxi,
                                                              lastLegByTaxi,
                                                              firstTaxiLeg,

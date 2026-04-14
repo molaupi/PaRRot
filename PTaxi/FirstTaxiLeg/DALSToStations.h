@@ -230,7 +230,7 @@ namespace karri {
 
             DistanceLabel costLowerBound = minCostToLastStop +
                                            F::calcKVehicleCosts(distancesToDropoffs) +
-                                           F::calcKTripCosts(distancesToDropoffs, *curReqState);
+                                           F::calcKTripCosts(distancesToDropoffs);
             return distancesToDropoffs >= INFTY | costLowerBound > upperBoundCost;
 
             // // For dropoffs with a distanceToDropoff of INFTY, set cost to INFTY later.
@@ -284,7 +284,7 @@ namespace karri {
                         schedArrTimeAtLastStop + residualDetourAtEnd - rs.earliestDeparture();
 
                 const auto costLowerBound = F::calcVehicleCost(residualDetourAtEnd) +
-                                            F::calcTripCost(minTripTimeToLastStop, *curReqState) +
+                                            F::calcTripCost(minTripTimeToLastStop) +
                                             F::calcChangeInTripCostsOfExistingPassengers(
                                                 calcAddedTripTimeInInterval(
                                                     vehId, e.stopIndex, numStops - 1, initialPickupDetour, routeState));
@@ -485,8 +485,7 @@ namespace karri {
 
                             const auto minCostFromHere = calculator.
                                     calcVehicleIndependentCostLowerBoundForDALSWithKnownMinDistToDropoff(
-                                        asgn.dropoff.walkingDist, asgn.distToDropoff, minTripTimeToLastStop,
-                                        requestState);
+                                        asgn.dropoff.walkingDist, asgn.distToDropoff, minTripTimeToLastStop);
                             if (minCostFromHere > upperBoundCost)
                                 break;
 

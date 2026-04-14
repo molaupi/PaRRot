@@ -353,7 +353,7 @@ namespace karri {
         template<typename RequestStateT>
         std::pair<int, int>
         insert(const Assignment &asgn, const RequestStateT &requestState,
-               const int externalMaxArrTimeAtDropoff = INFTY) {
+            const int latestVehDepTimeAtPickup, const int latestVehArrTimeAtDropoff) {
             KASSERT(checkAssignmentDistances(asgn, requestState));
             const auto vehId = asgn.vehicle->vehicleId;
             const auto &pickup = asgn.pickup;
@@ -388,7 +388,7 @@ namespace karri {
                 // the regular max dep time of requestTime + waitTime. In this case, the new latest permissible arrival
                 // time is defined by the passenger arrival time at the pickup, not the maximum wait time.
                 const int psgMaxDepTime =
-                        std::max(requestState.getMaxDepTimeAtPickup(), requestState.getPassengerArrAtPickup(pickup));
+                        std::max(latestVehDepTimeAtPickup, requestState.getPassengerArrAtPickup(pickup));
                 maxArrTimes[start + pickupIndex] = std::min(maxArrTimes[start + pickupIndex],
                                                             psgMaxDepTime - InputConfig::getInstance().stopTime);
             } else {
@@ -410,7 +410,7 @@ namespace karri {
                     requestState.getPassengerArrAtPickup(pickup));
 
                 maxArrTimes[start + pickupIndex] =
-                        requestState.getMaxDepTimeAtPickup() - InputConfig::getInstance().stopTime;
+                        latestVehDepTimeAtPickup - InputConfig::getInstance().stopTime;
                 occupancies[start + pickupIndex] = occupancies[start + pickupIndex - 1];
                 numDropoffsPrefixSum[start + pickupIndex] = numDropoffsPrefixSum[start + pickupIndex - 1];
                 isIntermediateStop[start + pickupIndex] = static_cast<uint8_t>(false);
@@ -423,11 +423,9 @@ namespace karri {
                 propagateSchedArrAndDepForward(start + pickupIndex + 1, start + dropoffIndex, asgn.distFromPickup);
             }
 
-            const int maxArrTimeAtDropoff = std::min(requestState.getMaxArrTimeAtDropoff(dropoff),
-                                                     externalMaxArrTimeAtDropoff);
 
             if (pickup.loc != dropoff.loc && dropoff.loc == stopLocations[start + dropoffIndex]) {
-                maxArrTimes[start + dropoffIndex] = std::min(maxArrTimes[start + dropoffIndex], maxArrTimeAtDropoff);
+                maxArrTimes[start + dropoffIndex] = std::min(maxArrTimes[start + dropoffIndex], latestVehArrTimeAtDropoff);
             } else {
                 ++dropoffIndex;
                 stableInsertion(vehId, dropoffIndex, getUnusedStopId(),
@@ -442,7 +440,7 @@ namespace karri {
                         schedDepTimes[start + dropoffIndex - 1] + asgn.distToDropoff;
                 schedDepTimes[start + dropoffIndex] =
                         schedArrTimes[start + dropoffIndex] + InputConfig::getInstance().stopTime;
-                maxArrTimes[start + dropoffIndex] = maxArrTimeAtDropoff;
+                maxArrTimes[start + dropoffIndex] = latestVehArrTimeAtDropoff;
                 occupancies[start + dropoffIndex] = occupancies[start + dropoffIndex - 1];
                 numDropoffsPrefixSum[start + dropoffIndex] = numDropoffsPrefixSum[start + dropoffIndex - 1];
                 isIntermediateStop[start + dropoffIndex] = static_cast<uint8_t>(false);

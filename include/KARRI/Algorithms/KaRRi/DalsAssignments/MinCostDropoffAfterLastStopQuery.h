@@ -174,7 +174,7 @@ namespace karri::DropoffAfterLastStopStrategies {
         int costOf(const DropoffLabel &label, const RequestState& requestState, const PDLocs& pdLocs) const {
             if (label.distToDropoff >= INFTY) return INFTY;
             return calculator.calcVehicleIndependentCostLowerBoundForDALSWithKnownMinDistToDropoff(
-                    label.distToDropoff, pdLocs.dropoffs[label.dropoffId], requestState);
+                    label.distToDropoff, pdLocs.dropoffs[label.dropoffId]);
         }
 
         bool dominates(const DropoffLabel &label1, const DropoffLabel &label2, const PDLocs& pdLocs) {
@@ -188,10 +188,9 @@ namespace karri::DropoffAfterLastStopStrategies {
             const auto maxTripDiff = maxDetourDiff + walkDiff;
 
             using F = CostCalculator::CostFunction;
-            const auto costDiffNoTripVio =
+            const auto costDiff =
                     F::VEH_WEIGHT * maxDetourDiff + F::PSG_WEIGHT * maxTripDiff + F::WALK_WEIGHT * walkDiff;
-            const auto costDiffTripVio = costDiffNoTripVio + F::TRIP_VIO_WEIGHT * maxTripDiff;
-            return costDiffNoTripVio < 0 && costDiffTripVio < 0;
+            return costDiff < 0;
         }
 
 
@@ -350,7 +349,7 @@ namespace karri::DropoffAfterLastStopStrategies {
                     const int fullDistToDropoff = entry.distToTarget + label.distToDropoff;
 
                     const auto costFromLastStop = calculator.calcVehicleIndependentCostLowerBoundForDALSWithKnownMinDistToDropoff(
-                            fullDistToDropoff, dropoff, requestState);
+                            fullDistToDropoff, dropoff);
 
                     if (costFromLastStop > result.getBestCost())
                         continue;

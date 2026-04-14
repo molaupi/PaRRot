@@ -30,8 +30,8 @@ namespace karri {
 
             ptAlgorithmWithTaxi.run(originPsgEdge, originVehEdge, destPsgEdge, destVehEdge, query.departureTime, stats);
             const auto ptOnlyParetoFront = ptAlgorithmWithTaxi.getJourneys();
-            auto journey = chooseBestJourney(ptOnlyParetoFront, requestState.getOriginalReqMaxTripTime());
-            PTResult ptOnlyResponse(journey, requestState.getOriginalReqMaxTripTime());
+            auto journey = chooseBestJourney(ptOnlyParetoFront);
+            PTResult ptOnlyResponse(journey);
 
             return ptOnlyResponse;
         }
