@@ -2,6 +2,7 @@
 
 #include <vector>
 
+#include <KARRI/Algorithms/KaRRi/RequestState/RequestState.h>
 #include "KARRI/Algorithms/KaRRi/Stats/PerformanceStats.h"
 #include "PTLeg/PTResult.h"
 
@@ -10,14 +11,14 @@ namespace karri {
     // Computes a PT journey with walking but without taxi legs.
     template<
         typename PTQueryT,
-        typename PTAlgorithmWithTaxiT
+        typename PTAlgorithmT
     >
     class PTJourneyFinder {
     public:
         PTJourneyFinder(const std::vector<PTQueryT> &queries,
-                     PTAlgorithmWithTaxiT &ptAlgorithmWithTaxi)
+                     PTAlgorithmT &ptAlgorithm)
             : queries(queries),
-              ptAlgorithmWithTaxi(ptAlgorithmWithTaxi) {
+              ptAlgorithm(ptAlgorithm) {
         }
 
         PTResult findBestJourney(const RequestState & requestState,
@@ -28,16 +29,16 @@ namespace karri {
             const int destPsgEdge = query.destinationPsgEdge;
             const int destVehEdge = query.destinationVehEdge;
 
-            ptAlgorithmWithTaxi.run(originPsgEdge, originVehEdge, destPsgEdge, destVehEdge, query.departureTime, stats);
-            const auto ptOnlyParetoFront = ptAlgorithmWithTaxi.getJourneys();
-            auto journey = chooseBestJourney(ptOnlyParetoFront);
-            PTResult ptOnlyResponse(journey);
+            ptAlgorithm.run(originPsgEdge, originVehEdge, destPsgEdge, destVehEdge, query.departureTime, stats);
+            const auto ptOnlyParetoFront = ptAlgorithm.getJourneys();
+            auto [journey, cost] = chooseBestJourney(ptOnlyParetoFront);
+            PTResult ptOnlyResponse(journey, cost);
 
             return ptOnlyResponse;
         }
 
     private:
         const std::vector<PTQueryT> &queries;
-        PTAlgorithmWithTaxiT &ptAlgorithmWithTaxi;
+        PTAlgorithmT &ptAlgorithm;
     };
 }

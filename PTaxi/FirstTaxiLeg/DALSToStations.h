@@ -175,6 +175,7 @@ namespace karri {
 
             initRelevantVehicles(relevantOrdinaryPickups, relevantPickupsBeforeNextStop, requestState, pdLocs, stats);
 
+            totalNumberOfCandidateDropoffs = 0;
             for (unsigned int i = 0; i < relevantVehicleIdsForRequest.size(); i += K) {
                 KaRRiTimer timer;
                 // TODO: not sure whether this is faster than std::fill on the entire distances vector since
@@ -194,6 +195,7 @@ namespace karri {
 
                 initializeDistancesForStationsAtLastStops(i, stats);
                 runSearchesForVehicleBatch(i, stats);
+                totalNumberOfCandidateDropoffs += stationsWithValidDistances.size() * K;
                 enumerateAssignmentsForVehicleBatch(i, relevantOrdinaryPickups, relevantPickupsBeforeNextStop,
                                                     requestState, pdLocs, stats, firstTaxiLegResult);
             }
@@ -210,8 +212,7 @@ namespace karri {
             stats.numEdgeRelaxationsInSearchGraph += totalNumEdgeRelaxations;
             stats.numVerticesOrLabelsSettled += totalNumVerticesSettled;
             stats.numEntriesOrLastStopsScanned += totalNumEntriesScanned;
-            stats.numCandidateVehicles += curRelOrdinaryPickups->getVehiclesWithRelevantPDLocs().size() +
-                    curRelPickupsBns->getVehiclesWithRelevantPDLocs().size();
+            stats.numCandidateVehicles += relevantVehicleIdsForRequest.size();
         }
 
         void setExternalCostUpperBound(const int bestCost, const int worstCostForAllStations) {
@@ -256,7 +257,6 @@ namespace karri {
 
 
         void initLastStopSearches(const RequestState &requestState) {
-            totalNumberOfCandidateDropoffs = 0;
             totalNumEdgeRelaxations = 0;
             totalNumVerticesSettled = 0;
             totalNumEntriesScanned = 0;
@@ -508,8 +508,6 @@ namespace karri {
                         // If the reverse scan of the vehicle route did not break early at a later stop, then we also
                         // need to consider the pickup before next stop case.
                         checkPBNSForVehicle.set(vehId);
-                    } else {
-                        ++totalNumberOfCandidateDropoffs;
                     }
                 }
             }
@@ -571,7 +569,6 @@ namespace karri {
                         asgn.distToDropoff = currentLastStopDistances[station.stationId][i];
                         if (asgn.distToDropoff >= INFTY)
                             continue;
-                        ++totalNumberOfCandidateDropoffs;
 
                         if (curVehLocToPickupSearches.knowsDistance(vehId, asgn.pickup.id)) {
                             asgn.distToPickup = curVehLocToPickupSearches.getDistance(vehId, asgn.pickup.id);
@@ -676,7 +673,6 @@ namespace karri {
         std::vector<int> relevantVehicleIdsForRequest;
         // std::vector<int> relevantVehiclesMinTripTimesToLastStop;
         // std::vector<int> relevantVehiclesMinResidualPickupDetours;
-        // TODO: replace min trip times and residual detours with straight min cost (take proportional lower bound wrt trip cost).
         std::vector<int> relevantVehiclesMinCostToLastStop;
 
         std::vector<int> stationsWithValidDistances;

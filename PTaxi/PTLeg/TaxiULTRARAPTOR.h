@@ -89,7 +89,7 @@ public:
         initializeEdgeToStationMappings();
     }
 
-    inline void run(const int originPsgEdge, const int originVehEdge, 
+    inline void run(const int originPsgEdge, const int originVehEdge,
         const int destPsgEdge, const int destVehEdge,
         const int departureTime, karri::stats::PtPerformanceStats &stats,
         const size_t maxRounds = INFTY) noexcept
@@ -389,10 +389,10 @@ private:
                 targetStop = StopId(stationId);
             }
         }
-        
+
         sourceDepartureTime = departureTime;
         startNewRound();
-        
+
         // Initialize source stop if the origin edge maps to a station
         if (originPsgEdge_ >= 0 && originPsgEdge_ < psgEdgeToStation.size()) {
             int stationId = psgEdgeToStation[originPsgEdge_];
@@ -407,7 +407,7 @@ private:
                     stopsUpdatedByTransfer.insert(sourceStop);
             }
         }
-        
+
         if constexpr (SeparateRouteAndTransferEntries)
             startNewRound();
     }
@@ -509,21 +509,21 @@ private:
         // Extension for first taxi leg
         if (firstTaxiLeg != nullptr) {
             for (const auto &station : stations) {
-                if (firstTaxiLeg->getWorstCostForAllStations() == INFTY) 
+                if (firstTaxiLeg->getWorstCostForAllStations() == INFTY)
                     break; // no stations reached by taxi
-                
+
                 const int stationId = station.stationId;
                 const Vertex targetStop = Vertex(stationId);
                 const StopId targetStopId = StopId(targetStop);
                 const auto taxiResult = firstTaxiLeg->getResultForStation(stationId);
-    
+
                 // Check if this is the destination station
-                bool isDestStation = (destinationPsgEdge >= 0 && destinationPsgEdge < psgEdgeToStation.size() && 
+                bool isDestStation = (destinationPsgEdge >= 0 && destinationPsgEdge < psgEdgeToStation.size() &&
                                        psgEdgeToStation[destinationPsgEdge] == stationId);
                 // Check if this is the origin station
-                bool isOriginStation = (originPsgEdge >= 0 && originPsgEdge < psgEdgeToStation.size() && 
+                bool isOriginStation = (originPsgEdge >= 0 && originPsgEdge < psgEdgeToStation.size() &&
                                          psgEdgeToStation[originPsgEdge] == stationId);
-                
+
                 if (isOriginStation || isDestStation || taxiResult.bestCost == INFTY)
                     continue;
                 Assert(data.isStop(targetStop), "Taxi station " << targetStop << " is not a stop!");
@@ -608,11 +608,11 @@ private:
                         label.usesRoute = false;
                         label.usesTaxi = true;
                         label.transferId = noEdge;
-    
+
                     }
                 }
             }
-            
+
             if constexpr (SeparateRouteAndTransferEntries) {
                 if (arrivalByTransfer(stop, earliestArrivalTime, stats)) {
                     EarliestArrivalLabel& label = currentRound()[stop];

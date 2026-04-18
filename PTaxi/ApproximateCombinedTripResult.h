@@ -2,49 +2,69 @@
 
 #include "FirstTaxiLeg/FirstTaxiLegResult.h"
 #include "PTLeg/PTResult.h"
+#include "ULTRA/DataStructures/RAPTOR/Entities/Journey.h"
+#include "ULTRA/DataStructures/RAPTOR/Entities/Journey.h"
 
 namespace karri {
 
 class ApproximateCombinedTripResult {
 public:
+    template<typename SecondTaxiLegApproximationT>
     ApproximateCombinedTripResult(const int requestTime,
-        const bool firstLegByTaxi,
-        const bool lastLegByTaxi,
-        const FirstTaxiLegResult &firstTaxiLegResult,
-                       const PTResult &ptLeg,
-                       const int secondLegApproximationCost,
-                       const int secondLegApproximationTravelTime)
+        const FirstTaxiLegResult &firstTaxiLegResults,
+        RAPTOR::Journey journey,
+        const SecondTaxiLegApproximationT &secondTaxiLegApproximation)
                         : requestTime(requestTime),
                         firstTaxiLeg(), 
-                        ptLeg(ptLeg), 
-                        firstStationId(ptLeg.getFirstStation()), 
-                        lastStationId(ptLeg.getLastStation()), 
+                        ptLeg(),
+                        firstStationId(INVALID_ID),
+                        lastStationId(INVALID_ID),
                         firstTaxiLegCost(INFTY),
                         secondTaxiLegCost(INFTY),
-                        ptLegCost(ptLeg.getCost()),
-                        bestCost(),
-                        arrivalTime(ptLeg.getArrivalTime()) {
+                        ptLegCost(INFTY),
+                        bestCost(0),
+                        arrivalTime(never) {
 
-        if (!ptLeg.isValid()) {
+        const bool firstLegByTaxi = !journey.empty() && journey.front().usesTaxi;
+        const bool lastLegByTaxi = !journey.empty() && journey.back().usesTaxi;
+        if (!firstLegByTaxi && !lastLegByTaxi) {
             bestCost = INFTY;
             return;
         }
-
-        if (firstLegByTaxi) {
-            firstTaxiLeg = firstTaxiLegResult.getResultForStation(firstStationId);
-            firstTaxiLegCost = firstTaxiLeg.bestCost;
-            bestCost += firstTaxiLegResult.getCostWithoutTripTimeForStation(firstStationId); 
-        }
-
-        bestCost += ptLeg.getCost();
-
+        bestCost = 0;
+        arrivalTime = 0;
         if (lastLegByTaxi) {
-            secondTaxiLegCost = secondLegApproximationCost;
-            arrivalTime += secondLegApproximationTravelTime;
-        }
+            // remove taxi leg in end
+            journey.pop_back();
 
-        int totalTripCost = CostCalculator::CostFunction::calcTripCost(arrivalTime - requestTime);
-        bestCost += totalTripCost;
+            const int secondTaxiLegApproximationTravelTime = secondTaxiLegApproximation.getDistanceFromStation(journey.back().to);
+            secondTaxiLegCost = CostCalculator::calcHeuristicCostForFinalTransferTimeByRP(secondTaxiLegApproximationTravelTime);
+            bestCost += secondTaxiLegCost;
+            arrivalTime += secondTaxiLegApproximationTravelTime;
+        }
+        if (firstLegByTaxi) {
+            // remove taxi leg in beginning
+            journey.erase(journey.begin());
+
+            firstTaxiLeg = firstTaxiLegResults.getResultForStation(journey.front().from);
+            firstTaxiLegCost = firstTaxiLeg.bestCost;
+            bestCost += firstTaxiLeg.bestCost;
+        }
+        KASSERT(!journey.empty());
+
+        const int ptEarliestDep = firstLegByTaxi ? firstTaxiLeg.arrivalTime : parrot::ultraToKarriTime(journey.front().departureTime);
+        ptLegCost = CostCalculator::calcPTJourneyCost(
+                                      parrot::ultraToKarriTime(journey.back().arrivalTime) - ptEarliestDep,
+                                      getTotalTransferTime(journey),
+                                      getNumberOfTransfers(journey));
+        bestCost += ptLegCost;
+        ptLeg = {journey, ptLegCost};
+        firstStationId = ptLeg.getFirstStation();
+        lastStationId = ptLeg.getLastStation();
+        arrivalTime += ptLeg.getArrivalTime();
+
+        // int totalTripCost = CostCalculator::CostFunction::calcTripCost(arrivalTime - requestTime);
+        // bestCost += totalTripCost;
     }
 
     bool isInitialTransferByTaxi() const {
@@ -78,7 +98,7 @@ public:
     const int &getArrivalTime() const { return arrivalTime; }
 
     bool isValid() const {
-        return ptLeg.isValid() && firstTaxiLeg.isValid();
+        return ptLeg.isValid() && (firstTaxiLeg.isValid() || secondTaxiLegCost != INFTY);
     }
 
 private:

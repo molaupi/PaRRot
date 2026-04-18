@@ -123,7 +123,7 @@ public:
      * @param destination The destination edge ID in the pedestrian graph
      * @param targetPruningFactor Unused, for interface compatibility
      */
-    template<bool TARGET_PRUNING = true>
+    template<bool>
     inline void run(const int origin, const int destination, const double /* targetPruningFactor */ = 1) noexcept {
         if (originEdge == origin && destEdge == destination) return;
 

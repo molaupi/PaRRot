@@ -85,8 +85,21 @@ namespace karri {
             return WALKING_COST_SCALE * walkingDist;
         }
 
+        static constexpr inline int calcWalkingCost(const int walkingDist) {
+            // Time is money => walking time is part of passengers trip time so do not count it again
+            return WALKING_COST_SCALE * walkingDist;
+        }
+
         template<typename DistanceLabel>
         static constexpr inline DistanceLabel calcKWalkingCosts(const DistanceLabel &walkingDist, const int) {
+            // Time is money => walking time is part of passengers trip time so do not count it again
+            auto cost = walkingDist;
+            cost.multiplyWithScalar(WALKING_COST_SCALE);
+            return cost;
+        }
+
+        template<typename DistanceLabel>
+        static constexpr inline DistanceLabel calcKWalkingCosts(const DistanceLabel &walkingDist) {
             // Time is money => walking time is part of passengers trip time so do not count it again
             auto cost = walkingDist;
             cost.multiplyWithScalar(WALKING_COST_SCALE);

@@ -1,6 +1,7 @@
 #pragma once
 
 #include <vector>
+#include <Common/TimeConversion.h>
 #include <ULTRA/DataStructures/RAPTOR/Entities/Journey.h>
 #include "../util.h"
 
@@ -20,8 +21,8 @@ class PTResult {
 public:
     PTResult() : valid(false), cost(INFTY) {}
 
-    PTResult(const Journey &journey)
-    : journey(journey), cost(computeCost(journey)), valid(!journey.empty()) {
+    PTResult(const Journey &journey, const int cost)
+    : journey(journey), cost(cost), valid(!journey.empty()) {
         for (const auto& leg :journey) {
             KASSERT(!leg.usesTaxi);
         }
@@ -40,7 +41,7 @@ public:
     // at Destination
     int getArrivalTime() const {
         return valid && !journey.empty() ?
-            convertToKaRRiTime(journey.back().arrivalTime) :
+            parrot::ultraToKarriTime(journey.back().arrivalTime) :
             INFTY;
     }
 
@@ -49,7 +50,7 @@ public:
             return INFTY;
         for (auto it = journey.rbegin(); it != journey.rend(); ++it) {
             if (it->usesRoute) {
-                return convertToKaRRiTime(it->arrivalTime);
+                return parrot::ultraToKarriTime(it->arrivalTime);
             }
         }
         return INFTY;
@@ -58,14 +59,14 @@ public:
     // at Origin
     int getDepartureTime() const {
         return valid && !journey.empty() ?
-            convertToKaRRiTime(journey.front().departureTime) :
+            parrot::ultraToKarriTime(journey.front().departureTime) :
             INFTY;
     }
 
     int getDepartureTimeAtFirstStation() const {
         for (const auto &leg : journey) {
             if (leg.usesRoute) {
-                return convertToKaRRiTime(leg.departureTime);
+                return parrot::ultraToKarriTime(leg.departureTime);
             }
         }
         return INFTY;
@@ -73,13 +74,13 @@ public:
 
     int getWalkingTimeToFirstStation() const {
         return valid && !journey.empty() ?
-            convertToKaRRiTime(journey.front().arrivalTime - journey.front().departureTime) :
+            parrot::ultraToKarriTime(journey.front().arrivalTime - journey.front().departureTime) :
             INFTY;
     }
 
     int getWalkingTimeFromLastStation() const {
         return valid && !journey.empty() ?
-            convertToKaRRiTime(journey.back().arrivalTime - journey.back().departureTime) :
+            parrot::ultraToKarriTime(journey.back().arrivalTime - journey.back().departureTime) :
             INFTY;
     }
 
@@ -92,11 +93,11 @@ public:
     }
 
     int getAccessEgressTransferTime() const {
-        return convertToKaRRiTime(RAPTOR::initialTransferTime(journey));
+        return parrot::ultraToKarriTime(RAPTOR::initialTransferTime(journey));
     }
 
     int getIntermediateTransferTime() const {
-        return convertToKaRRiTime(RAPTOR::intermediateTransferTime(journey));
+        return parrot::ultraToKarriTime(RAPTOR::intermediateTransferTime(journey));
     }
 
     int getTotalInVehicleTime() const {
@@ -106,7 +107,7 @@ public:
                 totalSeconds += leg.arrivalTime - leg.departureTime;
             }
         }
-        return convertToKaRRiTime(totalSeconds);
+        return parrot::ultraToKarriTime(totalSeconds);
     }
 
     bool valid;

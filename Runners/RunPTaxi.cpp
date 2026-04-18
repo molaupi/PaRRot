@@ -43,6 +43,7 @@
 #include "../PTaxi/Station/StationsInEllipse.h"
 #include "../PTaxi/SecondTaxiLeg/TaxiLegApproximation.h"
 #include "../PTaxi/PTLeg/TaxiULTRARAPTOR.h"
+#include "../PTaxi/PTLeg/TaxiULTRACostRAPTOR.h"
 #include "../PTaxi/PTLeg/TaxiInitialTransfers.h"
 
 #include <ULTRA/DataStructures/Queries/Queries.h>
@@ -473,7 +474,7 @@ int main(int argc, char *argv[]) {
 
         // Create Route State for empty routes.
         RouteState routeState(fleet);
-        
+
         // Set up the distance checker callback to verify shortest path distances.
         // This captures the vehicle graph and CH environment for use in checkDirectDistance().
         routeState.setDistanceChecker([&vehicleInputGraph, &vehChEnv](int curStop, int nextStop) {
@@ -661,7 +662,7 @@ int main(int argc, char *argv[]) {
 
         // Buckets for PT stations (vehicle graph)
         using StationBucketsEnv = StationBucketsEnvironment<VehicleInputGraph, VehCHEnv, false>;
-        
+
         std::cout << "Reading station buckets from file... " << std::flush;
         std::ifstream in(stationBucketsFilename, std::ios::binary);
         if (!in.good())
@@ -672,7 +673,7 @@ int main(int argc, char *argv[]) {
 
         // Pedestrian Station Buckets for walking transfers
         using PsgStationBucketsEnv = karri::StationBucketsEnvironment<PsgInputGraph, PsgCHEnv, true>;
-        
+
         std::cout << "Reading pedestrian station buckets from file... " << std::flush;
         std::ifstream inPsg(psgStationBucketsFilename, std::ios::binary);
         if (!inPsg.good())
@@ -686,8 +687,11 @@ int main(int argc, char *argv[]) {
         TaxiInitialTransfersType taxiInitialTransfers(psgInputGraph, *psgChEnv, psgStationBucketsEnv, stations.size());
 
         // Create TaxiULTRARAPTOR with our custom TaxiInitialTransfers
-        using PTAlgorithmWithTaxi = RAPTOR::TaxiULTRARAPTOR<BasicLabelSet<0, ParentInfo::FULL_PARENT_INFO>, RAPTOR::NoProfiler, true, TaxiInitialTransfersType>;
+        using PTAlgorithm = RAPTOR::TaxiULTRARAPTOR<BasicLabelSet<0, ParentInfo::FULL_PARENT_INFO>, RAPTOR::NoProfiler, true, TaxiInitialTransfersType>;
+        PTAlgorithm ptAlgorithm(raptor, taxiInitialTransfers, stations, psgInputGraph.numEdges());
 
+        // Create cost-criterion PT router to use for combined journeys<
+        using PTAlgorithmWithTaxi = RAPTOR::TaxiULTRACostRAPTOR<TaxiInitialTransfersType, RAPTOR::NoProfiler>;
         PTAlgorithmWithTaxi ptAlgorithmWithTaxi(raptor, taxiInitialTransfers, stations, psgInputGraph.numEdges());
 
         using StationBCH = StationDistanceFinder<VehicleInputGraph, VehCHEnv, StationBucketsEnv, PALSLabelSet>;
@@ -727,13 +731,13 @@ int main(int argc, char *argv[]) {
         using TaxiTripFinderImpl = TaxiTripFinder<OrdinaryAssignmentsFinderImpl, PBNSInsertionsFinderImpl, PALSInsertionsFinderImpl, DALSInsertionsFinderImpl>;
         TaxiTripFinderImpl taxiTripFinder(ordinaryInsertionsFinder, pbnsInsertionsFinder, palsInsertionsFinder, dalsInsertionsFinder);
 
-        using PTTripFinderImpl = PTJourneyFinder<EdgeQuery, PTAlgorithmWithTaxi>;
-        PTTripFinderImpl ptTripFinder(queries, ptAlgorithmWithTaxi);
+        using PTTripFinderImpl = PTJourneyFinder<EdgeQuery, PTAlgorithm>;
+        PTTripFinderImpl ptTripFinder(queries, ptAlgorithm);
 
         // -> pass ULTRA algorithm instance and stationBucketsEnv, palsToStations to PTAndTaxiTripFinder
         using PTAndTaxiTripFinderImpl = PTAndTaxiTripFinder<
                 VehicleInputGraph,
-                VehCHEnv, 
+                VehCHEnv,
                 StationBucketsEnv,
                 StationBCH,
                 PALSToStationsImpl,

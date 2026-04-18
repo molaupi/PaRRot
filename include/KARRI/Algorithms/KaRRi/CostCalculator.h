@@ -620,6 +620,21 @@ namespace karri {
             return tripCost + transferCost + transferPenalty;
         }
 
+        static int calcCostForAddedTransferTime(const int addedTransferTime, const bool numberOfTransfersIncreased) {
+            const int transferCost = F::calcTransferCost(addedTransferTime);
+            const int transferPenalty = numberOfTransfersIncreased ? F::calcTransferPenalty(1) : 0;
+            const int tripCost = F::calcTripCost(addedTransferTime);
+            return transferCost + transferPenalty + tripCost;
+        }
+
+        static int calcHeuristicCostForFinalTransferTimeByRP(const int finalTransferTime) {
+            return F::calcTripCost(finalTransferTime);
+        }
+
+        static int calcTripCost(const int tripTime) {
+            return F::calcTripCost(tripTime);
+        }
+
         static int calcPTJourneyCostWithoutTripTime(const int totalTransferTime, const int numberOfTransfers) {
             const int transferCost = F::calcTransferCost(totalTransferTime);
             const int transferPenalty = F::calcTransferPenalty(numberOfTransfers);

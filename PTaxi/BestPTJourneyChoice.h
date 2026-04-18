@@ -7,7 +7,7 @@
 namespace karri {
 
     template<typename Journeys>
-    RAPTOR::Journey chooseBestJourney(const Journeys &journeys) {
+    std::pair<RAPTOR::Journey, int> chooseBestJourney(const Journeys &journeys) {
         int bestCost = INFTY;
         RAPTOR::Journey bestJourney;
         for (const auto &journey: journeys) {
@@ -20,6 +20,6 @@ namespace karri {
                 bestJourney = journey;
             };
         }
-        return bestJourney;
+        return {bestJourney, bestCost};
     }
 }

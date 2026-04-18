@@ -37,7 +37,7 @@ public:
     }
 
     inline int transferTime() const noexcept {
-        return usesRoute || usesTaxi ? 0 : arrivalTime - departureTime;
+        return (usesRoute || usesTaxi) ? 0 : arrivalTime - departureTime;
     }
 
     inline friend std::ostream& operator<<(std::ostream& out, const JourneyLeg& leg) noexcept {

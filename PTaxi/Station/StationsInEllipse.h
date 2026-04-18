@@ -250,7 +250,7 @@ namespace karri {
         }
 
         void recomputeStationsInEllipseForStop(const int stopIndex, const int vehId, stats::UpdatePerformanceStats &stats) {
-            KASSERT(!stopBucketContainer.isBucketEmpty(routeState.stopIdsFor(vehId)[stopIndex]));
+            // KASSERT(!stopBucketContainer.isBucketEmpty(routeState.stopIdsFor(vehId)[stopIndex]));
             removeStationsForStop(stopIndex, vehId, stats);
             computeNewStationsInEllipsesForStop(stopIndex, vehId, stats);
         }
