@@ -193,9 +193,9 @@ namespace karri {
                                  firstTaxiLegResult);
         }
 
-        void setExternalCostUpperBound(const int bestCost, const int worstCostForAllStations) {
+        void setExternalCostUpperBound(const int bestCost) {
             externalUpperBoundCost = bestCost;
-            upperBoundCost = std::min(worstCostForAllStations, externalUpperBoundCost);
+            upperBoundCost = bestCost;
         }
 
     private:
@@ -282,8 +282,8 @@ namespace karri {
                         ++numAssignmentsTried;
                         asgn.distToDropoff = stationDistances.getDistance(station.stationId, asgn.pickup.id);
                         // requestState.tryAssignmentWithKnownCost(asgn, calculator.calc(asgn, requestState));
-                        firstTaxiLegResult.tryAssignmentWithKnownCostForStation(
-                            station.stationId, asgn, calculator.calc(asgn, requestState), InsertionType::PALS);
+                        firstTaxiLegResult.tryAssignmentWithForStation(
+                            station.stationId, asgn, calculator.calc(asgn, requestState), time_utils::calcArrivalTime(asgn, requestState, routeState), InsertionType::PALS);
                     }
                 }
             }
@@ -389,8 +389,8 @@ namespace karri {
                         ++numInsertionsForCoinciding;
                         asgn.distToDropoff = stationDistances.getDistance(station.stationId, asgn.pickup.id);
                         // requestState.tryAssignmentWithKnownCost(asgn, calculator.calc(asgn, requestState));
-                        firstTaxiLegResult.tryAssignmentWithKnownCostForStation(
-                            station.stationId, asgn, calculator.calc(asgn, requestState), InsertionType::PALS);
+                        firstTaxiLegResult.tryAssignmentWithForStation(
+                            station.stationId, asgn, calculator.calc(asgn, requestState), time_utils::calcArrivalTime(asgn, requestState, routeState), InsertionType::PALS);
                     }
                 }
             }

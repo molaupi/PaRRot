@@ -366,6 +366,17 @@ namespace karri::time_utils {
     }
 
     template<typename RequestContext>
+    inline int calcArrivalTime(const Assignment &asgn, const RequestContext &requestState, const RouteState &routeState) {
+        using namespace time_utils;
+        const int actualDepTimeAtPickup = getActualDepTimeAtPickup(asgn, requestState, routeState);
+        const int initialPickupDetour = calcInitialPickupDetour(asgn, actualDepTimeAtPickup, requestState,
+                                                                routeState);
+        const bool dropoffAtExistingStop = isDropoffAtExistingStop(asgn, routeState);
+        return getArrTimeAtDropoff(actualDepTimeAtPickup, asgn, initialPickupDetour, dropoffAtExistingStop,
+                                   routeState);
+    }
+
+    template<typename RequestContext>
     static INLINE bool isAnyHardConstraintViolated(const Vehicle &veh, const int pickupIndex, const int dropoffIndex,
                                                    const RequestContext &context, const int initialPickupDetour,
                                                    const int detourRightAfterDropoff, const int residualDetourAtEnd,

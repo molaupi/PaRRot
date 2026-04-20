@@ -1,4 +1,5 @@
 #pragma once
+#include <KARRI/Algorithms/KaRRi/BaseObjects/Assignment.h>
 #include "InsertionType.h"
 
 namespace karri {
@@ -14,13 +15,17 @@ namespace karri {
         Assignment bestAssignment;
         InsertionType insertionType = UNDEFINED;
 
+        bool operator==(const TaxiResult &other) const {
+            return bestCost == other.bestCost && arrivalTime == other.arrivalTime;
+        }
+
         bool tryAssignmentWithKnownCost(const Assignment &asgn, const int cost) {
             if (cost < INFTY && (cost < bestCost || (cost == bestCost &&
                                                      breakCostTie(asgn, bestAssignment)))) {
                 bestAssignment = asgn;
                 bestCost = cost;
                 return true;
-                                                     }
+            }
             return false;
         }
 
@@ -28,12 +33,13 @@ namespace karri {
             return bestCost;
         }
 
-        const Assignment & getBestAssignment() const {
+        const Assignment &getBestAssignment() const {
             return bestAssignment;
         }
 
         bool isValid() const {
-            return bestAssignment.vehicle && bestAssignment.pickup.id != INVALID_ID && bestAssignment.dropoff.id != INVALID_ID;
+            return bestAssignment.vehicle && bestAssignment.pickup.id != INVALID_ID && bestAssignment.dropoff.id !=
+                   INVALID_ID;
         }
     };
 }

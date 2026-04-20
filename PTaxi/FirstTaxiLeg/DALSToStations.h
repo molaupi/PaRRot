@@ -215,9 +215,9 @@ namespace karri {
             stats.numCandidateVehicles += relevantVehicleIdsForRequest.size();
         }
 
-        void setExternalCostUpperBound(const int bestCost, const int worstCostForAllStations) {
+        void setExternalCostUpperBound(const int bestCost) {
             externalUpperBoundCost = bestCost;
-            upperBoundCost = std::min(worstCostForAllStations, externalUpperBoundCost);
+            upperBoundCost = bestCost;
         }
 
     private:
@@ -500,8 +500,9 @@ namespace karri {
                         asgn.distToPickup = entry.distToPDLoc;
                         asgn.distFromPickup = entry.distFromPDLocToNextStop;
                         // requestState.tryAssignmentWithKnownCost(asgn, calculator.calc(asgn, requestState));
-                        firstTaxiLegResult.tryAssignmentWithKnownCostForStation(
-                            station.stationId, asgn, calculator.calc(asgn, requestState), InsertionType::DALS);
+                        firstTaxiLegResult.tryAssignmentWithForStation(
+                            station.stationId, asgn, calculator.calc(asgn, requestState),
+                            time_utils::calcArrivalTime(asgn, requestState, routeState), InsertionType::DALS);
                     }
 
                     if (pickupIt == relevantPickupsInRevOrder.end()) {
@@ -573,15 +574,13 @@ namespace karri {
                         if (curVehLocToPickupSearches.knowsDistance(vehId, asgn.pickup.id)) {
                             asgn.distToPickup = curVehLocToPickupSearches.getDistance(vehId, asgn.pickup.id);
                             // requestState.tryAssignmentWithKnownCost(asgn, calculator.calc(asgn, requestState));
-                            firstTaxiLegResult.tryAssignmentWithKnownCostForStation(
-                                station.stationId, asgn, calculator.calc(asgn, requestState), InsertionType::DALS_PBNS);
+                            firstTaxiLegResult.tryAssignmentWithForStation(
+                                station.stationId, asgn, calculator.calc(asgn, requestState), time_utils::calcArrivalTime(asgn, requestState, routeState), InsertionType::DALS_PBNS);
                             ++numAssignmentsTried;
                         } else {
                             asgn.distToPickup = entry.distToPDLoc;
                             const auto lowerBoundCost = calculator.calc(asgn, requestState);
-                            if (lowerBoundCost < upperBoundCost ||
-                                (lowerBoundCost == firstTaxiLegResult.getWorstCostForAllStations() &&
-                                 breakCostTie(asgn, firstTaxiLegResult.getWorstAssignmentForAllStations()))) {
+                            if (lowerBoundCost < upperBoundCost) {
                                 // In this case, we need the exact distance to the pickup via the current location of the
                                 // vehicle. We postpone computation of that distance to be able to bundle it with the
                                 // computation of distances to other pickups via the vehicle location. Then all remaining
@@ -631,8 +630,8 @@ namespace karri {
                         ++numAssignmentsTried;
                         asgn.dropoffStopIdx = numStops - 1;
                         // requestState.tryAssignmentWithKnownCost(asgn, calculator.calc(asgn, requestState));
-                        firstTaxiLegResult.tryAssignmentWithKnownCostForStation(
-                            station.stationId, asgn, calculator.calc(asgn, requestState), InsertionType::DALS_PBNS);
+                        firstTaxiLegResult.tryAssignmentWithForStation(
+                            station.stationId, asgn, calculator.calc(asgn, requestState), time_utils::calcArrivalTime(asgn, requestState, routeState), InsertionType::DALS_PBNS);
                     }
                 }
             }

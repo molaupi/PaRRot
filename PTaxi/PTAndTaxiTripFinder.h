@@ -50,6 +50,7 @@ namespace karri {
               stations(stations),
               queries(queries),
               stationBucketsEnv(stationBucketsEnv),
+              firstTaxiLegResult(routeState, stations.size()),
               stationDistanceFinder(vehInputGraph, vehChEnv, routeState, stationBucketsEnv, stations,
                                     stationsAtLocations),
               palsToStations(palsToStations),
@@ -85,7 +86,7 @@ namespace karri {
             static constexpr int ALLOW_WORSE_THAN_TAXI_ONLY_FACTOR = 1;
             const int rpAccessEgressUpperBoundCost = ALLOW_WORSE_THAN_TAXI_ONLY_FACTOR * taxiOnlyCost;
 
-            const FirstTaxiLegResult &firstTaxiLeg = runFirstTaxiSharingLeg(
+            runFirstTaxiSharingLeg(
                 requestState, baseInfo.pdLocs, baseInfo.relOrdinaryPickups, baseInfo.relPickupsBeforeNextStop,
                 rpAccessEgressUpperBoundCost, stats.stationBchStats, stats.taxiFirstLegStats);
 
@@ -94,24 +95,28 @@ namespace karri {
             const auto &distFromStations = taxiLegApproximation.getDistancesFromStations();
 
             ptAlgorithmWithTaxi.run(originPsgEdge, originVehEdge, destPsgEdge, destVehEdge,
-                                    query.departureTime, firstTaxiLeg, distFromStations, stats.ptWithTaxiStats);
+                                    query.departureTime, firstTaxiLegResult, distFromStations, stats.ptWithTaxiStats);
             // auto ptLegParetoFront = ptAlgorithmWithTaxi.getJourneys();
             // auto journey = chooseBestJourney(ptLegParetoFront);
-            auto [journey, costFromPtAlgo] = ptAlgorithmWithTaxi.getJourneyWithBestCost();
+            auto bestJourney = ptAlgorithmWithTaxi.getJourneyWithBestCost();
+
+            TaxiResult rpAccessTrip;
+            if (!bestJourney.journey.empty() && bestJourney.journey.front().usesTaxi)
+                rpAccessTrip = firstTaxiLegResult.getResultsForStation(bestJourney.journey.front().to)[bestJourney.accessRpTripIndex];
 
             // first taxi leg + PT journey + 2nd taxi leg approximation
             ApproximateCombinedTripResult intermediateResult(
                 req.requestTime,
-                firstTaxiLeg,
-                journey,
+                rpAccessTrip,
+                bestJourney.journey,
                 taxiLegApproximation);
-            KASSERT(intermediateResult.getBestCost() >= costFromPtAlgo - 20 &&
-                intermediateResult.getBestCost() <= costFromPtAlgo + 20);
+            KASSERT(intermediateResult.getBestCost() >= bestJourney.cost - 20 &&
+                intermediateResult.getBestCost() <= bestJourney.cost + 20);
 
 
             writeIntermediateResultToLogger(requestState, intermediateResult);
 
-            const auto firstTaxiLegResults = firstTaxiLeg.getValidResults();
+            const auto firstTaxiLegResults = firstTaxiLegResult.getValidResults();
             const size_t validResultsCount = firstTaxiLegResults.size();
 
             int sumCost = 0, sumArrivalTime = 0;
@@ -146,25 +151,21 @@ namespace karri {
         }
 
     private:
-        FirstTaxiLegResult runFirstTaxiSharingLeg(const RequestState &rs, const PDLocs &pdLocs,
-                                                  const RelevantPDLocs &relOrdinaryPickups,
-                                                  const RelevantPDLocs &relPickupsBeforeNextStop,
-                                                  const int rpAccessEgressUpperBoundCost,
-                                                  stats::StationBchPerformanceStats &stationBchStats,
-                                                  stats::TaxiPerformanceStats &stats) {
-            FirstTaxiLegResult firstTaxiLegResult(routeState, rs, stations.size(), rpAccessEgressUpperBoundCost);
+        void runFirstTaxiSharingLeg(const RequestState &rs, const PDLocs &pdLocs,
+                                    const RelevantPDLocs &relOrdinaryPickups,
+                                    const RelevantPDLocs &relPickupsBeforeNextStop,
+                                    const int rpAccessEgressUpperBoundCost,
+                                    stats::StationBchPerformanceStats &stationBchStats,
+                                    stats::TaxiPerformanceStats &stats) {
+            firstTaxiLegResult.reset(rpAccessEgressUpperBoundCost, rs.originalRequest.requestId);
 
             runStationBCH(rs, pdLocs, rpAccessEgressUpperBoundCost, stationBchStats);
-            runPALS(rs, pdLocs, rpAccessEgressUpperBoundCost, stats.palsAssignmentsStats, firstTaxiLegResult);
-            runOrdinary(rs, pdLocs, relOrdinaryPickups, stats.ordAssignmentsStats, firstTaxiLegResult,
+            runPALS(rs, pdLocs, rpAccessEgressUpperBoundCost, stats.palsAssignmentsStats);
+            runOrdinary(rs, pdLocs, relOrdinaryPickups, stats.ordAssignmentsStats,
                         rpAccessEgressUpperBoundCost);
             runDALS(rs, pdLocs, relOrdinaryPickups, relPickupsBeforeNextStop, rpAccessEgressUpperBoundCost,
-                    stats.dalsAssignmentsStats, firstTaxiLegResult);
-            runPBNS(rs, pdLocs, relPickupsBeforeNextStop, rpAccessEgressUpperBoundCost, stats.pbnsAssignmentsStats,
-                    firstTaxiLegResult);
-
-            // -> assignment with best cost for each PT station
-            return firstTaxiLegResult;
+                    stats.dalsAssignmentsStats);
+            runPBNS(rs, pdLocs, relPickupsBeforeNextStop, rpAccessEgressUpperBoundCost, stats.pbnsAssignmentsStats);
         }
 
         void runStationBCH(const RequestState &rs, const PDLocs &pdLocs, const int rpAccessEgressUpperBoundCost,
@@ -176,12 +177,10 @@ namespace karri {
 
         void runPALS(const RequestState &rs, const PDLocs &pdLocs,
                      const int rpAccessEgressUpperBoundCost,
-                     stats::PalsAssignmentsPerformanceStats &stats,
-                     FirstTaxiLegResult &firstTaxiLegResult) {
+                     stats::PalsAssignmentsPerformanceStats &stats) {
             // last stop -> pickups
             // PALS Individual BCH
-            palsToStations.setExternalCostUpperBound(rpAccessEgressUpperBoundCost,
-                                                     firstTaxiLegResult.getWorstCostForAllStations());
+            palsToStations.setExternalCostUpperBound(rpAccessEgressUpperBoundCost);
             palsToStations.tryPickupAfterLastStop(rs, pdLocs, stationDistanceFinder.getDistancesToStations(),
                                                   stationDistanceFinder.getStationsSeen(), stations, stats,
                                                   firstTaxiLegResult);
@@ -189,7 +188,7 @@ namespace karri {
 
         void runOrdinary(const RequestState &rs, const PDLocs &pdLocs,
                          const RelevantPDLocs &relOrdinaryPickpus, stats::OrdAssignmentsPerformanceStats &stats,
-                         FirstTaxiLegResult &firstTaxiLegResult, const int rpAccessEgressUpperBoundCost) {
+                         const int rpAccessEgressUpperBoundCost) {
             ordinaryToStations.enumerateAssignments(rs, pdLocs, relOrdinaryPickpus, stations, stationsInEllipse,
                                                     stationDistanceFinder.getDistancesToStations(), stats,
                                                     firstTaxiLegResult, rpAccessEgressUpperBoundCost);
@@ -198,10 +197,8 @@ namespace karri {
         void runDALS(const RequestState &rs, const PDLocs &pdLocs,
                      const RelevantPDLocs &relOrdinaryPickups, const RelevantPDLocs &relPickupsBeforeNextStop,
                      const int rpAccessEgressUpperBoundCost,
-                     stats::DalsAssignmentsPerformanceStats &stats,
-                     FirstTaxiLegResult &firstTaxiLegResult) {
-            dalsToStations.setExternalCostUpperBound(rpAccessEgressUpperBoundCost,
-                                                     firstTaxiLegResult.getWorstCostForAllStations());
+                     stats::DalsAssignmentsPerformanceStats &stats) {
+            dalsToStations.setExternalCostUpperBound(rpAccessEgressUpperBoundCost);
             dalsToStations.tryDropoffAfterLastStop(rs, pdLocs, relOrdinaryPickups, relPickupsBeforeNextStop, stats,
                                                    firstTaxiLegResult);
         }
@@ -209,10 +206,8 @@ namespace karri {
         void runPBNS(const RequestState &rs, const PDLocs &pdLocs,
                      const RelevantPDLocs &relPickupsBns,
                      const int rpAccessEgressUpperBoundCost,
-                     stats::PbnsAssignmentsPerformanceStats &stats,
-                     FirstTaxiLegResult &firstTaxiLegResult) {
-            pbnsToStations.setExternalCostUpperBound(rpAccessEgressUpperBoundCost,
-                                                     firstTaxiLegResult.getWorstCostForAllStations());
+                     stats::PbnsAssignmentsPerformanceStats &stats) {
+            pbnsToStations.setExternalCostUpperBound(rpAccessEgressUpperBoundCost);
             pbnsToStations.findAssignments(rs, pdLocs, relPickupsBns, stations, stationsInEllipse,
                                            stationDistanceFinder.getDistancesToStations(), stats, firstTaxiLegResult);
         }
@@ -301,6 +296,9 @@ namespace karri {
 
         const PTStations &stations;
         StationBucketsEnvT &stationBucketsEnv;
+
+        FirstTaxiLegResult firstTaxiLegResult;
+
         StationDistanceFinderT stationDistanceFinder;
         PALSToStationsT &palsToStations;
 

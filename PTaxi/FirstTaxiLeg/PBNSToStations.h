@@ -98,9 +98,9 @@ namespace karri {
             stats.directCHSearchTime += curVehLocToPickupSearches.getTotalVehicleToPickupSearchTimeForRequest();
         }
 
-        void setExternalCostUpperBound(const int bestCost, const int worstCostForAllStations) {
+        void setExternalCostUpperBound(const int bestCost) {
             externalUpperBoundCost = bestCost;
-            upperBoundCost = std::min(worstCostForAllStations, externalUpperBoundCost);
+            upperBoundCost = bestCost;
         }
 
     private:
@@ -207,9 +207,7 @@ namespace karri {
                 asgn.distToDropoff = stationDistances.getDistance(asgn.dropoff.id, asgn.pickup.id);
                 asgn.distFromDropoff = entry.distFromStationToStop;
                 const auto cost = calculator.calc(asgn, requestState);
-                if (cost < upperBoundCost || (cost == firstTaxiLegResult.getWorstCostForAllStations() &&
-                                              breakCostTie(
-                                                  asgn, firstTaxiLegResult.getWorstAssignmentForAllStations()))) {
+                if (cost < upperBoundCost) {
                     // Lower bound is better than best known cost => We need the exact distance to pickup.
                     // Return and postpone remaining combinations.
 
@@ -263,9 +261,7 @@ namespace karri {
 
                     ++numAssignmentsTriedWithPickupBeforeNextStop;
                     const auto cost = calculator.calc(asgn, requestState);
-                    if (cost < upperBoundCost || (cost == firstTaxiLegResult.getWorstCostForAllStations() &&
-                                                  breakCostTie(
-                                                      asgn, firstTaxiLegResult.getWorstAssignmentForAllStations()))) {
+                    if (cost < upperBoundCost) {
                         // Lower bound is better than best known cost => We need the exact distance to pickup.
                         // Return and postpone remaining combinations.
 
@@ -329,15 +325,12 @@ namespace karri {
                         asgn.distFromDropoff = entry.distFromStationToStop;
 
                         const auto cost = calculator.calc(asgn, requestState);
-                        if (cost < upperBoundCost || (cost == firstTaxiLegResult.getWorstCostForAllStations() &&
-                                                      breakCostTie(
-                                                          asgn, firstTaxiLegResult.
-                                                          getWorstAssignmentForAllStations()))) {
+                        if (cost < upperBoundCost) {
                             // Cost is better than best known cost => Update best known cost and assignment.
 
                             // requestState.tryAssignmentWithKnownCost(asgn, cost);
                             firstTaxiLegResult.
-                                    tryAssignmentWithKnownCostForStation(station.stationId, asgn, cost, PBNS);
+                                    tryAssignmentWithForStation(station.stationId, asgn, cost, time_utils::calcArrivalTime(asgn, requestState, routeState), PBNS);
                         }
 
 
@@ -385,14 +378,12 @@ namespace karri {
                     asgn.distToDropoff = stationDistances.getDistance(asgn.dropoff.id, asgn.pickup.id);
 
                     const auto cost = calculator.calc(asgn, requestState);
-                    if (cost < upperBoundCost || (cost == firstTaxiLegResult.getWorstCostForAllStations() &&
-                                                  breakCostTie(
-                                                      asgn, firstTaxiLegResult.getWorstAssignmentForAllStations()))) {
+                    if (cost < upperBoundCost) {
                         // Cost is better than best known cost => Update best known cost and assignment
 
                         // requestState.tryAssignmentWithKnownCost(asgn, calculator.calc(asgn, requestState));
-                        firstTaxiLegResult.tryAssignmentWithKnownCostForStation(
-                            station.stationId, asgn, calculator.calc(asgn, requestState), PBNS);
+                        firstTaxiLegResult.tryAssignmentWithForStation(
+                            station.stationId, asgn, calculator.calc(asgn, requestState), time_utils::calcArrivalTime(asgn, requestState, routeState), PBNS);
                     }
                 }
             }

@@ -620,11 +620,14 @@ namespace karri {
             return tripCost + transferCost + transferPenalty;
         }
 
-        static int calcCostForAddedTransferTime(const int addedTransferTime, const bool numberOfTransfersIncreased) {
+        static int calcCostForAddedTransferTime(const int addedTransferTime) {
             const int transferCost = F::calcTransferCost(addedTransferTime);
-            const int transferPenalty = numberOfTransfersIncreased ? F::calcTransferPenalty(1) : 0;
             const int tripCost = F::calcTripCost(addedTransferTime);
-            return transferCost + transferPenalty + tripCost;
+            return transferCost + tripCost;
+        }
+
+        static int penaltyForNewTransfer() {
+            return F::calcTransferPenalty(1);
         }
 
         static int calcHeuristicCostForFinalTransferTimeByRP(const int finalTransferTime) {

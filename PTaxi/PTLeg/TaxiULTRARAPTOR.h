@@ -154,71 +154,6 @@ public:
         profiler.done();
     }
 
-    inline void runWithTaxi(const int originPsgEdge, const int originVehEdge,
-        const int destPsgEdge, const int destVehEdge,
-        const int departureTime,
-        const karri::FirstTaxiLegResult &firstTaxiLeg, const std::vector<int> &distFromStations,
-        karri::stats::PtPerformanceStats &stats,
-        const size_t maxRounds = INFTY) noexcept
-    {
-        KaRRiTimer timer;
-        profiler.start();
-        profiler.startExtraRound(EXTRA_ROUND_CLEAR);
-        clear();
-        profiler.doneRound();
-
-        profiler.startExtraRound(EXTRA_ROUND_INITIALIZATION);
-        profiler.startPhase();
-        initialize(originPsgEdge, originVehEdge, destPsgEdge, destVehEdge, departureTime, stats);
-        profiler.donePhase(PHASE_INITIALIZATION);
-        stats.roundInitializationTime += timer.elapsed<std::chrono::nanoseconds>();
-
-        timer.restart();
-        profiler.startPhase();
-        relaxInitialTransfers(departureTime, stats, &firstTaxiLeg);
-        profiler.donePhase(PHASE_TRANSFERS);
-        profiler.doneRound();
-        stats.relaxInitialTransfersTime += timer.elapsed<std::chrono::nanoseconds>();
-
-        for (size_t i = 0; i < maxRounds; i++) {
-            ++stats.numRounds;
-            profiler.startRound();
-            timer.restart();
-            profiler.startPhase();
-            startNewRound();
-            profiler.donePhase(PHASE_INITIALIZATION);
-            stats.roundInitializationTime += timer.elapsed<std::chrono::nanoseconds>();
-            timer.restart();
-            profiler.startPhase();
-            collectRoutesServingUpdatedStops();
-            profiler.donePhase(PHASE_COLLECT);
-            stats.collectRoutesTime += timer.elapsed<std::chrono::nanoseconds>();
-            timer.restart();
-            profiler.startPhase();
-            scanRoutes(stats);
-            profiler.donePhase(PHASE_SCAN);
-            stats.scanRoutesTime += timer.elapsed<std::chrono::nanoseconds>();
-            if (stopsUpdatedByRoute.empty()) {
-                profiler.doneRound();
-                break;
-            }
-            if constexpr (SeparateRouteAndTransferEntries) {
-                timer.restart();
-                profiler.startPhase();
-                startNewRound();
-                profiler.donePhase(PHASE_INITIALIZATION);
-                stats.roundInitializationTime += timer.elapsed<std::chrono::nanoseconds>();
-            }
-            timer.restart();
-            profiler.startPhase();
-            relaxIntermediateTransfers(stats, distFromStations);
-            profiler.donePhase(PHASE_TRANSFERS);
-            stats.relaxIntermediateTransfersTime += timer.elapsed<std::chrono::nanoseconds>();
-            profiler.doneRound();
-        }
-        profiler.done();
-    }
-
     inline std::vector<Journey> getJourneys() const noexcept
     {
         return getJourneys(targetStop);
@@ -483,8 +418,7 @@ private:
         }
     }
 
-    inline void relaxInitialTransfers(const int sourceDepartureTime, karri::stats::PtPerformanceStats &stats,
-        const karri::FirstTaxiLegResult *firstTaxiLeg = nullptr) noexcept
+    inline void relaxInitialTransfers(const int sourceDepartureTime, karri::stats::PtPerformanceStats &stats) noexcept
     {
         // Pass edge IDs to initialTransfers for BCH-based distance computation
         initialTransfers.template run<!PreventDirectWalking>(originPsgEdge,
@@ -506,39 +440,6 @@ private:
             }
         }
 
-        // Extension for first taxi leg
-        if (firstTaxiLeg != nullptr) {
-            for (const auto &station : stations) {
-                if (firstTaxiLeg->getWorstCostForAllStations() == INFTY)
-                    break; // no stations reached by taxi
-
-                const int stationId = station.stationId;
-                const Vertex targetStop = Vertex(stationId);
-                const StopId targetStopId = StopId(targetStop);
-                const auto taxiResult = firstTaxiLeg->getResultForStation(stationId);
-
-                // Check if this is the destination station
-                bool isDestStation = (destinationPsgEdge >= 0 && destinationPsgEdge < psgEdgeToStation.size() &&
-                                       psgEdgeToStation[destinationPsgEdge] == stationId);
-                // Check if this is the origin station
-                bool isOriginStation = (originPsgEdge >= 0 && originPsgEdge < psgEdgeToStation.size() &&
-                                         psgEdgeToStation[originPsgEdge] == stationId);
-
-                if (isOriginStation || isDestStation || taxiResult.bestCost == INFTY)
-                    continue;
-                Assert(data.isStop(targetStop), "Taxi station " << targetStop << " is not a stop!");
-                const int arrivalTime = convertToULTRATime(taxiResult.arrivalTime);
-                if (arrivalByTransfer(targetStopId, arrivalTime, stats)) {
-                    EarliestArrivalLabel& label = currentRound()[targetStop];
-                    label.parent = noVertex; // Sentinel: this stop was reached from origin via taxi
-                    label.parentDepartureTime = sourceDepartureTime;
-                    label.usesRoute = false;
-                    label.usesTaxi = true;
-                    label.transferId = noEdge;
-                }
-            }
-        }
-
         if constexpr (!PreventDirectWalking) {
             if (initialTransfers.getDistance() != INFTY) {
                 const int arrivalTime = sourceDepartureTime + convertToULTRATime(initialTransfers.getDistance());
@@ -554,8 +455,7 @@ private:
         }
     }
 
-    inline void relaxIntermediateTransfers(karri::stats::PtPerformanceStats &stats,
-        const std::vector<int> &distFromStations = {}) noexcept
+    inline void relaxIntermediateTransfers(karri::stats::PtPerformanceStats &stats) noexcept
     {
         stopsUpdatedByTransfer.clear();
         routesServingUpdatedStops.clear();
@@ -590,26 +490,6 @@ private:
                     label.usesRoute = false;
                     label.usesTaxi = false;
                     label.transferId = noEdge;
-                }
-            }
-
-            // Extension for second taxi leg
-            if (!distFromStations.empty()) {
-                const int stationId = stop.value();
-                const auto &station = stations[stationId];
-                // ensure that no second taxi leg is used if station edge id == destination edge id
-                if (stationId != INVALID_ID && station.vehEdgeId != destinationVehEdge) {
-                    const int taxiTravelDistance = convertToULTRATime(distFromStations[stationId]);
-                    const int arrivalTime = earliestArrivalTime + taxiTravelDistance;
-                    if (arrivalByTransfer(targetStop, arrivalTime, stats)) {
-                        EarliestArrivalLabel& label = currentRound()[targetStop];
-                        label.parent = stop;
-                        label.parentDepartureTime = earliestArrivalTime;
-                        label.usesRoute = false;
-                        label.usesTaxi = true;
-                        label.transferId = noEdge;
-
-                    }
                 }
             }
 

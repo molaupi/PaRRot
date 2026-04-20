@@ -175,6 +175,28 @@ inline void removalOfAllCols(
     }
 }
 
+template<typename IndexArray, typename ValueArray, typename... ExtraValueArrays>
+inline void removalIf(
+        const int row, const auto &predicate,
+        IndexArray &indexArray, ValueArray &valueArray, ExtraValueArrays &... extraValueArrays) {
+    assert(row >= 0);
+    assert(row < indexArray.size());
+    auto &start = indexArray[row].start;
+    auto &end = indexArray[row].end;
+    int numRemoved = 0;
+    for (int i = start; i < end; ++i) {
+        if (predicate(valueArray[i])) {
+            ++numRemoved;
+        } else if (numRemoved > 0) {
+            valueArray[i - numRemoved] = valueArray[i];
+            ((extraValueArrays[i - numRemoved] = extraValueArrays[i]), ...);
+        }
+    }
+    std::fill(valueArray.begin() + end - numRemoved, valueArray.begin() + end,
+              std::numeric_limits<typename ValueArray::value_type>::max());
+    end -= numRemoved;
+}
+
 // Returns the index in the value arrays of the newly inserted value.
 template<typename T, typename IndexArray, typename ValueArray, typename... ExtraValueArrays>
 inline int stableInsertion(

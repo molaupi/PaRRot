@@ -158,8 +158,8 @@ namespace karri {
                             }
 
                             // requestState.tryAssignmentWithKnownCost(asgn, calculator.calc(asgn, requestState));
-                            firstTaxiLegResult.tryAssignmentWithKnownCostForStation(
-                                station.stationId, asgn, calculator.calc(asgn, requestState), InsertionType::ORDINARY);
+                            firstTaxiLegResult.tryAssignmentWithForStation(
+                                station.stationId, asgn, calculator.calc(asgn, requestState), time_utils::calcArrivalTime(asgn, requestState, routeState),  InsertionType::ORDINARY);
                         }
                         if (i == j)
                             pairedTime += pairedTimer.elapsed<std::chrono::nanoseconds>();

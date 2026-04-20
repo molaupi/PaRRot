@@ -11,7 +11,7 @@ class ApproximateCombinedTripResult {
 public:
     template<typename SecondTaxiLegApproximationT>
     ApproximateCombinedTripResult(const int requestTime,
-        const FirstTaxiLegResult &firstTaxiLegResults,
+        TaxiResult accessRpTrip,
         RAPTOR::Journey journey,
         const SecondTaxiLegApproximationT &secondTaxiLegApproximation)
                         : requestTime(requestTime),
@@ -46,7 +46,7 @@ public:
             // remove taxi leg in beginning
             journey.erase(journey.begin());
 
-            firstTaxiLeg = firstTaxiLegResults.getResultForStation(journey.front().from);
+            firstTaxiLeg = accessRpTrip;
             firstTaxiLegCost = firstTaxiLeg.bestCost;
             bestCost += firstTaxiLeg.bestCost;
         }
