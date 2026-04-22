@@ -389,6 +389,38 @@ namespace karri {
             return F::calcVehicleCost(minDetour) + walkingCost + waitViolationCost + minTripCost;
         }
 
+        template<typename RequestContext>
+        int calcCostUntilLastStopForDALS(const Vehicle &veh,
+                                         const PDLoc &pickup,
+                                         const int pickupIndex,
+                                         const int depTimeAtPickup,
+                                         const int initialPickupDetour,
+                                         const int residualDetourAtLastStop,
+                                         const RequestContext &context) {
+            using namespace time_utils;
+            if (depTimeAtPickup >= INFTY || initialPickupDetour >= INFTY || residualDetourAtLastStop >= INFTY)
+                return INFTY;
+
+            const int vehId = veh.vehicleId;
+            const int numStops = routeState.numStopsOf(vehId);
+            if (isServiceTimeConstraintViolated(veh, context, residualDetourAtLastStop, routeState))
+                return INFTY;
+
+            const int walkingCost = F::calcWalkingCost(pickup.walkingDist, InputConfig::getInstance().pickupRadius);
+            const int addedTripTimeOfOthers = calcAddedTripTimeInInterval(veh.vehicleId, pickupIndex, numStops - 1,
+                                                                          initialPickupDetour, routeState);
+
+            const int changeInTripTimeCosts = F::calcChangeInTripCostsOfExistingPassengers(addedTripTimeOfOthers);
+            const int waitViolation = F::calcWaitViolationCost(depTimeAtPickup, context);
+            const int minTripTime = routeState.schedDepTimesFor(vehId)[numStops - 1] +
+                                    residualDetourAtLastStop - context.earliestDeparture();
+            const int minTripCost = F::calcTripCost(minTripTime);
+            return F::calcVehicleCost(residualDetourAtLastStop)
+                   + changeInTripTimeCosts
+                   + minTripCost
+                   + walkingCost + waitViolation;
+        }
+
         int calcVehicleIndependentCostLowerBoundForDALSWithKnownMinDistToDropoff(const int distToDropoff,
             const PDLoc &dropoff) const {
             return calcVehicleIndependentCostLowerBoundForDALSWithKnownMinDistToDropoff(dropoff.walkingDist,
@@ -563,8 +595,7 @@ namespace karri {
             const int addedTripTimeOfOthers = calcAddedTripTimeInInterval(veh.vehicleId, pickupIndex, numStops - 1,
                                                                           initialPickupDetour, routeState);
 
-            const int changeInTripTimeCosts = F::calcChangeInTripCostsOfExistingPassengers(
-                addedTripTimeOfOthers);
+            const int changeInTripTimeCosts = F::calcChangeInTripCostsOfExistingPassengers(addedTripTimeOfOthers);
             const int waitViolation = F::calcWaitViolationCost(depTimeAtPickup, context);
             const int minTripTime = (depTimeAtPickup - context.earliestDeparture()) + minDirectPdDist;
             const int minTripCost = F::calcTripCost(minTripTime);
@@ -612,7 +643,8 @@ namespace karri {
         }
 
         // Calculates the cost for a PT Journey
-        static int calcPTJourneyCost(const int totalTripTime, const int totalTransferTime, const int numberOfTransfers) {
+        static int calcPTJourneyCost(const int totalTripTime, const int totalTransferTime,
+                                     const int numberOfTransfers) {
             const int tripCost = F::calcTripCost(totalTripTime);
             const int transferCost = F::calcTransferCost(totalTransferTime);
             const int transferPenalty = F::calcTransferPenalty(numberOfTransfers);

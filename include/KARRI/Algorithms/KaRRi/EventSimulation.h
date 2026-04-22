@@ -413,8 +413,9 @@ namespace karri {
             const auto taxiOnlyResult = taxiTripFinder.findBestAssignment(requestState, baseInfo, stats.taxiOnlyStats);
             const auto ptOnlyResult = ptTripFinder.findBestJourney(requestState, stats.ptOnlyStats);
 
+            const auto combinedUpperBoundCost = std::min(taxiOnlyResult.getBestCost(), ptOnlyResult.getCost());
             const auto ptAndTaxiResult = ptAndTaxiTripFinder.findBestAssignment(
-                requestState, baseInfo, taxiOnlyResult.getBestCost(), stats.taxiAndPtPerformanceStats);
+                requestState, baseInfo, combinedUpperBoundCost, stats.taxiAndPtPerformanceStats);
 
             // Calculated costs
             requestData[reqId].taxiLegCost = ptAndTaxiResult.getFirstTaxiLegCost();

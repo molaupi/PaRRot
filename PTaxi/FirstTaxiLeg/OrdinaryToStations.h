@@ -47,136 +47,239 @@ namespace karri {
                                   stats::OrdAssignmentsPerformanceStats &stats,
                                   FirstTaxiLegResult &firstTaxiLegResult,
                                   const int externalUpperBoundCost) {
-            using namespace time_utils;
+            for (const auto &vehId: relPickups.getVehiclesWithRelevantPDLocs()) {
+                KASSERT(relPickups.hasRelevantSpotsFor(vehId));
+                ++stats.numCandidateVehicles;
 
-            int numNonPairedAssignmentsTried = 0;
-            int numPairedAssignmentsTried = 0;
-            int numCandidateVehicles = 0;
-            KaRRiTimer pairedTimer;
-            int64_t pairedTime = 0;
+                enumerateOrdinaryAssignments(vehId, requestState, pdLocs, relPickups, stations, stationsInEllipse,
+                                             stationDistances, stats, firstTaxiLegResult, externalUpperBoundCost);
+                enumeratePairedAssignments(vehId, requestState, pdLocs, relPickups, stations, stationsInEllipse,
+                                           stationDistances, stats, firstTaxiLegResult, externalUpperBoundCost);
+            }
+        }
+
+    private:
+        void enumerateOrdinaryAssignments(const int vehId, const RequestState &requestState, const PDLocs &pdLocs,
+                                          const RelevantPDLocs &relPickups,
+                                          const PTStations &stations, StationsInEllipseT &stationsInEllipse,
+                                          StationDistancesT &stationDistances,
+                                          stats::OrdAssignmentsPerformanceStats &stats,
+                                          FirstTaxiLegResult &firstTaxiLegResult,
+                                          const int externalUpperBoundCost) {
+            using namespace time_utils;
+            static int stopTime = InputConfig::getInstance().stopTime;
+
             const int reqTime = requestState.originalRequest.requestTime;
             KaRRiTimer timer;
 
-            for (const auto &vehId: relPickups.getVehiclesWithRelevantPDLocs()) {
-                KASSERT(relPickups.hasRelevantSpotsFor(vehId));
-                ++numCandidateVehicles;
-                const auto numStops = routeState.numStopsOf(vehId);
-                const auto stopLocations = routeState.stopLocationsFor(vehId);
-                const auto schedArrTimes = routeState.schedArrTimesFor(vehId);
+            KASSERT(relPickups.hasRelevantSpotsFor(vehId));
+            const auto numStops = routeState.numStopsOf(vehId);
+            const auto stopLocations = routeState.stopLocationsFor(vehId);
+            const auto schedArrTimes = routeState.schedArrTimesFor(vehId);
+            const auto schedDepTimes = routeState.schedDepTimesFor(vehId);
+            const auto maxArrTimes = routeState.maxArrTimesFor(vehId);
 
-                Assignment asgn(&fleet[vehId]);
+            Assignment asgn(&fleet[vehId]);
 
-                for (const auto &pickupEntry: relPickups.relevantSpotsFor(vehId)) {
-                    const int i = pickupEntry.stopIndex;
-                    asgn.pickup = pdLocs.pickups[pickupEntry.pdId];
-                    asgn.pickupStopIdx = i;
-                    asgn.distToPickup = pickupEntry.distToPDLoc;
+            for (const auto &pickupEntry: relPickups.relevantSpotsFor(vehId)) {
+                const int i = pickupEntry.stopIndex;
+                asgn.pickup = pdLocs.pickups[pickupEntry.pdId];
+                asgn.pickupStopIdx = i;
+                asgn.distToPickup = pickupEntry.distToPDLoc;
+                asgn.distFromPickup = pickupEntry.distFromPDLocToNextStop;
 
-                    using namespace time_utils;
-                    const int depTimeAtPickup = getActualDepTimeAtPickup(
-                        vehId, i, pickupEntry.distToPDLoc, asgn.pickup, requestState, routeState);
-                    const int initialPickupDetour = calcInitialPickupDetour(
-                        vehId, i, INVALID_INDEX, depTimeAtPickup,
-                        pickupEntry.distFromPDLocToNextStop, requestState, routeState);
+                using namespace time_utils;
+                const int depTimeAtPickup = getActualDepTimeAtPickup(
+                    vehId, i, pickupEntry.distToPDLoc, asgn.pickup, requestState, routeState);
+                const int initialPickupDetour = calcInitialPickupDetour(
+                    vehId, i, INVALID_INDEX, depTimeAtPickup,
+                    pickupEntry.distFromPDLocToNextStop, requestState, routeState);
 
-                    // Iterates through stops [pickup's stop index; last stop) and try to find a station as a dropoff.
-                    pairedTimer.restart();
-                    for (int j = i; j < routeState.numStopsOf(vehId) - 1; ++j) {
-                        const auto curStopId = routeState.stopIdsFor(vehId)[j];
-                        const int curLeeway = routeState.leewayOfLegStartingAt(curStopId);
+                // Iterates through stops (pickup's stop index; last stop) and try to find a station as a dropoff.
+                for (int j = i + 1; j < routeState.numStopsOf(vehId) - 1; ++j) {
+                    asgn.dropoffStopIdx = j;
+                    const auto curStopId = routeState.stopIdsFor(vehId)[j];
+                    const auto curStopLoc = stopLocations[j];
+                    const auto nextStopLoc = stopLocations[j + 1];
+                    const int maxDetourAtJ = maxArrTimes[j + 1] - schedArrTimes[j + 1];
+                    const int lengthOfLegJ = calcLengthOfLegStartingAt(j, vehId, routeState);
 
+                    const int detourUntilArrAtJ =
+                            calcResidualPickupDetour(vehId, i, j, initialPickupDetour, routeState);
+                    KASSERT(schedArrTimes[j] >= reqTime);
+                    const int arrTimeAtJ = schedArrTimes[j] + detourUntilArrAtJ;
+                    const int minTripTime = arrTimeAtJ - reqTime;
 
-                        const int detourUntilArrAtJ =
-                                j == i ? 0 : calcResidualPickupDetour(vehId, i, j, initialPickupDetour, routeState);
-                        KASSERT(j == i || schedArrTimes[j] >= reqTime);
-                        const int minTripTime
-                                = (j == i
-                                       ? depTimeAtPickup + stationDistances.getMinDistanceForPDLoc(asgn.pickup.id)
-                                       : schedArrTimes[j] + detourUntilArrAtJ)
-                                  - reqTime;
+                    const int detourUntilDepAtJ =
+                            calcResidualPickupDetour(vehId, i, j + 1, initialPickupDetour, routeState);
+                    const int depTimeAtJ = std::max(schedDepTimes[j], schedArrTimes[j] + detourUntilArrAtJ + stopTime);
+                    KASSERT(depTimeAtJ == schedDepTimes[j] + detourUntilDepAtJ);
+                    const int addedTripTimeUntilJ = calcAddedTripTimeInInterval(vehId, i, j,
+                        initialPickupDetour, routeState);
 
-                        const int detourUntilDepAtJ =
-                                j == i ? 0 : calcResidualPickupDetour(vehId, i, j + 1, initialPickupDetour, routeState);
-                        const int addedTripTimeUntilJ = calcAddedTripTimeInInterval(vehId, i, j,
-                            initialPickupDetour, routeState);
+                    // for each station in ellipse, try assignment
+                    for (const auto &entry: stationsInEllipse.getStationsInEllipse(curStopId)) {
+                        const auto &station = stations[entry.targetId];
 
-                        // for each station in ellipse, try assignment
-                        for (const auto &stationEntry: stationsInEllipse.getStationsInEllipse(curStopId)) {
-                            const auto &station = stations[stationEntry.targetId];
-
-                            if (j + 1 < numStops && stopLocations[j + 1] == station.vehEdgeId) {
-                                // If the station is at the location of the following stop, do not try an assignment here as it would
-                                // introduce a new stop after dropoffIndex that is at the same location as dropoffIndex + 1.
-                                // Instead, this will be dealt with as an assignment at dropoffIndex + 1 afterwards.
-                                continue;
-                            }
-
-                            // Stations in ellipse are sorted by detour so that we can break after the first station
-                            // that has a detour that is large enough to lead to a total cost that is above the external upper bound.
-                            // (We use a lower bound that does not consider the trip time from stop i to the station as
-                            // this is not respected in the order of stations).
-                            const bool stationAtExistingStop = j != i && stopLocations[j] == station.vehEdgeId;
-                            int detourRightAfterStation = detourUntilDepAtJ + calcInitialDropoffDetour(
-                                                              vehId, j, stationEntry.distFromStopToStation,
-                                                              stationEntry.distFromStationToStop,
-                                                              stationAtExistingStop, routeState);
-                            if (detourRightAfterStation > curLeeway)
-                                break;
-                            if (i == j)
-                                detourRightAfterStation = std::max(detourRightAfterStation, initialPickupDetour);
-                            const int totalResDetour = calcResidualTotalDetourForStopAfterDropoff(
-                                vehId, j, numStops - 1, detourRightAfterStation, routeState);
-                            const int addedTripTime = addedTripTimeUntilJ + calcAddedTripTimeAffectedByPickupAndDropoff(
-                                                          vehId, j, detourRightAfterStation, routeState);
-                            const int minCost = calculator.calcMinCostForOrdinaryToStations(
-                                totalResDetour, minTripTime, addedTripTime);
-                            if (minCost >= externalUpperBoundCost)
-                                break;
-
-                            asgn.dropoff = {
-                                station.stationId, // PDLoc ID
-                                station.vehEdgeId, // Location in road network
-                                station.psgEdgeId, // Location in passenger road network
-                                0, // Walking time from this dropoff to destination
-                                0, // Vehicle driving time from this dropoff to the destination
-                                0 // Vehicle driving time from destination to this dropoff
-                            };
-
-                            asgn.dropoffStopIdx = j;
-
-                            asgn.distFromDropoff = stationEntry.distFromStationToStop;
-
-                            // In case of paired assignment:
-                            if (asgn.pickupStopIdx == asgn.dropoffStopIdx) {
-                                ++numPairedAssignmentsTried;
-                                asgn.distFromPickup = 0;
-                                asgn.distToDropoff = stationDistances.getDistance(asgn.dropoff.id, asgn.pickup.id);
-                            } else {
-                                ++numNonPairedAssignmentsTried;
-                                asgn.distFromPickup = pickupEntry.distFromPDLocToNextStop;
-                                asgn.distToDropoff = stationEntry.distFromStopToStation;
-                            }
-
-                            // requestState.tryAssignmentWithKnownCost(asgn, calculator.calc(asgn, requestState));
-                            firstTaxiLegResult.tryAssignmentWithForStation(
-                                station.stationId, asgn, calculator.calc(asgn, requestState), time_utils::calcArrivalTime(asgn, requestState, routeState),  InsertionType::ORDINARY);
+                        if (nextStopLoc == station.vehEdgeId) {
+                            // If the station is at the location of the following stop, do not try an assignment here as it would
+                            // introduce a new stop after dropoffIndex that is at the same location as dropoffIndex + 1.
+                            // Instead, this will be dealt with as an assignment at dropoffIndex + 1 afterwards.
+                            continue;
                         }
-                        if (i == j)
-                            pairedTime += pairedTimer.elapsed<std::chrono::nanoseconds>();
+
+                        if (asgn.pickup.loc == station.vehEdgeId)
+                            continue;
+
+                        // Stations in ellipse are sorted by detour so that we can break after the first station
+                        // that has a detour that is large enough to lead to a total cost that is above the external upper bound.
+                        // (We use a lower bound that does not consider the trip time from stop i to the station as
+                        // this is not respected in the order of stations).
+                        const bool stationAtExistingStop = curStopLoc == station.vehEdgeId;
+                        int detourRightAfterStation = detourUntilDepAtJ + (stationAtExistingStop
+                                                                               ? 0
+                                                                               : entry.distFromStopToStation + stopTime
+                                                                                   +
+                                                                                   entry.distFromStationToStop -
+                                                                                   lengthOfLegJ);
+                        if (detourRightAfterStation > maxDetourAtJ)
+                            break;
+                        const int totalResDetour = calcResidualTotalDetourForStopAfterDropoff(
+                            vehId, j, numStops - 1, detourRightAfterStation, routeState);
+                        const int addedTripTime = addedTripTimeUntilJ + calcAddedTripTimeAffectedByPickupAndDropoff(
+                                                      vehId, j, detourRightAfterStation, routeState);
+                        const int minCost = calculator.calcMinCostForOrdinaryToStations(
+                            totalResDetour, minTripTime, addedTripTime);
+                        if (minCost >= externalUpperBoundCost)
+                            break;
+
+                        asgn.dropoff = {
+                            station.stationId, // PDLoc ID
+                            station.vehEdgeId, // Location in road network
+                            station.psgEdgeId, // Location in passenger road network
+                            0, // Walking time from this dropoff to destination
+                            0, // Vehicle driving time from this dropoff to the destination
+                            0 // Vehicle driving time from destination to this dropoff
+                        };
+
+                        ++stats.numNonPairedAssignmentsTried;
+                        asgn.distToDropoff = entry.distFromStopToStation;
+                        asgn.distFromDropoff = entry.distFromStationToStop;
+
+                        // requestState.tryAssignmentWithKnownCost(asgn, calculator.calc(asgn, requestState));
+                        const int arrivalTime = stationAtExistingStop ? arrTimeAtJ : depTimeAtJ + asgn.distToDropoff;
+                        KASSERT(arrivalTime == calcArrivalTime(asgn, requestState, routeState));
+                        firstTaxiLegResult.tryAssignmentWithForStation(
+                            station.stationId, asgn, calculator.calc(asgn, requestState),
+                            arrivalTime, ORDINARY);
                     }
                 }
             }
 
-            const int64_t tryAssignmentsTime = timer.elapsed<std::chrono::nanoseconds>();
-            stats.numCandidateVehicles += numCandidateVehicles;
-            stats.numNonPairedAssignmentsTried += numNonPairedAssignmentsTried;
-            stats.numPairedAssignmentsTried += numPairedAssignmentsTried;
-            const auto nonPairedTime = tryAssignmentsTime - pairedTime;
-            stats.tryPairedAssignmentsTime += pairedTime;
-            stats.tryNonPairedAssignmentsTime += nonPairedTime;
+            stats.tryNonPairedAssignmentsTime += timer.elapsed<std::chrono::nanoseconds>();
         }
 
-    private:
+        void enumeratePairedAssignments(const int vehId, const RequestState &requestState, const PDLocs &pdLocs,
+                                        const RelevantPDLocs &relPickups,
+                                        const PTStations &stations, StationsInEllipseT &stationsInEllipse,
+                                        StationDistancesT &stationDistances,
+                                        stats::OrdAssignmentsPerformanceStats &stats,
+                                        FirstTaxiLegResult &firstTaxiLegResult,
+                                        const int externalUpperBoundCost) {
+            KASSERT(relPickups.hasRelevantSpotsFor(vehId));
+            static int stopTime = InputConfig::getInstance().stopTime;
+            KaRRiTimer timer;
+            const int reqTime = requestState.originalRequest.requestTime;
+            const auto numStops = routeState.numStopsOf(vehId);
+            const auto stopLocations = routeState.stopLocationsFor(vehId);
+            const auto schedArrTimes = routeState.schedArrTimesFor(vehId);
+            const auto schedDepTimes = routeState.schedDepTimesFor(vehId);
+            const auto maxArrTimes = routeState.maxArrTimesFor(vehId);
+
+            Assignment asgn(&fleet[vehId]);
+            asgn.distFromPickup = 0;
+
+            for (const auto &pickupEntry: relPickups.relevantSpotsFor(vehId)) {
+                const int i = pickupEntry.stopIndex;
+                const int j = i;
+                const int nextStopLoc = stopLocations[j + 1];
+                asgn.pickup = pdLocs.pickups[pickupEntry.pdId];
+                asgn.pickupStopIdx = i;
+                asgn.dropoffStopIdx = j;
+                asgn.distToPickup = pickupEntry.distToPDLoc;
+
+                using namespace time_utils;
+                const auto lengthOfLegJ = calcLengthOfLegStartingAt(j, vehId, routeState);
+                const int depTimeAtPickup = getActualDepTimeAtPickup(
+                    vehId, i, pickupEntry.distToPDLoc, asgn.pickup, requestState, routeState);
+
+                const int minPickupToStationDist = stationDistances.getMinDistanceForPDLoc(asgn.pickup.id);
+                const auto timeUntilDep = depTimeAtPickup - schedDepTimes[j];
+                const int minDetour = timeUntilDep + std::max(pickupEntry.distFromPDLocToNextStop,
+                                                              minPickupToStationDist) + stopTime - lengthOfLegJ;
+
+                const int minTripTime = depTimeAtPickup + minPickupToStationDist - reqTime;
+
+                const auto curStopId = routeState.stopIdsFor(vehId)[j];
+                const int remainingLeeway = routeState.leewayOfLegStartingAt(curStopId) - asgn.distToPickup -
+                                            InputConfig::getInstance().stopTime;
+
+                // for each station in ellipse, try assignment
+                for (const auto &entry: stationsInEllipse.getStationsInEllipse(curStopId)) {
+                    const auto &station = stations[entry.targetId];
+
+                    const int pickupToStationDist = stationDistances.getDistance(station.stationId, asgn.pickup.id);
+                    if (pickupToStationDist + entry.distFromStationToStop > remainingLeeway)
+                        continue;
+
+                    if (nextStopLoc == station.vehEdgeId) {
+                        // If the station is at the location of the following stop, do not try an assignment here as it would
+                        // introduce a new stop after dropoffIndex that is at the same location as dropoffIndex + 1.
+                        // Instead, this will be dealt with as an assignment at dropoffIndex + 1 afterwards.
+                        continue;
+                    }
+
+                    if (asgn.pickup.loc == station.vehEdgeId)
+                        continue;
+
+                    // Stations in ellipse are sorted by detour so that we can break after the first station
+                    // that has a detour that is large enough to lead to a total cost that is above the external upper bound.
+                    // (We use a lower bound that does not consider the trip time from stop i to the station as
+                    // this is not respected in the order of stations).
+                    int detourRightAfterStation = std::max(minDetour, entry.distFromStopToStation + stopTime +
+                                                                      entry.distFromStationToStop - lengthOfLegJ);
+                    const int totalResDetour = calcResidualTotalDetourForStopAfterDropoff(
+                        vehId, j, numStops - 1, detourRightAfterStation, routeState);
+                    const int addedTripTime = calcAddedTripTimeAffectedByPickupAndDropoff(
+                        vehId, j, detourRightAfterStation, routeState);
+                    const int minCost = calculator.calcMinCostForOrdinaryToStations(
+                        totalResDetour, minTripTime, addedTripTime);
+                    if (minCost >= externalUpperBoundCost)
+                        break;
+
+                    asgn.dropoff = {
+                        station.stationId, // PDLoc ID
+                        station.vehEdgeId, // Location in road network
+                        station.psgEdgeId, // Location in passenger road network
+                        0, // Walking time from this dropoff to destination
+                        0, // Vehicle driving time from this dropoff to the destination
+                        0 // Vehicle driving time from destination to this dropoff
+                    };
+
+                    ++stats.numPairedAssignmentsTried;
+                    asgn.distToDropoff = pickupToStationDist;
+                    asgn.distFromDropoff = entry.distFromStationToStop;
+
+                    // requestState.tryAssignmentWithKnownCost(asgn, calculator.calc(asgn, requestState));
+                    const int arrivalTime = depTimeAtPickup + pickupToStationDist;
+                    KASSERT(arrivalTime == calcArrivalTime(asgn, requestState, routeState));
+                    firstTaxiLegResult.tryAssignmentWithForStation(
+                        station.stationId, asgn, calculator.calc(asgn, requestState), arrivalTime, ORDINARY);
+                }
+            }
+            stats.tryPairedAssignmentsTime += timer.elapsed<std::chrono::nanoseconds>();
+        }
+
         const Fleet &fleet;
         CostCalculator calculator;
         const RouteState &routeState;

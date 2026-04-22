@@ -31,7 +31,7 @@ namespace karri {
 
             ptAlgorithm.run(originPsgEdge, originVehEdge, destPsgEdge, destVehEdge, query.departureTime, stats);
             const auto ptOnlyParetoFront = ptAlgorithm.getJourneys();
-            auto [journey, cost] = chooseBestJourney(ptOnlyParetoFront);
+            auto [journey, cost] = chooseBestJourney(ptOnlyParetoFront, requestState.originalRequest.requestTime);
             PTResult ptOnlyResponse(journey, cost);
 
             return ptOnlyResponse;

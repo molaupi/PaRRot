@@ -7,12 +7,12 @@
 namespace karri {
 
     template<typename Journeys>
-    std::pair<RAPTOR::Journey, int> chooseBestJourney(const Journeys &journeys) {
+    std::pair<RAPTOR::Journey, int> chooseBestJourney(const Journeys &journeys, const int reqTime) {
         int bestCost = INFTY;
         RAPTOR::Journey bestJourney;
         for (const auto &journey: journeys) {
             const int cost = CostCalculator::calcPTJourneyCost(
-                                            getTotalTripTime(journey),
+                                            parrot::ultraToKarriTime(journey.back().arrivalTime) - reqTime,
                                             getTotalTransferTime(journey),
                                             getNumberOfTransfers(journey));
             if (cost < bestCost) {

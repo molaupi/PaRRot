@@ -28,29 +28,27 @@
 #include <cstdint>
 
 namespace karri::stats {
-    
     struct FirstTaxiLegResultStats {
-
         static constexpr auto LOGGER_NAME = "first_taxi_leg_results.csv";
-        static constexpr auto LOGGER_COLS = 
-            "average_cost," 
-            "average_arrival_time,"
-            "pals_count,"
-            "dals_count,"
-            "dals_pbns_count,"
-            "ordinary_count,"
-            "pbns_count,"
-            "undefined_count,"
-            "valid_results_count\n";
+        static constexpr auto LOGGER_COLS =
+                "average_cost,"
+                "average_arrival_time,"
+                "pals_count,"
+                "dals_count,"
+                "dals_pbns_count,"
+                "ordinary_count,"
+                "pbns_count,"
+                "undefined_count,"
+                "num_stations_with_results,"
+                "num_valid_results\n";
     };
 
     struct PTResultStats {
-
         static constexpr auto LOGGER_NAME = "pt_results.csv";
-        static constexpr auto LOGGER_COLS = 
-            "pt_only_cost," 
-            "pt_only_leg_count," 
-            "pt_with_taxi_cost," 
-            "pt_with_taxi_leg_count\n";
+        static constexpr auto LOGGER_COLS =
+                "pt_only_cost,"
+                "pt_only_leg_count,"
+                "pt_with_taxi_cost,"
+                "pt_with_taxi_leg_count\n";
     };
 }

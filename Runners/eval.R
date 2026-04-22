@@ -93,12 +93,19 @@ quality <- function(file_base, mode_choice=TRUE) {
 
 # Given the paths to the result files of two KaRRi runs, this functions checks
 # whether all assignments are the same in both runs.
-compareBestAssignments <- function(file1, file2) {
-  bestins1 <- read.csv(paste0(file1, ".bestassignments.csv"))
-  bestins2 <- read.csv(paste0(file2, ".bestassignments.csv"))
+compareBestAssignments <- function(file1, file2, trim = F) {
+  bestins1 <- fread(paste0(file1, ".bestassignments.csv"))
+  bestins2 <- fread(paste0(file2, ".bestassignments.csv"))
     
-  bestins1 <- bestins1[order(bestins1$request_id),]
-  bestins2 <- bestins2[order(bestins2$request_id),]
+  bestins1 <- bestins1[order(bestins1$request_id)]
+  bestins2 <- bestins2[order(bestins2$request_id)]
+  
+  if (trim) {
+    if (nrow(bestins1) > nrow(bestins2))
+      bestins1 <- bestins1[1:nrow(bestins2)]
+    if (nrow(bestins2) > nrow(bestins1))
+      bestins2 <- bestins2[1:nrow(bestins1)]
+  }
   
   relcols <- c("request_id", 
                "request_time", 
@@ -114,13 +121,9 @@ compareBestAssignments <- function(file1, file2) {
                "pickup_walking_dist",
                "dropoff_id",
                "dropoff_walking_dist",
-               "num_stops",
-               "pickup_location",
-               "dropoff_location",
-               "stop_loc_before_pickup",
-               "stop_loc_before_dropoff")
-  rel1 <- bestins1[, relcols]
-  rel2 <- bestins2[, relcols]
+               "num_stops")
+  rel1 <- bestins1[, ..relcols]
+  rel2 <- bestins2[, ..relcols]
   
   # Get smallest row index where at least one value differs
   idx <- match(TRUE, rowSums(rel1 != rel2) > 0)
@@ -134,7 +137,7 @@ compareBestAssignments <- function(file1, file2) {
   }
 }
 
-compareFiles <- function(file1, file2, ending, trim = TRUE, ignore_columns=c()) {
+compareFiles <- function(file1, file2, ending, trim = TRUE, trim_n = NA, ignore_columns=c()) {
   df1 <- fread(paste0(file1, ending))
   df2 <- fread(paste0(file2, ending))
   
@@ -146,10 +149,16 @@ compareFiles <- function(file1, file2, ending, trim = TRUE, ignore_columns=c()) 
   df1 <- df1[order(df1$request_id)]
   df2 <- df2[order(df2$request_id)]
   
-  if (nrow(df1) > nrow(df2))
-    df1 <- df1[1:nrow(df2)]
-  if (nrow(df2) > nrow(df1))
-    df2 <- df2[1:nrow(df1)]
+  if (trim) {
+    if (nrow(df1) > nrow(df2))
+      df1 <- df1[1:nrow(df2)]
+    if (nrow(df2) > nrow(df1))
+      df2 <- df2[1:nrow(df1)]
+  }
+  if (!is.na(trim_n)) {
+    df1 <- df1[1:trim_n]
+    df2 <- df2[1:trim_n]
+  }
   
   # Get smallest row index where at least one value differs
   idx <- match(TRUE, rowSums(df1 != df2) > 0)
@@ -167,8 +176,8 @@ compareModeChoice <- function(file1, file2, trim = TRUE) {
   compareFiles(file1, file2, ".modechoice.csv", trim)
 }
 
-compareIntermediateResults <- function(file1, file2, trim = TRUE, ignore_columns=c("cost_1st_taxi_leg")) {
-  compareFiles(file1, file2, ".intermediate_results.csv", trim, ignore_columns)
+compareIntermediateResults <- function(file1, file2, trim = TRUE, trim_n = NA, ignore_columns=c("cost_1st_taxi_leg")) {
+  compareFiles(file1, file2, ".intermediate_results.csv", trim, trim_n, ignore_columns)
 }
 
 library(data.table)

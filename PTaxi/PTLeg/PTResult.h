@@ -10,13 +10,13 @@ namespace karri {
 class PTResult {
     using Journey = RAPTOR::Journey;
 
-    static int computeCost(const Journey &journey) {
-        if (journey.empty())
-            return INFTY;
-        return CostCalculator::calcPTJourneyCost(getTotalTripTime(journey),
-                                            getTotalTransferTime(journey),
-                                            getNumberOfTransfers(journey));
-    }
+    // static int computeCost(const Journey &journey) {
+    //     if (journey.empty())
+    //         return INFTY;
+    //     return CostCalculator::calcPTJourneyCost(getTotalTripTime(journey),
+    //                                         getTotalTransferTime(journey),
+    //                                         getNumberOfTransfers(journey));
+    // }
 
 public:
     PTResult() : valid(false), cost(INFTY) {}
