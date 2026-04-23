@@ -53,9 +53,6 @@ namespace karri {
 
             template<typename DistLabelT, typename DistLabelContainerT>
             bool operator()(const int v, DistLabelT &distToV, const DistLabelContainerT & /*distLabels*/) {
-                // // Check if we can prune at this vertex based on the distance to v
-                // if (allSet(search.canPrune(distToV, search.curMinTripTimesToLastStop, search.curMinResidualPickupDetours)))
-                //     return true;
 
                 int numEntriesScannedHere = 0;
 
@@ -96,12 +93,11 @@ namespace karri {
         private:
             void tryUpdatingDistance(const int stationId, const DistanceLabel &distToStation,
                                      LabelMask needToUpdate) {
-                KASSERT(allSet((distToStation < INFTY) | needToUpdate));
+                KASSERT(allSet((distToStation < INFTY) | ~needToUpdate));
                 // Update tentative distances to v for any searches where distViaV admits a possible better assignment
                 // than the current best and where distViaV is at least as good as the current tentative distance.
                 auto &cur = search.currentLastStopDistances[stationId];
-                needToUpdate &= ~(cur < distToStation);
-                // needToUpdate &= distToStation < INFTY;
+                needToUpdate &= distToStation < cur;
                 if (!anySet(needToUpdate))
                     return;
 
@@ -156,8 +152,9 @@ namespace karri {
               stationsAtLocations(stationsAtLocations),
               stationsWithValidDistances(),
               currentLastStopDistances(ptStations.size(), DistanceLabel(INFTY)),
-              costUntilLastStopUpperBound(ptStations.size(), INFTY) {
+              costUntilLastStopUpperBound() {
             stationsWithValidDistances.reserve(ptStations.size());
+            costUntilLastStopUpperBound.reserve(ptStations.size());
         }
 
         void tryDropoffAfterLastStop(const RequestState &requestState, const PDLocs &pdLocs,
@@ -181,9 +178,9 @@ namespace karri {
                 KaRRiTimer timer;
                 for (const auto &s: stationsWithValidDistances) {
                     currentLastStopDistances[s] = INFTY;
-                    costUntilLastStopUpperBound[s] = INFTY;
                 }
                 stationsWithValidDistances.clear();
+                costUntilLastStopUpperBound.clear();
 
                 curMinCostToLastStop = DistanceLabel(INFTY);
                 for (int j = 0; j < K; ++j) {
@@ -224,36 +221,11 @@ namespace karri {
     private:
         LabelMask canPrune(const DistanceLabel &distancesToDropoffs, const DistanceLabel &minCostToLastStop) const {
             using F = CostCalculator::CostFunction;
-            // if (upperBoundCost >= INFTY) {
-            //     // If current best is INFTY, only indices i with distancesToPickups[i] >= INFTY or
-            //     // minDirectDistances[i] >= INFTY are worse than the current best.
-            //     return ~(distancesToDropoffs < INFTY);
-            // }
 
             DistanceLabel costLowerBound = minCostToLastStop +
                                            F::calcKVehicleCosts(distancesToDropoffs) +
                                            F::calcKTripCosts(distancesToDropoffs);
             return distancesToDropoffs >= INFTY | costLowerBound > upperBoundCost;
-
-            // // For dropoffs with a distanceToDropoff of INFTY, set cost to INFTY later.
-            // const LabelMask inftyMask = ~(distancesToDropoffs < INFTY);
-            //
-            // const DistanceLabel minDetours = minResidualPickupDetour + distancesToDropoffs + InputConfig::getInstance().
-            //                                  stopTime;
-            // DistanceLabel minTripTimes = minTripTimeToLastStop + distancesToDropoffs;
-            // const DistanceLabel minTripCosts = F::calcKTripCosts(minTripTimes, *curReqState);
-            //
-            // // Independent of pickup so we cannot know here which existing passengers may be affected by pickup detour
-            // // const DistanceLabel minAddedTripCostOfOthers = 0;
-            //
-            // DistanceLabel costLowerBound = F::calcKVehicleCosts(minDetours) + minTripCosts;
-            // costLowerBound.setIf(DistanceLabel(INFTY), inftyMask);
-            // //
-            // // const DistanceLabel costLowerBound = calculator.template
-            // //         calcKCostLowerBoundsForStationDALSWithKnownMinDistToStation<LabelSet>(
-            // //             distancesToDropoffs, minTripTimeToLastStop, minResidualPickupDetour, *curReqState);
-
-            // return upperBoundCost < costLowerBound;
         }
 
 
@@ -429,20 +401,15 @@ namespace karri {
                 }
                 // If no access RP trips to this station are known, its upper bound is INFTY
                 if (upperBoundToStation == -1) {
-                    costUntilLastStopUpperBound[stationId] = INFTY;
+                    costUntilLastStopUpperBound.push_back(INFTY);
                     continue;
                 }
 
                 const auto &distToStation = currentLastStopDistances[stationId];
                 auto costAfterLastStop = (CostCalculator::CostFunction::calcKVehicleCosts(distToStation) +
                                           CostCalculator::CostFunction::calcKTripCosts(distToStation)).horizontalMin();
-                costUntilLastStopUpperBound[stationId] = upperBoundToStation - costAfterLastStop;
+                costUntilLastStopUpperBound.push_back(upperBoundToStation - costAfterLastStop);
             }
-            std::sort(stationsWithValidDistances.begin(), stationsWithValidDistances.end(),
-                      [&](const int s1, const int s2) {
-                          return costUntilLastStopUpperBound[s1] > costUntilLastStopUpperBound[s2];
-                      });
-
 
             enumerateAssignmentsWithOrdinaryPickupForVehicleBatch(indexOfFirstVeh, numAssignmentsTried,
                                                                   relevantOrdinaryPickups, requestState, pdLocs,
@@ -514,10 +481,12 @@ namespace karri {
                     const int depTimeAtLastStop =
                             routeState.schedArrTimesFor(vehId)[numStops - 1] + residualDetourAtLastStop;
 
-                    for (const int stationId: stationsWithValidDistances) {
-                        if (costUntilDepAtLastStop >= costUntilLastStopUpperBound[stationId])
-                            break; // stations are sorted by upper bound so no need to check any more stations
+                    for (int idxInValid = 0; idxInValid < stationsWithValidDistances.size(); ++idxInValid) {
 
+                        if (costUntilDepAtLastStop >= costUntilLastStopUpperBound[idxInValid])
+                            continue;
+
+                        const int stationId = stationsWithValidDistances[idxInValid];
                         const auto &station = ptStations[stationId];
                         KASSERT(station.stationId == stationId);
                         asgn.dropoff = {
@@ -604,14 +573,13 @@ namespace karri {
                         veh, asgn.pickup, 0, depTimeAtPickup, initialPickupDetour,
                         residualDetourAtLastStop, requestState);
 
-                    for (int idxInValidStations = 0; idxInValidStations < stationsWithValidDistances.size(); ++
-                         idxInValidStations) {
-                        const auto &station = ptStations[stationsWithValidDistances[idxInValidStations]];
+                    for (int idxInValid = 0; idxInValid < stationsWithValidDistances.size(); ++idxInValid) {
 
-                        if (lowerBoundCostUntilDepAtLastStop >= costUntilLastStopUpperBound[station.stationId])
-                            break; // stations are sorted by upper bound so no need to check any more stations
+                        if (lowerBoundCostUntilDepAtLastStop >= costUntilLastStopUpperBound[idxInValid])
+                            continue;
 
-                        KASSERT(station.stationId == stationsWithValidDistances[idxInValidStations]);
+                        const auto &station = ptStations[stationsWithValidDistances[idxInValid]];
+                        KASSERT(station.stationId == stationsWithValidDistances[idxInValid]);
                         asgn.dropoff = {
                             station.stationId, // PDLoc ID
                             station.vehEdgeId, // Location in road network
@@ -648,7 +616,7 @@ namespace karri {
                                 // computation of distances to other pickups via the vehicle location. Then all remaining
                                 // assignments with this pickup can be tried with the exact distance later.
                                 curVehLocToPickupSearches.addPickupForProcessing(asgn.pickup.id, asgn.distToPickup);
-                                pbnsContinuations.push_back({asgn.pickup.id, asgn.distFromPickup, idxInValidStations});
+                                pbnsContinuations.push_back({asgn.pickup.id, asgn.distFromPickup, idxInValid});
                                 break;
                             }
                         }
@@ -683,12 +651,12 @@ namespace karri {
                             routeState.schedArrTimesFor(vehId)[numStops - 1] + residualDetourAtLastStop;
 
                     asgn.distFromPickup = continuation.distFromPickup;
-                    for (int idxInValidStations = continuation.fromIdxInValidStations;
-                         idxInValidStations < stationsWithValidDistances.size(); ++idxInValidStations) {
-                        const auto &station = ptStations[stationsWithValidDistances[idxInValidStations]];
+                    for (int idxInValid = continuation.fromIdxInValidStations; idxInValid < stationsWithValidDistances.size(); ++idxInValid) {
 
-                        if (costUntilDepAtLastStop >= costUntilLastStopUpperBound[station.stationId])
-                            break; // stations are sorted by upper bound so no need to check any more stations
+                        if (costUntilDepAtLastStop >= costUntilLastStopUpperBound[idxInValid])
+                            continue;
+
+                        const auto &station = ptStations[stationsWithValidDistances[idxInValid]];
 
                         asgn.dropoff = {
                             station.stationId, // PDLoc ID
@@ -761,6 +729,8 @@ namespace karri {
         std::vector<int> stationsWithValidDistances;
         std::vector<DistanceLabel> currentLastStopDistances;
 
+        // For the station at stationsWithValidDistances[i], costUntilLastStopUpperBound[i] is an upper bound on the
+        // cost for the pickup until the last stop to allow for a better assignment than the best known to this station.
         std::vector<int> costUntilLastStopUpperBound;
 
         // Pointers to request state and relevant PD locs so Dijkstra search callback has access to them
