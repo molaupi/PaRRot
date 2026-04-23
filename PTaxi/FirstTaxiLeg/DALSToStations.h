@@ -53,7 +53,6 @@ namespace karri {
 
             template<typename DistLabelT, typename DistLabelContainerT>
             bool operator()(const int v, DistLabelT &distToV, const DistLabelContainerT & /*distLabels*/) {
-
                 int numEntriesScannedHere = 0;
 
                 if constexpr (!StationBucketsEnvT::SORTED) {
@@ -482,7 +481,6 @@ namespace karri {
                             routeState.schedArrTimesFor(vehId)[numStops - 1] + residualDetourAtLastStop;
 
                     for (int idxInValid = 0; idxInValid < stationsWithValidDistances.size(); ++idxInValid) {
-
                         if (costUntilDepAtLastStop >= costUntilLastStopUpperBound[idxInValid])
                             continue;
 
@@ -574,7 +572,6 @@ namespace karri {
                         residualDetourAtLastStop, requestState);
 
                     for (int idxInValid = 0; idxInValid < stationsWithValidDistances.size(); ++idxInValid) {
-
                         if (lowerBoundCostUntilDepAtLastStop >= costUntilLastStopUpperBound[idxInValid])
                             continue;
 
@@ -632,8 +629,8 @@ namespace karri {
                         stationsWithValidDistances.size());
                     asgn.pickup = pdLocs.pickups[continuation.pickupID];
 
-                    asgn.distToPickup = curVehLocToPickupSearches.getDistance(vehId,
-                                                                              continuation.pickupID);
+                    asgn.distToPickup = curVehLocToPickupSearches.getDistance(vehId, continuation.pickupID);
+                    asgn.distFromPickup = continuation.distFromPickup;
                     if (asgn.distToPickup >= INFTY)
                         continue;
 
@@ -645,14 +642,13 @@ namespace karri {
                     const auto residualDetourAtLastStop = calcResidualPickupDetour(
                         veh.vehicleId, 0, numStops - 1, initialPickupDetour, routeState);
                     const int costUntilDepAtLastStop = calculator.calcCostUntilLastStopForDALS(
-                        veh, asgn.pickup, 0, depTimeAtPickup, initialPickupDetour,
-                        residualDetourAtLastStop, requestState);
+                        veh, asgn.pickup, 0, depTimeAtPickup, initialPickupDetour, residualDetourAtLastStop,
+                        requestState);
                     const int depTimeAtLastStop =
                             routeState.schedArrTimesFor(vehId)[numStops - 1] + residualDetourAtLastStop;
 
-                    asgn.distFromPickup = continuation.distFromPickup;
-                    for (int idxInValid = continuation.fromIdxInValidStations; idxInValid < stationsWithValidDistances.size(); ++idxInValid) {
-
+                    for (int idxInValid = continuation.fromIdxInValidStations;
+                         idxInValid < stationsWithValidDistances.size(); ++idxInValid) {
                         if (costUntilDepAtLastStop >= costUntilLastStopUpperBound[idxInValid])
                             continue;
 

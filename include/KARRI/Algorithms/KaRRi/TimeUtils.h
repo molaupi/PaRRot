@@ -72,10 +72,10 @@ namespace karri::time_utils {
     static int getActualDepTimeAtPickup(const int vehId, const int stopIndexBeforePickup, const int distToPickup,
                                         const PDLoc &pickup, const RequestContext &context,
                                         const RouteState &routeState) {
-        const bool atStop = isPickupAtExistingStop(pickup, vehId, context.earliestDeparture(), stopIndexBeforePickup,
+        const bool atStop = isPickupAtExistingStop(pickup, vehId, context.now(), stopIndexBeforePickup,
                                                    routeState);
         const auto minVehicleDepTimeAtPickup =
-                getVehDepTimeAtStopForRequest(vehId, stopIndexBeforePickup, context.earliestDeparture(), routeState) +
+                getVehDepTimeAtStopForRequest(vehId, stopIndexBeforePickup, context.now(), routeState) +
                 !atStop * (distToPickup + InputConfig::getInstance().stopTime);
 
         // We assume a pickup at an existing stop takes no additional counting of stopTime, irrespective of when the
