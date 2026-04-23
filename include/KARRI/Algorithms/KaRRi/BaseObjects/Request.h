@@ -37,9 +37,6 @@ namespace karri {
         int requestTime = INFTY;
         int numRiders = INFTY;
 
-        int maxPickupWalkingDist = 0; // Maximum walking distance in meters from the origin to the pickup location
-        int maxDropoffWalkingDist = 0; // Maximum walking distance in meters from the destination to the dropoff location
-        double walkingSpeed = 1.3889; // Walking speed in m/s (default: 5 km/h)
         double allowPrivateCarProbability = 1.0; // Probability of allowing private car as an option for this request in mode choice. Should be between 0 and 1.
     };
 
@@ -50,9 +47,6 @@ namespace karri {
            << ",\n\tdestination=" << request.destination
            << ",\n\trequestTime=" << request.requestTime
            << ",\n\tnumRiders=" << request.numRiders
-           << ",\n\tmaxPickupWalkingDist=" << request.maxPickupWalkingDist
-           << ",\n\tmaxDropoffWalkingDist=" << request.maxDropoffWalkingDist
-           << ",\n\twalkingSpeed=" << request.walkingSpeed
            << ",\n\tallowPrivateCarProbability=" << request.allowPrivateCarProbability
            << "\n)";
         return os;
