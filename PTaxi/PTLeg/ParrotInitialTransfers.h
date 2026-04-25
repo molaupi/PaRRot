@@ -29,11 +29,11 @@ namespace RAPTOR {
  * 
  */
 template<typename InputGraphT, typename CHEnvT, typename StationBucketsEnvT>
-class TaxiInitialTransfers {
+class ParrotInitialTransfers {
 public:
     using LabelSetT = BasicLabelSet<0, ParentInfo::FULL_PARENT_INFO>;
     using Graph = TransferGraph;
-    using Type = TaxiInitialTransfers<InputGraphT, CHEnvT, StationBucketsEnvT>;
+    using Type = ParrotInitialTransfers<InputGraphT, CHEnvT, StationBucketsEnvT>;
     
     static constexpr int K = LabelSetT::K;
     using DistanceLabel = typename LabelSetT::DistanceLabel;
@@ -42,7 +42,7 @@ public:
 private:
     // For origin -> station distances
     struct ScanSourceBuckets {
-        explicit ScanSourceBuckets(TaxiInitialTransfers& search) : search(search) {}
+        explicit ScanSourceBuckets(ParrotInitialTransfers& search) : search(search) {}
 
         template<typename DistLabelT, typename DistLabelContainerT>
         bool operator()(const int v, DistLabelT& distFromV, const DistLabelContainerT&) {
@@ -59,12 +59,12 @@ private:
             return false; // Never prune
         }
 
-        TaxiInitialTransfers& search;
+        ParrotInitialTransfers& search;
     };
 
     // For station -> destination distances
     struct ScanTargetBuckets {
-        explicit ScanTargetBuckets(TaxiInitialTransfers& search) : search(search) {}
+        explicit ScanTargetBuckets(ParrotInitialTransfers& search) : search(search) {}
 
         template<typename DistLabelT, typename DistLabelContainerT>
         bool operator()(const int v, DistLabelT& distToV, const DistLabelContainerT&) {
@@ -81,7 +81,7 @@ private:
             return false; // Never prune
         }
 
-        TaxiInitialTransfers& search;
+        ParrotInitialTransfers& search;
     };
 
 
@@ -93,7 +93,7 @@ public:
      * @param stationBucketsEnv The pre-built pedestrian station buckets
      * @param numStations The number of PT stations (= number of stops)
      */
-    TaxiInitialTransfers(const InputGraphT& inputGraph, const CHEnvT& chEnv,
+    ParrotInitialTransfers(const InputGraphT& inputGraph, const CHEnvT& chEnv,
                          const StationBucketsEnvT& stationBucketsEnv, const int numStations)
         : inputGraph(inputGraph)
         , ch(chEnv.getCH())

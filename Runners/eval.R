@@ -91,6 +91,13 @@ quality <- function(file_base, mode_choice=TRUE) {
   print(df)
 }
 
+modeChoiceOverview <- function(file_base) {
+  modes <- fread(paste0(file_base, ".modechoice.csv"))
+  modes <- modes[,.N,mode]
+  modes[, pct := paste0(format(round(N / sum(N) * 100, 2), nsmall=2), " %")]
+  print(modes)
+}
+
 # Given the paths to the result files of two KaRRi runs, this functions checks
 # whether all assignments are the same in both runs.
 compareBestAssignments <- function(file1, file2, trim = F) {

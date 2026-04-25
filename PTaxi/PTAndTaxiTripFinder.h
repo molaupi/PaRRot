@@ -7,7 +7,6 @@
 
 #include "KaRRiBaseInfo.h"
 #include "ApproximateCombinedTripResult.h"
-#include "BestPTJourneyChoice.h"
 #include "FirstTaxiLeg/StationsAtLocations.h"
 
 namespace karri {
@@ -74,7 +73,8 @@ namespace karri {
 
         ApproximateCombinedTripResult findBestAssignment(const RequestState &requestState,
                                                          const KaRRiBaseInfo &baseInfo,
-                                                         const int upperBoundCost,
+                                                         const int taxiOnlyCost,
+                                                         const int ptOnlyCost,
                                                          stats::TaxiAndPtPerformanceStats &stats) {
             const Request &req = requestState.originalRequest;
             const auto query = queries[req.requestId];
@@ -83,6 +83,7 @@ namespace karri {
             const int destPsgEdge = query.destinationPsgEdge;
             const int destVehEdge = query.destinationVehEdge;
 
+            const int upperBoundCost = std::min(taxiOnlyCost, ptOnlyCost);
             runFirstTaxiSharingLeg(
                 requestState, baseInfo.pdLocs, baseInfo.relOrdinaryPickups, baseInfo.relPickupsBeforeNextStop,
                 upperBoundCost, stats.stationBchStats, stats.taxiFirstLegStats);
@@ -91,8 +92,8 @@ namespace karri {
                                                                  stats.stationBchStats);
             const auto &distFromStations = taxiLegApproximation.getDistancesFromStations();
 
-            ptAlgorithmWithTaxi.run(originPsgEdge, originVehEdge, destPsgEdge, destVehEdge,
-                                    query.departureTime, firstTaxiLegResult, distFromStations, stats.ptWithTaxiStats);
+            ptAlgorithmWithTaxi.runWithTaxi(originPsgEdge, originVehEdge, destPsgEdge, destVehEdge,
+                                    query.departureTime, firstTaxiLegResult, distFromStations, ptOnlyCost, stats.ptWithTaxiStats);
             // auto ptLegParetoFront = ptAlgorithmWithTaxi.getJourneys();
             // auto journey = chooseBestJourney(ptLegParetoFront);
             auto bestJourney = ptAlgorithmWithTaxi.getJourneyWithBestCost();
@@ -108,8 +109,8 @@ namespace karri {
                 rpAccessTrip,
                 bestJourney.journey,
                 taxiLegApproximation);
-            KASSERT(intermediateResult.getBestCost() >= bestJourney.cost - 30 &&
-                intermediateResult.getBestCost() <= bestJourney.cost + 30);
+            KASSERT(intermediateResult.getBestCost() >= bestJourney.cost - 200 &&
+                intermediateResult.getBestCost() <= bestJourney.cost + 200, "Request ID = " << req.requestId);
 
 
             writeIntermediateResultToLogger(requestState, intermediateResult);

@@ -25,9 +25,17 @@ public:
                         bestCost(0),
                         arrivalTime(never) {
 
+        bool journeyHasRouteLeg = false;
+        for (const auto &leg: journey) {
+            if (leg.usesRoute) {
+                journeyHasRouteLeg = true;
+                break;
+            }
+        }
+
         const bool firstLegByTaxi = !journey.empty() && journey.front().usesTaxi;
         const bool lastLegByTaxi = !journey.empty() && journey.back().usesTaxi;
-        if (!firstLegByTaxi && !lastLegByTaxi) {
+        if (!(journeyHasRouteLeg && (firstLegByTaxi || lastLegByTaxi))) {
             bestCost = INFTY;
             return;
         }
@@ -52,11 +60,13 @@ public:
         }
         KASSERT(!journey.empty());
 
-        const int ptEarliestDep = firstLegByTaxi ? firstTaxiLeg.arrivalTime : parrot::ultraToKarriTime(journey.front().departureTime);
+        const int ptEarliestDep = firstLegByTaxi ? firstTaxiLeg.arrivalTime : requestTime;
+        int numTransfers = RAPTOR::countTrips(journey);
+        if (numTransfers > 0) --numTransfers; // number of transfers is number of trips - 1 but at least 0
         ptLegCost = CostCalculator::calcPTJourneyCost(
                                       parrot::ultraToKarriTime(journey.back().arrivalTime) - ptEarliestDep,
-                                      getTotalTransferTime(journey),
-                                      getNumberOfTransfers(journey));
+                                      parrot::ultraToKarriTime(RAPTOR::totalTransferTime(journey)),
+                                      numTransfers);
         bestCost += ptLegCost;
         ptLeg = {journey, ptLegCost};
         firstStationId = ptLeg.getFirstStation();

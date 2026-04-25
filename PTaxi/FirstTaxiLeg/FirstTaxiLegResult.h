@@ -19,9 +19,7 @@ namespace karri {
     public:
         explicit FirstTaxiLegResult(const RouteState &routeState, const int numStations)
             : routeState(routeState),
-        // requestState(requestState),
               calculator(routeState), externalUpperBoundCost(INFTY),
-              // worstCostForAllStations(INFTY), worstAssignmentForAllStations(),
               pos(numStations),
               paretoResults(numStations, TaxiResult()) {
             assert(numStations >= 0);
@@ -70,28 +68,7 @@ namespace karri {
             // Add new result to pareto results
             insertion(stationId, newResult, pos, paretoResults);
             return true;
-
-            // TaxiResult &taxiResult = results[stationId];
-            //
-            // if (cost < INFTY && (cost < taxiResult.bestCost || (cost == taxiResult.bestCost &&
-            //                                                     breakCostTie(asgn, taxiResult.bestAssignment)))) {
-            //     taxiResult = TaxiResult(cost, calcArrivalTime(asgn), asgn, insertionType);
-            //     // if (worstCostForAllStations == INFTY || taxiResult.bestCost > worstCostForAllStations) {
-            //     //     worstCostForAllStations = taxiResult.bestCost;
-            //     //     worstAssignmentForAllStations = taxiResult.bestAssignment;
-            //     // }
-            //     return true;
-            // }
-            // return false;
         }
-
-        // const Assignment &getWorstAssignmentForAllStations() const {
-        //     return worstAssignmentForAllStations;
-        // }
-        //
-        // const int &getWorstCostForAllStations() const {
-        //     return worstCostForAllStations;
-        // }
 
         const std::vector<int> &getStationsWithResults() const {
             return stationsWithResults;
@@ -101,12 +78,6 @@ namespace karri {
             KASSERT(stationId >= 0 && stationId < pos.size());
             return {paretoResults.begin() + pos[stationId].start, paretoResults.begin() + pos[stationId].end};
         }
-
-        // const int getCostWithoutTripTimeForStation(const int stationId) const {
-        //     KASSERT(stationId >= 0 && stationId < pos.size());
-        //     auto result = results[stationId];
-        //     return calculator.calc(result.bestAssignment, requestState, true);
-        // }
 
         std::vector<TaxiResult> getValidResults() const {
             std::vector<TaxiResult> validResults;
@@ -120,24 +91,11 @@ namespace karri {
         }
 
     private:
-        // int calcArrivalTime(const Assignment &asgn) {
-        //     using namespace time_utils;
-        //     const int actualDepTimeAtPickup = getActualDepTimeAtPickup(asgn, requestState, routeState);
-        //     const int initialPickupDetour = calcInitialPickupDetour(asgn, actualDepTimeAtPickup, requestState,
-        //                                                             routeState);
-        //     const bool dropoffAtExistingStop = isDropoffAtExistingStop(asgn, routeState);
-        //     return getArrTimeAtDropoff(actualDepTimeAtPickup, asgn, initialPickupDetour, dropoffAtExistingStop,
-        //                                routeState);
-        // }
 
         const RouteState &routeState;
-        // const RequestState &requestState;
         CostCalculator calculator;
         int externalUpperBoundCost;
         int curRequestId;
-        // std::vector<TaxiResult> results;
-        // int worstCostForAllStations;
-        // Assignment worstAssignmentForAllStations;
 
         // One bucket per station. Bucket for station S contains all taxi results for S that are pareto-optimal with
         // respect to cost and arrival time.

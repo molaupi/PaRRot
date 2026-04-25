@@ -19,7 +19,7 @@ namespace RAPTOR {
 
 template <typename LabelSetT, typename PROFILER = NoProfiler, bool PREVENT_DIRECT_WALKING = false,
     typename INITIAL_TRANSFERS = BucketCHInitialTransfers>
-class TaxiULTRARAPTOR {
+class ParrotPTOnlyULTRARAPTOR {
 public:
     using Profiler = PROFILER;
     static constexpr bool PreventDirectWalking = PREVENT_DIRECT_WALKING;
@@ -28,7 +28,7 @@ public:
     static constexpr bool SeparateRouteAndTransferEntries = PreventDirectWalking;
     static constexpr int RoundFactor = SeparateRouteAndTransferEntries ? 2 : 1;
     using ArrivalTime = EarliestArrivalTime<SeparateRouteAndTransferEntries>;
-    using Type = TaxiULTRARAPTOR<LabelSetT, Profiler, PreventDirectWalking, InitialTransferType>;
+    using Type = ParrotPTOnlyULTRARAPTOR<LabelSetT, Profiler, PreventDirectWalking, InitialTransferType>;
     using SourceType = Vertex;
 
     using DistanceLabel = typename LabelSetT::DistanceLabel;
@@ -57,7 +57,7 @@ private:
     using Round = std::vector<EarliestArrivalLabel>;
 
 public:
-    TaxiULTRARAPTOR(const Data& data, InitialTransferType& initialTransfers, const PTStations &stations,
+    ParrotPTOnlyULTRARAPTOR(const Data& data, InitialTransferType& initialTransfers, const PTStations &stations,
         const int psgNumEdges,
         const Profiler& profilerTemplate = Profiler())
         : data(data)

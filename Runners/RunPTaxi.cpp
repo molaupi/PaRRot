@@ -42,9 +42,9 @@
 #include "../PTaxi/Station/StationBucketsEnvironment.h"
 #include "../PTaxi/Station/StationsInEllipse.h"
 #include "../PTaxi/SecondTaxiLeg/TaxiLegApproximation.h"
-#include "../PTaxi/PTLeg/TaxiULTRARAPTOR.h"
-#include "../PTaxi/PTLeg/TaxiULTRACostRAPTOR.h"
-#include "../PTaxi/PTLeg/TaxiInitialTransfers.h"
+#include "../PTaxi/PTLeg/ParrotCombinedULTRAMcRAPTOR.h"
+#include "../PTaxi/PTLeg/ParrotPTOnlyULTRAMcRAPTOR.h"
+#include "../PTaxi/PTLeg/ParrotInitialTransfers.h"
 
 #include <ULTRA/DataStructures/Queries/Queries.h>
 
@@ -92,6 +92,8 @@
 #include <../PTaxi/RiderModeChoice/UtilityLogitCriterion.h>
 
 #include "../PTaxi/CarTripFinder.h"
+#include "PTLeg/ParrotPTOnlyULTRARAPTOR.h"
+#include "ULTRA/Algorithms/RAPTOR/Profiler.h"
 
 #ifdef KARRI_USE_CCHS
 #include <KARRI/Algorithms/KaRRi/CCHEnvironment.h>
@@ -683,18 +685,18 @@ KARRI_DALS_STRATEGY == KARRI_COL || KARRI_DALS_STRATEGY == KARRI_IND
         psgStationBucketsEnv.readBucketsFrom(inPsg);
         std::cout << "done.\n";
 
-        // Create TaxiInitialTransfers using pedestrian BCH infrastructure
-        using TaxiInitialTransfersType = RAPTOR::TaxiInitialTransfers<PsgInputGraph, PsgCHEnv, PsgStationBucketsEnv>;
-        TaxiInitialTransfersType taxiInitialTransfers(psgInputGraph, *psgChEnv, psgStationBucketsEnv, stations.size());
+        // Create ParrotInitialTransfers using pedestrian BCH infrastructure
+        using ParrotInitialTransfersType = RAPTOR::ParrotInitialTransfers<PsgInputGraph, PsgCHEnv, PsgStationBucketsEnv>;
+        ParrotInitialTransfersType parrotInitialTransfers(psgInputGraph, *psgChEnv, psgStationBucketsEnv, stations.size());
 
-        // Create TaxiULTRARAPTOR with our custom TaxiInitialTransfers
-        using PTAlgorithm = RAPTOR::TaxiULTRARAPTOR<BasicLabelSet<0, ParentInfo::FULL_PARENT_INFO>, RAPTOR::NoProfiler,
-            true, TaxiInitialTransfersType>;
-        PTAlgorithm ptAlgorithm(raptor, taxiInitialTransfers, stations, psgInputGraph.numEdges());
+        // Create PT journey finder for PT-only journey with our custom ParrotInitialTransfers
+        using PTAlgorithm = RAPTOR::ParrotPTOnlyULTRARAPTOR<BasicLabelSet<0, ParentInfo::NO_PARENT_INFO>, RAPTOR::NoProfiler, false, ParrotInitialTransfersType>;
+        // using PTAlgorithm = RAPTOR::ParrotPTOnlyULTRAMcRAPTOR<ParrotInitialTransfersType, RAPTOR::NoProfiler>;
+        PTAlgorithm ptAlgorithm(raptor, parrotInitialTransfers, stations, psgInputGraph.numEdges());
 
-        // Create cost-criterion PT router to use for combined journeys<
-        using PTAlgorithmWithTaxi = RAPTOR::TaxiULTRACostRAPTOR<TaxiInitialTransfersType, RAPTOR::NoProfiler>;
-        PTAlgorithmWithTaxi ptAlgorithmWithTaxi(raptor, taxiInitialTransfers, stations, psgInputGraph.numEdges());
+        // Create cost-criterion PT router to use for combined journeys
+        using PTAlgorithmWithTaxi = RAPTOR::ParrotCombinedULTRAMcRAPTOR<ParrotInitialTransfersType, RAPTOR::NoProfiler>;
+        PTAlgorithmWithTaxi ptAlgorithmWithTaxi(raptor, parrotInitialTransfers, stations, psgInputGraph.numEdges());
 
         using StationBCH = StationDistanceFinder<VehicleInputGraph, VehCHEnv, StationBucketsEnv, PALSLabelSet>;
 

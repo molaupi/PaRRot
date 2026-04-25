@@ -9,9 +9,8 @@
 #include <ULTRA/DataStructures/RAPTOR/Entities/ArrivalLabel.h>
 #include <ULTRA/DataStructures/RAPTOR/Entities/Bags.h>
 
-namespace parrot {
-    // TODO: result struct
-}
+#include "ULTRA/Algorithms/RAPTOR/Profiler.h"
+
 
 namespace RAPTOR {
     // ULTRA-RAPTOR specialization that uses initial labels based on access ride-pooling trips and finds the
@@ -19,14 +18,18 @@ namespace RAPTOR {
     // Works like multi-criteria ULTRA-RAPTOR to deal with the fact that a ride-pooling trip with a later arrival time
     // might have a smaller cost than a ride-pooling trip with an earlier arrival time.
     // Uses target pruning based on only the cost though.
-    template<typename InitialTransfersT, typename PROFILER = NoProfiler>
-    class TaxiULTRACostRAPTOR {
+    template<typename InitialTransfersT, typename PROFILER = RAPTOR::NoProfiler>
+    class ParrotCombinedULTRAMcRAPTOR {
     public:
         using Profiler = PROFILER;
-        using Type = TaxiULTRACostRAPTOR<InitialTransfersT, Profiler>;
+        using Type = ParrotCombinedULTRAMcRAPTOR<InitialTransfersT, Profiler>;
         using SourceType = Vertex;
 
     private:
+
+        static constexpr StopId originSentinelStop = StopId(static_cast<u_int32_t>(-2));
+        static_assert(originSentinelStop.value() != noStop.value(), "Origin sentinel stop must be different from noStop.");
+
         struct Label {
             Label() : arrivalTime(never), cost(INFTY), parentStop(noStop), parentIndex(-1), parentDepartureTime(never),
                       usesRoute(false), usesTaxi(false), routeId(noRouteId) {
@@ -111,7 +114,7 @@ namespace RAPTOR {
         using RouteBagType = RouteBag<RouteLabel>;
 
     public:
-        TaxiULTRACostRAPTOR(const Data &data,
+        ParrotCombinedULTRAMcRAPTOR(const Data &data,
                             InitialTransfersT &initialTransfers, const PTStations &stations,
                             const int psgNumEdges,
                             const Profiler &profilerTemplate = Profiler())
@@ -127,7 +130,7 @@ namespace RAPTOR {
               sourceDepartureTime(never),
               bestCostAtTarget(INFTY),
               profiler(profilerTemplate) {
-            Assert(data.hasImplicitBufferTimes(), "Departure buffer times have to be implicit!");
+            KASSERT(data.hasImplicitBufferTimes(), "Departure buffer times have to be implicit!");
             profiler.registerExtraRounds({EXTRA_ROUND_CLEAR, EXTRA_ROUND_INITIALIZATION});
             profiler.registerPhases({PHASE_INITIALIZATION, PHASE_COLLECT, PHASE_SCAN, PHASE_TRANSFERS});
             profiler.registerMetrics({
@@ -137,10 +140,87 @@ namespace RAPTOR {
             initializeEdgeToStationMappings();
         }
 
-        inline void run(const int origPsgEdge, const int origVehEdge,
+
+        void runWithTaxi(const int origPsgEdge, const int origVehEdge,
+                         const int destPsgEdge, const int destVehEdge,
+                         const int departureTime,
+                         const karri::FirstTaxiLegResult &firstTaxiLeg, const std::vector<int> &distFromStations,
+                         const int ptOnlyUpperBoundCost,
+                         karri::stats::PtPerformanceStats &stats, const size_t maxRounds = INFTY) noexcept {
+            run<true>(origPsgEdge, origVehEdge, destPsgEdge, destVehEdge, departureTime, firstTaxiLeg, distFromStations,
+                      ptOnlyUpperBoundCost, stats, maxRounds);
+        }
+
+        // void run(const int origPsgEdge, const int origVehEdge,
+        //                     const int destPsgEdge, const int destVehEdge,
+        //                     const int departureTime,
+        //                     karri::stats::PtPerformanceStats &stats, const size_t maxRounds = INFTY) noexcept {
+        //     constexpr struct {} dummy;
+        //     run<false>(origPsgEdge, origVehEdge, destPsgEdge, destVehEdge, departureTime, dummy, dummy,
+        //                INFTY, stats, maxRounds);
+        // }
+
+        bool hasFoundJourney() const noexcept {
+            return !bestLabels[targetStop].empty();
+        }
+
+        struct BestJourney {
+            Journey journey = {};
+            int cost = INFTY;
+            // If journey uses access RP trip, this gives the index of the trip among pareto-optimal access RP trips at the station
+            int accessRpTripIndex = INVALID_INDEX;
+        };
+
+        BestJourney getJourneyWithBestCost() const noexcept {
+            // KASSERT(bestLabels[targetStop].size() == 1, "Target has more than one best label.");
+            int smallestCost = INFTY;
+            size_t bestRound = rounds.size();
+            size_t bestParentIndex = 0;
+            for (size_t round = 0; round < rounds.size(); round += 2) {
+                const size_t trueRound = std::min(round + 1, rounds.size() - 1);
+                for (size_t i = 0; i < rounds[trueRound][targetStop].size(); i++) {
+                    const Label &currentLabel = rounds[trueRound][targetStop][i];
+                    if (currentLabel.cost < smallestCost) {
+                        smallestCost = currentLabel.cost;
+                        bestRound = trueRound;
+                        bestParentIndex = i;
+                    }
+                }
+            }
+            if (smallestCost == INFTY)
+                return {};
+            // KASSERT(smallestCost < INFTY, "No label found for target stop!");
+
+            // Sets bestParentIndex to parent index of label at first station. Can be used to reconstruct correct access RP trip.
+            const auto journey = getJourney(bestRound, targetStop, bestParentIndex);
+            KASSERT(!journey.empty(), "Backtracking the journey for the target stop did not yield a valid journey!");
+
+            // If journey with best cost does not use RP at all, we consider combined journey infeasible
+            if (!journey.front().usesTaxi && !journey.back().usesTaxi)
+                return {};
+
+            int accessRpTripIndex = INVALID_INDEX;
+            if (journey.front().usesTaxi) {
+                accessRpTripIndex = static_cast<int>(bestParentIndex);
+            }
+            return {journey, smallestCost, accessRpTripIndex};
+        }
+
+
+
+        inline const Profiler &getProfiler() const noexcept {
+            return profiler;
+        }
+
+    private:
+
+        template<bool USE_TAXI_ACCESS_AND_EGRESS, typename FirstTaxiLegResultT, typename DistFromStationsT>
+        requires (!USE_TAXI_ACCESS_AND_EGRESS || (std::same_as<FirstTaxiLegResultT, karri::FirstTaxiLegResult> && std::same_as<DistFromStationsT, std::vector<int>>))
+        void run(const int origPsgEdge, const int origVehEdge,
                         const int destPsgEdge, const int destVehEdge,
                         const int departureTime,
-                        const karri::FirstTaxiLegResult &firstTaxiLeg, const std::vector<int> &distFromStations,
+                        const FirstTaxiLegResultT &firstTaxiLeg, const DistFromStationsT &distFromStations,
+                        const int ptOnlyUpperBoundCost,
                         karri::stats::PtPerformanceStats &stats, const size_t maxRounds = INFTY) noexcept {
             KaRRiTimer timer;
             profiler.start();
@@ -150,14 +230,17 @@ namespace RAPTOR {
 
             profiler.startExtraRound(EXTRA_ROUND_INITIALIZATION);
             profiler.startPhase();
-            initialize(origPsgEdge, origVehEdge, destPsgEdge, destVehEdge, departureTime, stats);
+            initialize(origPsgEdge, origVehEdge, destPsgEdge, destVehEdge, departureTime, ptOnlyUpperBoundCost, stats);
             profiler.donePhase(PHASE_INITIALIZATION);
 
             stats.roundInitializationTime += timer.elapsed<std::chrono::nanoseconds>();
             timer.restart();
 
             profiler.startPhase();
-            relaxInitialTransfers(firstTaxiLeg, stats);
+            relaxInitialTransfers(stats);
+            if constexpr (USE_TAXI_ACCESS_AND_EGRESS) {
+                relaxInitialTransfersByTaxi(firstTaxiLeg, stats);
+            }
             profiler.donePhase(PHASE_TRANSFERS);
             profiler.doneRound();
             stats.relaxInitialTransfersTime += timer.elapsed<std::chrono::nanoseconds>();
@@ -191,91 +274,16 @@ namespace RAPTOR {
                 stats.roundInitializationTime += timer.elapsed<std::chrono::nanoseconds>();
                 timer.restart();
                 profiler.startPhase();
-                relaxIntermediateTransfers(distFromStations, stats);
+                relaxIntermediateTransfers(stats);
+                if constexpr (USE_TAXI_ACCESS_AND_EGRESS) {
+                    relaxFinalTransfersByTaxi(distFromStations, stats);
+                }
                 profiler.donePhase(PHASE_TRANSFERS);
                 stats.relaxIntermediateTransfersTime += timer.elapsed<std::chrono::nanoseconds>();
                 profiler.doneRound();
             }
             profiler.done();
         }
-
-        bool hasFoundJourney() const noexcept {
-            return bestCostAtTarget < INFTY;
-        }
-
-        struct BestJourney {
-            Journey journey = {};
-            int cost = INFTY;
-            // If journey uses access RP trip, this gives the index of the trip among pareto-optimal access RP trips at the station
-            int accessRpTripIndex = INVALID_INDEX;
-        };
-
-        BestJourney getJourneyWithBestCost() const noexcept {
-            // Assert(bestLabels[targetStop].size() == 1, "Target has more than one best label.");
-            int smallestCost = INFTY;
-            size_t bestRound = rounds.size();
-            size_t bestParentIndex = 0;
-            for (size_t round = 0; round < rounds.size(); round += 2) {
-                const size_t trueRound = std::min(round + 1, rounds.size() - 1);
-                for (size_t i = 0; i < rounds[trueRound][targetStop].size(); i++) {
-                    const Label &currentLabel = rounds[trueRound][targetStop][i];
-                    if (currentLabel.cost < smallestCost) {
-                        smallestCost = currentLabel.cost;
-                        bestRound = trueRound;
-                        bestParentIndex = i;
-                    }
-                }
-            }
-            if (smallestCost == INFTY)
-                return {};
-            // Assert(smallestCost < INFTY, "No label found for target stop!");
-
-            // Sets bestParentIndex to parent index of label at first station. Can be used to reconstruct correct access RP trip.
-            const auto journey = getJourney(bestRound, targetStop, bestParentIndex);
-            Assert(!journey.empty(), "Backtracking the journey for the target stop did not yield a valid journey!");
-
-            // If journey with best cost does not use RP at all, we consider combined journey infeasible
-            if (!journey.front().usesTaxi && !journey.back().usesTaxi)
-                return {};
-
-            int accessRpTripIndex = INVALID_INDEX;
-            if (journey.front().usesTaxi) {
-                accessRpTripIndex = static_cast<int>(bestParentIndex);
-            }
-            return {journey, smallestCost, accessRpTripIndex};
-        }
-
-        // inline std::vector<Journey> getJourneys() const noexcept {
-        //     return getJourneys(targetStop);
-        // }
-        //
-        // inline std::vector<Journey> getJourneys(const Vertex vertex) const noexcept {
-        //     const StopId target = (vertex == targetVertex) ? (targetStop) : (StopId(vertex));
-        //     std::vector<Journey> journeys;
-        //     for (size_t round = 0; round < rounds.size(); round += 2) {
-        //         const size_t trueRound = std::min(round + 1, rounds.size() - 1);
-        //         for (size_t i = 0; i < rounds[trueRound][target].size(); i++) {
-        //             getJourney(journeys, trueRound, target, i);
-        //         }
-        //     }
-        //     return journeys;
-        // }
-        //
-        // inline std::vector<WalkingParetoLabel> getResults() const noexcept {
-        //     return getResults(targetStop);
-        // }
-        //
-        // inline std::vector<WalkingParetoLabel> getResults(const Vertex vertex) const noexcept {
-        //     const StopId target = (vertex == targetVertex) ? (targetStop) : (StopId(vertex));
-        //     std::vector<WalkingParetoLabel> result;
-        //     for (size_t round = 0; round < rounds.size(); round += 2) {
-        //         const size_t trueRound = std::min(round + 1, rounds.size() - 1);
-        //         for (const Label& label : rounds[trueRound][target].labels) {
-        //             result.emplace_back(label, round / 2);
-        //         }
-        //     }
-        //     return result;
-        // }
 
         template<bool RESET_CAPACITIES = false>
         inline void clear() noexcept {
@@ -286,6 +294,7 @@ namespace RAPTOR {
             originPsgEdge = noEdge;
             destinationVehEdge = noEdge;
             destinationPsgEdge = noEdge;
+            sourceStop = noStop;
             targetStop = StopId(data.numberOfStops());
             sourceDepartureTime = never;
             bestCostAtTarget = INFTY;
@@ -302,11 +311,6 @@ namespace RAPTOR {
             clear<true>();
         }
 
-        inline const Profiler &getProfiler() const noexcept {
-            return profiler;
-        }
-
-    private:
         inline void initializeEdgeToStationMappings() noexcept {
             for (const auto &station: stations) {
                 if (station.psgEdgeId == INVALID_EDGE)
@@ -317,12 +321,14 @@ namespace RAPTOR {
 
         inline void initialize(const int originPsgEdge_, const int originVehEdge_,
                                const int destPsgEdge_, const int destVehEdge_, const int departureTime,
+                               const int ptOnlyUpperBoundCost,
                                karri::stats::PtPerformanceStats &stats) noexcept {
             originPsgEdge = originPsgEdge_;
             originVehEdge = originVehEdge_;
             destinationPsgEdge = destPsgEdge_;
             destinationVehEdge = destVehEdge_;
 
+            targetStop = StopId(data.numberOfStops());
             if (destPsgEdge_ >= 0 && destPsgEdge_ < psgEdgeToStation.size()) {
                 int stationId = psgEdgeToStation[destPsgEdge_];
                 if (stationId != INVALID_ID) {
@@ -331,15 +337,16 @@ namespace RAPTOR {
             }
 
             sourceDepartureTime = departureTime;
+            bestCostAtTarget = ptOnlyUpperBoundCost;
             startNewRound();
 
             // Initialize source stop if the origin edge maps to a station
+            sourceStop = originSentinelStop;
             if (originPsgEdge_ >= 0 && originPsgEdge_ < psgEdgeToStation.size()) {
                 int stationId = psgEdgeToStation[originPsgEdge_];
                 if (stationId != INVALID_ID && data.isStop(StopId(stationId))) {
-                    StopId sourceStop = StopId(stationId);
-                    Label initialLabel(sourceDepartureTime, noStop);
-                    // Sentinel noStop since origin (which is an edge) is the parent
+                    sourceStop = StopId(stationId);
+                    Label initialLabel(sourceDepartureTime, sourceStop);
                     arrivalByRoute(sourceStop, initialLabel, stats);
                 }
             }
@@ -348,10 +355,10 @@ namespace RAPTOR {
 
         inline void collectRoutesServingUpdatedStops() noexcept {
             for (const StopId stop: stopsUpdatedByTransfer) {
-                Assert(data.isStop(stop), "Stop " << stop << " is out of range!");
+                KASSERT(data.isStop(stop), "Stop " << stop << " is out of range!");
                 for (const RouteSegment &route: data.routesContainingStop(stop)) {
-                    Assert(data.isRoute(route.routeId), "Route " << route.routeId << " is out of range!");
-                    Assert(data.stopIds[data.firstStopIdOfRoute[route.routeId] + route.stopIndex] == stop,
+                    KASSERT(data.isRoute(route.routeId), "Route " << route.routeId << " is out of range!");
+                    KASSERT(data.stopIds[data.firstStopIdOfRoute[route.routeId] + route.stopIndex] == stop,
                            "RAPTOR data contains invalid route segments!");
                     if (route.stopIndex + 1 == data.numberOfStopsInRoute(route.routeId)) continue;
                     if (routesServingUpdatedStops.contains(route.routeId)) {
@@ -372,7 +379,7 @@ namespace RAPTOR {
                 ++stats.numRoutesScanned;
                 StopIndex stopIndex = routesServingUpdatedStops[route];
                 const size_t tripSize = data.numberOfStopsInRoute(route);
-                Assert(stopIndex < tripSize - 1,
+                KASSERT(stopIndex < tripSize - 1,
                        "Cannot scan a route starting at/after the last stop (Route: " << route << ", StopIndex: " <<
                        stopIndex << ", TripSize: " << tripSize << ")!");
 
@@ -401,7 +408,9 @@ namespace RAPTOR {
                         // that are Pareto-optimal with respect to arrival time and total cost.
                         RouteLabel newLabel;
                         newLabel.trip = trip;
-                        newLabel.costWithoutTripCost = label.cost - Calc::calcTripCost(parrot::ultraToKarriTime(label.arrivalTime - sourceDepartureTime));
+                        newLabel.costWithoutTripCost = label.cost - Calc::calcTripCost(
+                                                           parrot::ultraToKarriTime(
+                                                               label.arrivalTime - sourceDepartureTime));
                         // newLabel.cost = label.cost - computeOnlyTripCost(label.arrivalTime - requestEarliestDeparture);
                         newLabel.parentStop = stopIndex;
                         newLabel.parentIndex = i;
@@ -414,7 +423,8 @@ namespace RAPTOR {
                     for (const RouteLabel &label: routeBag.labels) {
                         Label newLabel;
                         newLabel.arrivalTime = label.trip[stopIndex].arrivalTime;
-                        newLabel.cost = label.costWithoutTripCost + Calc::calcTripCost(parrot::ultraToKarriTime(newLabel.arrivalTime - sourceDepartureTime));
+                        newLabel.cost = label.costWithoutTripCost + Calc::calcTripCost(
+                                            parrot::ultraToKarriTime(newLabel.arrivalTime - sourceDepartureTime));
                         newLabel.parentStop = stops[label.parentStop];
                         newLabel.parentIndex = label.parentIndex;
                         newLabel.parentDepartureTime = label.trip[label.parentStop].departureTime;
@@ -426,35 +436,35 @@ namespace RAPTOR {
             }
         }
 
-        inline void relaxInitialTransfers(const karri::FirstTaxiLegResult &firstTaxiLeg,
-                                          karri::stats::PtPerformanceStats &stats) noexcept {
+        inline void relaxInitialTransfers(karri::stats::PtPerformanceStats &stats) noexcept {
             using Calc = karri::CostCalculator;
             // If the origin edge maps to a station, it is considered reached by initial transfer, too
-            if (originPsgEdge >= 0 && originPsgEdge < psgEdgeToStation.size()) {
-                int stationId = psgEdgeToStation[originPsgEdge];
-                if (stationId != INVALID_ID && data.isStop(StopId(stationId))) {
-                    StopId sourceStop = StopId(stationId);
-                    stopsUpdatedByTransfer.insert(sourceStop);
-                    currentRound()[stationId].resize(1);
-                    currentRound()[stationId][0] = Label(previousRound()[stationId][0], sourceStop, 0);
-                }
+            if (sourceStop != originSentinelStop && previousRound()[sourceStop].size() > 0) {
+                KASSERT(psgEdgeToStation[originPsgEdge] == sourceStop, "Source stop does not match mapping from origin edge!");
+                stopsUpdatedByTransfer.insert(sourceStop);
+                currentRound()[sourceStop].resize(1);
+                currentRound()[sourceStop][0] = Label(previousRound()[sourceStop][0], sourceStop, 0);
             }
             initialTransfers.template run<true>(originPsgEdge, destinationPsgEdge);
             for (const Vertex stop: initialTransfers.getForwardPOIs()) {
                 if (stop == targetStop) continue;
-                Assert(data.isStop(stop), "Reached POI " << stop << " is not a stop!");
-                Assert(initialTransfers.getForwardDistance(stop) != INFTY, "Vertex " << stop << " was not reached!");
+                KASSERT(data.isStop(stop), "Reached POI " << stop << " is not a stop!");
+                KASSERT(initialTransfers.getForwardDistance(stop) != INFTY, "Vertex " << stop << " was not reached!");
                 Label newLabel;
                 newLabel.arrivalTime = sourceDepartureTime + parrot::karriToULTRATime(
                                            initialTransfers.getForwardDistance(stop));
                 newLabel.cost = Calc::calcCostForAddedTransferTime(
                                     initialTransfers.getForwardDistance(stop)) + Calc::penaltyForNewTransfer();
-                newLabel.parentStop = noStop; // Sentinel noStop since origin (which is an edge) is the parent
+                newLabel.parentStop = sourceStop;
                 newLabel.parentIndex = 0;
                 newLabel.parentDepartureTime = sourceDepartureTime;
                 newLabel.transferId = noEdge;
                 arrivalByTransfer(StopId(stop), newLabel, stats);
             }
+        }
+
+        void relaxInitialTransfersByTaxi(const karri::FirstTaxiLegResult &firstTaxiLeg, karri::stats::PtPerformanceStats &stats) noexcept {
+            using Calc = karri::CostCalculator;
 
             // Extension for first taxi leg
             for (const auto &stationId: firstTaxiLeg.getStationsWithResults()) {
@@ -473,11 +483,11 @@ namespace RAPTOR {
                 const auto &resultsForStation = firstTaxiLeg.getResultsForStation(stationId);
                 for (int i = 0; i < resultsForStation.size(); i++) {
                     const auto &taxiResult = resultsForStation[i];
-                    Assert(data.isStop(stationVertex), "Taxi station " << stationVertex << " is not a stop!");
+                    KASSERT(data.isStop(stationVertex), "Taxi station " << stationVertex << " is not a stop!");
                     Label newLabel;
                     newLabel.arrivalTime = parrot::karriToULTRATime(taxiResult.arrivalTime);
                     newLabel.cost = taxiResult.bestCost + Calc::penaltyForNewTransfer();
-                    newLabel.parentStop = noStop; // Sentinel: this stop was reached from origin via taxi
+                    newLabel.parentStop = sourceStop;
                     newLabel.parentIndex = i;
                     // Store index of the taxi result among pareto-optimal results at the station to be able to reconstruct the access taxi trip later
                     newLabel.parentDepartureTime = sourceDepartureTime;
@@ -488,8 +498,8 @@ namespace RAPTOR {
             }
         }
 
-        inline void relaxIntermediateTransfers(const std::vector<int> &distFromStations,
-                                               karri::stats::PtPerformanceStats &stats) noexcept {
+
+        inline void relaxIntermediateTransfers(karri::stats::PtPerformanceStats &stats) noexcept {
             using Calc = karri::CostCalculator;
             stopsUpdatedByTransfer.clear();
             routesServingUpdatedStops.clear();
@@ -508,7 +518,7 @@ namespace RAPTOR {
                     profiler.countMetric(METRIC_EDGES);
                     ++stats.numTransferEdgesRelaxed;
                     const StopId toStop = StopId(data.transferGraph.get(ToVertex, edge));
-                    Assert(data.isStop(toStop), "Graph contains edges to non-stop vertices!");
+                    KASSERT(data.isStop(toStop), "Graph contains edges to non-stop vertices!");
                     const int travelTime = data.transferGraph.get(TravelTime, edge);
                     for (size_t i = 0; i < bag.size(); i++) {
                         Label newLabel;
@@ -526,9 +536,8 @@ namespace RAPTOR {
                     const int travelTime = initialTransfers.getBackwardDistance(stop);
                     for (size_t i = 0; i < bag.size(); i++) {
                         Label newLabel;
-                        newLabel.arrivalTime = bag[i].arrivalTime + travelTime;
-                        newLabel.cost = bag[i].cost + Calc::calcCostForAddedTransferTime(
-                                            parrot::ultraToKarriTime(travelTime)) + Calc::penaltyForNewTransfer();
+                        newLabel.arrivalTime = bag[i].arrivalTime + parrot::karriToULTRATime(travelTime);
+                        newLabel.cost = bag[i].cost + Calc::calcCostForAddedTransferTime(travelTime) + Calc::penaltyForNewTransfer();
                         newLabel.parentStop = stop;
                         newLabel.parentIndex = i;
                         newLabel.parentDepartureTime = bag[i].arrivalTime;
@@ -536,11 +545,19 @@ namespace RAPTOR {
                         arrivalByTransfer(targetStop, newLabel, stats);
                     }
                 }
+            }
+        }
 
+        void relaxFinalTransfersByTaxi(const std::vector<int> &distFromStations,
+                                       karri::stats::PtPerformanceStats &stats) noexcept {
+            using Calc = karri::CostCalculator;
+
+            for (const StopId stop: stopsUpdatedByRoute) {
+                const BagType &bag = previousRound()[stop];
                 // Extension for second taxi leg
                 const int stationId = stop.value();
                 const auto &station = stations[stationId];
-                Assert(distFromStations.size() == stations.size(),
+                KASSERT(distFromStations.size() == stations.size(),
                        "Size of distFromStations (" << distFromStations.size() <<
                        ") does not match number of stations (" << stations.size() << ")!");
                 // ensure that no second taxi leg is used if station edge id == destination edge id
@@ -565,12 +582,12 @@ namespace RAPTOR {
         }
 
         inline Round &currentRound() noexcept {
-            Assert(!rounds.empty(), "Cannot return current round, because no round exists!");
+            KASSERT(!rounds.empty(), "Cannot return current round, because no round exists!");
             return rounds.back();
         }
 
         inline Round &previousRound() noexcept {
-            Assert(rounds.size() >= 2, "Cannot return previous round, because less than two rounds exist!");
+            KASSERT(rounds.size() >= 2, "Cannot return previous round, because less than two rounds exist!");
             return rounds[rounds.size() - 2];
         }
 
@@ -580,7 +597,7 @@ namespace RAPTOR {
 
         inline void arrival(const StopId stop, const Label &label, IndexedSet<false, StopId> &updatedStops,
                             Metric metric, int64_t &numImproved) noexcept {
-            Assert(data.isStop(stop) || stop == targetStop, "Stop " << stop << " is out of range!");
+            KASSERT(data.isStop(stop) || stop == targetStop, "Stop " << stop << " is out of range!");
             // if (bestLabels[targetStop].dominates(label)) return;
 
             // Target pruning based only on cost since we're looking for the label with best cost at the target
@@ -590,11 +607,11 @@ namespace RAPTOR {
             ++numImproved;
             profiler.countMetric(metric);
             currentRound()[stop].mergeUndominated(label);
-            Assert(bestLabels[stop].dominates(currentRound()[stop]), "Best bag does not dominate current bag!");
+            KASSERT(bestLabels[stop].dominates(currentRound()[stop]), "Best bag does not dominate current bag!");
             if (data.isStop(stop)) updatedStops.insert(stop);
 
             if (stop == targetStop) {
-                Assert(label.cost < bestCostAtTarget,
+                KASSERT(label.cost < bestCostAtTarget,
                        "New label at target is not better than current best cost at target!");
                 bestCostAtTarget = label.cost;
             }
@@ -613,42 +630,14 @@ namespace RAPTOR {
         inline Journey getJourney(size_t round, StopId stop, size_t &index) const noexcept {
             Journey journey;
             do {
-                Assert(round != size_t(-1), "Backtracking parent pointers did not pass through the source stop!");
+                KASSERT(round != size_t(-1), "Backtracking parent pointers did not pass through the source stop! Partial journey = " << Vector::reverse(journey));
                 const Label &label = rounds[round][stop][index];
                 journey.emplace_back(label.parentStop, stop, label.parentDepartureTime, label.arrivalTime,
                                      label.usesRoute, label.routeId, label.usesTaxi);
                 stop = label.parentStop;
                 index = label.parentIndex;
                 round--;
-                // Assert(
-                // round != size_t(-1),
-                // "Backtracking parent pointers did not pass through the source stop!");
-                // const EarliestArrivalLabel& label = rounds[round][stop];
-                //
-                // // Check if this is an initial transfer from origin (parent == noVertex)
-                // if (label.parent == noVertex) {
-                //     // This leg starts from the origin - use noVertex as 'from' to signal origin
-                //     journey.emplace_back(noVertex, stop, label.parentDepartureTime,
-                //         label.arrivalTime, label.usesRoute, label.routeId, label.usesTaxi);
-                //     break; // Reached origin, journey reconstruction complete
-                // }
-                //
-                // // Regular intermediate leg: both parent and stop are valid stops
-                // journey.emplace_back(label.parent, stop, label.parentDepartureTime,
-                //     label.arrivalTime, label.usesRoute, label.routeId, label.usesTaxi);
-                //
-                // Assert(data.isStop(label.parent),
-                //     "Backtracking parent pointers reached a non-stop vertex ("
-                //         << label.parent << ")!");
-                //
-                // stop = StopId(label.parent);
-                // if constexpr (SeparateRouteAndTransferEntries) {
-                //     round--;
-                // } else {
-                //     if (label.usesRoute)
-                //         round--;
-                // }
-            } while (journey.back().from != noStop);
+            } while (journey.back().from != sourceStop);
             return Vector::reverse(journey);
         }
 
@@ -672,6 +661,7 @@ namespace RAPTOR {
         int originVehEdge; // Origin edge ID in vehicle graph
         int destinationPsgEdge; // Destination edge ID in passenger graph
         int destinationVehEdge; // Destination edge ID in vehicle graph
+        StopId sourceStop; // Stop if origin edge maps to a station, originSentinelStop otherwise
         StopId targetStop;
         int sourceDepartureTime;
         int bestCostAtTarget;
