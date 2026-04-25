@@ -46,7 +46,7 @@ public:
             journey.pop_back();
 
             const int secondTaxiLegApproximationTravelTime = secondTaxiLegApproximation.getDistanceFromStation(journey.back().to);
-            secondTaxiLegCost = CostCalculator::calcHeuristicCostForFinalTransferTimeByRP(secondTaxiLegApproximationTravelTime);
+            secondTaxiLegCost = CostCalculator::calcTripCost(secondTaxiLegApproximationTravelTime);
             bestCost += secondTaxiLegCost;
             arrivalTime += secondTaxiLegApproximationTravelTime;
         }
