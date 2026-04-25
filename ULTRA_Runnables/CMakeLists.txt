@@ -19,9 +19,10 @@ function(add_runnable name)
     target_link_libraries(${name} PUBLIC OpenMP::OpenMP_CXX)
 endfunction()
 
-set(RUNNABLES Network ULTRA ULTRAPHAST)
+set(RUNNABLES Network ULTRA ULTRAPHAST RunULTRAScript)
 foreach(f ${RUNNABLES})
     add_runnable(${f} ${f}.cpp)
+    target_include_directories(${f} PUBLIC ${PARROT_INCLUDE_DIR})
 endforeach()
 
 add_custom_target(All)

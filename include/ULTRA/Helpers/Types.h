@@ -5,6 +5,7 @@
 #include <string>
 
 #include "TaggedInteger.h"
+#include <Common/Constants.h>
 
 using Vertex = TaggedInteger<0, u_int32_t, -u_int32_t(1)>;
 constexpr Vertex noVertex(Vertex::InvalidValue);
