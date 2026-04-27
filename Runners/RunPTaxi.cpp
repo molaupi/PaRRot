@@ -639,7 +639,7 @@ KARRI_DALS_STRATEGY == KARRI_COL || KARRI_DALS_STRATEGY == KARRI_IND
 
         // Read the station mapping file
         std::cout << "Reading station mapping from file... " << std::flush;
-        PTStations stations;
+        parrot::PTStations stations;
         int edgeId;
         int stationId = 0;
         io::CSVReader<1> stationMappingFileReader(stationMappingFileName);
@@ -661,10 +661,10 @@ KARRI_DALS_STRATEGY == KARRI_COL || KARRI_DALS_STRATEGY == KARRI_IND
         }
         std::cout << "done.\n";
 
-        StationsAtLocations stationsAtLocations(stations, vehicleInputGraph.numEdges());
+        parrot::StationsAtLocations stationsAtLocations(stations, vehicleInputGraph.numEdges());
 
         // Buckets for PT stations (vehicle graph)
-        using StationBucketsEnv = StationBucketsEnvironment<VehicleInputGraph, VehCHEnv, false>;
+        using StationBucketsEnv = parrot::StationBucketsEnvironment<VehicleInputGraph, VehCHEnv, false>;
 
         std::cout << "Reading station buckets from file... " << std::flush;
         std::ifstream in(stationBucketsFilename, std::ios::binary);
@@ -675,7 +675,7 @@ KARRI_DALS_STRATEGY == KARRI_COL || KARRI_DALS_STRATEGY == KARRI_IND
         std::cout << "done.\n";
 
         // Pedestrian Station Buckets for walking transfers
-        using PsgStationBucketsEnv = karri::StationBucketsEnvironment<PsgInputGraph, PsgCHEnv, true>;
+        using PsgStationBucketsEnv = parrot::StationBucketsEnvironment<PsgInputGraph, PsgCHEnv, true>;
 
         std::cout << "Reading pedestrian station buckets from file... " << std::flush;
         std::ifstream inPsg(psgStationBucketsFilename, std::ios::binary);
@@ -698,34 +698,34 @@ KARRI_DALS_STRATEGY == KARRI_COL || KARRI_DALS_STRATEGY == KARRI_IND
         using PTAlgorithmWithTaxi = RAPTOR::ParrotCombinedULTRAMcRAPTOR<ParrotInitialTransfersType, RAPTOR::NoProfiler>;
         PTAlgorithmWithTaxi ptAlgorithmWithTaxi(raptor, parrotInitialTransfers, stations, psgInputGraph.numEdges());
 
-        using StationBCH = StationDistanceFinder<VehicleInputGraph, VehCHEnv, StationBucketsEnv, PALSLabelSet>;
+        using StationBCH = parrot::StationDistanceFinder<VehicleInputGraph, VehCHEnv, StationBucketsEnv, PALSLabelSet>;
 
         // PALS for stations
-        using PALSToStationsImpl = PALSToStations<VehicleInputGraph, VehCHEnv, LastStopBucketsEnv,
+        using PALSToStationsImpl = parrot::PALSToStations<VehicleInputGraph, VehCHEnv, LastStopBucketsEnv,
             LastStopAtVerticesInfo, StationBCH::StationDistances, PALSLabelSet>;
         PALSToStationsImpl palsToStations(vehicleInputGraph, fleet, *vehChEnv, lastStopBucketsEnv, lastStopBucketsEnv,
                                           routeState);
 
         // DALS for stations
         using DALSToStationsLabelSet = BasicLabelSet<0, ParentInfo::NO_PARENT_INFO>;
-        using DALSToStationsImpl = DALSToStations<VehicleInputGraph, VehCHEnv, CurVehLocToPickupSearchesImpl,
+        using DALSToStationsImpl = parrot::DALSToStations<VehicleInputGraph, VehCHEnv, CurVehLocToPickupSearchesImpl,
             StationBucketsEnv, DALSToStationsLabelSet>;
         DALSToStationsImpl dalsToStations(vehicleInputGraph, fleet, *vehChEnv, curVehLocToPickupSearches, routeState,
                                           stationBucketsEnv, stations, stationsAtLocations);
 
-        using StationsInEllipseImpl = StationsInEllipse<VehicleInputGraph, VehCHEnv, StationBucketsEnv>;
+        using StationsInEllipseImpl = parrot::StationsInEllipse<VehicleInputGraph, VehCHEnv, StationBucketsEnv>;
         StationsInEllipseImpl stationsInEllipse(vehicleInputGraph, *vehChEnv, routeState, stationBucketsEnv, stations,
                                                 stationsAtLocations);
 
         // Ordinary for stations
-        using OrdinaryToStationsImpl = OrdinaryToStations<StationsInEllipseImpl, StationBCH::StationDistances>;
+        using OrdinaryToStationsImpl = parrot::OrdinaryToStations<StationsInEllipseImpl, StationBCH::StationDistances>;
 
         // PBNS for stations
-        using PBNSToStationsImpl = PBNSToStations<CurVehLocToPickupSearchesImpl, StationsInEllipseImpl,
+        using PBNSToStationsImpl = parrot::PBNSToStations<CurVehLocToPickupSearchesImpl, StationsInEllipseImpl,
             StationBCH::StationDistances>;
         PBNSToStationsImpl pbnsToStations(curVehLocToPickupSearches, fleet, routeState);
 
-        using TaxiLegApproximationImpl = TaxiLegApproximation<VehicleInputGraph, VehCHEnv, StationBucketsEnv>;
+        using TaxiLegApproximationImpl = parrot::TaxiLegApproximation<VehicleInputGraph, VehCHEnv, StationBucketsEnv>;
 
 
         using KaRRiBaseInfoPreparatorImpl = KaRRiBaseInfoPreparator<VehicleInputGraph, VehCHEnv,
@@ -735,10 +735,10 @@ KARRI_DALS_STRATEGY == KARRI_COL || KARRI_DALS_STRATEGY == KARRI_IND
                                                             pdLocsFinder, pdLocsAtExistingStops, ellipticSearches,
                                                             pdDistanceSearches);
 
-        using WalkTripFinderImpl = WalkingTripFinder<VehicleInputGraph, PsgInputGraph, PsgCHEnv>;
+        using WalkTripFinderImpl = parrot::WalkingTripFinder<VehicleInputGraph, PsgInputGraph, PsgCHEnv>;
         WalkTripFinderImpl walkTripFinder(vehicleInputGraph, psgInputGraph, *psgChEnv, routeState);
 
-        using CarTripFinderImpl = CarTripFinder;
+        using CarTripFinderImpl = parrot::CarTripFinder;
         CarTripFinderImpl carTripFinder;
 
         using TaxiTripFinderImpl = TaxiTripFinder<OrdinaryAssignmentsFinderImpl, PBNSInsertionsFinderImpl,
@@ -746,11 +746,11 @@ KARRI_DALS_STRATEGY == KARRI_COL || KARRI_DALS_STRATEGY == KARRI_IND
         TaxiTripFinderImpl taxiTripFinder(ordinaryInsertionsFinder, pbnsInsertionsFinder, palsInsertionsFinder,
                                           dalsInsertionsFinder);
 
-        using PTTripFinderImpl = PTJourneyFinder<EdgeQuery, PTAlgorithm>;
+        using PTTripFinderImpl = parrot::PTJourneyFinder<EdgeQuery, PTAlgorithm>;
         PTTripFinderImpl ptTripFinder(queries, ptAlgorithm);
 
         // -> pass ULTRA algorithm instance and stationBucketsEnv, palsToStations to PTAndTaxiTripFinder
-        using PTAndTaxiTripFinderImpl = PTAndTaxiTripFinder<
+        using PTAndTaxiTripFinderImpl = parrot::PTAndTaxiTripFinder<
             VehicleInputGraph,
             VehCHEnv,
             StationBucketsEnv,
@@ -769,7 +769,7 @@ KARRI_DALS_STRATEGY == KARRI_COL || KARRI_DALS_STRATEGY == KARRI_IND
                                                     ptAlgorithmWithTaxi);
 
 
-        using ModeChoiceImpl = mode_choice::ModeChoice<mode_choice::UtilityLogitCriterion, std::ofstream>;
+        using ModeChoiceImpl = parrot::mode_choice::ModeChoice<parrot::mode_choice::UtilityLogitCriterion, std::ofstream>;
         ModeChoiceImpl modeChoice(routeState);
 
 #if KARRI_OUTPUT_VEHICLE_PATHS

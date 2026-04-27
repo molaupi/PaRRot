@@ -10,7 +10,7 @@
 #include "types.h"
 #include "KARRI/Tools/ThreadSafeRandom.h"
 
-namespace karri::mode_choice::utility_logit {
+namespace parrot::mode_choice::utility_logit {
     /**
      * A simple Logit utility distribution function. Keeps utilities and probabilities vector as reused state. Utility
      * calculation is defined in external function. Probabilities are calculated for each option i as e^(U_i) / Sum e^(U_j)

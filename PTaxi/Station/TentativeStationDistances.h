@@ -30,7 +30,7 @@
 #include <KARRI/Tools/Constants.h>
 #include <KARRI/DataStructures/Containers/TimestampedVector.h>
 
-namespace karri {
+namespace parrot {
 
 // Data structure for dynamically tracking distances from pickups -> stations.
 // Allocates entries for distances to a station s from all pickups when one relevant distance to s is found

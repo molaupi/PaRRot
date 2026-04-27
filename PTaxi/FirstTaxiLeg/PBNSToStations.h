@@ -29,7 +29,10 @@
 #include <KARRI/Algorithms/KaRRi/PbnsAssignments/CurVehLocToPickupSearches.h>
 #include <Station/StationEntry.h>
 
-namespace karri {
+namespace parrot {
+
+    using namespace karri;
+
     // Finds pickup before next stop assignments, i.e. assignments where the pickup is inserted before the vehicle's next
     // stop, which means the vehicle is rerouted at its current location. Dropoff station may be inserted before the next stop or
     // at ordinary locations, i.e. after the next stop but before the last stop.
@@ -240,7 +243,8 @@ namespace karri {
                     station.psgEdgeId, // Location in passenger road network
                     0, // Walking time from this dropoff to destination
                     0, // Vehicle driving time from this dropoff to the destination
-                    0 // Vehicle driving time from destination to this dropoff
+                    0, // Vehicle driving time from destination to this dropoff
+                    true
                 };
 
                 ++numAssignmentsTriedWithPickupBeforeNextStop;
@@ -336,7 +340,8 @@ namespace karri {
                         station.psgEdgeId, // Location in passenger road network
                         0, // Walking time from this dropoff to destination
                         0, // Vehicle driving time from this dropoff to the destination
-                        0 // Vehicle driving time from destination to this dropoff
+                        0, // Vehicle driving time from destination to this dropoff
+                        true
                     };
 
                     asgn.dropoffStopIdx = j;
@@ -450,7 +455,8 @@ namespace karri {
                             station.psgEdgeId, // Location in passenger road network
                             0, // Walking time from this dropoff to destination
                             0, // Vehicle driving time from this dropoff to the destination
-                            0 // Vehicle driving time from destination to this dropoff
+                            0, // Vehicle driving time from destination to this dropoff
+                            true
                         };
 
                         asgn.dropoffStopIdx = j;
@@ -465,7 +471,7 @@ namespace karri {
                             const int arrivalTime =
                                     stationAtExistingStop ? arrTimeAtJ : depTimeAtJ + asgn.distToDropoff;
                             KASSERT(arrivalTime == calcArrivalTime(asgn, requestState, routeState));
-                            firstTaxiLegResult.tryAssignmentWithForStation(
+                            firstTaxiLegResult.tryAssignmentForStation(
                                 station.stationId, asgn, cost, arrivalTime, PBNS);
                         }
 
@@ -532,7 +538,8 @@ namespace karri {
                         station.psgEdgeId, // Location in passenger road network
                         0, // Walking time from this dropoff to destination
                         0, // Vehicle driving time from this dropoff to the destination
-                        0 // Vehicle driving time from destination to this dropoff
+                        0, // Vehicle driving time from destination to this dropoff
+                        true
                     };
 
                     asgn.distFromDropoff = entry.distFromStationToStop;
@@ -548,7 +555,7 @@ namespace karri {
                         // requestState.tryAssignmentWithKnownCost(asgn, calculator.calc(asgn, requestState));
                         const int arrivalTime = depTimeAtPickup + asgn.distToDropoff;
                         KASSERT(arrivalTime == calcArrivalTime(asgn, requestState, routeState));
-                        firstTaxiLegResult.tryAssignmentWithForStation(
+                        firstTaxiLegResult.tryAssignmentForStation(
                             station.stationId, asgn, calculator.calc(asgn, requestState), arrivalTime, PBNS);
                     }
                 }

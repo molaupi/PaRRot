@@ -32,7 +32,7 @@
 
 #include "StationBucketContainer.h"
 
-namespace karri {
+namespace parrot {
 
     template<typename InputGraphT, typename CHEnvT, bool isPsg>
     class StationBucketsEnvironment {

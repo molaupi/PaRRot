@@ -34,7 +34,9 @@
 
 #include "StationsAtLocations.h"
 
-namespace karri {
+namespace parrot {
+    using namespace karri;
+
     template<typename InputGraphT,
         typename CHEnvT,
         typename CurVehLocToPickupSearchesT,
@@ -151,9 +153,9 @@ namespace karri {
               stationsAtLocations(stationsAtLocations),
               stationsWithValidDistances(),
               currentLastStopDistances(ptStations.size(), DistanceLabel(INFTY)),
-              costUntilLastStopUpperBound() {
+              untilLastStopUpperBounds() {
             stationsWithValidDistances.reserve(ptStations.size());
-            costUntilLastStopUpperBound.reserve(ptStations.size());
+            untilLastStopUpperBounds.reserve(ptStations.size());
         }
 
         void tryDropoffAfterLastStop(const RequestState &requestState, const PDLocs &pdLocs,
@@ -179,7 +181,7 @@ namespace karri {
                     currentLastStopDistances[s] = INFTY;
                 }
                 stationsWithValidDistances.clear();
-                costUntilLastStopUpperBound.clear();
+                untilLastStopUpperBounds.clear();
 
                 curMinCostToLastStop = DistanceLabel(INFTY);
                 for (int j = 0; j < K; ++j) {
@@ -329,7 +331,7 @@ namespace karri {
         void runSearchesForVehicleBatch(const int indexOfFirstVeh, stats::DalsAssignmentsPerformanceStats &stats) {
             KaRRiTimer timer;
 
-            assert(indexOfFirstVeh % K == 0 && indexOfFirstVeh < relevantVehicleIdsForRequest.size());
+            KASSERT(indexOfFirstVeh % K == 0 && indexOfFirstVeh < relevantVehicleIdsForRequest.size());
 
             std::array<int, K> lastStopHeads;
             for (int i = 0; i < K; ++i) {
@@ -389,25 +391,28 @@ namespace karri {
             // If a DALS insertion is only relevant if its cost is <= c, then the pickup detour and rider trip to the
             // last stop of the route must have a cost of at most c - F::calcVehicleCosts(d) - F::calcTripCost(d)
             // for any relevant DALS assignment.
-            // We sort the stations by this upper bound in decreasing order. Then, we can stop enumerating assignments
-            // for a pickup as soon as we hit a station for which the upper bound is broken.
             for (const int stationId: stationsWithValidDistances) {
-                // Find worst cost of known Pareto-optimal access RP trips to station
-                auto upperBoundToStation = -1;
+                // Find upper bound of known Pareto-optimal access RP trips to station
+                int upperBoundCostWithoutTripToStation = -1;
+                int upperBoundArrTimeAtStation = -1;
                 for (const auto &knownResult: firstTaxiLegResult.getResultsForStation(stationId)) {
-                    if (knownResult.bestCost > upperBoundToStation)
-                        upperBoundToStation = knownResult.bestCost;
+                    if (knownResult.costWithoutTrip > upperBoundCostWithoutTripToStation)
+                        upperBoundCostWithoutTripToStation = knownResult.costWithoutTrip;
+                    if (knownResult.arrivalTime > upperBoundArrTimeAtStation)
+                        upperBoundArrTimeAtStation = knownResult.arrivalTime;
                 }
                 // If no access RP trips to this station are known, its upper bound is INFTY
-                if (upperBoundToStation == -1) {
-                    costUntilLastStopUpperBound.push_back(INFTY);
+                if (upperBoundCostWithoutTripToStation == -1) {
+                    untilLastStopUpperBounds.emplace_back(INFTY, INFTY);
                     continue;
                 }
 
-                const auto &distToStation = currentLastStopDistances[stationId];
-                auto costAfterLastStop = (CostCalculator::CostFunction::calcKVehicleCosts(distToStation) +
-                                          CostCalculator::CostFunction::calcKTripCosts(distToStation)).horizontalMin();
-                costUntilLastStopUpperBound.push_back(upperBoundToStation - costAfterLastStop);
+                const int minDistToStation = currentLastStopDistances[stationId].horizontalMin();
+                const int costNoTripAfterLastStop = CostCalculator::CostFunction::calcVehicleCost(minDistToStation);
+                untilLastStopUpperBounds.emplace_back(
+                    upperBoundCostWithoutTripToStation - costNoTripAfterLastStop,
+                    upperBoundArrTimeAtStation - minDistToStation
+                );
             }
 
             enumerateAssignmentsWithOrdinaryPickupForVehicleBatch(indexOfFirstVeh, numAssignmentsTried,
@@ -429,6 +434,7 @@ namespace karri {
                                                                    const RequestState &requestState,
                                                                    const PDLocs &pdLocs,
                                                                    FirstTaxiLegResult &firstTaxiLegResult) {
+            const int reqTime = requestState.earliestDeparture();
             Assignment asgn;
 
             checkPBNSForVehicle.reset();
@@ -446,6 +452,7 @@ namespace karri {
 
                 const auto &numStops = routeState.numStopsOf(vehId);
                 const auto &occupancies = routeState.occupanciesFor(vehId);
+                const auto lastStopLoc = routeState.stopLocationsFor(vehId)[numStops - 1];
                 const auto relevantPickupsInRevOrder = relevantOrdinaryPickups.relevantSpotsForInReverseOrder(vehId);
                 asgn.vehicle = &fleet[vehId];
                 asgn.dropoffStopIdx = numStops - 1;
@@ -473,15 +480,18 @@ namespace karri {
                         routeState);
                     const auto residualDetourAtLastStop = calcResidualPickupDetour(
                         veh.vehicleId, asgn.pickupStopIdx, numStops - 1, initialPickupDetour, routeState);
-                    const int costUntilDepAtLastStop = calculator.calcCostUntilLastStopForDALS(
+                    const int costNoTripUntilDepAtLastStop = calculator.calcCostWithoutTripUntilLastStopForDALS(
                         veh, asgn.pickup, asgn.pickupStopIdx, depTimeAtPickup, initialPickupDetour,
                         residualDetourAtLastStop,
                         requestState);
-                    const int depTimeAtLastStop =
+                    const int arrTimeAtLastStop =
                             routeState.schedArrTimesFor(vehId)[numStops - 1] + residualDetourAtLastStop;
+                    const int depTimeAtLastStop =
+                            routeState.schedDepTimesFor(vehId)[numStops - 1] + residualDetourAtLastStop;
 
                     for (int idxInValid = 0; idxInValid < stationsWithValidDistances.size(); ++idxInValid) {
-                        if (costUntilDepAtLastStop >= costUntilLastStopUpperBound[idxInValid])
+                        if (untilLastStopUpperBounds[idxInValid].dominates(
+                            costNoTripUntilDepAtLastStop, arrTimeAtLastStop))
                             continue;
 
                         const int stationId = stationsWithValidDistances[idxInValid];
@@ -493,7 +503,8 @@ namespace karri {
                             station.psgEdgeId, // Location in passenger road network
                             0, // Walking time from this dropoff to destination
                             0, // Vehicle driving time from this dropoff to the destination
-                            0 // Vehicle driving time from destination to this dropoff
+                            0, // Vehicle driving time from destination to this dropoff,
+                            true
                         };
 
                         asgn.distToDropoff = currentLastStopDistances[station.stationId][i];
@@ -502,13 +513,27 @@ namespace karri {
                         if (asgn.pickup.loc == asgn.dropoff.loc)
                             continue;
 
-                        using F = CostCalculator::CostFunction;
-                        const int cost = costUntilDepAtLastStop +
-                                         F::calcVehicleCost(asgn.distToDropoff + InputConfig::getInstance().stopTime) +
-                                         F::calcTripCost(asgn.distToDropoff);
-                        const int arrivalTime = depTimeAtLastStop + asgn.distToDropoff;
+                        const bool stationAtExistingStop = asgn.dropoff.loc == lastStopLoc;
 
-                        firstTaxiLegResult.tryAssignmentWithForStation(
+                        // Check hard constraints
+                        if (isAnyHardConstraintViolated(asgn, requestState, initialPickupDetour, 0,
+                                                        residualDetourAtLastStop, stationAtExistingStop,
+                                                        routeState))
+                            continue;
+
+                        using F = CostCalculator::CostFunction;
+                        const int arrivalTime =
+                                (stationAtExistingStop ? arrTimeAtLastStop : depTimeAtLastStop) + asgn.distToDropoff;
+                        KASSERT(arrivalTime == calcArrivalTime(asgn, requestState, routeState));
+                        static const int &stopTime = InputConfig::getInstance().stopTime;
+                        const int vehDist = asgn.distToDropoff + (stationAtExistingStop ? 0 : stopTime);
+                        const int cost = costNoTripUntilDepAtLastStop +
+                                         F::calcVehicleCost(vehDist) +
+                                         F::calcTripCost(arrivalTime - reqTime);
+                        KASSERT(cost == calculator.calc(asgn, requestState),
+                                "RequestState=" << requestState << ", Assignment=" << asgn << ", Route=" << routeState.
+                                printRouteOf(vehId));
+                        firstTaxiLegResult.tryAssignmentForStation(
                             station.stationId, asgn, cost, arrivalTime, InsertionType::DALS);
                         ++numAssignmentsTried;
                     }
@@ -529,6 +554,7 @@ namespace karri {
                                                          const RequestState &requestState,
                                                          const PDLocs &pdLocs,
                                                          FirstTaxiLegResult &firstTaxiLegResult) {
+            const int reqTime = requestState.earliestDeparture();
             Assignment asgn;
             asgn.pickupStopIdx = 0;
 
@@ -552,6 +578,7 @@ namespace karri {
                 pbnsContinuations.clear();
 
                 const auto numStops = routeState.numStopsOf(vehId);
+                const int lastStopLoc = routeState.stopLocationsFor(vehId)[numStops - 1];
                 asgn.vehicle = &fleet[vehId];
                 asgn.dropoffStopIdx = numStops - 1;
 
@@ -567,12 +594,18 @@ namespace karri {
                         vehId, 0, numStops - 1, depTimeAtPickup, asgn.distFromPickup, requestState, routeState);
                     const auto residualDetourAtLastStop = calcResidualPickupDetour(
                         veh.vehicleId, 0, numStops - 1, initialPickupDetour, routeState);
-                    const int lowerBoundCostUntilDepAtLastStop = calculator.calcCostUntilLastStopForDALS(
-                        veh, asgn.pickup, 0, depTimeAtPickup, initialPickupDetour,
-                        residualDetourAtLastStop, requestState);
+                    const int lowerBoundCostNoTripUntilDepAtLastStop = calculator.
+                            calcCostWithoutTripUntilLastStopForDALS(
+                                veh, asgn.pickup, 0, depTimeAtPickup, initialPickupDetour,
+                                residualDetourAtLastStop, requestState);
+                    const int lowerBoundArrTimeAtLastStop =
+                            routeState.schedArrTimesFor(vehId)[numStops - 1] + residualDetourAtLastStop;
+                    const int lowerBoundDepTimeAtLastStop =
+                            routeState.schedDepTimesFor(vehId)[numStops - 1] + residualDetourAtLastStop;
 
                     for (int idxInValid = 0; idxInValid < stationsWithValidDistances.size(); ++idxInValid) {
-                        if (lowerBoundCostUntilDepAtLastStop >= costUntilLastStopUpperBound[idxInValid])
+                        if (untilLastStopUpperBounds[idxInValid].dominates(
+                            lowerBoundCostNoTripUntilDepAtLastStop, lowerBoundArrTimeAtLastStop))
                             continue;
 
                         const auto &station = ptStations[stationsWithValidDistances[idxInValid]];
@@ -583,7 +616,8 @@ namespace karri {
                             station.psgEdgeId, // Location in passenger road network
                             0, // Walking time from this dropoff to destination
                             0, // Vehicle driving time from this dropoff to the destination
-                            0 // Vehicle driving time from destination to this dropoff
+                            0, // Vehicle driving time from destination to this dropoff
+                            true
                         };
 
                         if (asgn.pickup.loc == asgn.dropoff.loc)
@@ -593,20 +627,28 @@ namespace karri {
                         if (asgn.distToDropoff >= INFTY)
                             continue;
 
+                        const bool stationAtExistingStop = asgn.dropoff.loc == lastStopLoc;
+
                         if (curVehLocToPickupSearches.knowsDistance(vehId, asgn.pickup.id)) {
                             asgn.distToPickup = curVehLocToPickupSearches.getDistance(vehId, asgn.pickup.id);
                             // requestState.tryAssignmentWithKnownCost(asgn, calculator.calc(asgn, requestState));
-                            firstTaxiLegResult.tryAssignmentWithForStation(
+                            firstTaxiLegResult.tryAssignmentForStation(
                                 station.stationId, asgn, calculator.calc(asgn, requestState),
                                 time_utils::calcArrivalTime(asgn, requestState, routeState), InsertionType::DALS_PBNS);
                             ++numAssignmentsTried;
                         } else {
                             asgn.distToPickup = entry.distToPDLoc;
                             using F = CostCalculator::CostFunction;
-                            const auto lowerBoundCost = lowerBoundCostUntilDepAtLastStop +
+                            const auto lowerBoundArrTime = (stationAtExistingStop
+                                                                ? lowerBoundArrTimeAtLastStop
+                                                                : lowerBoundDepTimeAtLastStop) + asgn.distToDropoff;;
+                            KASSERT(lowerBoundArrTime == calcArrivalTime(asgn, requestState, routeState));
+                            static const int &stopTime = InputConfig::getInstance().stopTime;
+                            const int vehDist = asgn.distToDropoff + (stationAtExistingStop ? 0 : stopTime);
+                            const auto lowerBoundCost = lowerBoundCostNoTripUntilDepAtLastStop +
                                                         F::calcVehicleCost(
                                                             asgn.distToDropoff + InputConfig::getInstance().stopTime) +
-                                                        F::calcTripCost(asgn.distToDropoff);
+                                                        F::calcTripCost(lowerBoundArrTime - reqTime);
                             if (lowerBoundCost < upperBoundCost) {
                                 // In this case, we need the exact distance to the pickup via the current location of the
                                 // vehicle. We postpone computation of that distance to be able to bundle it with the
@@ -623,8 +665,8 @@ namespace karri {
                 // Continue with assignments for pickups where exact distance via vehicle location is needed
                 curVehLocToPickupSearches.computeExactDistancesVia(fleet[vehId], pdLocs);
                 for (const auto &continuation: pbnsContinuations) {
-                    assert(continuation.pickupID >= 0 && continuation.pickupID < pdLocs.numPickups());
-                    assert(
+                    KASSERT(continuation.pickupID >= 0 && continuation.pickupID < pdLocs.numPickups());
+                    KASSERT(
                         continuation.fromIdxInValidStations >= 0 && continuation.fromIdxInValidStations <
                         stationsWithValidDistances.size());
                     asgn.pickup = pdLocs.pickups[continuation.pickupID];
@@ -641,15 +683,18 @@ namespace karri {
                         vehId, 0, numStops - 1, depTimeAtPickup, asgn.distFromPickup, requestState, routeState);
                     const auto residualDetourAtLastStop = calcResidualPickupDetour(
                         veh.vehicleId, 0, numStops - 1, initialPickupDetour, routeState);
-                    const int costUntilDepAtLastStop = calculator.calcCostUntilLastStopForDALS(
+                    const int costNoTripUntilDepAtLastStop = calculator.calcCostWithoutTripUntilLastStopForDALS(
                         veh, asgn.pickup, 0, depTimeAtPickup, initialPickupDetour, residualDetourAtLastStop,
                         requestState);
-                    const int depTimeAtLastStop =
+                    const int arrTimeAtLastStop =
                             routeState.schedArrTimesFor(vehId)[numStops - 1] + residualDetourAtLastStop;
+                    const int depTimeAtLastStop =
+                            routeState.schedDepTimesFor(vehId)[numStops - 1] + residualDetourAtLastStop;
 
                     for (int idxInValid = continuation.fromIdxInValidStations;
                          idxInValid < stationsWithValidDistances.size(); ++idxInValid) {
-                        if (costUntilDepAtLastStop >= costUntilLastStopUpperBound[idxInValid])
+                        if (untilLastStopUpperBounds[idxInValid].dominates(
+                            costNoTripUntilDepAtLastStop, arrTimeAtLastStop))
                             continue;
 
                         const auto &station = ptStations[stationsWithValidDistances[idxInValid]];
@@ -660,7 +705,8 @@ namespace karri {
                             station.psgEdgeId, // Location in passenger road network
                             0, // Walking time from this dropoff to destination
                             0, // Vehicle driving time from this dropoff to the destination
-                            0 // Vehicle driving time from destination to this dropoff
+                            0, // Vehicle driving time from destination to this dropoff
+                            true
                         };
 
                         if (asgn.pickup.loc == asgn.dropoff.loc)
@@ -672,13 +718,29 @@ namespace karri {
 
                         ++numAssignmentsTried;
                         asgn.dropoffStopIdx = numStops - 1;
+
+                        const bool stationAtExistingStop = asgn.dropoff.loc == lastStopLoc;
+
+                        // Check hard constraints
+                        if (isAnyHardConstraintViolated(asgn, requestState, initialPickupDetour, 0,
+                                                        residualDetourAtLastStop, stationAtExistingStop,
+                                                        routeState))
+                            continue;
+
                         // requestState.tryAssignmentWithKnownCost(asgn, calculator.calc(asgn, requestState));
                         using F = CostCalculator::CostFunction;
-                        const int cost = costUntilDepAtLastStop +
-                                         F::calcVehicleCost(asgn.distToDropoff + InputConfig::getInstance().stopTime) +
-                                         F::calcTripCost(asgn.distToDropoff);
-                        const int arrivalTime = depTimeAtLastStop + asgn.distToDropoff;
-                        firstTaxiLegResult.tryAssignmentWithForStation(
+                        const int arrivalTime =
+                                (stationAtExistingStop ? arrTimeAtLastStop : depTimeAtLastStop) + asgn.distToDropoff;
+                        KASSERT(arrivalTime == calcArrivalTime(asgn, requestState, routeState));
+                        static const int &stopTime = InputConfig::getInstance().stopTime;
+                        const int vehDist = asgn.distToDropoff + (stationAtExistingStop ? 0 : stopTime);
+                        const int cost = costNoTripUntilDepAtLastStop +
+                                         F::calcVehicleCost(vehDist) +
+                                         F::calcTripCost(arrivalTime - reqTime);
+                        KASSERT(cost == calculator.calc(asgn, requestState),
+                                "RequestState=" << requestState << ", Assignment=" << asgn << ", Route=" << routeState.
+                                printRouteOf(vehId));
+                        firstTaxiLegResult.tryAssignmentForStation(
                             station.stationId, asgn, cost, arrivalTime, InsertionType::DALS_PBNS);
                     }
                 }
@@ -725,9 +787,20 @@ namespace karri {
         std::vector<int> stationsWithValidDistances;
         std::vector<DistanceLabel> currentLastStopDistances;
 
-        // For the station at stationsWithValidDistances[i], costUntilLastStopUpperBound[i] is an upper bound on the
-        // cost for the pickup until the last stop to allow for a better assignment than the best known to this station.
-        std::vector<int> costUntilLastStopUpperBound;
+        // For the station at stationsWithValidDistances[i], untilLastStopUpperBounds[i] contains an upper bound on the
+        // cost and departure time until the last stop to allow for a better assignment than the best known to this station.
+        struct UpperBoundLabel {
+            int cost = INFTY;
+            int departureTime = INFTY;
+
+            bool dominates(int c, int d) const {
+                if (cost > c || departureTime > d)
+                    return false;
+                return cost < c || departureTime < d;
+            }
+        };
+
+        std::vector<UpperBoundLabel> untilLastStopUpperBounds;
 
         // Pointers to request state and relevant PD locs so Dijkstra search callback has access to them
         RequestState const *curReqState;

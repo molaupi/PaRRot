@@ -4,7 +4,7 @@
 #include <Common/TimeConversion.h>
 #include <ULTRA/DataStructures/RAPTOR/Entities/Journey.h>
 
-namespace karri {
+namespace parrot {
     class PTResult {
         using Journey = RAPTOR::Journey;
 

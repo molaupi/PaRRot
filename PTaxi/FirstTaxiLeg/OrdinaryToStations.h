@@ -30,7 +30,9 @@
 #include <KARRI/Algorithms/KaRRi/LastStopSearches/LastStopBCHQuery.h>
 #include <KARRI/Algorithms/KaRRi/CostCalculator.h>
 
-namespace karri {
+namespace parrot {
+    using namespace karri;
+
     template<typename StationsInEllipseT, typename StationDistancesT>
     class OrdinaryToStations {
     public:
@@ -159,7 +161,8 @@ namespace karri {
                             station.psgEdgeId, // Location in passenger road network
                             0, // Walking time from this dropoff to destination
                             0, // Vehicle driving time from this dropoff to the destination
-                            0 // Vehicle driving time from destination to this dropoff
+                            0, // Vehicle driving time from destination to this dropoff
+                            true
                         };
 
                         ++stats.numNonPairedAssignmentsTried;
@@ -169,7 +172,7 @@ namespace karri {
                         // requestState.tryAssignmentWithKnownCost(asgn, calculator.calc(asgn, requestState));
                         const int arrivalTime = stationAtExistingStop ? arrTimeAtJ : depTimeAtJ + asgn.distToDropoff;
                         KASSERT(arrivalTime == calcArrivalTime(asgn, requestState, routeState));
-                        firstTaxiLegResult.tryAssignmentWithForStation(
+                        firstTaxiLegResult.tryAssignmentForStation(
                             station.stationId, asgn, calculator.calc(asgn, requestState),
                             arrivalTime, ORDINARY);
                     }
@@ -263,7 +266,8 @@ namespace karri {
                         station.psgEdgeId, // Location in passenger road network
                         0, // Walking time from this dropoff to destination
                         0, // Vehicle driving time from this dropoff to the destination
-                        0 // Vehicle driving time from destination to this dropoff
+                        0, // Vehicle driving time from destination to this dropoff
+                        true
                     };
 
                     ++stats.numPairedAssignmentsTried;
@@ -273,7 +277,7 @@ namespace karri {
                     // requestState.tryAssignmentWithKnownCost(asgn, calculator.calc(asgn, requestState));
                     const int arrivalTime = depTimeAtPickup + pickupToStationDist;
                     KASSERT(arrivalTime == calcArrivalTime(asgn, requestState, routeState));
-                    firstTaxiLegResult.tryAssignmentWithForStation(
+                    firstTaxiLegResult.tryAssignmentForStation(
                         station.stationId, asgn, calculator.calc(asgn, requestState), arrivalTime, ORDINARY);
                 }
             }

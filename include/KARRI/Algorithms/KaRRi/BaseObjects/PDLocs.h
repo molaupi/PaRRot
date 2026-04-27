@@ -30,12 +30,10 @@
 #include "KARRI/Tools/Constants.h"
 
 namespace karri {
-
     // Models a location used for a pickup or dropoff with an ID (should be counted separately for pickups and dropoffs), a
     // location, a walking distance, and optional driving distances to and from the associated origin or destination
     // location.
     struct PDLoc {
-
         int id = INVALID_ID; // Should be counted separately for pickups and dropoffs
         int loc = INVALID_EDGE; // Location in road network
         int psgLoc = INVALID_EDGE; // Location in passenger road network
@@ -43,7 +41,21 @@ namespace karri {
 
         int vehDistToCenter = INFTY; // Vehicle driving time from this pickup/dropoff to the origin/destination.
         int vehDistFromCenter = INFTY; // Vehicle driving time from origin/destination to this pickup/dropoff.
+
+        bool isStation = false;
     };
+
+    // Print representation of PDLoc to stream
+    inline std::ostream &operator<<(std::ostream &os, const PDLoc &pdLoc) {
+        os << "PDLoc("
+                << "\n\tid=" << pdLoc.id
+                << ",\n\tloc=" << pdLoc.loc
+                << ",\n\tpsgLoc=" << pdLoc.psgLoc
+                << ",\n\twalkingDist=" << pdLoc.walkingDist
+                << ",\n\tisStation=" << (pdLoc.isStation ? "true" : "false")
+                << "\n)";
+        return os;
+    }
 
 
     enum PDLocType : std::int8_t {
@@ -53,7 +65,6 @@ namespace karri {
     };
 
     struct PDLocs {
-
         int numPickups() const {
             return pickups.size();
         }
@@ -65,5 +76,4 @@ namespace karri {
         std::vector<PDLoc> pickups;
         std::vector<PDLoc> dropoffs;
     };
-
 }

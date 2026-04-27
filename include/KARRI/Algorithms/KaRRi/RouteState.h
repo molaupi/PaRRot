@@ -353,7 +353,7 @@ namespace karri {
         template<typename RequestStateT>
         std::pair<int, int>
         insert(const Assignment &asgn, const RequestStateT &requestState,
-            const int latestVehDepTimeAtPickup, const int latestVehArrTimeAtDropoff) {
+               const int latestVehDepTimeAtPickup, const int latestVehArrTimeAtDropoff) {
             KASSERT(checkAssignmentDistances(asgn, requestState));
             const auto vehId = asgn.vehicle->vehicleId;
             const auto &pickup = asgn.pickup;
@@ -425,7 +425,8 @@ namespace karri {
 
 
             if (pickup.loc != dropoff.loc && dropoff.loc == stopLocations[start + dropoffIndex]) {
-                maxArrTimes[start + dropoffIndex] = std::min(maxArrTimes[start + dropoffIndex], latestVehArrTimeAtDropoff);
+                maxArrTimes[start + dropoffIndex] = std::min(maxArrTimes[start + dropoffIndex],
+                                                             latestVehArrTimeAtDropoff);
             } else {
                 ++dropoffIndex;
                 stableInsertion(vehId, dropoffIndex, getUnusedStopId(),
@@ -464,7 +465,9 @@ namespace karri {
             // Update occupancies and prefix sums
             for (int idx = start + pickupIndex; idx < start + dropoffIndex; ++idx) {
                 occupancies[idx] += numRiders;
-                KASSERT(occupancies[idx] <= asgn.vehicle->capacity);
+                KASSERT(occupancies[idx] <= asgn.vehicle->capacity,
+                        "RequestState = " << requestState << ", Assignment = " << asgn << ", Route = " << printRouteOf(
+                            vehId));
             }
 
             for (int idx = start + dropoffIndex; idx < end; ++idx) {
@@ -667,7 +670,9 @@ namespace karri {
             for (int i = start; i < end; ++i) {
                 ss << "  Stop " << stopIds[i] << " at location " << stopLocations[i] << ": arrTime = "
                         << schedArrTimes[i] << ", depTime = " << schedDepTimes[i] << ", maxArrTime = "
-                        << maxArrTimes[i] << ", occupancy = " << occupancies[i] << (isIntermediateStop[i]? " (intermediate)" : "") << "\n";
+                        << maxArrTimes[i] << ", occupancy = " << occupancies[i] << (isIntermediateStop[i]
+                            ? " (intermediate)"
+                            : "") << "\n";
             }
             return ss.str();
         }
@@ -788,7 +793,8 @@ namespace karri {
                 // Stop is only allowed to be shorter than stopTime if it is an intermediate stop. Only the next stop
                 // can be an intermediate stop. If it is, set the vehicle wait time at the stop to 0.
                 KASSERT(isIntermediateStop[l] || stopLength >= 0,
-                        "l = " << l << ", fromIdx = " << fromIdx << ", Route = " << printRouteOf(stopIdToVehicleId[stopIds[l]]));
+                        "l = " << l << ", fromIdx = " << fromIdx << ", Route = " << printRouteOf(stopIdToVehicleId[
+                            stopIds[l]]));
                 stopLength = std::max(stopLength, 0);
                 vehWaitTimesPrefixSum[l] = prevSum + stopLength;
                 prevSum = vehWaitTimesPrefixSum[l];

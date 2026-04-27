@@ -1,6 +1,7 @@
 #pragma once
 #include <KARRI/Algorithms/KaRRi/BaseObjects/Assignment.h>
 #include "InsertionType.h"
+#include "Common/Constants.h"
 
 namespace karri {
     struct TaxiResult {

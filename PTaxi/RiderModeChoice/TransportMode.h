@@ -2,7 +2,7 @@
 #include <stdexcept>
 #include <string>
 
-namespace karri::mode_choice {
+namespace parrot::mode_choice {
 
     enum class TransportMode {
         Car, Ped, Taxi, PublicTransport, TaxiAndPT, None

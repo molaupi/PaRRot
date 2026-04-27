@@ -3,7 +3,7 @@
 #include <unordered_map>
 #include <string>
 
-namespace karri::mode_choice::utility_logit {
+namespace parrot::mode_choice::utility_logit {
     /**
      * A simple parameter wrapper containing the two basic parameters found in transport mode discrete choice models. A
      * constant factor

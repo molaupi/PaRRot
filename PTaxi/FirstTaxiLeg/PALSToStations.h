@@ -30,7 +30,10 @@
 #include <KARRI/Algorithms/KaRRi/LastStopSearches/LastStopBCHQuery.h>
 #include <KARRI/Algorithms/KaRRi/CostCalculator.h>
 
-namespace karri {
+namespace parrot {
+
+    using namespace karri;
+
     template<typename InputGraphT, typename CHEnvT, typename LastStopBucketsEnvT, typename LastStopsAtVerticesT,
         typename
         StationDistancesT, typename
@@ -185,6 +188,7 @@ namespace karri {
                                     stats::PalsAssignmentsPerformanceStats &stats,
                                     FirstTaxiLegResult &firstTaxiLegResult) {
             minDistanceToAnyStation = stationDistances.getMinDistanceToAnyStation();
+
             enumerateAssignmentsWherePickupCoincidesWithLastStop(requestState, pdLocs, stationDistances, stationsSeen,
                                                                  stations, stats, firstTaxiLegResult);
 
@@ -275,14 +279,15 @@ namespace karri {
                             station.psgEdgeId, // Location in passenger road network
                             0, // Walking time from this dropoff to destination
                             0, // Vehicle driving time from this dropoff to the destination
-                            0 // Vehicle driving time from destination to this dropoff
+                            0, // Vehicle driving time from destination to this dropoff
+                            true
                         };
 
                         // Try inserting pair with pickup after last stop:
                         ++numAssignmentsTried;
                         asgn.distToDropoff = stationDistances.getDistance(station.stationId, asgn.pickup.id);
                         // requestState.tryAssignmentWithKnownCost(asgn, calculator.calc(asgn, requestState));
-                        firstTaxiLegResult.tryAssignmentWithForStation(
+                        firstTaxiLegResult.tryAssignmentForStation(
                             station.stationId, asgn, calculator.calc(asgn, requestState), time_utils::calcArrivalTime(asgn, requestState, routeState), InsertionType::PALS);
                     }
                 }
@@ -374,7 +379,7 @@ namespace karri {
 
                     // Consider only stations with feasible distances from StationBCH
                     for (const auto &stationId: stationsSeen) {
-                        const auto station = stations[stationId];
+                        const auto &station = stations[stationId];
                         KASSERT(station.stationId == stationId);
                         asgn.dropoff = {
                             station.stationId, // PDLoc ID
@@ -382,14 +387,15 @@ namespace karri {
                             station.psgEdgeId, // Location in passenger road network
                             0, // Walking time from this dropoff to destination
                             0, // Vehicle driving time from this dropoff to the destination
-                            0 // Vehicle driving time from destination to this dropoff
+                            0, // Vehicle driving time from destination to this dropoff
+                            true
                         };
 
                         // Try inserting pair with pickup after last stop:
                         ++numInsertionsForCoinciding;
                         asgn.distToDropoff = stationDistances.getDistance(station.stationId, asgn.pickup.id);
                         // requestState.tryAssignmentWithKnownCost(asgn, calculator.calc(asgn, requestState));
-                        firstTaxiLegResult.tryAssignmentWithForStation(
+                        firstTaxiLegResult.tryAssignmentForStation(
                             station.stationId, asgn, calculator.calc(asgn, requestState), time_utils::calcArrivalTime(asgn, requestState, routeState), InsertionType::PALS);
                     }
                 }

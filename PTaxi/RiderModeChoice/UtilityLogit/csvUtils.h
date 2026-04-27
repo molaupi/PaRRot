@@ -8,7 +8,7 @@
 
 #include "types.h"
 
-namespace karri::mode_choice::utility_logit {
+namespace parrot::mode_choice::utility_logit {
 
     template<typename T, typename P>
     std::unordered_map<T, P> loadParametersFromCSV(

@@ -34,7 +34,10 @@
 #include "StationsAtLocations.h"
 #include "../Station/TentativeStationDistances.h"
 
-namespace karri {
+namespace parrot {
+
+    using namespace karri;
+
     template<typename InputGraphT, typename CHEnvT,
         typename StationBucketsEnvT,
         typename LabelSetT = BasicLabelSet<0, ParentInfo::FULL_PARENT_INFO> >

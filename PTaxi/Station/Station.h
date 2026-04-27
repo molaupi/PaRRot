@@ -26,11 +26,13 @@
 #pragma once
 #include <vector>
 
-// Models a station with a station ID and a corresponding edge ID in the passenger road network.
-struct Station {
-    int stationId;
-    int psgEdgeId; // edge ID in the passenger road network
-    int vehEdgeId; // edge ID in the vehicle road network
-};
+namespace parrot {
+    // Models a station with a station ID and a corresponding edge ID in the passenger road network.
+    struct Station {
+        int stationId;
+        int psgEdgeId; // edge ID in the passenger road network
+        int vehEdgeId; // edge ID in the vehicle road network
+    };
 
-using PTStations = std::vector<Station>;
+    using PTStations = std::vector<Station>;
+}

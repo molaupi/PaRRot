@@ -57,7 +57,7 @@ private:
     using Round = std::vector<EarliestArrivalLabel>;
 
 public:
-    ParrotPTOnlyULTRARAPTOR(const Data& data, InitialTransferType& initialTransfers, const PTStations &stations,
+    ParrotPTOnlyULTRARAPTOR(const Data& data, InitialTransferType& initialTransfers, const parrot::PTStations &stations,
         const int psgNumEdges,
         const Profiler& profilerTemplate = Profiler())
         : data(data)
@@ -634,7 +634,7 @@ private:
     }
 
     const Data& data;
-    const PTStations &stations;
+    const parrot::PTStations &stations;
 
     InitialTransferType& initialTransfers;
 

@@ -7,6 +7,7 @@
 
 #include "KaRRiBaseInfo.h"
 #include "KARRI/Algorithms/KaRRi/PDDistanceQueries/PDDistances.h"
+#include <TaxiResult.h>
 
 namespace karri {
     // Given a ride request r, this facility finds the optimal assignment of r to the route of a ride-pooling

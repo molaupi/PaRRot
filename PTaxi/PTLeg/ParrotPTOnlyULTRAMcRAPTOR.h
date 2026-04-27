@@ -103,7 +103,7 @@ namespace RAPTOR {
 
     public:
         ParrotPTOnlyULTRAMcRAPTOR(const Data &data,
-                                  InitialTransfersT &initialTransfers, const PTStations &stations,
+                                  InitialTransfersT &initialTransfers, const parrot::PTStations &stations,
                                   const int psgNumEdges,
                                   const Profiler &profilerTemplate = Profiler()) : data(data),
             stations(stations),
@@ -477,7 +477,7 @@ namespace RAPTOR {
 
     private:
         const Data &data;
-        const PTStations &stations;
+        const parrot::PTStations &stations;
         // Fast lookup maps: edge ID -> station ID
         std::vector<int> psgEdgeToStation;
 

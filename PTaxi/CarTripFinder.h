@@ -4,7 +4,9 @@
 #include "KARRI/Algorithms/KaRRi/RequestState/RequestState.h"
 #include "KARRI/Tools/ThreadSafeRandom.h"
 
-namespace karri {
+namespace parrot {
+    using namespace karri;
+
     // Computes a car trip for a given request, i.e., a trip that consists of only walking from origin to destination.
     class CarTripFinder {
         static bool isCarAllowed(const Request &req) {

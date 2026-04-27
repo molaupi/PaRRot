@@ -4,7 +4,10 @@
 #include "KARRI/Algorithms/KaRRi/BaseObjects/Request.h"
 #include "KARRI/Algorithms/KaRRi/RequestState/RequestState.h"
 
-namespace karri {
+namespace parrot {
+
+    using namespace karri;
+
     // Computes a walking trip for a given request, i.e., a trip that consists of only walking from origin to destination.
     template<
         typename VehInputGraphT,

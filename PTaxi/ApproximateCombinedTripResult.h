@@ -5,13 +5,13 @@
 #include "ULTRA/DataStructures/RAPTOR/Entities/Journey.h"
 #include "ULTRA/DataStructures/RAPTOR/Entities/Journey.h"
 
-namespace karri {
+namespace parrot {
 
 class ApproximateCombinedTripResult {
 public:
     template<typename SecondTaxiLegApproximationT>
     ApproximateCombinedTripResult(const int requestTime,
-        TaxiResult accessRpTrip,
+        AccessRPTrip accessRpTrip,
         RAPTOR::Journey journey,
         const SecondTaxiLegApproximationT &secondTaxiLegApproximation)
                         : requestTime(requestTime),
@@ -55,8 +55,8 @@ public:
             journey.erase(journey.begin());
 
             firstTaxiLeg = accessRpTrip;
-            firstTaxiLegCost = firstTaxiLeg.bestCost;
-            bestCost += firstTaxiLeg.bestCost;
+            firstTaxiLegCost = firstTaxiLeg.costWithoutTrip + CostCalculator::calcTripCost(firstTaxiLeg.arrivalTime - requestTime);
+            bestCost += firstTaxiLegCost;
         }
         KASSERT(!journey.empty());
 
@@ -89,7 +89,7 @@ public:
         return firstTaxiLeg.insertionType;
     }
 
-    const TaxiResult &getFirstTaxiLeg() const {
+    const AccessRPTrip &getFirstTaxiLeg() const {
         return firstTaxiLeg;
     }
 
@@ -114,7 +114,7 @@ public:
 private:
     const int requestTime;
 
-    TaxiResult firstTaxiLeg;
+    AccessRPTrip firstTaxiLeg;
     PTResult ptLeg;
     int firstStationId;
     int lastStationId;

@@ -5,7 +5,7 @@
 #include "types.h"
 #include "../TransportMode.h"
 
-namespace karri::mode_choice::utility_logit {
+namespace parrot::mode_choice::utility_logit {
 /**
  * The example utility function for transport choice, using only the global coefficient and the travel time coefficient
  * multiplied by the travel time. Note that travel time is assumed to be in tenths of seconds here.

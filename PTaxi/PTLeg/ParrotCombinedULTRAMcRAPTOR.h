@@ -117,7 +117,7 @@ namespace RAPTOR {
 
     public:
         ParrotCombinedULTRAMcRAPTOR(const Data &data,
-                                    InitialTransfersT &initialTransfers, const PTStations &stations,
+                                    InitialTransfersT &initialTransfers, const parrot::PTStations &stations,
                                     const int psgNumEdges,
                                     const Profiler &profilerTemplate = Profiler())
             : data(data),
@@ -146,7 +146,7 @@ namespace RAPTOR {
         void runWithTaxi(const int origPsgEdge, const int origVehEdge,
                          const int destPsgEdge, const int destVehEdge,
                          const int departureTime,
-                         const karri::FirstTaxiLegResult &firstTaxiLeg, const std::vector<int> &distFromStations,
+                         const parrot::FirstTaxiLegResult &firstTaxiLeg, const std::vector<int> &distFromStations,
                          const int ptOnlyUpperBoundCost,
                          karri::stats::PtPerformanceStats &stats, const size_t maxRounds = INFTY) noexcept {
             run<true>(origPsgEdge, origVehEdge, destPsgEdge, destVehEdge, departureTime, firstTaxiLeg, distFromStations,
@@ -226,7 +226,7 @@ namespace RAPTOR {
 
         template<bool USE_TAXI_ACCESS_AND_EGRESS, typename FirstTaxiLegResultT, typename DistFromStationsT>
             requires (!USE_TAXI_ACCESS_AND_EGRESS || (
-                          std::same_as<FirstTaxiLegResultT, karri::FirstTaxiLegResult> && std::same_as<DistFromStationsT
+                          std::same_as<FirstTaxiLegResultT, parrot::FirstTaxiLegResult> && std::same_as<DistFromStationsT
                               , std::vector<int> >))
         void run(const int origPsgEdge, const int origVehEdge,
                  const int destPsgEdge, const int destVehEdge,
@@ -474,7 +474,7 @@ namespace RAPTOR {
             }
         }
 
-        void relaxInitialTransfersByTaxi(const karri::FirstTaxiLegResult &firstTaxiLeg,
+        void relaxInitialTransfersByTaxi(const parrot::FirstTaxiLegResult &firstTaxiLeg,
                                          karri::stats::PtPerformanceStats &stats) noexcept {
             using Calc = karri::CostCalculator;
 
@@ -498,10 +498,7 @@ namespace RAPTOR {
                     KASSERT(data.isStop(stationVertex), "Taxi station " << stationVertex << " is not a stop!");
                     Label newLabel;
                     newLabel.arrivalTime = parrot::karriToULTRATime(taxiResult.arrivalTime);
-                    using F = karri::CostCalculator::CostFunction;
-                    newLabel.costWithoutTrip = taxiResult.bestCost - F::calcTripCost(
-                                        taxiResult.arrivalTime - parrot::ultraToKarriTime(sourceDepartureTime)) +
-                                    Calc::penaltyForNewTransfer();
+                    newLabel.costWithoutTrip = taxiResult.costWithoutTrip + Calc::penaltyForNewTransfer();
                     newLabel.parentStop = sourceStop;
                     newLabel.parentIndex = i;
                     // Store index of the taxi result among pareto-optimal results at the station to be able to reconstruct the access taxi trip later
@@ -660,7 +657,7 @@ namespace RAPTOR {
 
     private:
         const Data &data;
-        const PTStations &stations;
+        const parrot::PTStations &stations;
         // Fast lookup maps: edge ID -> station ID
         std::vector<int> psgEdgeToStation;
 

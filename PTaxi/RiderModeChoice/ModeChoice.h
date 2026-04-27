@@ -19,7 +19,7 @@
 #include "Common/Constants.h"
 #include "KARRI/Algorithms/KaRRi/RequestState/RequestState.h"
 
-namespace karri::mode_choice {
+namespace parrot::mode_choice {
     template<typename CriterionT, typename LoggerT = NullLogger>
     class ModeChoice {
 

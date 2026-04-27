@@ -211,8 +211,8 @@ namespace karri {
 
             const int minDetour = distToPickup + minDistToDropoff + stopTime;
 
-            const int minActualDepTimeAtPickup = context.earliestDeparture() + distToPickup;
-            const int minTripTime = minActualDepTimeAtPickup - context.earliestDeparture() + minDistToDropoff;
+            const int minTripTime = distToPickup + minDistToDropoff;
+            const int minActualDepTimeAtPickup = std::max(context.now() + distToPickup, context.earliestDeparture());
             const int minWaitViolationCost = F::calcWaitViolationCost(minActualDepTimeAtPickup, context);
             const int minTripCost = F::calcTripCost(minTripTime);
 
@@ -390,7 +390,7 @@ namespace karri {
         }
 
         template<typename RequestContext>
-        int calcCostUntilLastStopForDALS(const Vehicle &veh,
+        int calcCostWithoutTripUntilLastStopForDALS(const Vehicle &veh,
                                          const PDLoc &pickup,
                                          const int pickupIndex,
                                          const int depTimeAtPickup,
@@ -412,12 +412,12 @@ namespace karri {
 
             const int changeInTripTimeCosts = F::calcChangeInTripCostsOfExistingPassengers(addedTripTimeOfOthers);
             const int waitViolation = F::calcWaitViolationCost(depTimeAtPickup, context);
-            const int minTripTime = routeState.schedDepTimesFor(vehId)[numStops - 1] +
-                                    residualDetourAtLastStop - context.earliestDeparture();
-            const int minTripCost = F::calcTripCost(minTripTime);
+            // const int minTripTime = routeState.schedDepTimesFor(vehId)[numStops - 1] +
+                                    // residualDetourAtLastStop - context.earliestDeparture();
+            // const int minTripCost = F::calcTripCost(minTripTime);
             return F::calcVehicleCost(residualDetourAtLastStop)
                    + changeInTripTimeCosts
-                   + minTripCost
+                   // + minTripCost
                    + walkingCost + waitViolation;
         }
 

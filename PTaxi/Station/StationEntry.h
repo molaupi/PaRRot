@@ -28,24 +28,27 @@
 #include <cstdint>
 #include <limits>
 
-// This class represents an entry of a relevant station for dropoff in a stop pair. 
-// It stores the distance from the previous stop of a vehicle to the station
-// and the distance from the station to the next stop of the vehicle.
-struct StationEntry {
-  StationEntry() noexcept = default;
+namespace parrot {
+    // This class represents an entry of a relevant station for dropoff in a stop pair.
+    // It stores the distance from the previous stop of a vehicle to the station
+    // and the distance from the station to the next stop of the vehicle.
+    struct StationEntry {
+        StationEntry() noexcept = default;
 
-  StationEntry(const int stationId, 
-               const int distFromStopToStation, 
-               const int distFromStationToStop) noexcept
-      : targetId(stationId), 
-        distFromStopToStation(distFromStopToStation), 
-        distFromStationToStop(distFromStationToStop) {}
+        StationEntry(const int stationId,
+                     const int distFromStopToStation,
+                     const int distFromStationToStop) noexcept
+            : targetId(stationId),
+              distFromStopToStation(distFromStopToStation),
+              distFromStationToStop(distFromStationToStop) {
+        }
 
-  constexpr bool operator==(const StationEntry& rhs) const noexcept {
-    return targetId == rhs.targetId;
-  }
+        constexpr bool operator==(const StationEntry &rhs) const noexcept {
+            return targetId == rhs.targetId;
+        }
 
-  int32_t targetId = std::numeric_limits<int32_t>::max(); // station ID
-  int32_t distFromStopToStation;
-  int32_t distFromStationToStop;
-};
+        int32_t targetId = std::numeric_limits<int32_t>::max(); // station ID
+        int32_t distFromStopToStation;
+        int32_t distFromStationToStop;
+    };
+}

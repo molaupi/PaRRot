@@ -33,7 +33,10 @@
 #include "StationEntry.h"
 #include "KARRI/Algorithms/Buckets/SortedBucketContainer.h"
 
-namespace karri {
+namespace parrot {
+
+    using namespace karri;
+
     template<typename InputGraphT, typename CHEnvT,
         typename StationBucketsEnvT>
     class StationsInEllipse {

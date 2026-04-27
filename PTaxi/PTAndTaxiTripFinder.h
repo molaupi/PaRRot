@@ -9,7 +9,10 @@
 #include "ApproximateCombinedTripResult.h"
 #include "FirstTaxiLeg/StationsAtLocations.h"
 
-namespace karri {
+namespace parrot {
+
+    using namespace karri;
+
     // Core of the PTaxi algorithm: Given a ride request r, this facility finds the optimal assignment of r to the route
     // of a vehicle and a pickup and dropoff location, according to the current state of all vehicle routes.
     template<
@@ -98,15 +101,15 @@ namespace karri {
             // auto journey = chooseBestJourney(ptLegParetoFront);
             auto bestJourney = ptAlgorithmWithTaxi.getJourneyWithBestCost();
 
-            TaxiResult rpAccessTrip;
+            AccessRPTrip accessRpTrip;
             if (!bestJourney.journey.empty() && bestJourney.journey.front().usesTaxi)
-                rpAccessTrip = firstTaxiLegResult.getResultsForStation(bestJourney.journey.front().to)[bestJourney.
+                accessRpTrip = firstTaxiLegResult.getResultsForStation(bestJourney.journey.front().to)[bestJourney.
                     accessRpTripIndex];
 
             // first taxi leg + PT journey + 2nd taxi leg approximation
             ApproximateCombinedTripResult intermediateResult(
                 req.requestTime,
-                rpAccessTrip,
+                accessRpTrip,
                 bestJourney.journey,
                 taxiLegApproximation);
             KASSERT(intermediateResult.getBestCost() >= bestJourney.cost - 200 &&
@@ -123,7 +126,7 @@ namespace karri {
             int insertionTypeCounts[] = {0, 0, 0, 0, 0, 0}; // PALS, DALS, DALS_PBNS, ORDINARY, PBNS, UNDEFINED
 
             for (const auto &result: firstTaxiLegResults) {
-                sumCost += result.bestCost;
+                sumCost += result.costWithoutTrip + CostCalculator::calcTripCost(result.arrivalTime - req.requestTime);
                 sumArrivalTime += result.arrivalTime;
                 ++insertionTypeCounts[result.insertionType];
             }
@@ -158,7 +161,7 @@ namespace karri {
                                     const int upperBoundCost,
                                     stats::StationBchPerformanceStats &stationBchStats,
                                     stats::TaxiPerformanceStats &stats) {
-            firstTaxiLegResult.reset(upperBoundCost, rs.originalRequest.requestId);
+            firstTaxiLegResult.reset(upperBoundCost, rs.originalRequest);
 
             runStationBCH(rs, pdLocs, upperBoundCost, stationBchStats);
             runPALS(rs, pdLocs, upperBoundCost, stats.palsAssignmentsStats);

@@ -279,7 +279,7 @@ namespace karri::PickupAfterLastStopStrategies {
             const auto &pickup2 = pdLocs.pickups[label2.pickupId];
             const auto &dropoff2 = pdLocs.dropoffs[label2.dropoffId];
 
-            assert(dropoff1.id != dropoff2.id);
+            KASSERT(dropoff1.id != dropoff2.id);
             if (pickup1.id != pickup2.id || label1.distToPickup != label2.distToPickup)
                 return false;
 
@@ -352,7 +352,7 @@ namespace karri::PickupAfterLastStopStrategies {
             int costLowerBound;
             reverseQueue.min(v, costLowerBound);
             labelAtV = reverseLabelBuckets.closeMinOpenLabel(v);
-            assert(lowerBoundCostOfLabel(labelAtV, requestState, pdLocs) == costLowerBound);
+            KASSERT(lowerBoundCostOfLabel(labelAtV, requestState, pdLocs) == costLowerBound);
 
             // Check if this label can be pruned at v
             const bool pruned = STALL_LABELS && pruneLabel(v, labelAtV, pdLocs, requestState);
@@ -393,7 +393,7 @@ namespace karri::PickupAfterLastStopStrategies {
             if (reverseLabelBuckets.getBucketOf(v).open().size() == 0) {
                 int deletedV;
                 reverseQueue.deleteMin(deletedV, costLowerBound);
-                assert(v == deletedV && costLowerBound == lowerBoundCostOfLabel(labelAtV, requestState, pdLocs));
+                KASSERT(v == deletedV && costLowerBound == lowerBoundCostOfLabel(labelAtV, requestState, pdLocs));
             } else {
                 reverseQueue.increaseKey(
                     v, lowerBoundCostOfLabel(reverseLabelBuckets.minOpenLabel(v), requestState, pdLocs));
@@ -592,7 +592,7 @@ namespace karri::PickupAfterLastStopStrategies {
                     //  effect beyond the arrival time, too, so the vehicle-independent lower bound is different.)
                     const auto vehTimeTillDepAtPickup = std::max(fullDistToPickup + InputConfig::getInstance().stopTime,
                                                                  requestState.earliestDeparture() + pickup.walkingDist -
-                                                                 requestState.now());
+                                                                 (requestState.now() + InputConfig::getInstance().stopTime)); // add the final stop time since a vehicle may already be idle but still currently performing its final stop
                     const auto psgTimeTillDepAtPickup = std::max(
                         requestState.now() + fullDistToPickup + InputConfig::getInstance().stopTime - requestState.
                         earliestDeparture(),
@@ -654,7 +654,7 @@ namespace karri::PickupAfterLastStopStrategies {
             // out that a PALS assignment better than the upper bound cost may exist.
             const auto costIgnoringHardConstraints = calculator.calcWithoutHardConstraints(asgn, requestState);
 
-            assert(bestCostWithoutConstraints <= upperBoundCostWithConstraints);
+            KASSERT(bestCostWithoutConstraints <= upperBoundCostWithConstraints);
             if (costIgnoringHardConstraints > bestCostWithoutConstraints)
                 return;
 

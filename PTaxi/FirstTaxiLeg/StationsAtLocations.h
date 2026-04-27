@@ -5,7 +5,7 @@
 
 struct Station;
 
-namespace karri {
+namespace parrot {
 
     // Allows query of which stations are located at a given location (edge in the vehicle road network).
     struct StationsAtLocations {

@@ -132,7 +132,7 @@ namespace karri {
             ModeChoiceT &modeChoice,
             SystemStateUpdaterT &systemStateUpdater,
             const ScheduledStopsT &scheduledStops,
-            const PTStations &stations,
+            const parrot::PTStations &stations,
             const bool verbose = false)
             : fleet(fleet),
               requests(requests),
@@ -428,10 +428,11 @@ namespace karri {
             KASSERT(id == reqId && key == occTime);
             nextRiderEvents[reqId] = RIDER_NO_EVENT;
 
-            const auto mode = modeChoice.chooseMode(requestState, walkOnlyResult, carOnlyResult, taxiOnlyResult, ptOnlyResult,
+            const auto mode = modeChoice.chooseMode(requestState, walkOnlyResult, carOnlyResult, taxiOnlyResult,
+                                                    ptOnlyResult,
                                                     ptAndTaxiResult);
 
-            using mode_choice::TransportMode;
+            using parrot::mode_choice::TransportMode;
             if (mode == TransportMode::Ped || mode == TransportMode::Car || mode == TransportMode::PublicTransport) {
                 const int arrTime = mode == TransportMode::Ped
                                         ? request.requestTime + walkOnlyResult.walkingDist
@@ -442,7 +443,8 @@ namespace karri {
             } else if (mode == TransportMode::Taxi) {
                 systemStateUpdater.writeBestAssignmentToLogger(requestState, taxiOnlyResult);
                 riderState[reqId] = WAITING_FOR_PICKUP;
-                applyAssignment(requestState, taxiOnlyResult, reqId, occTime, stats.updateStats);
+                applyAssignment(requestState, taxiOnlyResult.getBestAssignment(), taxiOnlyResult.getBestCost(), reqId,
+                                occTime, stats.updateStats);
             } else if (mode == TransportMode::TaxiAndPT) {
                 riderState[reqId] = WAITING_FOR_PICKUP;
                 applyCombinedTrip(requestState, ptAndTaxiResult, reqId, occTime, stats.updateStats);
@@ -457,29 +459,29 @@ namespace karri {
             eventSimulationStatsLogger << occTime << ",RequestReceipt," << time << '\n';
         }
 
-        void applyAssignment(const RequestState &requestState, const TaxiResult &result, const int reqId, const int,
+        void applyAssignment(const RequestState &requestState, const Assignment &asgn, const int cost, const int reqId,
+                             const int,
                              karri::stats::UpdatePerformanceStats &updateStats,
                              const bool isSecondTaxiLeg = false,
                              const int externalMaxArrTimeAtDropoff = INFTY) {
-            const auto &bestAsgn = result.getBestAssignment();
             // || !bestAsgn.pickup || !bestAsgn.dropoff
-            if (!bestAsgn.vehicle) {
+            if (!asgn.vehicle) {
                 riderState[reqId] = FINISHED;
                 return;
             }
 
             if (isSecondTaxiLeg) {
-                requestData[reqId].walkingTimeToSecondTaxiLegPickup = bestAsgn.pickup.walkingDist;
-                requestData[reqId].walkingTimeFromDropoff += bestAsgn.dropoff.walkingDist;
-                requestData[reqId].secondTaxiLegCost = result.getBestCost();
+                requestData[reqId].walkingTimeToSecondTaxiLegPickup = asgn.pickup.walkingDist;
+                requestData[reqId].walkingTimeFromDropoff += asgn.dropoff.walkingDist;
+                requestData[reqId].secondTaxiLegCost = cost;
             } else {
-                requestData[reqId].walkingTimeToPickup = bestAsgn.pickup.walkingDist;
-                requestData[reqId].walkingTimeFromDropoff = bestAsgn.dropoff.walkingDist;
+                requestData[reqId].walkingTimeToPickup = asgn.pickup.walkingDist;
+                requestData[reqId].walkingTimeFromDropoff = asgn.dropoff.walkingDist;
             }
 
-            systemStateUpdater.insertBestAssignment(requestState, result, updateStats, externalMaxArrTimeAtDropoff);
+            systemStateUpdater.insertBestAssignment(requestState, asgn, updateStats, externalMaxArrTimeAtDropoff);
 
-            const auto vehId = bestAsgn.vehicle->vehicleId;
+            const auto vehId = asgn.vehicle->vehicleId;
             switch (vehicleState[vehId]) {
                 case STOPPING:
                     // Update event time to departure time at current stop since it may have changed
@@ -529,7 +531,7 @@ namespace karri {
         // }
 
         void applyCombinedTrip(const RequestState &requestState,
-                               const ApproximateCombinedTripResult &combinedResult,
+                               const parrot::ApproximateCombinedTripResult &combinedResult,
                                const int reqId, const int occTime,
                                karri::stats::UpdatePerformanceStats &updateStats) {
             const auto &ptLeg = combinedResult.getPTLeg();
@@ -543,7 +545,10 @@ namespace karri {
             // Apply first taxi leg assignment
             if (combinedResult.isInitialTransferByTaxi()) {
                 KASSERT(firstTaxiLeg.isValid());
-                applyAssignment(requestState, firstTaxiLeg, reqId, occTime, updateStats, false,
+                const int cost = firstTaxiLeg.costWithoutTrip + CostCalculator::calcTripCost(
+                                     firstTaxiLeg.arrivalTime - requestState.earliestDeparture());
+                applyAssignment(requestState, firstTaxiLeg.getBestAssignment(), cost, reqId, occTime, updateStats,
+                                false,
                                 ptLeg.getDepartureTimeAtFirstStation());
                 reqData.hasFirstTaxiLeg = true;
             } else {
@@ -589,8 +594,11 @@ namespace karri {
 
             karri::stats::SecondTaxiLegStats secondTaxiLegStats;
             auto requestState = rsInitializer.initializeRequestState(newReq, occTime,
-                                                                     secondTaxiLegStats.taxiPrepStats.initializationStats);
-            const auto baseInfo = karriPrep.prepareBaseInfo(requestState, secondTaxiLegStats.taxiPrepStats);
+                                                                     secondTaxiLegStats.taxiPrepStats.
+                                                                     initializationStats);
+            auto baseInfo = karriPrep.prepareBaseInfo(requestState, secondTaxiLegStats.taxiPrepStats);
+            for (auto &p : baseInfo.pdLocs.pickups)
+                p.isStation = true;
             const auto secondLegResult = taxiTripFinder.findBestAssignment(
                 requestState, baseInfo, secondTaxiLegStats.taxiSecondLegStats);
             // auto asgnFinderResponse = ptAndTaxiTripFinder.findBestSecondTaxiLeg(
@@ -603,7 +611,8 @@ namespace karri {
             // const auto waitTime = reqData.depTime - requests[reqId].requestTime;
             // requestState.setCurrentWaitTime(waitTime);
 
-            applyAssignment(requestState, secondLegResult, reqId, occTime, secondTaxiLegStats.updateStats, true);
+            applyAssignment(requestState, secondLegResult.getBestAssignment(), secondLegResult.getBestCost(), reqId,
+                            occTime, secondTaxiLegStats.updateStats, true);
 
             systemStateUpdater.writeSecondTaxiLegLogs(reqId, secondTaxiLegStats);
         }
@@ -659,7 +668,7 @@ namespace karri {
         ModeChoiceT &modeChoice;
         SystemStateUpdaterT &systemStateUpdater;
         const ScheduledStopsT &scheduledStops;
-        const PTStations &stations;
+        const parrot::PTStations &stations;
 
         AddressableQuadHeap vehicleEvents;
         AddressableQuadHeap requestEvents;

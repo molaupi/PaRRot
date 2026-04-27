@@ -32,7 +32,10 @@
 #include <KARRI/Tools/Constants.h>
 #include "../Station/StationEntry.h"
 
-namespace karri {
+namespace parrot {
+
+    using namespace karri;
+
     template<typename InputGraphT, typename CHEnvT,
         typename StationBucketsEnvT>
     class TaxiLegApproximation {

@@ -24,10 +24,15 @@
 
 #pragma once
 
+#include <vector>
 #include "TransportMode.h"
 #include "ModeChoiceInput.h"
+#include "KARRI/Algorithms/KaRRi/InputConfig.h"
+#include "UtilityLogit/types.h"
 
-namespace karri::mode_choice {
+namespace parrot::mode_choice {
+
+        using karri::InputConfig;
 
     // Models mode choice of a rider given a possible taxi-sharing assignment.
     // Simple implementation based on trip times: Takes smaller trip time between walking and taxi sharing. If this
@@ -39,7 +44,7 @@ namespace karri::mode_choice {
 
         TripTimeThresholdCriterion() = default;
 
-        TransportMode apply(std::vector<Alternative<TransportMode>> entries) {
+        TransportMode apply(std::vector<utility_logit::Alternative<TransportMode>> entries) {
             using namespace time_utils;
 
             const auto taxiTripTime = input.taxiTravelTime + input.taxiWaitTime + input.taxiAccEgrTime;

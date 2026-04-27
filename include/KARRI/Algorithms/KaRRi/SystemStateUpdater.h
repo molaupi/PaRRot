@@ -89,12 +89,11 @@ namespace karri {
         }
 
 
-        void insertBestAssignment(const RequestState &requestState, const TaxiResult &result,
+        void insertBestAssignment(const RequestState &requestState, const Assignment &asgn,
                                   stats::UpdatePerformanceStats &stats,
                                   const int externalMaxArrTimeAtDropoff = INFTY) {
             KaRRiTimer timer;
 
-            const auto &asgn = result.getBestAssignment();
             chosenPDLocsRoadCatStats.incCountForCat(inputGraph.osmRoadCategory(asgn.pickup.loc));
             chosenPDLocsRoadCatStats.incCountForCat(inputGraph.osmRoadCategory(asgn.dropoff.loc));
             assert(asgn.vehicle != nullptr);
