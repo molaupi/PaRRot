@@ -53,6 +53,9 @@ namespace karri {
         int hardConstraintMaxAddedWaitTime = -1;
         double hardConstraintAlpha = -1.0;
         int hardConstraintBeta = -1;
+
+        int parrotEgressHeuristicIntercept = INFTY;
+        double parrotEgressHeuristicSlope = 0.0;
     };
 
 }

@@ -660,9 +660,11 @@ namespace karri {
             return F::calcTransferPenalty(1);
         }
 
-        static int calcHeuristicCostForFinalTransferTimeByRP(const int) {
-            // return F::calcTripCost(finalTransferTime);
-            return 0;
+        static int calcHeuristicCostForFinalTransferTimeByRP(const int finalTransferTime) {
+            // Heuristic for cost of final transfer uses linear function fitted to known KaRRi data.
+            static const int &b = InputConfig::getInstance().parrotEgressHeuristicIntercept;
+            static const double &m = InputConfig::getInstance().parrotEgressHeuristicSlope;
+            return static_cast<int>(std::round(m * static_cast<double>(finalTransferTime))) + b;
         }
 
         static int calcTripCost(const int tripTime) {

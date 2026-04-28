@@ -77,6 +77,45 @@ namespace RAPTOR {
             }
         };
 
+        struct TargetLabel {
+            TargetLabel() : cost(INFTY), arrivalTime(never), parentStop(noStop), parentIndex(-1),
+                            parentDepartureTime(never), round(-1),
+                            usesRoute(false), usesTaxi(false), routeId(noRouteId) {
+            }
+
+            TargetLabel(const int cost,
+                        const int arrivalTime,
+                        const StopId parentStop,
+                        const size_t parentIndex,
+                        const int parentDepartureTime,
+                        const size_t round,
+                        const bool usesRoute,
+                        const bool usesTaxi) : cost(cost),
+                                                 arrivalTime(arrivalTime),
+                                                 parentStop(parentStop),
+                                                 parentIndex(parentIndex),
+                                                 parentDepartureTime(parentDepartureTime),
+                                                 round(round),
+                                                 usesRoute(usesRoute),
+                                                 usesTaxi(usesTaxi),
+                                                 routeId(noRouteId) {
+            }
+
+            int cost;
+            int arrivalTime;
+            StopId parentStop;
+            size_t parentIndex;
+            int parentDepartureTime;
+            size_t round;
+            bool usesRoute;
+            bool usesTaxi;
+
+            union {
+                RouteId routeId;
+                Edge transferId;
+            };
+        };
+
         struct BestLabel {
             BestLabel() : arrivalTime(never), costWithoutTrip(INFTY) {
             }
@@ -130,7 +169,8 @@ namespace RAPTOR {
               routesServingUpdatedStops(data.numberOfRoutes()),
               targetStop(noStop),
               sourceDepartureTime(never),
-              bestCostAtTarget(INFTY),
+              // bestCostAtTarget(INFTY),
+              bestAtTarget(),
               profiler(profilerTemplate) {
             KASSERT(data.hasImplicitBufferTimes(), "Departure buffer times have to be implicit!");
             profiler.registerExtraRounds({EXTRA_ROUND_CLEAR, EXTRA_ROUND_INITIALIZATION});
@@ -174,33 +214,39 @@ namespace RAPTOR {
         };
 
         BestJourney getJourneyWithBestCost() const noexcept {
+            // using F = karri::CostCalculator::CostFunction;
+            // // KASSERT(bestLabels[targetStop].size() == 1, "Target has more than one best label.");
+            // size_t bestRound = rounds.size();
+            // size_t bestParentIndex = -1;
+            // for (size_t round = 0; round < rounds.size(); round += 2) {
+            //     const size_t trueRound = std::min(round + 1, rounds.size() - 1);
+            //     for (size_t i = 0; i < rounds[trueRound][targetStop].size(); i++) {
+            //         const Label &currentLabel = rounds[trueRound][targetStop][i];
+            //         const int cost = fullCost(currentLabel);
+            //         if (cost == bestCostAtTarget) {
+            //             bestRound = trueRound;
+            //             bestParentIndex = i;
+            //             break;
+            //         }
+            //     }
+            //     if (bestRound != rounds.size())
+            //         break;
+            // }
+            // if (bestRound == rounds.size())
+            //     return {};
+            // // KASSERT(smallestCost < INFTY, "No label found for target stop!");
+            //
+            // // Sets bestParentIndex to parent index of label at first station. Can be used to reconstruct correct access RP trip.
+            // const auto journey = getJourney(bestRound, targetStop, bestParentIndex);
+            // KASSERT(!journey.empty(), "Backtracking the journey for the target stop did not yield a valid journey!");
 
-            using F = karri::CostCalculator::CostFunction;
-            // KASSERT(bestLabels[targetStop].size() == 1, "Target has more than one best label.");
-            size_t bestRound = rounds.size();
-            size_t bestParentIndex = -1;
-            for (size_t round = 0; round < rounds.size(); round += 2) {
-                const size_t trueRound = std::min(round + 1, rounds.size() - 1);
-                for (size_t i = 0; i < rounds[trueRound][targetStop].size(); i++) {
-                    const Label &currentLabel = rounds[trueRound][targetStop][i];
-                    const int cost = fullCost(currentLabel);
-                    if (cost == bestCostAtTarget) {
-                        bestRound = trueRound;
-                        bestParentIndex = i;
-                        break;
-                    }
-                }
-                if (bestRound != rounds.size())
-                    break;
-            }
-            if (bestRound == rounds.size())
+            if (bestAtTarget.parentStop == noStop)
                 return {};
-            // KASSERT(smallestCost < INFTY, "No label found for target stop!");
+            KASSERT(bestAtTarget.round >= 1 && bestAtTarget.round < rounds.size(), "Best round for target stop is out of bounds!");
+            KASSERT(bestAtTarget.parentIndex < rounds[bestAtTarget.round - 1][bestAtTarget.parentStop].size(),
+                    "Best parent index for target stop is out of bounds!");
 
-            // Sets bestParentIndex to parent index of label at first station. Can be used to reconstruct correct access RP trip.
-            const auto journey = getJourney(bestRound, targetStop, bestParentIndex);
-            KASSERT(!journey.empty(), "Backtracking the journey for the target stop did not yield a valid journey!");
-
+            const auto [journey, bestParentIndex] = getJourneyToTarget();
             // If journey with best cost does not use RP at all, we consider combined journey infeasible
             if (!journey.front().usesTaxi && !journey.back().usesTaxi)
                 return {};
@@ -209,7 +255,7 @@ namespace RAPTOR {
             if (journey.front().usesTaxi) {
                 accessRpTripIndex = static_cast<int>(bestParentIndex);
             }
-            return {journey, bestCostAtTarget, accessRpTripIndex};
+            return {journey, bestAtTarget.cost, accessRpTripIndex};
         }
 
 
@@ -226,7 +272,8 @@ namespace RAPTOR {
 
         template<bool USE_TAXI_ACCESS_AND_EGRESS, typename FirstTaxiLegResultT, typename DistFromStationsT>
             requires (!USE_TAXI_ACCESS_AND_EGRESS || (
-                          std::same_as<FirstTaxiLegResultT, parrot::FirstTaxiLegResult> && std::same_as<DistFromStationsT
+                          std::same_as<FirstTaxiLegResultT, parrot::FirstTaxiLegResult> && std::same_as<
+                              DistFromStationsT
                               , std::vector<int> >))
         void run(const int origPsgEdge, const int origVehEdge,
                  const int destPsgEdge, const int destVehEdge,
@@ -309,7 +356,8 @@ namespace RAPTOR {
             sourceStop = noStop;
             targetStop = StopId(data.numberOfStops());
             sourceDepartureTime = never;
-            bestCostAtTarget = INFTY;
+            // bestCostAtTarget = INFTY;
+            bestAtTarget = TargetLabel();
             if constexpr (RESET_CAPACITIES) {
                 std::vector<Round>().swap(rounds);
                 std::vector<BestBagType>(bestLabels.size()).swap(bestLabels);
@@ -349,7 +397,8 @@ namespace RAPTOR {
             }
 
             sourceDepartureTime = departureTime;
-            bestCostAtTarget = ptOnlyUpperBoundCost;
+            // bestCostAtTarget = ptOnlyUpperBoundCost;
+            bestAtTarget.cost = ptOnlyUpperBoundCost;
             startNewRound();
 
             // Initialize source stop if the origin edge maps to a station
@@ -536,7 +585,8 @@ namespace RAPTOR {
                         Label newLabel;
                         newLabel.arrivalTime = bag[i].arrivalTime + travelTime;
                         newLabel.costWithoutTrip = bag[i].costWithoutTrip + Calc::calcCostForAddedTransferTime(
-                                            parrot::ultraToKarriTime(travelTime)) + Calc::penaltyForNewTransfer();
+                                                       parrot::ultraToKarriTime(travelTime)) +
+                                                   Calc::penaltyForNewTransfer();
                         newLabel.parentStop = stop;
                         newLabel.parentIndex = i;
                         newLabel.parentDepartureTime = bag[i].arrivalTime;
@@ -547,15 +597,22 @@ namespace RAPTOR {
                 if (initialTransfers.getBackwardDistance(stop) != INFTY) {
                     const int travelTime = initialTransfers.getBackwardDistance(stop);
                     for (size_t i = 0; i < bag.size(); i++) {
-                        Label newLabel;
-                        newLabel.arrivalTime = bag[i].arrivalTime + parrot::karriToULTRATime(travelTime);
-                        newLabel.costWithoutTrip = bag[i].costWithoutTrip + Calc::calcCostForAddedTransferTime(travelTime) +
-                                        Calc::penaltyForNewTransfer();
-                        newLabel.parentStop = stop;
-                        newLabel.parentIndex = i;
-                        newLabel.parentDepartureTime = bag[i].arrivalTime;
-                        newLabel.transferId = noEdge;
-                        arrivalByTransfer(targetStop, newLabel, stats);
+                        // Label newLabel;
+                        // newLabel.arrivalTime = bag[i].arrivalTime + parrot::karriToULTRATime(travelTime);
+                        // newLabel.costWithoutTrip = bag[i].costWithoutTrip + Calc::calcCostForAddedTransferTime(travelTime) +
+                        //                 Calc::penaltyForNewTransfer();
+                        // newLabel.parentStop = stop;
+                        // newLabel.parentIndex = i;
+                        // newLabel.parentDepartureTime = bag[i].arrivalTime;
+                        // newLabel.transferId = noEdge;
+                        // arrivalByTransfer(targetStop, newLabel, stats);
+                        const int arrivalTime = bag[i].arrivalTime + parrot::karriToULTRATime(travelTime);
+                        const int cost = fullCost(bag[i]) + Calc::penaltyForNewTransfer() +
+                                         Calc::calcCostForAddedTransferTime(travelTime) + Calc::calcTripCost(travelTime);
+                        TargetLabel candidate(cost, arrivalTime, stop, i, bag[i].arrivalTime, rounds.size() - 1, false,
+                                        false);
+                        candidate.transferId = noEdge;
+                        arrivalAtTarget(candidate);
                     }
                 }
             }
@@ -578,16 +635,23 @@ namespace RAPTOR {
                     INFTY) {
                     const int taxiTravelDistance = distFromStations[stationId];
                     for (size_t i = 0; i < bag.size(); i++) {
-                        Label newLabel;
-                        newLabel.arrivalTime = bag[i].arrivalTime + parrot::karriToULTRATime(taxiTravelDistance);
-                        newLabel.costWithoutTrip = bag[i].costWithoutTrip + Calc::calcHeuristicCostForFinalTransferTimeByRP(
-                                            taxiTravelDistance) + Calc::penaltyForNewTransfer();
-                        newLabel.parentStop = stop;
-                        newLabel.parentIndex = i;
-                        newLabel.parentDepartureTime = bag[i].arrivalTime;
-                        newLabel.transferId = noEdge;
-                        newLabel.usesTaxi = true;
-                        arrivalByTransfer(targetStop, newLabel, stats);
+                        // Label newLabel;
+                        // newLabel.arrivalTime = bag[i].arrivalTime + parrot::karriToULTRATime(taxiTravelDistance);
+                        // newLabel.costWithoutTrip = bag[i].costWithoutTrip + Calc::calcHeuristicCostForFinalTransferTimeByRP(
+                        //                     taxiTravelDistance) + Calc::penaltyForNewTransfer();
+                        // newLabel.parentStop = stop;
+                        // newLabel.parentIndex = i;
+                        // newLabel.parentDepartureTime = bag[i].arrivalTime;
+                        // newLabel.transferId = noEdge;
+                        // newLabel.usesTaxi = true;
+                        // arrivalByTransfer(targetStop, newLabel, stats);
+                        const int arrivalTime = bag[i].arrivalTime + parrot::karriToULTRATime(taxiTravelDistance);
+                        const int cost = fullCost(bag[i]) + Calc::penaltyForNewTransfer() +
+                                         Calc::calcHeuristicCostForFinalTransferTimeByRP(taxiTravelDistance);
+                        TargetLabel candidate(cost, arrivalTime, stop, i, bag[i].arrivalTime, rounds.size() - 1, false,
+                                        true);
+                        candidate.transferId = noEdge;
+                        arrivalAtTarget(candidate);
                     }
                 }
             }
@@ -607,13 +671,27 @@ namespace RAPTOR {
             rounds.emplace_back(data.numberOfStops() + 1);
         }
 
+        void arrivalAtTarget(const TargetLabel &candidate) noexcept {
+            if (candidate.cost >= bestAtTarget.cost) return;
+            bestAtTarget = candidate;
+        }
+
         inline void arrival(const StopId stop, const Label &label, IndexedSet<false, StopId> &updatedStops,
                             Metric metric, int64_t &numImproved) noexcept {
             KASSERT(data.isStop(stop) || stop == targetStop, "Stop " << stop << " is out of range!");
             // if (bestLabels[targetStop].dominates(label)) return;
 
             // Target pruning based only on cost since we're looking for the label with best cost at the target
-            if (fullCost(label) >= bestCostAtTarget) return;
+            // if (fullCost(label) >= bestCostAtTarget) return;
+            if (fullCost(label) >= bestAtTarget.cost) return;
+
+            if (stop == targetStop) {
+                TargetLabel candidate(fullCost(label), label.arrivalTime, label.parentStop, label.parentIndex,
+                                label.parentDepartureTime, rounds.size() - 1,
+                                label.usesRoute, label.usesTaxi);
+                candidate.routeId = label.routeId; // union with transfer id so this may assign transfer id instead
+                arrivalAtTarget(candidate);
+            }
 
             if (!bestLabels[stop].merge(BestLabel(label))) return;
             ++numImproved;
@@ -621,12 +699,6 @@ namespace RAPTOR {
             currentRound()[stop].mergeUndominated(label);
             KASSERT(bestLabels[stop].dominates(currentRound()[stop]), "Best bag does not dominate current bag!");
             if (data.isStop(stop)) updatedStops.insert(stop);
-
-            if (stop == targetStop) {
-                KASSERT(fullCost(label) < bestCostAtTarget,
-                        "New label at target is not better than current best cost at target!");
-                bestCostAtTarget = fullCost(label);
-            }
         }
 
         inline void arrivalByTransfer(const StopId stop, const Label &label,
@@ -655,6 +727,29 @@ namespace RAPTOR {
             return Vector::reverse(journey);
         }
 
+        std::pair<Journey, size_t> getJourneyToTarget() const noexcept {
+            if (bestAtTarget.parentStop == noStop)
+                return {};
+            Journey journey;
+            journey.emplace_back(bestAtTarget.parentStop, targetStop, bestAtTarget.parentDepartureTime, bestAtTarget.arrivalTime,
+                                 bestAtTarget.usesRoute, bestAtTarget.routeId, bestAtTarget.usesTaxi);
+            StopId stop = bestAtTarget.parentStop;
+            size_t index = bestAtTarget.parentIndex;
+            size_t round = bestAtTarget.round - 1;
+            while (stop != sourceStop) {
+                KASSERT(round != size_t(-1),
+                        "Backtracking parent pointers did not pass through the source stop! Partial journey = " <<
+                        Vector::reverse(journey));
+                const Label &label = rounds[round][stop][index];
+                journey.emplace_back(label.parentStop, stop, label.parentDepartureTime, label.arrivalTime,
+                                     label.usesRoute, label.routeId, label.usesTaxi);
+                stop = label.parentStop;
+                index = label.parentIndex;
+                --round;
+            }
+            return {Vector::reverse(journey), index};
+        }
+
     private:
         const Data &data;
         const parrot::PTStations &stations;
@@ -679,7 +774,8 @@ namespace RAPTOR {
         StopId targetStop;
         int sourceDepartureTime;
 
-        int bestCostAtTarget;
+        // int bestCostAtTarget;
+        TargetLabel bestAtTarget;
 
 
         Profiler profiler;

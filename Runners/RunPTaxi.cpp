@@ -158,6 +158,8 @@ inline void printUsage() {
             "  -d-radius <sec>          walking radius (in s) for dropoff locations around destination. (dflt: 300s)\n"
             "  -max-num-p <int>         max number of pickup locations to consider, sampled from all in radius. Set to 0 for no limit (dflt).\n"
             "  -max-num-d <int>         max number of dropoff locations to consider, sampled from all in radius. Set to 0 for no limit (dflt).\n"
+            "  -egr-m <factor>          model parameter for slope of linear approximation of taxi egress cost relative to direct distance (dflt: 1.0)\n"
+            "  -egr-b <sec>             model parameter for intercept of linear approximation of taxi egress cost (dflt: 0s)\n"
             "  -veh-h <file>            contraction hierarchy for the vehicle network in binary format.\n"
             "  -psg-h <file>            contraction hierarchy for the passenger network in binary format.\n"
             "  -veh-d <file>            separator decomposition for the vehicle network in binary format (needed for CCHs).\n"
@@ -187,6 +189,8 @@ int main(int argc, char *argv[]) {
         inputConfig.hardConstraintMaxAddedWaitTime = clp.getValue<int>("w", 600) * 10;
         inputConfig.hardConstraintAlpha = clp.getValue<double>("a", 1.4);
         inputConfig.hardConstraintBeta = clp.getValue<int>("b", 600) * 10;
+        inputConfig.parrotEgressHeuristicSlope = clp.getValue<double>("egr-m", 1.0);
+        inputConfig.parrotEgressHeuristicIntercept = clp.getValue<int>("egr-b", 0) * 10;
         inputConfig.pickupRadius = clp.getValue<int>("p-radius", 300) * 10;
         inputConfig.dropoffRadius = clp.getValue<int>("d-radius", 300) * 10;
         inputConfig.maxNumPickups = clp.getValue<int>("max-num-p", INFTY);
