@@ -149,7 +149,12 @@ namespace parrot::mode_choice {
 
                 // Second taxi leg
                 if (approxCombinedResult.isFinalTransferByTaxi()) {
-                    combinedTravelTime += approxCombinedResult.getArrivalTime() - approxPtLeg.getArrivalTime();
+                    // Real travel time approximated by linear function with parameters based on known KaRRi data.
+                    static const double &m = InputConfig::getInstance().parrotEgressTravelTimeHeuristicSlope;
+                    static const int &b = InputConfig::getInstance().parrotEgressTravelTimeHeuristicIntercept;
+                    const int directDist = approxCombinedResult.getArrivalTime() - approxPtLeg.getArrivalTime();
+                    const int heuristicTravelTime = static_cast<int>(std::round(m * static_cast<double>(directDist))) + b;
+                    combinedTravelTime += std::max(heuristicTravelTime, directDist);
                 }
 
                 entries.push_back({

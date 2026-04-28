@@ -662,8 +662,8 @@ namespace karri {
 
         static int calcHeuristicCostForFinalTransferTimeByRP(const int finalTransferTime) {
             // Heuristic for cost of final transfer uses linear function fitted to known KaRRi data.
-            static const int &b = InputConfig::getInstance().parrotEgressHeuristicIntercept;
-            static const double &m = InputConfig::getInstance().parrotEgressHeuristicSlope;
+            static const int &b = InputConfig::getInstance().parrotEgressCostHeuristicIntercept;
+            static const double &m = InputConfig::getInstance().parrotEgressCostHeuristicSlope;
             return static_cast<int>(std::round(m * static_cast<double>(finalTransferTime))) + b;
         }
 

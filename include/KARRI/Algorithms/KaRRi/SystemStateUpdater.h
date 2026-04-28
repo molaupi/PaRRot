@@ -92,11 +92,15 @@ namespace karri {
         void insertBestAssignment(const RequestState &requestState, const Assignment &asgn,
                                   stats::UpdatePerformanceStats &stats,
                                   const int externalMaxArrTimeAtDropoff = INFTY) {
+            KASSERT(
+                asgn.pickupStopIdx != asgn.dropoffStopIdx || asgn.pickup.id != 0 || asgn.dropoff.id != 0 || asgn.
+                distToDropoff >= requestState.originalReqDirectDist,
+                "Paired assignment with origin and destination has wrong direct distance.");
             KaRRiTimer timer;
 
             chosenPDLocsRoadCatStats.incCountForCat(inputGraph.osmRoadCategory(asgn.pickup.loc));
             chosenPDLocsRoadCatStats.incCountForCat(inputGraph.osmRoadCategory(asgn.dropoff.loc));
-            assert(asgn.vehicle != nullptr);
+            KASSERT(asgn.vehicle != nullptr);
 
             const auto vehId = asgn.vehicle->vehicleId;
             const auto numStopsBefore = routeState.numStopsOf(vehId);
@@ -131,14 +135,22 @@ namespace karri {
             stats.updateRoutesTime += routeUpdateTime;
 
             if (rerouteVehicle) {
-                // If vehicle is rerouted from its current position to a newly inserted stop (PBNS assignment), create new
-                // intermediate stop at the vehicle's current position to maintain the invariant of the schedule for the
-                // first stop, i.e. dist(s[i], s[i+1]) = schedArrTime(s[i+1]) - schedDepTime(s[i]).
-                // Intermediate stop gets an arrival time equal to the request time so the stop is reached immediately,
-                // making it the new stop 0. Thus, we do not need to compute target bucket entries for the stop.
-                createIntermediateStopAtCurrentLocationForReroute(*asgn.vehicle, requestState.now(), stats);
-                ++pickupIndex;
-                ++dropoffIndex;
+                KASSERT(curVehLocs.knowsCurrentLocationOf(vehId));
+                auto loc = curVehLocs.getCurrentLocationOf(vehId);
+                LIGHT_KASSERT(loc.depTimeAtHead >= requestState.now());
+                if (loc.location == routeState.stopLocationsFor(vehId)[1]) {
+                    // No need to create intermediate stop if vehicle is already at the location of the inserted stop.
+                    rerouteVehicle = false;
+                } else {
+                    // If vehicle is rerouted from its current position to a newly inserted stop (PBNS assignment), create new
+                    // intermediate stop at the vehicle's current position to maintain the invariant of the schedule for the
+                    // first stop, i.e. dist(s[i], s[i+1]) = schedArrTime(s[i+1]) - schedDepTime(s[i]).
+                    // Intermediate stop gets an arrival time equal to the request time so the stop is reached immediately,
+                    // making it the new stop 0. Thus, we do not need to compute target bucket entries for the stop.
+                    createIntermediateStopAtCurrentLocationForReroute(*asgn.vehicle, loc, requestState.now(), stats);
+                    ++pickupIndex;
+                    ++dropoffIndex;
+                }
             }
 
             updateEllipticBucketsForSingleAssignment(asgn, pickupIndex, dropoffIndex, rerouteVehicle, stats);
@@ -151,7 +163,7 @@ namespace karri {
             int pickupStopId = routeState.stopIdsFor(vehId)[pickupIndex];
             int dropoffStopId = routeState.stopIdsFor(vehId)[dropoffIndex];
 
-            assert(pickupStopId >= 0 && dropoffStopId >= 0);
+            KASSERT(pickupStopId >= 0 && dropoffStopId >= 0);
 
             // Register the inserted pickup and dropoff with the path data
             pathTracker.registerPdEventsForBestAssignment(requestState, pickupStopId, dropoffStopId);
@@ -180,7 +192,7 @@ namespace karri {
 
         void notifyVehicleReachedEndOfServiceTime(const Vehicle &veh) {
             const auto vehId = veh.vehicleId;
-            assert(routeState.numStopsOf(vehId) == 1);
+            KASSERT(routeState.numStopsOf(vehId) == 1);
 
             stats::UpdatePerformanceStats finalRemovalStatsPlaceholder;
             lastStopBucketsEnv.removeIdleBucketEntries(veh, 0, finalRemovalStatsPlaceholder, veh.endOfServiceTime);
@@ -299,11 +311,8 @@ namespace karri {
         // first stop, i.e. dist(s[i], s[i+1]) = schedArrTime(s[i+1]) - schedDepTime(s[i]).
         // Intermediate stop gets an arrival time equal to the request time so the stop is reached immediately,
         // making it the new stop 0. Thus, we do not need to compute target bucket entries for the stop.
-        void createIntermediateStopAtCurrentLocationForReroute(const Vehicle &veh, const int now,
+        void createIntermediateStopAtCurrentLocationForReroute(const Vehicle &veh, const VehicleLocation& loc, const int now,
                                                                karri::stats::UpdatePerformanceStats &stats) {
-            assert(curVehLocs.knowsCurrentLocationOf(veh.vehicleId));
-            auto loc = curVehLocs.getCurrentLocationOf(veh.vehicleId);
-            LIGHT_KASSERT(loc.depTimeAtHead >= now);
             routeState.createIntermediateStopForReroute(veh.vehicleId, loc.location, now, loc.depTimeAtHead);
             ellipticBucketsEnv.generateSourceBucketEntries(veh, 1, stats);
             stationsInEllipse.computeNewStationsInEllipsesForStop(1, veh.vehicleId, stats);

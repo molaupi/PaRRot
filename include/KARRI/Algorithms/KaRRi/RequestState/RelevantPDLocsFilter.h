@@ -152,6 +152,10 @@ namespace karri {
                 if ((!beforeNextStop && stopPos == 0) || (beforeNextStop && stopPos > 0) ||
                     (!isDropoff && stopPos == routeState.numStopsOf(vehId) - 1))
                     continue;
+                // Skip vehicles that are already on edge that represents next stop for PBNS
+                if (beforeNextStop && routeState.schedArrTimesFor(vehId)[1] - inputGraph.travelTime(routeState.stopLocationsFor(vehId)[1])
+                    <= requestState.dispatchingTime)
+                    continue;
                 vehiclesWithFeasibleDistances.insert(vehId);
             }
 

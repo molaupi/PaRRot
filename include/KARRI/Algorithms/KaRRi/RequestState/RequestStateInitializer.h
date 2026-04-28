@@ -22,6 +22,7 @@
 /// SOFTWARE.
 /// ******************************************************************************
 
+#include "RequestState.h"
 
 #pragma once
 namespace karri {
@@ -49,10 +50,14 @@ namespace karri {
 
             // Calculate the direct distance between the requests origin and destination
             timer.restart();
-            const auto source = vehCh.rank(vehInputGraph.edgeHead(req.origin));
-            const auto target = vehCh.rank(vehInputGraph.edgeTail(req.destination));
-            vehChQuery.run(source, target);
-            requestState.originalReqDirectDist = vehChQuery.getDistance() + vehInputGraph.travelTime(req.destination);
+            if (req.origin == req.destination) {
+                requestState.originalReqDirectDist = 0;
+            } else {
+                const auto source = vehCh.rank(vehInputGraph.edgeHead(req.origin));
+                const auto target = vehCh.rank(vehInputGraph.edgeTail(req.destination));
+                vehChQuery.run(source, target);
+                requestState.originalReqDirectDist = vehChQuery.getDistance() + vehInputGraph.travelTime(req.destination);
+            }
 
             const auto directSearchTime = timer.elapsed<std::chrono::nanoseconds>();
             stats.computeODDistanceTime = directSearchTime;

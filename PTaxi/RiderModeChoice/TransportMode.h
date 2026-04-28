@@ -29,6 +29,8 @@ namespace parrot::mode_choice {
                 return "PublicTransport";
             case TransportMode::TaxiAndPT:
                 return "TaxiAndPT";
+            case TransportMode::None:
+                return "None";
             default:
                 return "InvalidMode";
         }

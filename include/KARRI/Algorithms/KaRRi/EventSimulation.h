@@ -448,6 +448,8 @@ namespace karri {
             } else if (mode == TransportMode::TaxiAndPT) {
                 riderState[reqId] = WAITING_FOR_PICKUP;
                 applyCombinedTrip(requestState, ptAndTaxiResult, reqId, occTime, stats.updateStats);
+            } else if (mode == TransportMode::None) {
+                processNoMode(reqId);
             } else {
                 KASSERT(false);
             }
@@ -514,21 +516,14 @@ namespace karri {
             requestEvents.insert(reqId, arrivalTime);
         }
 
-        // template<typename JourneyResponseT>
-        // void applyPtOnlyJourney(const JourneyResponseT &ptResponse, const int reqId, const int) {
-        //     auto &reqData = requestData[reqId];
-        //
-        //     const bool isWalkingOnly = ptResponse.isJourneyWalking();
-        //     riderState[reqId] = NON_TAXI_TO_DESTINATION;
-        //     nextRiderEvents[reqId] = ARRIVE_AT_DESTINATION;
-        //     requestEvents.insert(reqId, ptResponse.getArrivalTime());
-        //     reqData.depTime = isWalkingOnly
-        //                           ? ptResponse.getDepartureTime()
-        //                           : ptResponse.getDepartureTimeAtFirstStation();
-        //     reqData.walkingTimeToPickup = isWalkingOnly ? 0 : ptResponse.getWalkingTimeToFirstStation();
-        //     reqData.walkingTimeFromDropoff = ptResponse.getWalkingTimeFromLastStation();
-        //     reqData.arrivalTimeAtEndOfPtJourney = ptResponse.getArrivalTime();
-        // }
+        void processNoMode(const int reqId) {
+            KASSERT(!requestEvents.contains(reqId));
+            riderState[reqId] = FINISHED;
+            nextRiderEvents[reqId] = RIDER_NO_EVENT;
+            requestData[reqId].depTime = -1;
+            requestData[reqId].walkingTimeToPickup = -1;
+            requestData[reqId].walkingTimeFromDropoff = -1;
+        }
 
         void applyCombinedTrip(const RequestState &requestState,
                                const parrot::ApproximateCombinedTripResult &combinedResult,

@@ -96,6 +96,8 @@ namespace karri {
                     asgn.dropoffStopIdx = numStops - 1;
 
                     for (const auto &d: pdLocs.dropoffs) {
+                        if (d.loc == asgn.pickup.loc)
+                            continue;
                         asgn.dropoff = d;
                         asgn.distToDropoff = pdDistances.getDirectDistance(asgn.pickup, asgn.dropoff);
                         ++numInsertionsForCoinciding;

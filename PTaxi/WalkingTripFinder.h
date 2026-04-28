@@ -18,13 +18,11 @@ namespace parrot {
     public:
         WalkingTripFinder(const VehInputGraphT &vehInputGraph,
                           const PsgInputGraphT &psgInputGraph,
-                          const PsgCHEnvT &psgChEnv,
-                          const RouteState &routeState)
+                          const PsgCHEnvT &psgChEnv)
             : vehInputGraph(vehInputGraph),
               psgInputGraph(psgInputGraph),
               psgCh(psgChEnv.getCH()),
-              psgChQuery(psgChEnv.template getFullCHQuery<>()),
-              calc(routeState) {
+              psgChQuery(psgChEnv.template getFullCHQuery<>()) {
         }
 
         WalkingResult findWalkingTrip(const RequestState &requestState, stats::WalkPerformanceStats &stats) {
@@ -32,12 +30,20 @@ namespace parrot {
             const auto &request = requestState.originalRequest;
             const int originPsgEdge = vehInputGraph.toPsgEdge(request.origin);
             const int destPsgEdge = vehInputGraph.toPsgEdge(request.destination);
-            const int source = psgInputGraph.edgeHead(originPsgEdge);
-            const int target = psgInputGraph.edgeTail(destPsgEdge);
-            const int offset = psgInputGraph.travelTime(originPsgEdge);
-            psgChQuery.run(psgCh.rank(source), psgCh.rank(target));
-            const auto walkingDist = psgChQuery.getDistance() + offset;
-            const WalkingResult res = {walkingDist, calc.calcCostForNotUsingVehicle(walkingDist, offset)};
+            int walkingDist = INFTY;
+            int travelTimeOfDestEdge = INFTY;
+            if (originPsgEdge == destPsgEdge) {
+                walkingDist = 0;
+                travelTimeOfDestEdge = 0;
+            } else {
+                const int source = psgInputGraph.edgeHead(originPsgEdge);
+                const int target = psgInputGraph.edgeTail(destPsgEdge);
+                const int offset = psgInputGraph.travelTime(originPsgEdge);
+                psgChQuery.run(psgCh.rank(source), psgCh.rank(target));
+                walkingDist = psgChQuery.getDistance() + offset;
+                travelTimeOfDestEdge = offset;
+            }
+            const WalkingResult res = {walkingDist, CostCalculator::calcCostForNotUsingVehicle(walkingDist, travelTimeOfDestEdge)};
             const int64_t time = timer.elapsed<std::chrono::nanoseconds>();
             stats.time += time;
             return res;
@@ -48,6 +54,5 @@ namespace parrot {
         const PsgInputGraphT &psgInputGraph;
         const CH &psgCh;
         PsgCHEnvT::template FullCHQuery<> psgChQuery;
-        CostCalculator calc;
     };
 }

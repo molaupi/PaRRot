@@ -36,17 +36,15 @@
 #include "KARRI/DataStructures/Graph/Attributes/CarEdgeToPsgEdgeAttribute.h"
 
 namespace karri {
-
-
-// This class finds every possible location suited for passenger pickups or dropoffs in a given radius around the
-// origin or destination of a request. When queried, a local Dijkstra search bounded by the given radius is executed
-// around the center point.
+    // This class finds every possible location suited for passenger pickups or dropoffs in a given radius around the
+    // origin or destination of a request. When queried, a local Dijkstra search bounded by the given radius is executed
+    // around the center point.
     template<typename PassengerGraphT, typename WeightT = TravelTimeAttribute>
     class FindPDLocsInRadiusQuery {
-
     private:
         struct StopWhenRadiusExceeded {
-            StopWhenRadiusExceeded(const int radius) : radius(radius) {}
+            StopWhenRadiusExceeded(const int radius) : radius(radius) {
+            }
 
             template<typename DistLabelT, typename DistLabelContainerT>
             bool operator()(const int, DistLabelT &distToV, const DistLabelContainerT & /*distLabels*/) {
@@ -58,8 +56,8 @@ namespace karri {
         };
 
         struct RememberSearchSpace {
-
-            RememberSearchSpace(std::vector<int> &searchSpace) : searchSpace(searchSpace) {}
+            RememberSearchSpace(std::vector<int> &searchSpace) : searchSpace(searchSpace) {
+            }
 
             template<typename DistLabelT, typename DistLabelContT>
             bool operator()(const int v, DistLabelT &, const DistLabelContT &) {
@@ -69,29 +67,33 @@ namespace karri {
 
         private:
             std::vector<int> &searchSpace;
-
         };
 
-        using PickupSearch = KaRRiDijkstra<PassengerGraphT, WeightT, BasicLabelSet<0, ParentInfo::NO_PARENT_INFO>, StopWhenRadiusExceeded, RememberSearchSpace>;
-        using DropoffSearch = KaRRiDijkstra<PassengerGraphT, WeightT, BasicLabelSet<0, ParentInfo::NO_PARENT_INFO>, StopWhenRadiusExceeded, RememberSearchSpace>;
+        using PickupSearch = KaRRiDijkstra<PassengerGraphT, WeightT, BasicLabelSet<0, ParentInfo::NO_PARENT_INFO>,
+            StopWhenRadiusExceeded, RememberSearchSpace>;
+        using DropoffSearch = KaRRiDijkstra<PassengerGraphT, WeightT, BasicLabelSet<0, ParentInfo::NO_PARENT_INFO>,
+            StopWhenRadiusExceeded, RememberSearchSpace>;
 
     public:
-
         FindPDLocsInRadiusQuery(const PassengerGraphT &forwardPsgGraph,
                                 const PassengerGraphT &reversePsgGraph)
-                : forwardGraph(forwardPsgGraph),
-                  reverseGraph(reversePsgGraph),
-                  pickupSearch(forwardPsgGraph, {InputConfig::getInstance().pickupRadius},
-                               {searchSpace}),
-                  dropoffSearch(reversePsgGraph, {InputConfig::getInstance().dropoffRadius},
-                                {searchSpace}),
-                  searchSpace(),
-                  rand(seed) {}
+            : forwardGraph(forwardPsgGraph),
+              reverseGraph(reversePsgGraph),
+              pickupSearch(forwardPsgGraph, {InputConfig::getInstance().pickupRadius},
+                           {searchSpace}),
+              dropoffSearch(reversePsgGraph, {InputConfig::getInstance().dropoffRadius},
+                            {searchSpace}),
+              searchSpace(),
+              rand(seed) {
+        }
 
-        void findPickups(const int origin, std::vector<PDLoc>& pickups) {
+        void findPickups(const int origin, std::vector<PDLoc> &pickups) {
             assert(origin < forwardGraph.numEdges());
             pickups.clear();
-
+            if (InputConfig::getInstance().pickupRadius == 0) {
+                pickups.push_back({0, forwardGraph.toCarEdge(origin), origin, 0, INFTY, INFTY});
+                return;
+            }
             searchSpace.clear();
             auto headOfOriginEdge = forwardGraph.edgeHead(origin);
             pickupSearch.run(headOfOriginEdge);
@@ -100,22 +102,24 @@ namespace karri {
             finalizePDLocs(origin, pickups, InputConfig::getInstance().maxNumPickups);
         }
 
-            void findDropoffs(const int destination, std::vector<PDLoc>& dropoffs) {
-                assert(destination < forwardGraph.numEdges());
-                dropoffs.clear();
-
-                searchSpace.clear();
-                auto tailOfDestEdge = forwardGraph.edgeTail(destination);
-                auto destOffset = forwardGraph.travelTime(destination);
-                dropoffSearch.runWithOffset(tailOfDestEdge, destOffset);
-                turnSearchSpaceIntoDropoffLocations(dropoffs);
-
-                finalizePDLocs(destination, dropoffs, InputConfig::getInstance().maxNumDropoffs);
+        void findDropoffs(const int destination, std::vector<PDLoc> &dropoffs) {
+            assert(destination < forwardGraph.numEdges());
+            dropoffs.clear();
+            if (InputConfig::getInstance().dropoffRadius == 0) {
+                dropoffs.push_back({0, forwardGraph.toCarEdge(destination), destination, 0, INFTY, INFTY});
+                return;
             }
+            searchSpace.clear();
+            auto tailOfDestEdge = forwardGraph.edgeTail(destination);
+            auto destOffset = forwardGraph.travelTime(destination);
+            dropoffSearch.runWithOffset(tailOfDestEdge, destOffset);
+            turnSearchSpaceIntoDropoffLocations(dropoffs);
+
+            finalizePDLocs(destination, dropoffs, InputConfig::getInstance().maxNumDropoffs);
+        }
 
     private:
-
-        void turnSearchSpaceIntoPickupLocations(std::vector<PDLoc>& pickups) {
+        void turnSearchSpaceIntoPickupLocations(std::vector<PDLoc> &pickups) {
             for (const auto &v: searchSpace) {
                 const auto distToV = pickupSearch.getDistance(v);
                 assert(distToV <= InputConfig::getInstance().pickupRadius);
@@ -130,7 +134,7 @@ namespace karri {
             }
         }
 
-        void turnSearchSpaceIntoDropoffLocations(std::vector<PDLoc>& dropoffs) {
+        void turnSearchSpaceIntoDropoffLocations(std::vector<PDLoc> &dropoffs) {
             for (const auto &v: searchSpace) {
                 const auto distToV = dropoffSearch.getDistance(v);
                 assert(distToV <= InputConfig::getInstance().dropoffRadius);
@@ -217,23 +221,22 @@ namespace karri {
     };
 
 
-
     // Initializes the pickup and dropoff locations for a new request.
     template<typename VehInputGraphT,
-            typename PsgInputGraphT,
-            typename VehicleToPDLocQueryT>
+        typename PsgInputGraphT,
+        typename VehicleToPDLocQueryT>
     class PDLocsFinder {
-
     public:
         PDLocsFinder(const VehInputGraphT &vehInputGraph, const PsgInputGraphT &psgInputGraph,
-                                const PsgInputGraphT& revPsgGraph,
-                                VehicleToPDLocQueryT &vehicleToPdLocQuery)
-                : vehInputGraph(vehInputGraph), psgInputGraph(psgInputGraph),
-                  findPdLocsInRadiusQuery(psgInputGraph, revPsgGraph),
-                  vehicleToPdLocQuery(vehicleToPdLocQuery) {}
+                     const PsgInputGraphT &revPsgGraph,
+                     VehicleToPDLocQueryT &vehicleToPdLocQuery)
+            : vehInputGraph(vehInputGraph), psgInputGraph(psgInputGraph),
+              findPdLocsInRadiusQuery(psgInputGraph, revPsgGraph),
+              vehicleToPdLocQuery(vehicleToPdLocQuery) {
+        }
 
 
-        PDLocs findPDLocs(const int origin, const int destination, stats::InitializationPerformanceStats& stats) {
+        PDLocs findPDLocs(const int origin, const int destination, stats::InitializationPerformanceStats &stats) {
             KaRRiTimer timer;
 
             PDLocs pdLocs;
@@ -269,14 +272,11 @@ namespace karri {
             return pdLocs;
         }
 
-
     private:
-
         const VehInputGraphT &vehInputGraph;
         const PsgInputGraphT &psgInputGraph;
 
         FindPDLocsInRadiusQuery<PsgInputGraphT> findPdLocsInRadiusQuery;
         VehicleToPDLocQueryT &vehicleToPdLocQuery;
-
     };
 }

@@ -21,6 +21,8 @@ namespace karri {
         }
 
         bool tryAssignmentWithKnownCost(const Assignment &asgn, const int cost) {
+            if (asgn.pickup.loc == asgn.dropoff.loc)
+                return false;
             if (cost < INFTY && (cost < bestCost || (cost == bestCost &&
                                                      breakCostTie(asgn, bestAssignment)))) {
                 bestAssignment = asgn;
