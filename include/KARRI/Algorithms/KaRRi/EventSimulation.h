@@ -81,39 +81,61 @@ namespace karri {
         // request.
         struct RequestData {
             int depTime = 0;
-            int walkingTimeToPickup = 0;
-            int walkingTimeFromDropoff = 0;
+            int walkingTime = 0;
             int taxiLegCost = 0;
             int ptLegCost = 0;
             int secondTaxiLegApproxCost = 0;
+            parrot::mode_choice::TransportMode mode = parrot::mode_choice::TransportMode::None;
 
             // related to combined trip
-            bool isCombinedTrip = false;
             bool hasFirstTaxiLeg = false;
             bool hasSecondTaxiLeg = false;
             bool completedFirstTaxiLeg = false;
-            int arrivalTimeAtEndOfPtJourney = 0; // arr time at last station if 2nd taxi leg or at destination if not
-            int secondTaxiLegDepTime = 0;
             int secondTaxiLegCost = 0;
-            int walkingTimeToSecondTaxiLegPickup = 0;
+
+            // First taxi leg
+            int firstTaxiLegPickupWalkTime = 0;
+            int firstTaxiLegDepAtPickup = 0;
+            int firstTaxiLegArrAtDropoff = 0;
+            int firstTaxiLegDropoffWalkTime = 0;
+
+            // PT leg
+            int ptLegDepTime = 0;
+            int ptLegArrTime = 0;
+            int ptLegWalkTime = 0;
+            int ptLegRideTime = 0;
+
+            // Second taxi leg
+            int secondTaxiLegPickupWalkTime = 0;
+            int secondTaxiLegDepAtPickup = 0;
+            int secondTaxiLegArrAtDropoff = 0;
+            int secondTaxiLegDropoffWalkTime = 0;
         };
 
         // Prints representation of request data to output stream for debugging purposes
         inline friend std::ostream &operator<<(std::ostream &os, const RequestData &data) {
             os << "depTime: " << data.depTime
-                    << ", walkingTimeToPickup: " << data.walkingTimeToPickup
-                    << ", walkingTimeFromDropoff: " << data.walkingTimeFromDropoff
-                    << ", taxiLegCost: " << data.taxiLegCost
-                    << ", ptLegCost: " << data.ptLegCost
-                    << ", secondTaxiLegApproxCost: " << data.secondTaxiLegApproxCost
-                    << ", isCombinedTrip: " << data.isCombinedTrip
-                    << ", hasFirstTaxiLeg: " << data.hasFirstTaxiLeg
-                    << ", hasSecondTaxiLeg: " << data.hasSecondTaxiLeg
-                    << ", completedFirstTaxiLeg: " << data.completedFirstTaxiLeg
-                    << ", arrivalTimeAtEndOfPtJourney: " << data.arrivalTimeAtEndOfPtJourney
-                    << ", secondTaxiLegDepTime: " << data.secondTaxiLegDepTime
-                    << ", secondTaxiLegCost: " << data.secondTaxiLegCost
-                    << ", walkingTimeToSecondTaxiLegPickup: " << data.walkingTimeToSecondTaxiLegPickup;
+               << ", walkingTime: " << data.walkingTime
+               << ", taxiLegCost: " << data.taxiLegCost
+               << ", ptLegCost: " << data.ptLegCost
+               << ", secondTaxiLegApproxCost: " << data.secondTaxiLegApproxCost
+               << ", mode: " << static_cast<int>(data.mode)
+               << ", hasFirstTaxiLeg: " << data.hasFirstTaxiLeg
+               << ", hasSecondTaxiLeg: " << data.hasSecondTaxiLeg
+               << ", completedFirstTaxiLeg: " << data.completedFirstTaxiLeg
+               << ", secondTaxiLegCost: " << data.secondTaxiLegCost
+               << ", firstTaxiLegPickupWalkTime: " << data.firstTaxiLegPickupWalkTime
+               << ", firstTaxiLegDepAtPickup: " << data.firstTaxiLegDepAtPickup
+               << ", firstTaxiLegArrAtDropoff: " << data.firstTaxiLegArrAtDropoff
+               << ", firstTaxiLegDropoffWalkTime: " << data.firstTaxiLegDropoffWalkTime
+               << ", ptLegDepTime: " << data.ptLegDepTime
+               << ", ptLegArrTime: " << data.ptLegArrTime
+               << ", ptLegWalkTime: " << data.ptLegWalkTime
+               << ", ptLegRideTime: " << data.ptLegRideTime
+               << ", secondTaxiLegPickupWalkTime: " << data.secondTaxiLegPickupWalkTime
+               << ", secondTaxiLegDepAtPickup: " << data.secondTaxiLegDepAtPickup
+               << ", secondTaxiLegArrAtDropoff: " << data.secondTaxiLegArrAtDropoff
+               << ", secondTaxiLegDropoffWalkTime: " << data.secondTaxiLegDropoffWalkTime;
             return os;
         }
 
@@ -162,11 +184,11 @@ namespace karri {
               assignmentQualityStats(LogManager<std::ofstream>::getLogger("assignmentquality.csv",
                                                                           "request_id,"
                                                                           "arr_time,"
-                                                                          "wait_time,"
-                                                                          "ride_time,"
                                                                           "trip_time,"
-                                                                          "walk_to_pickup_time,"
-                                                                          "walk_to_dropoff_time,"
+                                                                          "wait_time,"
+                                                                          "taxi_ride_time,"
+                                                                          "pt_ride_time,"
+                                                                          "walk_time,"
                                                                           "cost\n")),
               legStatsLogger(LogManager<std::ofstream>::getLogger("legstats.csv",
                                                                   "vehicle_id,"
@@ -322,34 +344,67 @@ namespace karri {
                 KASSERT(riderState[reqId] == IN_TAXI_VEHICLE, "request " << reqId << " data: " << requestData[reqId]);
                 auto &reqData = requestData[reqId];
 
-                const bool lastTaxiLegFinished =
-                        !reqData.isCombinedTrip || // finished first leg in taxi only trip
-                        !reqData.hasSecondTaxiLeg || // finished first leg in combined trip without second taxi leg
-                        reqData.completedFirstTaxiLeg; // finished second leg of combined trip
-
-                if (lastTaxiLegFinished) {
-                    // No more taxis used, so arrival time at destination is fixed.
-                    // Insert rider event for arrival at destination.
+                if (reqData.mode == parrot::mode_choice::TransportMode::Taxi) {
+                    // If the request is on a taxi-only trip, the rider now walks from here to the destination.
                     riderState[reqId] = NON_TAXI_TO_DESTINATION;
-                    int arrTimeAtDest;
-                    if (ptStationsForSecondTaxiLeg[reqId] == INVALID_ID) {
-                        // If finished first leg in combined trip without second taxi leg, arrival time at destination is
-                        // arrival time with PT journey
-                        arrTimeAtDest = reqData.arrivalTimeAtEndOfPtJourney;
-                    } else {
-                        // If finished a taxi leg with no more PT, walk to destination.
-                        arrTimeAtDest = occTime + reqData.walkingTimeFromDropoff;
-                    }
                     nextRiderEvents[reqId] = ARRIVE_AT_DESTINATION;
-                    requestEvents.insert(reqId, arrTimeAtDest);
-                } else {
-                    KASSERT(reqData.hasSecondTaxiLeg);
-                    // If finished first leg of a trip with more than one leg, wait for pickup by next vehicle.
-                    riderState[reqId] = WAITING_FOR_PICKUP;
-                    reqData.completedFirstTaxiLeg = true;
+                    reqData.firstTaxiLegArrAtDropoff = occTime;
+                    requestEvents.insert(reqId, occTime + reqData.firstTaxiLegDropoffWalkTime);
+                    continue;
                 }
-            }
 
+                KASSERT(reqData.mode == parrot::mode_choice::TransportMode::TaxiAndPT);
+
+                if (!reqData.hasSecondTaxiLeg) {
+                    // If the request is on a combined trip without second taxi leg, they now take the PT leg until the destination.
+                    riderState[reqId] = NON_TAXI_TO_DESTINATION;
+                    nextRiderEvents[reqId] = ARRIVE_AT_DESTINATION;
+                    requestEvents.insert(reqId, reqData.ptLegArrTime);
+                    continue;
+                }
+
+                if (reqData.completedFirstTaxiLeg) {
+                    // If the request is on a combined trip with second taxi leg and has previously completed the first taxi leg,
+                    // they are now done with the second taxi leg, and walk to the destination.
+                    riderState[reqId] = NON_TAXI_TO_DESTINATION;
+                    nextRiderEvents[reqId] = ARRIVE_AT_DESTINATION;
+                    reqData.secondTaxiLegArrAtDropoff = occTime;
+                    requestEvents.insert(reqId, occTime + reqData.secondTaxiLegDropoffWalkTime);
+                    continue;
+                }
+
+                // If the rider has finished the access RP trip in a combined journey with an egress RP trip,
+                // they now wait for pickup by the egress vehicle. (In reality, they start the PT leg but there are no
+                // more rider events until the next pickup.)
+                riderState[reqId] = WAITING_FOR_PICKUP;
+                reqData.completedFirstTaxiLeg = true;
+
+                // const bool lastTaxiLegFinished =
+                //         !reqData.hasSecondTaxiLeg || // finished first leg in combined trip without second taxi leg
+                //         reqData.completedFirstTaxiLeg; // finished second leg of combined trip
+                //
+                // if (lastTaxiLegFinished) {
+                //     // No more taxis used, so arrival time at destination is fixed.
+                //     // Insert rider event for arrival at destination.
+                //     riderState[reqId] = NON_TAXI_TO_DESTINATION;
+                //     int arrTimeAtDest;
+                //     if (ptStationsForSecondTaxiLeg[reqId] == INVALID_ID) {
+                //         // If finished first leg in combined trip without second taxi leg, arrival time at destination is
+                //         // arrival time with PT journey
+                //         arrTimeAtDest = reqData.arrivalTimeAtEndOfPtJourney;
+                //     } else {
+                //         // If finished a taxi leg with no more PT, walk to destination.
+                //         arrTimeAtDest = occTime + reqData.walkingTimeFromDropoff;
+                //     }
+                //     nextRiderEvents[reqId] = ARRIVE_AT_DESTINATION;
+                //     requestEvents.insert(reqId, arrTimeAtDest);
+                // } else {
+                //     KASSERT(reqData.hasSecondTaxiLeg);
+                //     // If finished first leg of a trip with more than one leg, wait for pickup by next vehicle.
+                //     riderState[reqId] = WAITING_FOR_PICKUP;
+                //     reqData.completedFirstTaxiLeg = true;
+                // }
+            }
 
             // Next event for this vehicle is the departure at this stop:
             vehicleState[vehId] = STOPPING;
@@ -379,9 +434,9 @@ namespace karri {
 
                     riderState[reqId] = IN_TAXI_VEHICLE;
                     if (requestData[reqId].completedFirstTaxiLeg) {
-                        requestData[reqId].secondTaxiLegDepTime = occTime;
+                        requestData[reqId].secondTaxiLegDepAtPickup = occTime;
                     } else {
-                        requestData[reqId].depTime = occTime;
+                        requestData[reqId].firstTaxiLegDepAtPickup = occTime;
                     }
                 }
                 vehicleState[vehId] = DRIVING;
@@ -418,10 +473,6 @@ namespace karri {
             const auto ptAndTaxiResult = ptAndTaxiTripFinder.findBestAssignment(
                 requestState, baseInfo, taxiOnlyResult.getBestCost(), ptOnlyCostBound, stats.taxiAndPtPerformanceStats);
 
-            // Calculated costs
-            requestData[reqId].taxiLegCost = ptAndTaxiResult.getFirstTaxiLegCost();
-            requestData[reqId].ptLegCost = ptAndTaxiResult.getPTLegCost();
-            requestData[reqId].secondTaxiLegApproxCost = ptAndTaxiResult.getSecondTaxiLegCost();
 
             int id, key;
             requestEvents.deleteMin(id, key);
@@ -431,22 +482,56 @@ namespace karri {
             const auto mode = modeChoice.chooseMode(requestState, walkOnlyResult, carOnlyResult, taxiOnlyResult,
                                                     ptOnlyResult,
                                                     ptAndTaxiResult);
+            auto &reqData = requestData[reqId];
+            reqData.mode = mode;
 
             using parrot::mode_choice::TransportMode;
-            if (mode == TransportMode::Ped || mode == TransportMode::Car || mode == TransportMode::PublicTransport) {
+            if (mode == TransportMode::Ped || mode == TransportMode::Car) {
                 const int arrTime = mode == TransportMode::Ped
                                         ? request.requestTime + walkOnlyResult.walkingDist
-                                        : mode == TransportMode::Car
-                                              ? request.requestTime + requestState.originalReqDirectDist
-                                              : ptOnlyResult.getArrivalTime();
+                                        : request.requestTime + requestState.originalReqDirectDist;
                 processChoiceOtherMode(reqId, occTime, arrTime);
+            } else if (mode == TransportMode::PublicTransport) {
+                reqData.ptLegCost = ptOnlyResult.getCost();
+                reqData.ptLegDepTime = request.requestTime;
+                reqData.ptLegArrTime = ptOnlyResult.getArrivalTime();
+                reqData.ptLegRideTime = ptOnlyResult.getTotalInVehicleTime();
+                reqData.ptLegWalkTime = ptOnlyResult.getTotalTransferTime();
+                processChoiceOtherMode(reqId, occTime, ptOnlyResult.getArrivalTime());
             } else if (mode == TransportMode::Taxi) {
                 systemStateUpdater.writeBestAssignmentToLogger(requestState, taxiOnlyResult);
                 riderState[reqId] = WAITING_FOR_PICKUP;
-                applyAssignment(requestState, taxiOnlyResult.getBestAssignment(), taxiOnlyResult.getBestCost(), reqId,
-                                occTime, stats.updateStats);
+                const auto &asgn = taxiOnlyResult.getBestAssignment();
+                reqData.taxiLegCost = taxiOnlyResult.getBestCost();
+                reqData.firstTaxiLegPickupWalkTime = asgn.pickup.walkingDist;
+                reqData.firstTaxiLegDropoffWalkTime = asgn.dropoff.walkingDist;
+                applyAssignment(requestState, asgn, reqId, stats.updateStats);
             } else if (mode == TransportMode::TaxiAndPT) {
                 riderState[reqId] = WAITING_FOR_PICKUP;
+                // Calculated costs
+                reqData.taxiLegCost = ptAndTaxiResult.getFirstTaxiLegCost();
+                reqData.ptLegCost = ptAndTaxiResult.getPTLegCost();
+                reqData.secondTaxiLegApproxCost = ptAndTaxiResult.getSecondTaxiLegCost();
+
+                if (ptAndTaxiResult.isInitialTransferByTaxi()) {
+                    const auto &firstTaxiLeg = ptAndTaxiResult.getFirstTaxiLeg();
+                    const auto &firstTaxiLegAsgn = firstTaxiLeg.getBestAssignment();
+                    reqData.firstTaxiLegPickupWalkTime = firstTaxiLegAsgn.pickup.walkingDist;
+                    reqData.firstTaxiLegDropoffWalkTime = firstTaxiLegAsgn.dropoff.walkingDist;
+                    reqData.hasFirstTaxiLeg = true;
+                }
+
+                KASSERT(!ptAndTaxiResult.getPTLeg().journey.empty()
+                    && (!ptAndTaxiResult.isInitialTransferByTaxi() || ptAndTaxiResult.getPTLeg().journey.front().usesRoute)
+                    && (!ptAndTaxiResult.isFinalTransferByTaxi() || ptAndTaxiResult.getPTLeg().journey.back().usesRoute));
+                reqData.ptLegCost = ptAndTaxiResult.getPTLeg().getCost();
+                reqData.ptLegDepTime = ptAndTaxiResult.getPTLeg().getDepartureTime();
+                reqData.ptLegArrTime = ptAndTaxiResult.getPTLeg().getArrivalTime();
+                reqData.ptLegRideTime = ptAndTaxiResult.getPTLeg().getTotalInVehicleTime();
+                reqData.ptLegWalkTime = ptAndTaxiResult.getPTLeg().getTotalTransferTime();
+
+                reqData.hasSecondTaxiLeg = ptAndTaxiResult.isFinalTransferByTaxi();
+
                 applyCombinedTrip(requestState, ptAndTaxiResult, reqId, occTime, stats.updateStats);
             } else if (mode == TransportMode::None) {
                 processNoMode(reqId);
@@ -461,24 +546,13 @@ namespace karri {
             eventSimulationStatsLogger << occTime << ",RequestReceipt," << time << '\n';
         }
 
-        void applyAssignment(const RequestState &requestState, const Assignment &asgn, const int cost, const int reqId,
-                             const int,
+        void applyAssignment(const RequestState &requestState, const Assignment &asgn, const int reqId,
                              karri::stats::UpdatePerformanceStats &updateStats,
-                             const bool isSecondTaxiLeg = false,
                              const int externalMaxArrTimeAtDropoff = INFTY) {
             // || !bestAsgn.pickup || !bestAsgn.dropoff
             if (!asgn.vehicle) {
                 riderState[reqId] = FINISHED;
                 return;
-            }
-
-            if (isSecondTaxiLeg) {
-                requestData[reqId].walkingTimeToSecondTaxiLegPickup = asgn.pickup.walkingDist;
-                requestData[reqId].walkingTimeFromDropoff += asgn.dropoff.walkingDist;
-                requestData[reqId].secondTaxiLegCost = cost;
-            } else {
-                requestData[reqId].walkingTimeToPickup = asgn.pickup.walkingDist;
-                requestData[reqId].walkingTimeFromDropoff = asgn.dropoff.walkingDist;
             }
 
             systemStateUpdater.insertBestAssignment(requestState, asgn, updateStats, externalMaxArrTimeAtDropoff);
@@ -508,11 +582,6 @@ namespace karri {
             // Assign rider to take other mode to their destination and insert event for their arrival.
             riderState[reqId] = NON_TAXI_TO_DESTINATION;
             nextRiderEvents[reqId] = ARRIVE_AT_DESTINATION;
-            // requestData[reqId].assignmentCost = INFTY;
-            // No meaningful cost can be assigned since this is not a possibility in local cost function
-            requestData[reqId].depTime = occTime;
-            requestData[reqId].walkingTimeToPickup = -1;
-            requestData[reqId].walkingTimeFromDropoff = -1;
             requestEvents.insert(reqId, arrivalTime);
         }
 
@@ -520,9 +589,14 @@ namespace karri {
             KASSERT(!requestEvents.contains(reqId));
             riderState[reqId] = FINISHED;
             nextRiderEvents[reqId] = RIDER_NO_EVENT;
-            requestData[reqId].depTime = -1;
-            requestData[reqId].walkingTimeToPickup = -1;
-            requestData[reqId].walkingTimeFromDropoff = -1;
+            assignmentQualityStats << reqId << ','
+                    << -1 << ','
+                    << -1 << ','
+                    << -1 << ','
+                    << -1 << ','
+                    << -1 << ','
+                    << -1 << ','
+                    << -1 << '\n';
         }
 
         void applyCombinedTrip(const RequestState &requestState,
@@ -533,28 +607,18 @@ namespace karri {
             const auto &firstTaxiLeg = combinedResult.getFirstTaxiLeg();
             KASSERT(ptLeg.getDepartureTimeAtFirstStation() < ptLeg.getArrivalTimeAtLastStation(),
                     "Journey: " << ptLeg.getBestJourney());
-            auto &reqData = requestData[reqId];
-            reqData.isCombinedTrip = true;
-            reqData.arrivalTimeAtEndOfPtJourney = ptLeg.getArrivalTimeAtLastStation();
 
             // Apply first taxi leg assignment
             if (combinedResult.isInitialTransferByTaxi()) {
                 KASSERT(firstTaxiLeg.isValid());
                 const int cost = firstTaxiLeg.costWithoutTrip + CostCalculator::calcTripCost(
                                      firstTaxiLeg.arrivalTime - requestState.earliestDeparture());
-                applyAssignment(requestState, firstTaxiLeg.getBestAssignment(), cost, reqId, occTime, updateStats,
-                                false,
+                KASSERT(ptLeg.journey.front().usesRoute);
+                applyAssignment(requestState, firstTaxiLeg.getBestAssignment(), reqId, updateStats,
                                 ptLeg.getDepartureTimeAtFirstStation());
-                reqData.hasFirstTaxiLeg = true;
-            } else {
-                // without first taxi leg
-                reqData.depTime = ptLeg.getDepartureTimeAtFirstStation();
-                reqData.walkingTimeToPickup = ptLeg.getWalkingTimeToFirstStation();
-                reqData.walkingTimeFromDropoff = ptLeg.getWalkingTimeFromLastStation();
             }
 
             if (combinedResult.isFinalTransferByTaxi()) {
-                reqData.hasSecondTaxiLeg = true;
                 ptStationsForSecondTaxiLeg[reqId] = ptLeg.getLastStation();
 
                 // Insert request event for second taxi leg 15 minutes before arrival
@@ -562,9 +626,6 @@ namespace karri {
                     occTime, ptLeg.getArrivalTimeAtLastStation() - TRIGGER_TAXI_TIME);
                 nextRiderEvents[reqId] = SCHEDULE_2ND_TAXI_LEG;
                 requestEvents.insert(reqId, schedule2ndLegTime);
-            } else {
-                const auto arrivalTimeAtDestination = ptLeg.getArrivalTime();
-                requestData[reqId].arrivalTimeAtEndOfPtJourney = arrivalTimeAtDestination;
             }
         }
 
@@ -583,7 +644,7 @@ namespace karri {
                 reqId,
                 stationEdgeId,
                 originalRequest.destination,
-                requestData[reqId].arrivalTimeAtEndOfPtJourney,
+                requestData[reqId].ptLegArrTime,
                 originalRequest.numRiders
             };
 
@@ -592,7 +653,7 @@ namespace karri {
                                                                      secondTaxiLegStats.taxiPrepStats.
                                                                      initializationStats);
             auto baseInfo = karriPrep.prepareBaseInfo(requestState, secondTaxiLegStats.taxiPrepStats);
-            for (auto &p : baseInfo.pdLocs.pickups)
+            for (auto &p: baseInfo.pdLocs.pickups)
                 p.isStation = true;
             const auto secondLegResult = taxiTripFinder.findBestAssignment(
                 requestState, baseInfo, secondTaxiLegStats.taxiSecondLegStats);
@@ -606,8 +667,14 @@ namespace karri {
             // const auto waitTime = reqData.depTime - requests[reqId].requestTime;
             // requestState.setCurrentWaitTime(waitTime);
 
-            applyAssignment(requestState, secondLegResult.getBestAssignment(), secondLegResult.getBestCost(), reqId,
-                            occTime, secondTaxiLegStats.updateStats, true);
+
+            auto &reqData = requestData[reqId];
+            const auto &asgn = secondLegResult.getBestAssignment();
+            reqData.secondTaxiLegCost = secondLegResult.getBestCost();
+            reqData.secondTaxiLegPickupWalkTime = asgn.pickup.walkingDist;
+            reqData.secondTaxiLegDropoffWalkTime = asgn.dropoff.walkingDist;
+
+            applyAssignment(requestState, asgn, reqId, secondTaxiLegStats.updateStats);
 
             systemStateUpdater.writeSecondTaxiLegLogs(reqId, secondTaxiLegStats);
         }
@@ -623,26 +690,58 @@ namespace karri {
             KASSERT(id == reqId && key == occTime);
             nextRiderEvents[reqId] = RIDER_NO_EVENT;
 
-            const auto firstTaxiLegWaitTime = reqData.depTime - requests[reqId].requestTime;
-            const auto secondTaxiLegWaitTime = reqData.hasSecondTaxiLeg
-                                                   ? reqData.secondTaxiLegDepTime - reqData.arrivalTimeAtEndOfPtJourney
-                                                   : 0;
-            const auto waitTime = firstTaxiLegWaitTime + secondTaxiLegWaitTime;
-            const auto arrTime = occTime;
-            const auto rideTime = occTime - reqData.walkingTimeFromDropoff - secondTaxiLegWaitTime - reqData.
-                                  walkingTimeToSecondTaxiLegPickup - reqData.depTime;
-            const auto tripTime = arrTime - requests[reqId].requestTime;
-            const auto asgnCost = reqData.hasSecondTaxiLeg
-                                      ? reqData.taxiLegCost + reqData.ptLegCost + reqData.secondTaxiLegCost
-                                      : reqData.taxiLegCost + reqData.ptLegCost;
+
+            int arrTime = 0, tripTime = 0, waitTime = 0, taxiRideTime = 0, ptRideTime = 0, walkTime = 0, asgnCost = 0;
+            if (reqData.mode == parrot::mode_choice::TransportMode::Ped || reqData.mode ==
+                parrot::mode_choice::TransportMode::Car) {
+                arrTime = occTime;
+                tripTime = arrTime - requests[reqId].requestTime;
+                walkTime = reqData.mode == parrot::mode_choice::TransportMode::Ped ? tripTime : 0;
+                asgnCost = INFTY;
+            } else if (reqData.mode == parrot::mode_choice::TransportMode::PublicTransport) {
+                KASSERT(occTime == reqData.ptLegArrTime && requests[reqId].requestTime == reqData.ptLegDepTime);
+                arrTime = occTime;
+                tripTime = arrTime - requests[reqId].requestTime;
+                waitTime = tripTime - reqData.ptLegRideTime - reqData.ptLegWalkTime;
+                ptRideTime = reqData.ptLegRideTime;
+                walkTime = reqData.ptLegWalkTime;
+                asgnCost = reqData.ptLegCost;
+            } else if (reqData.mode == parrot::mode_choice::TransportMode::Taxi) {
+                arrTime = occTime;
+                tripTime = arrTime - requests[reqId].requestTime;
+                waitTime = reqData.firstTaxiLegDepAtPickup - requests[reqId].requestTime - reqData.
+                           firstTaxiLegPickupWalkTime;
+                taxiRideTime = reqData.firstTaxiLegArrAtDropoff - reqData.firstTaxiLegDepAtPickup;
+                walkTime = reqData.firstTaxiLegPickupWalkTime + reqData.firstTaxiLegDropoffWalkTime;
+                asgnCost = reqData.taxiLegCost;
+            } else if (reqData.mode == parrot::mode_choice::TransportMode::TaxiAndPT) {
+                arrTime = occTime;
+                tripTime = arrTime - requests[reqId].requestTime;
+                if (reqData.hasFirstTaxiLeg) {
+                    waitTime += reqData.firstTaxiLegDepAtPickup - requests[reqId].requestTime - reqData.firstTaxiLegPickupWalkTime;
+                    waitTime += reqData.ptLegDepTime - (reqData.firstTaxiLegArrAtDropoff + reqData.firstTaxiLegDropoffWalkTime);
+                    walkTime += reqData.firstTaxiLegPickupWalkTime + reqData.firstTaxiLegDropoffWalkTime;
+                    taxiRideTime += reqData.firstTaxiLegArrAtDropoff - reqData.firstTaxiLegDepAtPickup;
+                }
+                waitTime += reqData.ptLegArrTime - reqData.ptLegDepTime - reqData.ptLegRideTime - reqData.ptLegWalkTime;
+                walkTime += reqData.ptLegWalkTime;
+                ptRideTime = reqData.ptLegRideTime;
+                if (reqData.hasSecondTaxiLeg) {
+                    waitTime += reqData.secondTaxiLegDepAtPickup - reqData.ptLegArrTime - reqData.secondTaxiLegPickupWalkTime;
+                    walkTime += reqData.secondTaxiLegPickupWalkTime + reqData.secondTaxiLegDropoffWalkTime;
+                    taxiRideTime += reqData.secondTaxiLegArrAtDropoff - reqData.secondTaxiLegDepAtPickup;
+                }
+                asgnCost = reqData.taxiLegCost + reqData.ptLegCost + reqData.secondTaxiLegCost;
+            }
+            KASSERT(reqData.mode == parrot::mode_choice::TransportMode::Car || tripTime == waitTime + taxiRideTime + ptRideTime + walkTime);
 
             assignmentQualityStats << reqId << ','
                     << arrTime << ','
-                    << waitTime << ','
-                    << rideTime << ','
                     << tripTime << ','
-                    << reqData.walkingTimeToPickup << ','
-                    << reqData.walkingTimeFromDropoff << ','
+                    << waitTime << ','
+                    << taxiRideTime << ','
+                    << ptRideTime << ','
+                    << walkTime << ','
                     << asgnCost << '\n';
 
 

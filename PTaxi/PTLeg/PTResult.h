@@ -94,6 +94,10 @@ namespace parrot {
             return parrot::ultraToKarriTime(RAPTOR::intermediateTransferTime(journey));
         }
 
+        int getTotalTransferTime() const {
+            return parrot::ultraToKarriTime(RAPTOR::totalTransferTime(journey));
+        }
+
         int getTotalInVehicleTime() const {
             int totalSeconds = 0;
             for (const auto &leg: journey) {
