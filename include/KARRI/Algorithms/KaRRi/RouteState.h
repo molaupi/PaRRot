@@ -99,15 +99,15 @@ namespace karri {
         }
 
         int numStopsOf(const int vehId) const {
-            assert(vehId >= 0);
-            assert(vehId < pos.size());
+            KASSERT(vehId >= 0);
+            KASSERT(vehId < pos.size());
             return pos[vehId].end - pos[vehId].start;
         }
 
         // Range containing the distances to next stops of the scheduled stops of vehicle with given ID.
         ConstantVectorRange<int> distancesToNextStopFor(const int vehId) const {
-            assert(vehId >= 0);
-            assert(vehId < pos.size());
+            KASSERT(vehId >= 0);
+            KASSERT(vehId < pos.size());
             const auto start = pos[vehId].start;
             const auto end = pos[vehId].end;
             return {distancesToNextStop.begin() + start, distancesToNextStop.begin() + end};
@@ -116,8 +116,8 @@ namespace karri {
 
         // Range containing the ids of the currently scheduled stops of vehicle with given ID.
         ConstantVectorRange<int> stopIdsFor(const int vehId) const {
-            assert(vehId >= 0);
-            assert(vehId < pos.size());
+            KASSERT(vehId >= 0);
+            KASSERT(vehId < pos.size());
             const auto start = pos[vehId].start;
             const auto end = pos[vehId].end;
             return {stopIds.begin() + start, stopIds.begin() + end};
@@ -125,8 +125,8 @@ namespace karri {
 
         // Range containing the locations (= edges) of the currently scheduled stops of vehicle with given ID.
         ConstantVectorRange<int> stopLocationsFor(const int vehId) const {
-            assert(vehId >= 0);
-            assert(vehId < pos.size());
+            KASSERT(vehId >= 0);
+            KASSERT(vehId < pos.size());
             const auto start = pos[vehId].start;
             const auto end = pos[vehId].end;
             return {stopLocations.begin() + start, stopLocations.begin() + end};
@@ -134,8 +134,8 @@ namespace karri {
 
         // Range containing the scheduled arrival times of vehicle with given ID at its stops.
         ConstantVectorRange<int> schedArrTimesFor(const int vehId) const {
-            assert(vehId >= 0);
-            assert(vehId < pos.size());
+            KASSERT(vehId >= 0);
+            KASSERT(vehId < pos.size());
             const auto start = pos[vehId].start;
             const auto end = pos[vehId].end;
             return {schedArrTimes.begin() + start, schedArrTimes.begin() + end};
@@ -143,8 +143,8 @@ namespace karri {
 
         // Range containing the scheduled departure times of vehicle with given ID at its stops.
         ConstantVectorRange<int> schedDepTimesFor(const int vehId) const {
-            assert(vehId >= 0);
-            assert(vehId < pos.size());
+            KASSERT(vehId >= 0);
+            KASSERT(vehId < pos.size());
             const auto start = pos[vehId].start;
             const auto end = pos[vehId].end;
             return {schedDepTimes.begin() + start, schedDepTimes.begin() + end};
@@ -153,8 +153,8 @@ namespace karri {
         // Range containing the latest possible arrival times of vehicle with given ID at its stops s.t. all hard
         // constraints of the vehicle and its passengers are still satisfied.
         ConstantVectorRange<int> maxArrTimesFor(const int vehId) const {
-            assert(vehId >= 0);
-            assert(vehId < pos.size());
+            KASSERT(vehId >= 0);
+            KASSERT(vehId < pos.size());
             const auto start = pos[vehId].start;
             const auto end = pos[vehId].end;
             return {maxArrTimes.begin() + start, maxArrTimes.begin() + end};
@@ -164,8 +164,8 @@ namespace karri {
         // wait time means any amount of time that a vehicle has to wait for a passenger to arrive at a stop (excluding
         // the minimum duration stopTime of each stop).
         ConstantVectorRange<int> vehWaitTimesPrefixSumFor(const int vehId) const {
-            assert(vehId >= 0);
-            assert(vehId < pos.size());
+            KASSERT(vehId >= 0);
+            KASSERT(vehId < pos.size());
             const auto start = pos[vehId].start;
             const auto end = pos[vehId].end;
             return {vehWaitTimesPrefixSum.begin() + start, vehWaitTimesPrefixSum.begin() + end};
@@ -174,8 +174,8 @@ namespace karri {
         // Range containing the occupancies of each leg of the currently scheduled route of the vehicle with given ID.
         // occupanciesFor(vehId)[i] means the number of passengers that travel in the vehicle between stops i and i+1.
         ConstantVectorRange<int> occupanciesFor(const int vehId) const {
-            assert(vehId >= 0);
-            assert(vehId < pos.size());
+            KASSERT(vehId >= 0);
+            KASSERT(vehId < pos.size());
             const auto start = pos[vehId].start;
             const auto end = pos[vehId].end;
             return {occupancies.begin() + start, occupancies.begin() + end};
@@ -184,8 +184,8 @@ namespace karri {
         // Range containing a prefix sum over the number of dropoffs that the vehicle with given ID is scheduled to
         // make at each of its stops.
         ConstantVectorRange<int> numDropoffsPrefixSumFor(const int vehId) const {
-            assert(vehId >= 0);
-            assert(vehId < pos.size());
+            KASSERT(vehId >= 0);
+            KASSERT(vehId < pos.size());
             const auto start = pos[vehId].start;
             const auto end = pos[vehId].end;
             return {numDropoffsPrefixSum.begin() + start, numDropoffsPrefixSum.begin() + end};
@@ -196,8 +196,8 @@ namespace karri {
         // Let N_d(l) be the number of dropoffs at stop l.
         // Then vehWaitTimesUntilDropoffsPrefixSumsFor(vehId)[i] = \sum_{z = 0}^{i} N_d(z) * vehWaitTimesPrefixSumFor(vehId)[z - 1]
         ConstantVectorRange<int> vehWaitTimesUntilDropoffsPrefixSumsFor(const int vehId) const {
-            assert(vehId >= 0);
-            assert(vehId < pos.size());
+            KASSERT(vehId >= 0);
+            KASSERT(vehId < pos.size());
             const auto start = pos[vehId].start;
             const auto end = pos[vehId].end;
             return {
@@ -216,23 +216,23 @@ namespace karri {
 
         // Returns the id of the vehicle whose route the stop with the given ID is currently part of.
         int vehicleIdOf(const int stopId) const {
-            assert(stopId >= 0 && stopId < stopIdToPosition.size());
+            KASSERT(stopId >= 0 && stopId < stopIdToPosition.size());
             return stopIdToVehicleId[stopId];
         }
 
         // Returns the id of the stop that comes before the stop with the given ID in the route of its vehicle.
         int idOfPreviousStopOf(const int stopId) const {
-            assert(stopId >= 0 && stopId < stopIdToIdOfPrevStop.size());
+            KASSERT(stopId >= 0 && stopId < stopIdToIdOfPrevStop.size());
             return stopIdToIdOfPrevStop[stopId];
         }
 
         int stopPositionOf(const int stopId) const {
-            assert(stopId >= 0 && stopId < stopIdToPosition.size());
+            KASSERT(stopId >= 0 && stopId < stopIdToPosition.size());
             return stopIdToPosition[stopId];
         }
 
         int leewayOfLegStartingAt(const int stopId) const {
-            assert(stopId >= 0 && stopId < stopIdToLeeway.size());
+            KASSERT(stopId >= 0 && stopId < stopIdToLeeway.size());
             return stopIdToLeeway[stopId];
         }
 
@@ -419,7 +419,6 @@ namespace karri {
 
             if (pickupIndex != dropoffIndex) {
                 // Propagate changes to minArrTime/minDepTime forward from inserted pickup stop until dropoff stop
-                KASSERT(asgn.distFromPickup > 0);
                 propagateSchedArrAndDepForward(start + pickupIndex + 1, start + dropoffIndex, asgn.distFromPickup);
             }
 
@@ -532,10 +531,10 @@ namespace karri {
         }
 
         void removeStartOfCurrentLeg(const int vehId) {
-            assert(vehId >= 0);
-            assert(vehId < pos.size());
+            KASSERT(vehId >= 0);
+            KASSERT(vehId < pos.size());
             const auto &start = pos[vehId].start;
-            assert(pos[vehId].end - start > 0);
+            KASSERT(pos[vehId].end - start > 0);
             const bool haveToRecomputeMaxLeeway = stopIds[start] == stopIdOfMaxLeeway;
             stopIdToVehicleId[stopIds[start]] = INVALID_ID;
             stopIdToLeeway[stopIds[start]] = 0;
@@ -543,7 +542,7 @@ namespace karri {
             removalOfAllCols(stopIds[start], rangeOfRequestsPickedUpAtStop, requestsPickedUpAtStop);
             removalOfAllCols(stopIds[start], rangeOfRequestsDroppedOffAtStop, requestsDroppedOffAtStop);
             unusedStopIds.push(stopIds[start]);
-            assert(stopIdToIdOfPrevStop[stopIds[start]] == INVALID_ID);
+            KASSERT(stopIdToIdOfPrevStop[stopIds[start]] == INVALID_ID);
             if (numStopsOf(vehId) > 1) {
                 stopIdToIdOfPrevStop[stopIds[start + 1]] = INVALID_ID;
             }
@@ -560,7 +559,7 @@ namespace karri {
             for (int i = startAfterRemoval; i < endAfterRemoval; ++i) {
                 numDropoffsPrefixSum[i] -= numDropoffsAtStart;
                 --stopIdToPosition[stopIds[i]];
-                assert(stopIdToPosition[stopIds[i]] == i - startAfterRemoval);
+                KASSERT(stopIdToPosition[stopIds[i]] == i - startAfterRemoval);
             }
 
             if (haveToRecomputeMaxLeeway)
@@ -614,7 +613,7 @@ namespace karri {
             const auto leeway =
                     std::max(maxArrTimes[start + 2], schedDepTimes[start + 2]) - schedDepTimes[start + 1] -
                     InputConfig::getInstance().stopTime;
-            assert(leeway >= 0);
+            KASSERT(leeway >= 0);
             stopIdToLeeway[newStopId] = leeway;
 
             updateMaxLegLength(vehId, 1, 1);
@@ -643,7 +642,7 @@ namespace karri {
         }
 
         ScheduledStop getScheduledStop(const int vehId, const int stopIndex) const {
-            assert(numStopsOf(vehId) > stopIndex);
+            KASSERT(numStopsOf(vehId) > stopIndex);
             const auto id = stopIdsFor(vehId)[stopIndex];
             const auto arrTime = schedArrTimesFor(vehId)[stopIndex];
             const auto depTime = schedDepTimesFor(vehId)[stopIndex];
@@ -682,7 +681,7 @@ namespace karri {
             if (!unusedStopIds.empty()) {
                 const auto id = unusedStopIds.top();
                 unusedStopIds.pop();
-                assert(stopIdToVehicleId[id] == INVALID_ID);
+                KASSERT(stopIdToVehicleId[id] == INVALID_ID);
                 return id;
             }
             ++maxStopId;
@@ -694,7 +693,6 @@ namespace karri {
         // caused by inserting a pickup stop. Needs distance from stop at fromIdx - 1 to stop at fromIdx because that
         // distance cannot be inferred. Indices are direct indices in the 2D arrays.
         void propagateSchedArrAndDepForward(const int fromIdx, const int toIdx, const int distFromPrevOfFromIdx) {
-            assert(distFromPrevOfFromIdx > 0);
             int distPrevToCurrent = distFromPrevOfFromIdx;
             for (int l = fromIdx; l <= toIdx; ++l) {
                 schedArrTimes[l] = schedDepTimes[l - 1] + distPrevToCurrent;
