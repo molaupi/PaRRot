@@ -22,14 +22,14 @@ convertToHHMM <- function(seconds) {
 # Given the path to the result files of a KaRRi run (e.g. 
 # "<output-dir>/Berlin-1pct_pedestrian/karri-col-simd_300_300"), 
 # this function returns an overview over the solution quality of the assignments.
-quality <- function(file_base, mode_name=NA) {
+quality <- function(file_base, num_vehicles=NULL, mode_name=NULL) {
   asgnstats <- fread(paste0(file_base, ".assignmentquality.csv"))
   setkey(asgnstats, request_id)
   # asgnstats <- asgnstats[order(asgnstats$request_id)]
   legstats <- fread(paste0(file_base, ".legstats.csv"))
   # bestasgns <- bestasgns[order(bestasgns$request_id)]
   shareOfMode <- 1
-  if (!is.na(mode)) {
+  if (!is.null(mode)) {
     modes <- fread(paste0(file_base, ".modechoice.csv"))
     setkey(modes, request_id)
     # modes <- modes[order(modes$request_id)]
@@ -45,8 +45,10 @@ quality <- function(file_base, mode_name=NA) {
     asgnstats <- asgnstats[modes, nomatch=0]
   }
   
-  eventsimstats <- fread(paste0(file_base, ".eventsimulationstats.csv"))
-  num.Vehicles <- sum(eventsimstats$type == "VehicleStartup")
+  if (is.null(num_vehicles)) {
+    eventsimstats <- fread(paste0(file_base, ".eventsimulationstats.csv"))
+    num_vehicles <- sum(eventsimstats$type == "VehicleStartup") 
+  }
   
   df <- data.frame(
              direct_time_avg = c(mean(asgnstats$direct_od_dist) / 10), # avg direct vehicle time from origin to destination
@@ -59,9 +61,9 @@ quality <- function(file_base, mode_name=NA) {
              pt_ride_time_avg = c(mean(asgnstats$pt_ride_time) / 10), # avg PT ride time for each request
              pt_ride_time_q95 = c(quantile(asgnstats$pt_ride_time, 0.95) / 10), # q95 PT ride time for each request
              walk_avg=c(mean(asgnstats$walk_time) / 10), # avg walk time
-             stop_time_avg = c(sum(legstats$stop_time) / num.Vehicles / 10), # avg total stop time for each vehicle
-             empty_time_avg = c(sum(legstats[legstats$occupancy == 0, "drive_time"]) / num.Vehicles / 10), # avg time spent driving empty for each vehicle
-             occ_time_avg = c(sum(legstats[legstats$occupancy > 0, "drive_time"]) / num.Vehicles / 10) # avg time spent driving occupied for each vehicle
+             stop_time_avg = c(sum(legstats$stop_time) / num_vehicles / 10), # avg total stop time for each vehicle
+             empty_time_avg = c(sum(legstats[legstats$occupancy == 0, "drive_time"]) / num_vehicles / 10), # avg time spent driving empty for each vehicle
+             occ_time_avg = c(sum(legstats[legstats$occupancy > 0, "drive_time"]) / num_vehicles / 10) # avg time spent driving occupied for each vehicle
              )
   
   df$op_time_avg <- df$stop_time_avg + df$empty_time_avg + df$occ_time_avg # avg total operation time for each vehicle

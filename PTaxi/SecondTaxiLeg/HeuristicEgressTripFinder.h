@@ -33,19 +33,17 @@
 #include "../Station/StationEntry.h"
 
 namespace parrot {
-
     using namespace karri;
 
     template<typename InputGraphT, typename CHEnvT,
         typename StationBucketsEnvT>
-    class TaxiLegApproximation {
-
+    class HeuristicEgressTripFinder {
         using StationBucketContainer = typename StationBucketsEnvT::BucketContainer;
         using StopBucketContainer = DynamicBucketContainer<StationEntry>;
 
         struct ScanSourceBucket {
         public:
-            explicit ScanSourceBucket(TaxiLegApproximation &search) : search(search) {
+            explicit ScanSourceBucket(HeuristicEgressTripFinder &search) : search(search) {
             }
 
             template<typename DistLabelT, typename DistLabelContainerT>
@@ -98,11 +96,11 @@ namespace parrot {
             }
 
 
-            TaxiLegApproximation &search;
+            HeuristicEgressTripFinder &search;
         };
 
         struct StopSearch {
-            explicit StopSearch(const TaxiLegApproximation &search) : search(search) {
+            explicit StopSearch(const HeuristicEgressTripFinder &search) : search(search) {
             }
 
             template<typename DistLabelT, typename DistLabelContainerT>
@@ -111,20 +109,22 @@ namespace parrot {
             }
 
         private:
-            const TaxiLegApproximation &search;
+            const HeuristicEgressTripFinder &search;
         };
 
     public:
         // Pruning: Fahrzeit = trip time -> untere Schranke
         // > besten globalen Kosten -> abbrechen
-        TaxiLegApproximation(
+        HeuristicEgressTripFinder(
             const InputGraphT &inputGraph,
             const CHEnvT &chEnv,
             const StationBucketsEnvT &stationBucketsEnv,
             const int numberOfStations)
             : inputGraph(inputGraph),
-              reverseUpwardSearch(chEnv.template getReverseSearch<ScanSourceBucket, StopSearch, BasicLabelSet<0, ParentInfo::NO_PARENT_INFO>>(
-                  ScanSourceBucket(*this), StopSearch(*this))),
+              reverseUpwardSearch(
+                  chEnv.template getReverseSearch<ScanSourceBucket, StopSearch, BasicLabelSet<0,
+                      ParentInfo::NO_PARENT_INFO> >(
+                      ScanSourceBucket(*this), StopSearch(*this))),
               ch(chEnv.getCH()),
               stationBucketContainer(stationBucketsEnv.getSourceBuckets()),
               distFromStations(numberOfStations, INFTY),
@@ -133,9 +133,11 @@ namespace parrot {
         }
 
         void findDistancesFromStationsToDest(const int destination,
+                                             const int externalUpperBoundCost,
                                              stats::StationBchPerformanceStats &stats) {
             KaRRiTimer timer;
             init();
+            upperBoundCost = externalUpperBoundCost;
             stats.destInitializationTime += timer.elapsed<std::chrono::nanoseconds>();
 
             timer.restart();
@@ -152,10 +154,6 @@ namespace parrot {
             stats.destNumVerticesSettled += reverseUpwardSearch.getNumVerticesSettled();
             stats.destNumEntriesScanned += numEntriesVisited;
             stats.destNumStationsSeen += stationsSeen.size();
-        }
-
-        void setCostUpperBound(const int c) {
-            upperBoundCost = c;
         }
 
         const std::vector<int> &getDistancesFromStations() const {
@@ -186,11 +184,12 @@ namespace parrot {
         }
 
         bool exceedsGlobalBestCost(const int &dist) const {
-            const auto tripCost = CostCalculator::CostFunction::calcTripCost(dist);
+            const auto tripCost = CostCalculator::calcHeuristicCostForFinalTransferTimeByRP(dist);
             return tripCost > upperBoundCost;
         }
 
-        typename CHEnvT::template UpwardSearch<ScanSourceBucket, StopSearch, BasicLabelSet<0, ParentInfo::NO_PARENT_INFO>> reverseUpwardSearch;
+        typename CHEnvT::template UpwardSearch<ScanSourceBucket, StopSearch, BasicLabelSet<0,
+            ParentInfo::NO_PARENT_INFO> > reverseUpwardSearch;
 
         const InputGraphT &inputGraph;
         const CH &ch;

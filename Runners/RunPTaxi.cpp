@@ -41,7 +41,7 @@
 #include "../PTaxi/FirstTaxiLeg/PBNSToStations.h"
 #include "../PTaxi/Station/StationBucketsEnvironment.h"
 #include "../PTaxi/Station/StationsInEllipse.h"
-#include "../PTaxi/SecondTaxiLeg/TaxiLegApproximation.h"
+#include "../PTaxi/SecondTaxiLeg/HeuristicEgressTripFinder.h"
 #include "../PTaxi/PTLeg/ParrotCombinedULTRAMcRAPTOR.h"
 #include "../PTaxi/PTLeg/ParrotPTOnlyULTRAMcRAPTOR.h"
 #include "../PTaxi/PTLeg/ParrotInitialTransfers.h"
@@ -752,7 +752,7 @@ KARRI_DALS_STRATEGY == KARRI_COL || KARRI_DALS_STRATEGY == KARRI_IND
             StationBCH::StationDistances>;
         PBNSToStationsImpl pbnsToStations(curVehLocToPickupSearches, fleet, routeState);
 
-        using TaxiLegApproximationImpl = parrot::TaxiLegApproximation<VehicleInputGraph, VehCHEnv, StationBucketsEnv>;
+        using TaxiLegApproximationImpl = parrot::HeuristicEgressTripFinder<VehicleInputGraph, VehCHEnv, StationBucketsEnv>;
 
 
         using KaRRiBaseInfoPreparatorImpl = KaRRiBaseInfoPreparator<VehicleInputGraph, VehCHEnv,

@@ -92,6 +92,7 @@ namespace parrot {
                 upperBoundCost, stats.stationBchStats, stats.taxiFirstLegStats);
 
             taxiLegApproximation.findDistancesFromStationsToDest(req.destination,
+                                                                 upperBoundCost,
                                                                  stats.stationBchStats);
             const auto &distFromStations = taxiLegApproximation.getDistancesFromStations();
 
