@@ -10,7 +10,6 @@
 #include "FirstTaxiLeg/StationsAtLocations.h"
 
 namespace parrot {
-
     using namespace karri;
 
     // Core of the PTaxi algorithm: Given a ride request r, this facility finds the optimal assignment of r to the route
@@ -86,18 +85,23 @@ namespace parrot {
             const int destPsgEdge = query.destinationPsgEdge;
             const int destVehEdge = query.destinationVehEdge;
 
-            const int upperBoundCost = std::min(taxiOnlyCost, ptOnlyCost);
+            const int rpAccEgrUpperBoundCost = static_cast<int>(
+                InputConfig::getInstance().parrotCostTolerance * static_cast<double>(
+                    std::min(taxiOnlyCost, ptOnlyCost)));
             runFirstTaxiSharingLeg(
                 requestState, baseInfo.pdLocs, baseInfo.relOrdinaryPickups, baseInfo.relPickupsBeforeNextStop,
-                upperBoundCost, stats.stationBchStats, stats.taxiFirstLegStats);
+                rpAccEgrUpperBoundCost, stats.stationBchStats, stats.taxiFirstLegStats);
 
             taxiLegApproximation.findDistancesFromStationsToDest(req.destination,
-                                                                 upperBoundCost,
+                                                                 rpAccEgrUpperBoundCost,
                                                                  stats.stationBchStats);
             const auto &distFromStations = taxiLegApproximation.getDistancesFromStations();
 
+            const int ptBasedUpperBoundCost = static_cast<int>(
+                InputConfig::getInstance().parrotCostTolerance * static_cast<double>(ptOnlyCost));;
             ptAlgorithmWithTaxi.runWithTaxi(originPsgEdge, originVehEdge, destPsgEdge, destVehEdge,
-                                    query.departureTime, firstTaxiLegResult, distFromStations, ptOnlyCost, stats.ptWithTaxiStats);
+                                            query.departureTime, firstTaxiLegResult, distFromStations,
+                                            ptBasedUpperBoundCost, stats.ptWithTaxiStats);
             // auto ptLegParetoFront = ptAlgorithmWithTaxi.getJourneys();
             // auto journey = chooseBestJourney(ptLegParetoFront);
             auto bestJourney = ptAlgorithmWithTaxi.getJourneyWithBestCost();
@@ -114,7 +118,7 @@ namespace parrot {
                 bestJourney.journey,
                 taxiLegApproximation);
             KASSERT(intermediateResult.getBestCost() >= bestJourney.cost - 200 &&
-                intermediateResult.getBestCost() <= bestJourney.cost + 200, "Request ID = " << req.requestId);
+                    intermediateResult.getBestCost() <= bestJourney.cost + 200, "Request ID = " << req.requestId);
 
 
             writeIntermediateResultToLogger(requestState, intermediateResult);

@@ -158,6 +158,7 @@ inline void printUsage() {
             "  -d-radius <sec>          walking radius (in s) for dropoff locations around destination. (dflt: 300s)\n"
             "  -max-num-p <int>         max number of pickup locations to consider, sampled from all in radius. Set to 0 for no limit (dflt).\n"
             "  -max-num-d <int>         max number of dropoff locations to consider, sampled from all in radius. Set to 0 for no limit (dflt).\n"
+            "  -cost-tolerance <factor> factor that decides cost upper bound for combined journeys relative to cost of best RP-only and PT-only journeys (dflt: 1.0)\n"
             "  -egr-cost-m <factor>     model parameter for slope of linear approximation of taxi egress cost relative to direct distance (dflt: 1.0); prefix 'neg' for negative\n"
             "  -egr-cost-b <sec>        model parameter for intercept of linear approximation of taxi egress cost (dflt: 0s); prefix 'neg' for negative\n"
             "  -egr-tt-m <factor>       model parameter for slope of linear approximation of taxi egress travel time relative to direct distance (dflt: 1.0); prefix 'neg' for negative\n"
@@ -205,6 +206,7 @@ int main(int argc, char *argv[]) {
         inputConfig.hardConstraintMaxAddedWaitTime = clp.getValue<int>("w", 600) * 10;
         inputConfig.hardConstraintAlpha = clp.getValue<double>("a", 1.4);
         inputConfig.hardConstraintBeta = clp.getValue<int>("b", 600) * 10;
+        inputConfig.parrotCostTolerance = clp.getValue<double>("cost-tolerance", 1.0);
         inputConfig.parrotEgressCostHeuristicSlope = readSignedDoubleParam(clp.getValue<std::string>("egr-cost-m", "1.0"));
         inputConfig.parrotEgressCostHeuristicIntercept = readSignedIntParam(clp.getValue<std::string>("egr-cost-b", "0")) * 10;
         inputConfig.parrotEgressTravelTimeHeuristicSlope = readSignedDoubleParam(clp.getValue<std::string>("egr-tt-m", "1.0"));

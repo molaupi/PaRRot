@@ -57,6 +57,11 @@ namespace karri {
         double hardConstraintAlpha = -1.0;
         int hardConstraintBeta = -1;
 
+        // PaRRot disregards access/egress RP trips whose cost is worse than parrotCostTolerance times the cost of the
+        // best RP-only journey. Additionally, it disregards any combined journey whose total cost is worse than
+        // parrotCostTolerance times the cost of the best PT-only journey.
+        double parrotCostTolerance = 1.0;
+
         int parrotEgressCostHeuristicIntercept = INFTY;
         double parrotEgressCostHeuristicSlope = 0.0;
         int parrotEgressTravelTimeHeuristicIntercept = INFTY;
