@@ -78,6 +78,10 @@ namespace parrot {
             return bestCost;
         }
 
+        std::vector<RAPTOR::Journey> getJourneys(const int stationId) const {
+            return ptAlgorithm.getJourneys(StopId(stationId));
+        }
+
     private:
         RAPTOR::Journey pickJourneyWithBestUtility(const std::vector<RAPTOR::Journey> &journeys,
                                                    const Request &request) const {

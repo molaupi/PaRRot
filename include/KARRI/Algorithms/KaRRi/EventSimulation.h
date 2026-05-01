@@ -447,7 +447,7 @@ namespace karri {
             // const int ptOnlyCostBound = ptOnlyResult.getCost();
             const int ptOnlyCostBound = ptTripFinder.getBestCostOfAnyJourneyFromLastRun(request.requestTime);
             const auto ptAndTaxiResult = ptAndTaxiTripFinder.findBestAssignment(
-                requestState, baseInfo, taxiOnlyResult.getBestCost(), ptOnlyCostBound, stats.taxiAndPtPerformanceStats);
+                requestState, baseInfo, taxiOnlyResult.getBestCost(), ptOnlyCostBound, ptTripFinder, stats.taxiAndPtPerformanceStats);
 
 
             int id, key;

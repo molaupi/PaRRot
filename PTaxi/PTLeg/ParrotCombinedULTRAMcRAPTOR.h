@@ -91,14 +91,14 @@ namespace RAPTOR {
                         const size_t round,
                         const bool usesRoute,
                         const bool usesTaxi) : cost(cost),
-                                                 arrivalTime(arrivalTime),
-                                                 parentStop(parentStop),
-                                                 parentIndex(parentIndex),
-                                                 parentDepartureTime(parentDepartureTime),
-                                                 round(round),
-                                                 usesRoute(usesRoute),
-                                                 usesTaxi(usesTaxi),
-                                                 routeId(noRouteId) {
+                                               arrivalTime(arrivalTime),
+                                               parentStop(parentStop),
+                                               parentIndex(parentIndex),
+                                               parentDepartureTime(parentDepartureTime),
+                                               round(round),
+                                               usesRoute(usesRoute),
+                                               usesTaxi(usesTaxi),
+                                               routeId(noRouteId) {
             }
 
             int cost;
@@ -242,7 +242,8 @@ namespace RAPTOR {
 
             if (bestAtTarget.parentStop == noStop)
                 return {};
-            KASSERT(bestAtTarget.round >= 1 && bestAtTarget.round < rounds.size(), "Best round for target stop is out of bounds!");
+            KASSERT(bestAtTarget.round >= 1 && bestAtTarget.round < rounds.size(),
+                    "Best round for target stop is out of bounds!");
             KASSERT(bestAtTarget.parentIndex < rounds[bestAtTarget.round - 1][bestAtTarget.parentStop].size(),
                     "Best parent index for target stop is out of bounds!");
 
@@ -570,6 +571,7 @@ namespace RAPTOR {
                 currentRound()[stop].resize(bag.size());
                 for (size_t i = 0; i < bag.size(); i++) {
                     currentRound()[stop][i] = Label(bag[i], stop, i);
+                    currentRound()[stop][i].costWithoutTrip += Calc::penaltyForNewTransfer();
                 }
             }
 
@@ -608,12 +610,50 @@ namespace RAPTOR {
                         // arrivalByTransfer(targetStop, newLabel, stats);
                         const int arrivalTime = bag[i].arrivalTime + parrot::karriToULTRATime(travelTime);
                         const int cost = fullCost(bag[i]) + Calc::penaltyForNewTransfer() +
-                                         Calc::calcCostForAddedTransferTime(travelTime) + Calc::calcTripCost(travelTime);
+                                         Calc::calcCostForAddedTransferTime(travelTime) +
+                                         Calc::calcTripCost(travelTime);
                         TargetLabel candidate(cost, arrivalTime, stop, i, bag[i].arrivalTime, rounds.size() - 1, false,
-                                        false);
+                                              false);
                         candidate.transferId = noEdge;
                         arrivalAtTarget(candidate);
                     }
+                }
+            }
+        }
+
+        void relaxFinalTransfersByTaxiFromStation(const int stationId,
+                                            const BagType &bag,
+                                            const size_t round,
+                                            const int transferPenalty,
+                                            const std::vector<int> &distFromStations,
+                                            karri::stats::PtPerformanceStats &stats) noexcept {
+            using Calc = karri::CostCalculator;
+            // Extension for second taxi leg
+            const auto &station = stations[stationId];
+            KASSERT(distFromStations.size() == stations.size(),
+                    "Size of distFromStations (" << distFromStations.size() <<
+                    ") does not match number of stations (" << stations.size() << ")!");
+            // ensure that no second taxi leg is used if station edge id == destination edge id
+            if (stationId != INVALID_ID && station.vehEdgeId != destinationVehEdge && distFromStations[stationId] <
+                INFTY) {
+                const int taxiTravelDistance = distFromStations[stationId];
+                for (size_t i = 0; i < bag.size(); i++) {
+                    // Label newLabel;
+                    // newLabel.arrivalTime = bag[i].arrivalTime + parrot::karriToULTRATime(taxiTravelDistance);
+                    // newLabel.costWithoutTrip = bag[i].costWithoutTrip + Calc::calcHeuristicCostForFinalTransferTimeByRP(
+                    //                     taxiTravelDistance) + Calc::penaltyForNewTransfer();
+                    // newLabel.parentStop = stop;
+                    // newLabel.parentIndex = i;
+                    // newLabel.parentDepartureTime = bag[i].arrivalTime;
+                    // newLabel.transferId = noEdge;
+                    // newLabel.usesTaxi = true;
+                    // arrivalByTransfer(targetStop, newLabel, stats);
+                    const int arrivalTime = bag[i].arrivalTime + parrot::karriToULTRATime(taxiTravelDistance);
+                    const int cost = fullCost(bag[i]) + Calc::calcHeuristicCostForFinalTransferTimeByRP(taxiTravelDistance) + transferPenalty;
+                    TargetLabel candidate(cost, arrivalTime, StopId(stationId), i, bag[i].arrivalTime, round, false,
+                                          true);
+                    candidate.transferId = noEdge;
+                    arrivalAtTarget(candidate);
                 }
             }
         }
@@ -622,38 +662,16 @@ namespace RAPTOR {
                                        karri::stats::PtPerformanceStats &stats) noexcept {
             using Calc = karri::CostCalculator;
 
+            // Try egress RP trip from every station updated by route in the previous round.
             for (const StopId stop: stopsUpdatedByRoute) {
                 const BagType &bag = previousRound()[stop];
-                // Extension for second taxi leg
-                const int stationId = stop.value();
-                const auto &station = stations[stationId];
-                KASSERT(distFromStations.size() == stations.size(),
-                        "Size of distFromStations (" << distFromStations.size() <<
-                        ") does not match number of stations (" << stations.size() << ")!");
-                // ensure that no second taxi leg is used if station edge id == destination edge id
-                if (stationId != INVALID_ID && station.vehEdgeId != destinationVehEdge && distFromStations[stationId] <
-                    INFTY) {
-                    const int taxiTravelDistance = distFromStations[stationId];
-                    for (size_t i = 0; i < bag.size(); i++) {
-                        // Label newLabel;
-                        // newLabel.arrivalTime = bag[i].arrivalTime + parrot::karriToULTRATime(taxiTravelDistance);
-                        // newLabel.costWithoutTrip = bag[i].costWithoutTrip + Calc::calcHeuristicCostForFinalTransferTimeByRP(
-                        //                     taxiTravelDistance) + Calc::penaltyForNewTransfer();
-                        // newLabel.parentStop = stop;
-                        // newLabel.parentIndex = i;
-                        // newLabel.parentDepartureTime = bag[i].arrivalTime;
-                        // newLabel.transferId = noEdge;
-                        // newLabel.usesTaxi = true;
-                        // arrivalByTransfer(targetStop, newLabel, stats);
-                        const int arrivalTime = bag[i].arrivalTime + parrot::karriToULTRATime(taxiTravelDistance);
-                        const int cost = fullCost(bag[i]) + Calc::penaltyForNewTransfer() +
-                                         Calc::calcHeuristicCostForFinalTransferTimeByRP(taxiTravelDistance);
-                        TargetLabel candidate(cost, arrivalTime, stop, i, bag[i].arrivalTime, rounds.size() - 1, false,
-                                        true);
-                        candidate.transferId = noEdge;
-                        arrivalAtTarget(candidate);
-                    }
-                }
+                relaxFinalTransfersByTaxiFromStation(static_cast<int>(stop), bag, rounds.size() - 1, Calc::penaltyForNewTransfer(), distFromStations, stats);
+            }
+
+            // Try egress RP trip from every station updated by transfer in the current round.
+            for (const StopId stop: stopsUpdatedByTransfer) {
+                const BagType &bag = currentRound()[stop];
+                relaxFinalTransfersByTaxiFromStation(static_cast<int>(stop), bag, rounds.size(), 0, distFromStations, stats);
             }
         }
 
@@ -672,7 +690,8 @@ namespace RAPTOR {
         }
 
         void arrivalAtTarget(const TargetLabel &candidate) noexcept {
-            if (candidate.cost >= bestAtTarget.cost) return;
+            if (candidate.cost > bestAtTarget.cost || (
+                    candidate.cost == bestAtTarget.cost && bestAtTarget.arrivalTime != never)) return;
             bestAtTarget = candidate;
         }
 
@@ -687,8 +706,8 @@ namespace RAPTOR {
 
             if (stop == targetStop) {
                 TargetLabel candidate(fullCost(label), label.arrivalTime, label.parentStop, label.parentIndex,
-                                label.parentDepartureTime, rounds.size() - 1,
-                                label.usesRoute, label.usesTaxi);
+                                      label.parentDepartureTime, rounds.size() - 1,
+                                      label.usesRoute, label.usesTaxi);
                 candidate.routeId = label.routeId; // union with transfer id so this may assign transfer id instead
                 arrivalAtTarget(candidate);
             }
@@ -731,7 +750,8 @@ namespace RAPTOR {
             if (bestAtTarget.parentStop == noStop)
                 return {};
             Journey journey;
-            journey.emplace_back(bestAtTarget.parentStop, targetStop, bestAtTarget.parentDepartureTime, bestAtTarget.arrivalTime,
+            journey.emplace_back(bestAtTarget.parentStop, targetStop, bestAtTarget.parentDepartureTime,
+                                 bestAtTarget.arrivalTime,
                                  bestAtTarget.usesRoute, bestAtTarget.routeId, bestAtTarget.usesTaxi);
             StopId stop = bestAtTarget.parentStop;
             size_t index = bestAtTarget.parentIndex;

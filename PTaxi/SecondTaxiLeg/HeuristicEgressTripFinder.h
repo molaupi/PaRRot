@@ -156,6 +156,10 @@ namespace parrot {
             stats.destNumStationsSeen += stationsSeen.size();
         }
 
+        const LightweightSubset &getStationsWithValidDistances() const {
+            return stationsSeen;
+        }
+
         const std::vector<int> &getDistancesFromStations() const {
             return distFromStations;
         }

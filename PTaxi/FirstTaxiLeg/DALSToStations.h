@@ -215,7 +215,6 @@ namespace parrot {
         }
 
         void setExternalCostUpperBound(const int bestCost) {
-            externalUpperBoundCost = bestCost;
             upperBoundCost = bestCost;
         }
 
@@ -775,7 +774,6 @@ namespace parrot {
         std::vector<PickupBeforeNextStopContinuation> pbnsContinuations;
 
         int upperBoundCost;
-        int externalUpperBoundCost; // External upper bound on the cost of a PALS insertion
 
         std::vector<int> idxOfVehicleInRelevant;
         // Maps every vehicle to its index in relevantVehicleIdsForRequest and in relevantVehiclesMinTripTimesToLastStop

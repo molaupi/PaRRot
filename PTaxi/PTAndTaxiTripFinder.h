@@ -26,7 +26,7 @@ namespace parrot {
         typename PBNSToStationsT,
         typename PTQueryT,
         typename PTAlgorithmWithTaxiT,
-        typename TaxiLegApproximationT
+        typename HeuristicRPEgressT
     >
     class PTAndTaxiTripFinder {
     public:
@@ -60,7 +60,7 @@ namespace parrot {
               dalsToStations(dalsToStations),
               pbnsToStations(pbnsToStations),
               ptAlgorithmWithTaxi(ptAlgorithmWithTaxi),
-              taxiLegApproximation(vehInputGraph, vehChEnv, stationBucketsEnv, stations.size()),
+              heuristicRPEgress(vehInputGraph, vehChEnv, stationBucketsEnv, stations.size()),
               intermediateLogger(LogManager<std::ofstream>::getLogger(IntermediateResultStats::LOGGER_NAME,
                                                                       std::string(
                                                                           IntermediateResultStats::LOGGER_COLS))),
@@ -77,6 +77,7 @@ namespace parrot {
                                                          const KaRRiBaseInfo &baseInfo,
                                                          const int taxiOnlyCost,
                                                          const int ptOnlyCost,
+                                                         const auto &ptOnlyQueryInformation,
                                                          stats::TaxiAndPtPerformanceStats &stats) {
             const Request &req = requestState.originalRequest;
             const auto query = queries[req.requestId];
@@ -85,20 +86,27 @@ namespace parrot {
             const int destPsgEdge = query.destinationPsgEdge;
             const int destVehEdge = query.destinationVehEdge;
 
-            const int rpAccEgrUpperBoundCost = static_cast<int>(
+            int rpAccEgrUpperBoundCost = static_cast<int>(
                 InputConfig::getInstance().parrotCostTolerance * static_cast<double>(
                     std::min(taxiOnlyCost, ptOnlyCost)));
+
+            heuristicRPEgress.findDistancesFromStationsToDest(req.destination,
+                                                                 rpAccEgrUpperBoundCost,
+                                                                 stats.stationBchStats);
+            // Upper bound based on PT-only solution and egress RP trips
+            const auto [egressOnlyUpperBoundCost, stationForEgressBound] = getUpperBoundForPTOnlyAndEgress(req.requestTime, ptOnlyQueryInformation);
+            unused(stationForEgressBound);
+            rpAccEgrUpperBoundCost = std::min(rpAccEgrUpperBoundCost, egressOnlyUpperBoundCost);
+
             runFirstTaxiSharingLeg(
                 requestState, baseInfo.pdLocs, baseInfo.relOrdinaryPickups, baseInfo.relPickupsBeforeNextStop,
                 rpAccEgrUpperBoundCost, stats.stationBchStats, stats.taxiFirstLegStats);
 
-            taxiLegApproximation.findDistancesFromStationsToDest(req.destination,
-                                                                 rpAccEgrUpperBoundCost,
-                                                                 stats.stationBchStats);
-            const auto &distFromStations = taxiLegApproximation.getDistancesFromStations();
 
-            const int ptBasedUpperBoundCost = static_cast<int>(
-                InputConfig::getInstance().parrotCostTolerance * static_cast<double>(ptOnlyCost));;
+            int ptBasedUpperBoundCost = static_cast<int>(
+                InputConfig::getInstance().parrotCostTolerance * static_cast<double>(ptOnlyCost));
+            ptBasedUpperBoundCost = std::min(ptBasedUpperBoundCost, egressOnlyUpperBoundCost);
+            const auto &distFromStations = heuristicRPEgress.getDistancesFromStations();
             ptAlgorithmWithTaxi.runWithTaxi(originPsgEdge, originVehEdge, destPsgEdge, destVehEdge,
                                             query.departureTime, firstTaxiLegResult, distFromStations,
                                             ptBasedUpperBoundCost, stats.ptWithTaxiStats);
@@ -116,7 +124,7 @@ namespace parrot {
                 req.requestTime,
                 accessRpTrip,
                 bestJourney.journey,
-                taxiLegApproximation);
+                heuristicRPEgress);
             KASSERT(intermediateResult.getBestCost() >= bestJourney.cost - 200 &&
                     intermediateResult.getBestCost() <= bestJourney.cost + 200, "Request ID = " << req.requestId);
 
@@ -160,6 +168,32 @@ namespace parrot {
         }
 
     private:
+        std::pair<int, int> getUpperBoundForPTOnlyAndEgress(const int reqTime,
+                                            const auto &ptOnlyQueryInformation) const {
+            int egressOnlyUpperBoundCost = INFTY;
+            int bestStationId = -1;
+            for (const int stationId: heuristicRPEgress.getStationsWithValidDistances()) {
+                for (const auto &journey: ptOnlyQueryInformation.getJourneys(stationId)) {
+                    const int numPTTrips = RAPTOR::countTrips(journey);
+                    if (numPTTrips == 0)
+                        continue; // Only consider combined journeys with at least one route leg
+                    const int numTransfers = numPTTrips; // numPTTrips - 1 transfers in the journey + 1 for access transfer
+                    int ptCost = CostCalculator::calcPTJourneyCost(
+                        parrot::ultraToKarriTime(journey.back().arrivalTime) - reqTime,
+                        parrot::ultraToKarriTime(RAPTOR::totalTransferTime(journey)),
+                        numTransfers);
+                    int egressCost = CostCalculator::calcHeuristicCostForFinalTransferTimeByRP(
+                        heuristicRPEgress.getDistanceFromStation(stationId));
+                    int fullCost = ptCost + CostCalculator::penaltyForNewTransfer() + egressCost;
+                    if (fullCost < egressOnlyUpperBoundCost) {
+                        egressOnlyUpperBoundCost = fullCost;
+                        bestStationId = stationId;
+                    }
+                }
+            }
+            return {egressOnlyUpperBoundCost, bestStationId};
+        }
+
         void runFirstTaxiSharingLeg(const RequestState &rs, const PDLocs &pdLocs,
                                     const RelevantPDLocs &relOrdinaryPickups,
                                     const RelevantPDLocs &relPickupsBeforeNextStop,
@@ -320,7 +354,7 @@ namespace parrot {
         const std::vector<PTQueryT> &queries;
         PTAlgorithmWithTaxiT &ptAlgorithmWithTaxi;
 
-        TaxiLegApproximationT taxiLegApproximation;
+        HeuristicRPEgressT heuristicRPEgress;
 
         std::ofstream &intermediateLogger;
         std::ofstream &firstTaxiLegLogger;
