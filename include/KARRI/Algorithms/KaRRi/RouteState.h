@@ -622,6 +622,7 @@ namespace karri {
         // Scheduled stop interface for event simulation
         struct ScheduledStop {
             int stopId;
+            int stopLocation;
             int arrTime;
             int depTime;
             int occupancyInFollowingLeg;
@@ -644,6 +645,7 @@ namespace karri {
         ScheduledStop getScheduledStop(const int vehId, const int stopIndex) const {
             KASSERT(numStopsOf(vehId) > stopIndex);
             const auto id = stopIdsFor(vehId)[stopIndex];
+            const auto stopLocation = stopLocationsFor(vehId)[stopIndex];
             const auto arrTime = schedArrTimesFor(vehId)[stopIndex];
             const auto depTime = schedDepTimesFor(vehId)[stopIndex];
             const auto occ = occupanciesFor(vehId)[stopIndex];
@@ -657,7 +659,7 @@ namespace karri {
                 requestsDroppedOffAtStop.begin() + dropoffsRange.start,
                 requestsDroppedOffAtStop.begin() + dropoffsRange.end
             };
-            return {id, arrTime, depTime, occ, pickups, dropoffs};
+            return {id, stopLocation, arrTime, depTime, occ, pickups, dropoffs};
         }
 
 
@@ -670,8 +672,8 @@ namespace karri {
                 ss << "  Stop " << stopIds[i] << " at location " << stopLocations[i] << ": arrTime = "
                         << schedArrTimes[i] << ", depTime = " << schedDepTimes[i] << ", maxArrTime = "
                         << maxArrTimes[i] << ", occupancy = " << occupancies[i] << (isIntermediateStop[i]
-                            ? " (intermediate)"
-                            : "") << "\n";
+                                ? " (intermediate)"
+                                : "") << "\n";
             }
             return ss.str();
         }
