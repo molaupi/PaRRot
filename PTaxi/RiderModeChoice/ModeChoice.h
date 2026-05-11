@@ -155,7 +155,7 @@ namespace parrot::mode_choice {
                     static const double &m = InputConfig::getInstance().parrotEgressTravelTimeHeuristicSlope;
                     static const int &b = InputConfig::getInstance().parrotEgressTravelTimeHeuristicIntercept;
                     const int directDist = approxCombinedResult.getArrivalTime() - approxPtLeg.getArrivalTime();
-                    const int heuristicTravelTime = static_cast<int>(std::round(m * static_cast<double>(directDist))) + b;
+                    const int heuristicTravelTime = std::max(static_cast<int>(std::round(m * static_cast<double>(directDist))) + b, 0);
                     combinedSecondLegHeuristicTravelTime = heuristicTravelTime;
                     combinedTravelTime += std::max(heuristicTravelTime, directDist);
                 }
