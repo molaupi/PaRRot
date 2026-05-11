@@ -43,6 +43,7 @@ namespace parrot::mode_choice {
                                                        "combined_travel_time,"
                                                        "combined_wait_time,"
                                                        "combined_accegr_time,"
+                                                       "combined_2nd_leg_heuristic_travel_time,"
                                                        "mode\n")) {
         }
 
@@ -113,6 +114,7 @@ namespace parrot::mode_choice {
             int combinedTravelTime = INFTY;
             int combinedWaitTime = INFTY;
             int combinedAccessEgressTime = INFTY;
+            int combinedSecondLegHeuristicTravelTime = INFTY;
             if (approxCombinedResult.isValid()) {
                 combinedTravelTime = 0;
                 combinedWaitTime = 0;
@@ -154,6 +156,7 @@ namespace parrot::mode_choice {
                     static const int &b = InputConfig::getInstance().parrotEgressTravelTimeHeuristicIntercept;
                     const int directDist = approxCombinedResult.getArrivalTime() - approxPtLeg.getArrivalTime();
                     const int heuristicTravelTime = static_cast<int>(std::round(m * static_cast<double>(directDist))) + b;
+                    combinedSecondLegHeuristicTravelTime = heuristicTravelTime;
                     combinedTravelTime += std::max(heuristicTravelTime, directDist);
                 }
 
@@ -178,6 +181,7 @@ namespace parrot::mode_choice {
                     << combinedTravelTime << ","
                     << combinedWaitTime << ","
                     << combinedAccessEgressTime << ","
+                    << combinedSecondLegHeuristicTravelTime << ","
                     << transportModeToString(choice) << "\n";
 
             return choice;
