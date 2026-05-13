@@ -104,11 +104,15 @@ namespace parrot::mode_choice {
                 taxiOnlyWaitTime = depTimeAtPickup - requestState.originalRequest.requestTime - bestAsgn.pickup.
                                    walkingDist;
                 taxiOnlyAccessEgressTime = bestAsgn.pickup.walkingDist + bestAsgn.dropoff.walkingDist;
-                entries.push_back({
-                    TransportMode::Taxi,
-                    constructAttributesForTimesInTenthsOfSeconds(taxiOnlyTravelTime, taxiOnlyWaitTime,
-                                                                 taxiOnlyAccessEgressTime)
-                });
+
+                // Taxi trips with an excessive wait time do not take part in mode choice
+                if (taxiOnlyWaitTime <= InputConfig::getInstance().modeChoiceMaxTaxiWaitTime) {
+                    entries.push_back({
+                        TransportMode::Taxi,
+                        constructAttributesForTimesInTenthsOfSeconds(taxiOnlyTravelTime, taxiOnlyWaitTime,
+                                                                     taxiOnlyAccessEgressTime)
+                    });
+                }
             }
 
             int combinedTravelTime = INFTY;
@@ -140,31 +144,35 @@ namespace parrot::mode_choice {
                     ptLegStartTime = flArrTimeAtDropoff;
                 }
 
-                // PT leg
-                const auto &approxPtLeg = approxCombinedResult.getPTLeg();
-                const int ptAccEgrTransferTime = approxPtLeg.getAccessEgressTransferTime();
-                const int intermediateTransferTime = approxPtLeg.getIntermediateTransferTime();
-                const int ptInVehicleTime = approxPtLeg.getTotalInVehicleTime();
-                combinedTravelTime += ptInVehicleTime;
-                combinedWaitTime += approxPtLeg.getArrivalTime() - ptLegStartTime - ptInVehicleTime - ptAccEgrTransferTime - intermediateTransferTime;
-                combinedAccessEgressTime += ptAccEgrTransferTime + intermediateTransferTime;
+                // Combined journeys that use an access RP trip with excessive wait time do not take part in mode choice
+                if (combinedWaitTime <= InputConfig::getInstance().modeChoiceMaxTaxiWaitTime) {
 
-                // Second taxi leg
-                if (approxCombinedResult.isFinalTransferByTaxi()) {
-                    // Real travel time approximated by linear function with parameters based on known KaRRi data.
-                    static const double &m = InputConfig::getInstance().parrotEgressTravelTimeHeuristicSlope;
-                    static const int &b = InputConfig::getInstance().parrotEgressTravelTimeHeuristicIntercept;
-                    const int directDist = approxCombinedResult.getArrivalTime() - approxPtLeg.getArrivalTime();
-                    const int heuristicTravelTime = std::max(static_cast<int>(std::round(m * static_cast<double>(directDist))) + b, 0);
-                    combinedSecondLegHeuristicTravelTime = heuristicTravelTime;
-                    combinedTravelTime += std::max(heuristicTravelTime, directDist);
+                    // PT leg
+                    const auto &approxPtLeg = approxCombinedResult.getPTLeg();
+                    const int ptAccEgrTransferTime = approxPtLeg.getAccessEgressTransferTime();
+                    const int intermediateTransferTime = approxPtLeg.getIntermediateTransferTime();
+                    const int ptInVehicleTime = approxPtLeg.getTotalInVehicleTime();
+                    combinedTravelTime += ptInVehicleTime;
+                    combinedWaitTime += approxPtLeg.getArrivalTime() - ptLegStartTime - ptInVehicleTime - ptAccEgrTransferTime - intermediateTransferTime;
+                    combinedAccessEgressTime += ptAccEgrTransferTime + intermediateTransferTime;
+
+                    // Second taxi leg
+                    if (approxCombinedResult.isFinalTransferByTaxi()) {
+                        // Real travel time approximated by linear function with parameters based on known KaRRi data.
+                        static const double &m = InputConfig::getInstance().parrotEgressTravelTimeHeuristicSlope;
+                        static const int &b = InputConfig::getInstance().parrotEgressTravelTimeHeuristicIntercept;
+                        const int directDist = approxCombinedResult.getArrivalTime() - approxPtLeg.getArrivalTime();
+                        const int heuristicTravelTime = std::max(static_cast<int>(std::round(m * static_cast<double>(directDist))) + b, 0);
+                        combinedSecondLegHeuristicTravelTime = heuristicTravelTime;
+                        combinedTravelTime += std::max(heuristicTravelTime, directDist);
+                    }
+
+                    entries.push_back({
+                        TransportMode::TaxiAndPT,
+                        constructAttributesForTimesInTenthsOfSeconds(combinedTravelTime, combinedWaitTime,
+                                                                     combinedAccessEgressTime)
+                    });
                 }
-
-                entries.push_back({
-                    TransportMode::TaxiAndPT,
-                    constructAttributesForTimesInTenthsOfSeconds(combinedTravelTime, combinedWaitTime,
-                                                                 combinedAccessEgressTime)
-                });
             }
 
             const auto choice = criterion.apply(entries);

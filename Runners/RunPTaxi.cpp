@@ -151,6 +151,7 @@ inline void printUsage() {
             "  -r <file>                requests in CSV format.\n"
             "  -v <file>                vehicles in CSV format.\n"
             "  -s <sec>                 stop time (in s). (dflt: 60s)\n"
+            "  -mc-taxi-w <sec>         if the wait time for a taxi pickup exceeds this value, the trip is not considred for mode choice (in s). (dflt: 1200s)\n"
             "  -w <sec>                   maximum added wait time after accepting ride (in s). (dflt: 600s)\n"
             "  -a <factor>               model parameter alpha' for max trip time after being assigned = pa * asgn trip time + pb (dflt: 1.4)\n"
             "  -b <seconds>              model parameter beta' for max trip time after being assigned = pa * asgn trip time + pb (dflt: 1200)\n"
@@ -203,6 +204,7 @@ int main(int argc, char *argv[]) {
         // Parse the command-line options.
         InputConfig &inputConfig = InputConfig::getInstance();
         inputConfig.stopTime = clp.getValue<int>("s", 60) * 10;
+        inputConfig.modeChoiceMaxTaxiWaitTime = clp.getValue<int>("mc-taxi-w", 1200) * 10;
         inputConfig.hardConstraintMaxAddedWaitTime = clp.getValue<int>("w", 600) * 10;
         inputConfig.hardConstraintAlpha = clp.getValue<double>("a", 1.4);
         inputConfig.hardConstraintBeta = clp.getValue<int>("b", 600) * 10;

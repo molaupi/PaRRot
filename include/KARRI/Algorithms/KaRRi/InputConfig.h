@@ -53,6 +53,8 @@ namespace karri {
         int maxNumPickups = -1;
         int maxNumDropoffs = -1;
 
+        int modeChoiceMaxTaxiWaitTime = -1;
+
         int hardConstraintMaxAddedWaitTime = -1;
         double hardConstraintAlpha = -1.0;
         int hardConstraintBeta = -1;
