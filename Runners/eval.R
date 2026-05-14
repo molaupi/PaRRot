@@ -29,7 +29,7 @@ quality <- function(file_base, num_vehicles=NULL, mode_name=NULL) {
   legstats <- fread(paste0(file_base, ".legstats.csv"))
   # bestasgns <- bestasgns[order(bestasgns$request_id)]
   shareOfMode <- 1
-  if (!is.null(mode)) {
+  if (!is.null(mode_name)) {
     modes <- fread(paste0(file_base, ".modechoice.csv"))
     setkey(modes, request_id)
     # modes <- modes[order(modes$request_id)]
@@ -43,6 +43,12 @@ quality <- function(file_base, num_vehicles=NULL, mode_name=NULL) {
     modes <- modes[mode == mode_name]
     setkey(modes, request_id)
     asgnstats <- asgnstats[modes, nomatch=0]
+    
+    if (mode_name == "TaxiAndPT") {
+      asgnstats[, cost_1st_taxi_leg := ifelse(cost_1st_taxi_leg > 10000000, 0, cost_1st_taxi_leg)]
+      asgnstats[, cost_2nd_taxi_leg := ifelse(cost_2nd_taxi_leg > 10000000, 0, cost_2nd_taxi_leg)]
+      asgnstats[, cost := cost_1st_taxi_leg + cost_pt_leg + cost_2nd_taxi_leg]
+    }
   }
   
   if (is.null(num_vehicles)) {
@@ -86,6 +92,89 @@ quality <- function(file_base, num_vehicles=NULL, mode_name=NULL) {
   df[, colnames(df) %in% veh_time_cols] <- convertToHHMM(df[, colnames(df) %in% veh_time_cols])
   
   df["service_rate"] <- c(shareOfMode)
+  
+  print(df)
+}
+
+qualityTaxiAndPT <- function(file_base, num_vehicles=NULL) {
+  asgnstats <- fread(paste0(file_base, ".assignmentquality.csv"))
+  setkey(asgnstats, request_id)
+  # asgnstats <- asgnstats[order(asgnstats$request_id)]
+  intermediate <- fread(paste0(file_base, ".intermediate_results.csv"))
+  setkey(intermediate, request_id)
+  tripstats <- fread(paste0(file_base, ".tripstats.csv"))
+  setkey(tripstats, request_id)
+  
+  modes <- fread(paste0(file_base, ".modechoice.csv"))
+  setkey(modes, request_id)
+  
+  numTaxiAndPT <- sum(modes[["mode"]] == "TaxiAndPT")
+  numTotal <- nrow(modes)
+  shareOfMode <- numTaxiAndPT / numTotal
+  modes <- modes[mode == "TaxiAndPT"]
+  setkey(modes, request_id)
+  asgnstats <- asgnstats[modes, nomatch=0]
+  intermediate <- intermediate[modes, nomatch=0]
+  tripstats <- tripstats[modes, nomatch=0]
+  
+  asgnstats[, cost_1st_taxi_leg := ifelse(cost_1st_taxi_leg > 10000000, 0, cost_1st_taxi_leg)]
+  asgnstats[, cost_2nd_taxi_leg := ifelse(cost_2nd_taxi_leg > 10000000, 0, cost_2nd_taxi_leg)]
+  asgnstats[, cost := cost_1st_taxi_leg + cost_pt_leg + cost_2nd_taxi_leg]
+  
+  df <- data.table(
+    direct_time_avg = c(mean(asgnstats$direct_od_dist) / 10), # avg direct vehicle time from origin to destination
+    trip_time_avg = c(mean(asgnstats$trip_time) / 10), # avg trip time for each request
+    trip_time_q95 = c(quantile(asgnstats$trip_time, 0.95) / 10), # q95 trip time for each request
+    wait_time_avg = c(mean(asgnstats$wait_time) / 10), # avg wait time for each request
+    wait_time_q95 = c(quantile(asgnstats$wait_time, 0.95) / 10), # q95 wait time for each request
+    taxi_ride_time_avg = c(mean(asgnstats$taxi_ride_time) / 10), # avg RP ride time for each request
+    taxi_ride_time_q95 = c(quantile(asgnstats$taxi_ride_time, 0.95) / 10), # q95 RP ride time for each request
+    pt_ride_time_avg = c(mean(asgnstats$pt_ride_time) / 10), # avg PT ride time for each request
+    pt_ride_time_q95 = c(quantile(asgnstats$pt_ride_time, 0.95) / 10), # q95 PT ride time for each request
+    walk_avg=c(mean(asgnstats$walk_time) / 10), # avg walk time
+    cost = c(mean(asgnstats$cost))
+    )
+  
+  tripstats[, request_time := intermediate$request_time]
+  rp_pt = tripstats[(firstTaxiLegVehicleId != -1) & (secondTaxiLegVehicleId == -1)]
+  pt_rp = tripstats[(firstTaxiLegVehicleId == -1) & (secondTaxiLegVehicleId != -1)]
+  rp_pt_rp = tripstats[(firstTaxiLegVehicleId != -1) & (secondTaxiLegVehicleId != -1)]
+  
+  df[, rp_pt_share := nrow(rp_pt) / nrow(asgnstats)]
+  df[, rp_pt_1st_leg := mean(rp_pt$firstTaxiLegArrAtDropoff + rp_pt$firstTaxiLegDropoffWalkTime - rp_pt$request_time) / 10]
+  df[, rp_pt_pt_leg := mean(rp_pt$ptLegArrTime - (rp_pt$firstTaxiLegArrAtDropoff + rp_pt$firstTaxiLegDropoffWalkTime)) / 10]
+  
+  df[, pt_rp_share := nrow(pt_rp) / nrow(asgnstats)]
+  df[, pt_rp_pt_leg := mean(pt_rp$ptLegArrTime - pt_rp$request_time) / 10]
+  df[, pt_rp_2nd_leg := mean(pt_rp$secondTaxiLegArrAtDropoff + pt_rp$secondTaxiLegDropoffWalkTime - pt_rp$ptLegArrTime) / 10]
+  df[, pt_rp_2nd_leg_in_vehicle := mean(pt_rp$secondTaxiLegArrAtDropoff - pt_rp$secondTaxiLegDepAtPickup) / 10]
+  
+  df[, rp_pt_rp_share := nrow(rp_pt_rp) / nrow(asgnstats)]
+  df[, rp_pt_rp_1st_leg := mean(rp_pt_rp$firstTaxiLegArrAtDropoff + rp_pt_rp$firstTaxiLegDropoffWalkTime - rp_pt_rp$request_time) / 10]
+  df[, rp_pt_rp_pt_leg := mean(rp_pt_rp$ptLegArrTime - (rp_pt_rp$firstTaxiLegArrAtDropoff + rp_pt_rp$firstTaxiLegDropoffWalkTime)) / 10]
+  df[, rp_pt_rp_2nd_leg := mean(rp_pt_rp$secondTaxiLegArrAtDropoff + rp_pt_rp$secondTaxiLegDropoffWalkTime - rp_pt_rp$ptLegArrTime) / 10]
+  
+  # Reformat passenger times to MM:SS
+  psg_time_cols <- c(
+    "direct_time_avg",
+    "trip_time_avg", "trip_time_q95",
+    "wait_time_avg", "wait_time_q95", 
+    "taxi_ride_time_avg", "taxi_ride_time_q95", 
+    "pt_ride_time_avg", "pt_ride_time_q95",
+    "walk_avg",
+    "rp_pt_1st_leg",
+    "rp_pt_pt_leg",
+    "pt_rp_pt_leg",
+    "pt_rp_2nd_leg",
+    "pt_rp_2nd_leg_in_vehicle",
+    "rp_pt_rp_1st_leg",
+    "rp_pt_rp_pt_leg",
+    "rp_pt_rp_2nd_leg"
+  )
+  for (name in psg_time_cols)
+    set(df, j = name, value=lapply(df[[name]], convertToMMSS))
+  
+  df[, service_rate := shareOfMode]
   
   print(df)
 }
