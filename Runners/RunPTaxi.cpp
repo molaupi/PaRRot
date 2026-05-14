@@ -91,8 +91,10 @@
 #include <../PTaxi/RiderModeChoice/ModeChoice.h>
 #include <../PTaxi/RiderModeChoice/UtilityLogitCriterion.h>
 
+#include "NoOpPTAndTaxiTripFinder.h"
 #include "../PTaxi/CarTripFinder.h"
 #include "PTLeg/ParrotPTOnlyULTRARAPTOR.h"
+#include "Station/NoOpStationsInEllipse.h"
 #include "ULTRA/Algorithms/RAPTOR/Profiler.h"
 
 #ifdef KARRI_USE_CCHS
@@ -654,8 +656,6 @@ KARRI_DALS_STRATEGY == KARRI_COL || KARRI_DALS_STRATEGY == KARRI_IND
         using PDLocsFinderImpl = PDLocsFinder<VehicleInputGraph, PsgInputGraph, VehicleToPDLocQueryImpl>;
         PDLocsFinderImpl pdLocsFinder(vehicleInputGraph, psgInputGraph, revPsgGraph, vehicleToPdLocQuery);
 
-        // FeasibleEllipticDistancesImpl feasibleEllipticPickups(fleet.size(), routeState);
-        // FeasibleEllipticDistancesImpl feasibleEllipticDropoffs(fleet.size(), routeState);
 
         // Read the RAPTOR data
         std::cout << "Reading RAPTOR data from file... " << std::flush;
@@ -689,19 +689,6 @@ KARRI_DALS_STRATEGY == KARRI_COL || KARRI_DALS_STRATEGY == KARRI_IND
         }
         std::cout << "done.\n";
 
-        parrot::StationsAtLocations stationsAtLocations(stations, vehicleInputGraph.numEdges());
-
-        // Buckets for PT stations (vehicle graph)
-        using StationBucketsEnv = parrot::StationBucketsEnvironment<VehicleInputGraph, VehCHEnv, false>;
-
-        std::cout << "Reading station buckets from file... " << std::flush;
-        std::ifstream in(stationBucketsFilename, std::ios::binary);
-        if (!in.good())
-            throw std::invalid_argument("file not found -- '" + stationBucketsFilename + "'");
-        StationBucketsEnv stationBucketsEnv(vehicleInputGraph, *vehChEnv);
-        stationBucketsEnv.readBucketsFrom(in);
-        std::cout << "done.\n";
-
         // Pedestrian Station Buckets for walking transfers
         using PsgStationBucketsEnv = parrot::StationBucketsEnvironment<PsgInputGraph, PsgCHEnv, true>;
 
@@ -724,6 +711,28 @@ KARRI_DALS_STRATEGY == KARRI_COL || KARRI_DALS_STRATEGY == KARRI_IND
             RAPTOR::NoProfiler, false, ParrotInitialTransfersType>;
         // using PTAlgorithm = RAPTOR::ParrotPTOnlyULTRAMcRAPTOR<ParrotInitialTransfersType, RAPTOR::NoProfiler>;
         PTAlgorithm ptAlgorithm(raptor, parrotInitialTransfers, stations, psgInputGraph.numEdges());
+
+
+#if PARROT_NO_COMBINED
+        using PTAndTaxiTripFinderImpl = parrot::NoOpPTAndTaxiTripFinder;
+        PTAndTaxiTripFinderImpl ptAndTaxiTripFinder;
+
+        using StationsInEllipseImpl = parrot::NoOpStationsInEllipse;
+        StationsInEllipseImpl stationsInEllipse;
+#else
+
+        parrot::StationsAtLocations stationsAtLocations(stations, vehicleInputGraph.numEdges());
+
+        // Buckets for PT stations (vehicle graph)
+        using StationBucketsEnv = parrot::StationBucketsEnvironment<VehicleInputGraph, VehCHEnv, false>;
+
+        std::cout << "Reading station buckets from file... " << std::flush;
+        std::ifstream in(stationBucketsFilename, std::ios::binary);
+        if (!in.good())
+            throw std::invalid_argument("file not found -- '" + stationBucketsFilename + "'");
+        StationBucketsEnv stationBucketsEnv(vehicleInputGraph, *vehChEnv);
+        stationBucketsEnv.readBucketsFrom(in);
+        std::cout << "done.\n";
 
         // Create cost-criterion PT router to use for combined journeys
         using PTAlgorithmWithTaxi = RAPTOR::ParrotCombinedULTRAMcRAPTOR<ParrotInitialTransfersType, RAPTOR::NoProfiler>;
@@ -758,6 +767,26 @@ KARRI_DALS_STRATEGY == KARRI_COL || KARRI_DALS_STRATEGY == KARRI_IND
 
         using TaxiLegApproximationImpl = parrot::HeuristicEgressTripFinder<VehicleInputGraph, VehCHEnv, StationBucketsEnv>;
 
+        // -> pass ULTRA algorithm instance and stationBucketsEnv, palsToStations to PTAndTaxiTripFinder
+        using PTAndTaxiTripFinderImpl = parrot::PTAndTaxiTripFinder<
+            VehicleInputGraph,
+            VehCHEnv,
+            StationBucketsEnv,
+            StationBCH,
+            PALSToStationsImpl,
+            StationsInEllipseImpl,
+            OrdinaryToStationsImpl,
+            DALSToStationsImpl,
+            PBNSToStationsImpl,
+            EdgeQuery,
+            PTAlgorithmWithTaxi,
+            TaxiLegApproximationImpl>;
+        PTAndTaxiTripFinderImpl ptAndTaxiTripFinder(vehicleInputGraph, *vehChEnv, fleet, routeState,
+                                                    stations, queries, stationBucketsEnv, stationsAtLocations,
+                                                    palsToStations, stationsInEllipse, dalsToStations, pbnsToStations,
+                                                    ptAlgorithmWithTaxi);
+#endif
+
 
         using KaRRiBaseInfoPreparatorImpl = KaRRiBaseInfoPreparator<VehicleInputGraph, VehCHEnv,
             FeasibleEllipticDistancesImpl, PDLocsFinderImpl, PDLocsAtExistingStopsFinderImpl, EllipticBCHSearchesImpl,
@@ -780,30 +809,6 @@ KARRI_DALS_STRATEGY == KARRI_COL || KARRI_DALS_STRATEGY == KARRI_IND
         using PTTripFinderImpl = parrot::PTJourneyFinder<EdgeQuery, PTAlgorithm>;
         PTTripFinderImpl ptTripFinder(queries, ptAlgorithm);
 
-        // -> pass ULTRA algorithm instance and stationBucketsEnv, palsToStations to PTAndTaxiTripFinder
-        using PTAndTaxiTripFinderImpl = parrot::PTAndTaxiTripFinder<
-            VehicleInputGraph,
-            VehCHEnv,
-            StationBucketsEnv,
-            StationBCH,
-            PALSToStationsImpl,
-            StationsInEllipseImpl,
-            OrdinaryToStationsImpl,
-            DALSToStationsImpl,
-            PBNSToStationsImpl,
-            EdgeQuery,
-            PTAlgorithmWithTaxi,
-            TaxiLegApproximationImpl>;
-        PTAndTaxiTripFinderImpl ptAndTaxiTripFinder(vehicleInputGraph, *vehChEnv, fleet, routeState,
-                                                    stations, queries, stationBucketsEnv, stationsAtLocations,
-                                                    palsToStations, stationsInEllipse, dalsToStations, pbnsToStations,
-                                                    ptAlgorithmWithTaxi);
-
-
-        using ModeChoiceImpl = parrot::mode_choice::ModeChoice<parrot::mode_choice::UtilityLogitCriterion,
-            std::ofstream>;
-        ModeChoiceImpl modeChoice(routeState);
-
 #if KARRI_OUTPUT_VEHICLE_PATHS
         using VehPathTracker = PathTracker<VehicleInputGraph, VehCHEnv, std::ofstream>;
         VehPathTracker pathTracker(vehicleInputGraph, *vehChEnv, routeState, fleet);
@@ -824,6 +829,10 @@ KARRI_DALS_STRATEGY == KARRI_COL || KARRI_DALS_STRATEGY == KARRI_IND
         for (const auto &veh: fleet) {
             lastStopBucketsEnv.generateIdleBucketEntries(veh, genInitialLastStopBucketsStats);
         }
+
+        using ModeChoiceImpl = parrot::mode_choice::ModeChoice<parrot::mode_choice::UtilityLogitCriterion,
+            std::ofstream>;
+        ModeChoiceImpl modeChoice(routeState);
 
         // Run simulation:
         using EventSimulationImpl = EventSimulation<RequestStateInitializerImpl, KaRRiBaseInfoPreparatorImpl,

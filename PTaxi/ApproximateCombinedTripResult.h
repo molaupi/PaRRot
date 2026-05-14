@@ -9,6 +9,19 @@ namespace parrot {
 
 class ApproximateCombinedTripResult {
 public:
+
+    ApproximateCombinedTripResult() : requestTime(-1),
+                                    firstTaxiLeg(),
+                                    ptLeg(),
+                                    firstStationId(INVALID_ID),
+                                    lastStationId(INVALID_ID),
+                                    firstTaxiLegCost(INFTY),
+                                    secondTaxiLegCost(INFTY),
+                                    ptLegCost(INFTY),
+                                    bestCost(INFTY),
+                                    arrivalTime(never) {
+    }
+
     template<typename SecondTaxiLegApproximationT>
     ApproximateCombinedTripResult(const int requestTime,
         AccessRPTrip accessRpTrip,
@@ -22,7 +35,7 @@ public:
                         firstTaxiLegCost(INFTY),
                         secondTaxiLegCost(INFTY),
                         ptLegCost(INFTY),
-                        bestCost(0),
+                        bestCost(INFTY),
                         arrivalTime(never) {
 
         bool journeyHasRouteLeg = false;

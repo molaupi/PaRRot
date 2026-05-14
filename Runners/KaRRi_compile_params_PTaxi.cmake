@@ -189,3 +189,13 @@ endif (KARRI_COL_PALS_ONLY_PROMISING_DROPOFFS)
 if (DEFINED KARRI_LOGIT_FIXED_SEED)
     target_compile_definitions(PTaxi PRIVATE KARRI_LOGIT_FIXED_SEED=${KARRI_LOGIT_FIXED_SEED})
 endif (DEFINED KARRI_LOGIT_FIXED_SEED)
+
+
+
+# If set, does not find combined journeys, but only uses RP-only.
+option(PARROT_NO_COMBINED "Turn off combined journeys (i.e. run KaRRi instead of PaRRot)" OFF)
+if (PARROT_NO_COMBINED)
+    target_compile_definitions(PTaxi PRIVATE PARROT_NO_COMBINED=true)
+else(PARROT_NO_COMBINED)
+    target_compile_definitions(PTaxi PRIVATE PARROT_NO_COMBINED=false)
+endif (PARROT_NO_COMBINED)
