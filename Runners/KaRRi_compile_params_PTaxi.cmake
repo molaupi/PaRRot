@@ -183,7 +183,27 @@ else(KARRI_COL_PALS_ONLY_PROMISING_DROPOFFS)
 endif (KARRI_COL_PALS_ONLY_PROMISING_DROPOFFS)
 
 
-# Logit settings
+# Mode choice settings
+
+## Mode choice method
+set(MODE_CHOICE_LOGIT_CODE 1)
+set(MODE_CHOICE_COST_CODE 2)
+target_compile_definitions(PTaxi PRIVATE KARRI_MODE_CHOICE_LOGIT=${MODE_CHOICE_LOGIT_CODE})
+target_compile_definitions(PTaxi PRIVATE KARRI_MODE_CHOICE_COST=${MODE_CHOICE_COST_CODE})
+set(KARRI_MODE_CHOICE_METHOD_VALUES Logit Cost)
+
+set(KARRI_MODE_CHOICE_METHOD Logit CACHE STRING "Mode choice method to use. Possible values: Logit (dflt), Cost")
+set_property(CACHE KARRI_MODE_CHOICE_METHOD PROPERTY STRINGS ${KARRI_MODE_CHOICE_METHOD_VALUES})
+list(FIND KARRI_MODE_CHOICE_METHOD_VALUES ${KARRI_MODE_CHOICE_METHOD} index)
+if (index EQUAL -1)
+    message(FATAL_ERROR "KARRI_MODE_CHOICE_METHOD must be one of ${KARRI_MODE_CHOICE_METHOD_VALUES}")
+endif ()
+
+if (${KARRI_MODE_CHOICE_METHOD} STREQUAL Logit)
+    target_compile_definitions(PTaxi PRIVATE KARRI_MODE_CHOICE_METHOD=${MODE_CHOICE_LOGIT_CODE}) # Logit
+else()
+    target_compile_definitions(PTaxi PRIVATE KARRI_MODE_CHOICE_METHOD=${MODE_CHOICE_COST_CODE}) # Cost
+endif()
 
 # If set, use this value as fixed seed for RNG. Use for debugging.
 if (DEFINED KARRI_LOGIT_FIXED_SEED)

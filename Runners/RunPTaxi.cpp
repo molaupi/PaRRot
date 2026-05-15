@@ -90,6 +90,7 @@
 #include "../PTaxi/WalkingTripFinder.h"
 #include <../PTaxi/RiderModeChoice/ModeChoice.h>
 #include <../PTaxi/RiderModeChoice/UtilityLogitCriterion.h>
+#include <../PTaxi/RiderModeChoice/CostCriterion.h>
 
 #include "NoOpPTAndTaxiTripFinder.h"
 #include "../PTaxi/CarTripFinder.h"
@@ -834,7 +835,11 @@ KARRI_DALS_STRATEGY == KARRI_COL || KARRI_DALS_STRATEGY == KARRI_IND
             lastStopBucketsEnv.generateIdleBucketEntries(veh, genInitialLastStopBucketsStats);
         }
 
-        using ModeChoiceImpl = parrot::mode_choice::ModeChoice<parrot::mode_choice::UtilityLogitCriterion,
+
+        using ModeChoiceCriterion = std::conditional_t<KARRI_MODE_CHOICE_METHOD == KARRI_MODE_CHOICE_LOGIT,
+            parrot::mode_choice::UtilityLogitCriterion,
+            parrot::mode_choice::CostCriterion>;
+        using ModeChoiceImpl = parrot::mode_choice::ModeChoice<ModeChoiceCriterion,
             std::ofstream>;
         ModeChoiceImpl modeChoice(routeState);
 

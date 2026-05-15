@@ -469,6 +469,7 @@ namespace karri {
             const auto walkOnlyResult = walkTripFinder.findWalkingTrip(requestState, stats.walkOnlyStats);
             const auto carOnlyResult = carTripFinder.findCarTrip(requestState, stats.carOnlyStats);
             const auto taxiOnlyResult = taxiTripFinder.findBestAssignment(requestState, baseInfo, stats.taxiOnlyStats);
+            systemStateUpdater.writeBestAssignmentToLogger(requestState, taxiOnlyResult);
             const auto ptOnlyResult = ptTripFinder.findBestJourney(requestState, stats.ptOnlyStats);
 
             // const int ptOnlyCostBound = ptOnlyResult.getCost();
@@ -504,7 +505,6 @@ namespace karri {
                 reqData.ptLegWalkTime = ptOnlyResult.getTotalTransferTime();
                 processChoiceOtherMode(reqId, occTime, ptOnlyResult.getArrivalTime());
             } else if (mode == TransportMode::Taxi) {
-                systemStateUpdater.writeBestAssignmentToLogger(requestState, taxiOnlyResult);
                 riderState[reqId] = WAITING_FOR_PICKUP;
                 const auto &asgn = taxiOnlyResult.getBestAssignment();
                 reqData.taxiLegCost = taxiOnlyResult.getBestCost();
