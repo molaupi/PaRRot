@@ -283,8 +283,8 @@ namespace karri {
             const LabelSet::DistanceLabel &distsFromPickupsToStation,
             const LabelSet::DistanceLabel &pickupWalkingDists) const {
             using DistanceLabel = LabelSet::DistanceLabel;
-            KASSERT(distsFromPickupsToStation.horizontalMin() >= 0 && distsFromPickupsToStation.horizontalMax() < INFTY)
-            ;
+            KASSERT(distsFromPickupsToStation.horizontalMin() >= 0);
+
             KASSERT(pickupWalkingDists.horizontalMin() >= 0 && pickupWalkingDists.horizontalMax() < INFTY);
 
             const DistanceLabel detourCost = F::calcKVehicleCosts(distsFromPickupsToStation + stopTime);

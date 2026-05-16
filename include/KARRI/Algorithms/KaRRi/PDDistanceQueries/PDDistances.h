@@ -33,7 +33,7 @@ namespace karri {
     struct PDDistances {
     private:
         static size_t numLabelsPerDropoff(const int numPickups, const int k) {
-            return numPickups / k + (numPickups % k != 0);
+            return k * (numPickups / k + (numPickups % k != 0));
         }
 
     public:
