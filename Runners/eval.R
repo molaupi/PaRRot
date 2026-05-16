@@ -28,10 +28,12 @@ quality <- function(file_base, num_vehicles=NULL, mode_name=NULL) {
   # asgnstats <- asgnstats[order(asgnstats$request_id)]
   legstats <- fread(paste0(file_base, ".legstats.csv"))
   # bestasgns <- bestasgns[order(bestasgns$request_id)]
+  modes <- fread(paste0(file_base, ".modechoice.csv"))
+  setkey(modes, request_id)
+  tripstats <- fread(paste0(file_base, ".tripstats.csv"))
+  setkey(tripstats, request_id)
   shareOfMode <- 1
   if (!is.null(mode_name)) {
-    modes <- fread(paste0(file_base, ".modechoice.csv"))
-    setkey(modes, request_id)
     # modes <- modes[order(modes$request_id)]
     numTaxi <- sum(modes[["mode"]] == mode_name)
     numTotal <- nrow(modes)
@@ -43,12 +45,20 @@ quality <- function(file_base, num_vehicles=NULL, mode_name=NULL) {
     modes <- modes[mode == mode_name]
     setkey(modes, request_id)
     asgnstats <- asgnstats[modes, nomatch=0]
+    tripstats <- tripstats[modes, nomatch = 0]
     
     if (mode_name == "TaxiAndPT") {
       asgnstats[, cost_1st_taxi_leg := ifelse(cost_1st_taxi_leg > 10000000, 0, cost_1st_taxi_leg)]
       asgnstats[, cost_2nd_taxi_leg := ifelse(cost_2nd_taxi_leg > 10000000, 0, cost_2nd_taxi_leg)]
       asgnstats[, cost := cost_1st_taxi_leg + cost_pt_leg + cost_2nd_taxi_leg]
     }
+  } else {
+    asgnstats <- asgnstats[modes, nomatch=0]
+    tripstats <- tripstats[modes, nomatch = 0]
+    asgnstats[, cost := ifelse(mode == "Ped", trip_time, cost)]
+    asgnstats[, cost_1st_taxi_leg := ifelse(cost_1st_taxi_leg > 10000000, 0, cost_1st_taxi_leg)]
+    asgnstats[, cost_2nd_taxi_leg := ifelse(cost_2nd_taxi_leg > 10000000, 0, cost_2nd_taxi_leg)]
+    asgnstats[, cost := ifelse(mode == "TaxiAndPT", cost_1st_taxi_leg + cost_pt_leg + cost_2nd_taxi_leg, cost)]
   }
   
   if (is.null(num_vehicles)) {
@@ -56,8 +66,16 @@ quality <- function(file_base, num_vehicles=NULL, mode_name=NULL) {
     num_vehicles <- sum(eventsimstats$type == "VehicleStartup") 
   }
   
+  accrpstats <- tripstats[mode == "Taxi" | (mode == "TaxiAndPT" & firstTaxiLegVehicleId != -1 )]
+  ir <- fread(paste0(file_base, ".intermediate_results.csv"))
+  ir = ir[, c("request_id", "request_time")]
+  setkey(ir, request_id)
+  accrpstats <- accrpstats[ir, nomatch=0]
+  wait_for_rp_at_beg <- accrpstats$firstTaxiLegDepAtPickup - accrpstats$firstTaxiLegPickupWalkTime - accrpstats$request_time
   df <- data.frame(
              direct_time_avg = c(mean(asgnstats$direct_od_dist) / 10), # avg direct vehicle time from origin to destination
+             trip_rel_direct_avg = c(mean((asgnstats$trip_time / asgnstats$direct_od_dist)[asgnstats$direct_od_dist != 0])),
+             trip_rel_direct_gmean = c(exp(mean(log((asgnstats$trip_time / asgnstats$direct_od_dist)[asgnstats$direct_od_dist != 0 & asgnstats$trip_time != 0])))),
              trip_time_avg = c(mean(asgnstats$trip_time) / 10), # avg trip time for each request
              trip_time_q95 = c(quantile(asgnstats$trip_time, 0.95) / 10), # q95 trip time for each request
              wait_time_avg = c(mean(asgnstats$wait_time) / 10), # avg wait time for each request
@@ -67,14 +85,17 @@ quality <- function(file_base, num_vehicles=NULL, mode_name=NULL) {
              pt_ride_time_avg = c(mean(asgnstats$pt_ride_time) / 10), # avg PT ride time for each request
              pt_ride_time_q95 = c(quantile(asgnstats$pt_ride_time, 0.95) / 10), # q95 PT ride time for each request
              walk_avg=c(mean(asgnstats$walk_time) / 10), # avg walk time
+             wait_for_rp_at_beg_avg = c(mean(wait_for_rp_at_beg) / 10),
              stop_time_avg = c(sum(legstats$stop_time) / num_vehicles / 10), # avg total stop time for each vehicle
              empty_time_avg = c(sum(legstats[legstats$occupancy == 0, "drive_time"]) / num_vehicles / 10), # avg time spent driving empty for each vehicle
              occ_time_avg = c(sum(legstats[legstats$occupancy > 0, "drive_time"]) / num_vehicles / 10) # avg time spent driving occupied for each vehicle
              )
   
   df$op_time_avg <- df$stop_time_avg + df$empty_time_avg + df$occ_time_avg # avg total operation time for each vehicle
+  df$sum_hours_driving <- round(sum(legstats$drive_time) / 3600)
   df$occ_rate_avg <- sum(legstats$drive_time * legstats$occupancy) / sum(legstats$drive_time) # avg occupation rate while driving for each vehicle
   df$cost <- mean(asgnstats$cost) # avg cost (according to cost function used in KaRRi) for each vehicle
+  
   
   # Reformat passenger times to MM:SS
   psg_time_cols <- c(
@@ -83,7 +104,8 @@ quality <- function(file_base, num_vehicles=NULL, mode_name=NULL) {
     "wait_time_avg", "wait_time_q95", 
     "taxi_ride_time_avg", "taxi_ride_time_q95", 
     "pt_ride_time_avg", "pt_ride_time_q95",
-    "walk_avg", "walk_q95"
+    "walk_avg", "walk_q95",
+    "wait_for_rp_at_beg_avg"
   )
   df[, colnames(df) %in% psg_time_cols] <- convertToMMSS(df[, colnames(df) %in% psg_time_cols])
   
@@ -195,6 +217,7 @@ qualityTaxiAndPT <- function(file_base, num_vehicles=NULL) {
 modeChoiceOverview <- function(file_base) {
   modes <- fread(paste0(file_base, ".modechoice.csv"))
   modes <- modes[,.N,mode]
+  modes <- modes[order(mode)]
   modes[, pct := paste0(format(round(N / sum(N) * 100, 2), nsmall=2), " %")]
   print(modes)
 }

@@ -68,6 +68,8 @@ namespace karri {
         double parrotEgressCostHeuristicSlope = 0.0;
         int parrotEgressTravelTimeHeuristicIntercept = INFTY;
         double parrotEgressTravelTimeHeuristicSlope = 0.0;
+
+        int triggerEgressDispatchBuffer = 0;
     };
 
 }

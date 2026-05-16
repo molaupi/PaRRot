@@ -142,8 +142,6 @@ namespace karri {
             return os;
         }
 
-        const int TRIGGER_TAXI_TIME = 9000;
-
     public:
         EventSimulation(
             const Fleet &fleet, const std::vector<Request> &requests,
@@ -645,9 +643,10 @@ namespace karri {
             if (combinedResult.isFinalTransferByTaxi()) {
                 ptStationsForSecondTaxiLeg[reqId] = ptLeg.getLastStation();
 
-                // Insert request event for second taxi leg 15 minutes before arrival
+                // Insert request event for second taxi leg at fixed time interval before arrival
                 const int schedule2ndLegTime = std::max(
-                    occTime, ptLeg.getArrivalTimeAtLastStation() - TRIGGER_TAXI_TIME);
+                    occTime,
+                    ptLeg.getArrivalTimeAtLastStation() - InputConfig::getInstance().triggerEgressDispatchBuffer);
                 nextRiderEvents[reqId] = SCHEDULE_2ND_TAXI_LEG;
                 requestEvents.insert(reqId, schedule2ndLegTime);
             }

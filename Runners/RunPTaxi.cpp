@@ -167,6 +167,7 @@ inline void printUsage() {
             "  -egr-cost-b <sec>        model parameter for intercept of linear approximation of taxi egress cost (dflt: 0s); prefix 'neg' for negative\n"
             "  -egr-tt-m <factor>       model parameter for slope of linear approximation of taxi egress travel time relative to direct distance (dflt: 1.0); prefix 'neg' for negative\n"
             "  -egr-tt-b <sec>          model parameter for intercept of linear approximation of taxi egress travel time (dflt: 0s); prefix 'neg' for negative\n"
+            "  -egr-buf <sec>           dispatching of egress RP trip in combined journey is triggered at tarr(egress station) - egr-buf. (dflt: 900)\n"
             "  -veh-h <file>            contraction hierarchy for the vehicle network in binary format.\n"
             "  -psg-h <file>            contraction hierarchy for the passenger network in binary format.\n"
             "  -veh-d <file>            separator decomposition for the vehicle network in binary format (needed for CCHs).\n"
@@ -220,6 +221,7 @@ int main(int argc, char *argv[]) {
         inputConfig.parrotEgressCostHeuristicIntercept = readSignedIntParam(clp.getValue<std::string>("egr-cost-b", "0")) * 10;
         inputConfig.parrotEgressTravelTimeHeuristicSlope = readSignedDoubleParam(clp.getValue<std::string>("egr-tt-m", "1.0"));
         inputConfig.parrotEgressTravelTimeHeuristicIntercept = readSignedIntParam(clp.getValue<std::string>("egr-tt-b", "0")) * 10;
+        inputConfig.triggerEgressDispatchBuffer = clp.getValue<int>("egr-buf", 900) * 10;
         inputConfig.pickupRadius = clp.getValue<int>("p-radius", 300) * 10;
         inputConfig.dropoffRadius = clp.getValue<int>("d-radius", 300) * 10;
         inputConfig.maxNumPickups = clp.getValue<int>("max-num-p", INFTY);
