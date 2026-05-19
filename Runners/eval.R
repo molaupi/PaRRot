@@ -22,15 +22,34 @@ convertToHHMM <- function(seconds) {
 # Given the path to the result files of a KaRRi run (e.g. 
 # "<output-dir>/Berlin-1pct_pedestrian/karri-col-simd_300_300"), 
 # this function returns an overview over the solution quality of the assignments.
-quality <- function(file_base, num_vehicles=NULL, mode_name=NULL) {
-  asgnstats <- fread(paste0(file_base, ".assignmentquality.csv"))
+quality <- function(path_dir, 
+                    num_vehicles,
+                    vcs,
+                    radius = 0,
+                    capacity = 4,
+                    run=1,
+                    mode_name=NULL, 
+                    algo="parrot") {
+  pattern <- paste0(algo,".*_",vcs,"_1_1_.*_r",radius,"_.*_n",num_vehicles,"_c",capacity,"_run", run)
+  files <- dir(
+    path = path_dir,
+    pattern = pattern,
+    recursive = FALSE,
+    full.names = TRUE
+  )
+  
+  asgnstats <- fread(files[endsWith(files, ".assignmentquality.csv")][[1]])
+  # asgnstats <- fread(paste0(file_base, ".assignmentquality.csv"))
   setkey(asgnstats, request_id)
   # asgnstats <- asgnstats[order(asgnstats$request_id)]
-  legstats <- fread(paste0(file_base, ".legstats.csv"))
+  legstats <- fread(files[endsWith(files, ".legstats.csv")][[1]])
+  # legstats <- fread(paste0(file_base, ".legstats.csv"))
   # bestasgns <- bestasgns[order(bestasgns$request_id)]
-  modes <- fread(paste0(file_base, ".modechoice.csv"))
+  modes <- fread(files[endsWith(files, ".modechoice.csv")][[1]])
+  # modes <- fread(paste0(file_base, ".modechoice.csv"))
   setkey(modes, request_id)
-  tripstats <- fread(paste0(file_base, ".tripstats.csv"))
+  tripstats <- fread(files[endsWith(files, ".tripstats.csv")][[1]])
+  # tripstats <- fread(paste0(file_base, ".tripstats.csv"))
   setkey(tripstats, request_id)
   shareOfMode <- 1
   if (!is.null(mode_name)) {
@@ -61,21 +80,31 @@ quality <- function(file_base, num_vehicles=NULL, mode_name=NULL) {
     asgnstats[, cost := ifelse(mode == "TaxiAndPT", cost_1st_taxi_leg + cost_pt_leg + cost_2nd_taxi_leg, cost)]
   }
   
-  if (is.null(num_vehicles)) {
-    eventsimstats <- fread(paste0(file_base, ".eventsimulationstats.csv"))
-    num_vehicles <- sum(eventsimstats$type == "VehicleStartup") 
+  wait_for_rp_at_beg <- 0
+  if (is.null(mode_name) || mode_name == "Taxi" || mode_name == "TaxiAndPT") {
+    accrpstats <- tripstats[mode == "Taxi" | (mode == "TaxiAndPT" & firstTaxiLegVehicleId != -1 )]
+    reqtimesdf <- NULL
+    if (algo == "karri") {
+      ba <- fread(files[endsWith(files, ".bestassignments.csv")][[1]])
+      # ba <- fread(paste0(file_base, ".bestassignments.csv"))
+      reqtimesdf = ba[, c("request_id", "request_time")]
+      setkey(reqtimesdf, request_id)
+    } else {
+      ir <- fread(files[endsWith(files, ".intermediate_results.csv")][[1]])
+      # ir <- fread(paste0(file_base, ".intermediate_results.csv"))
+      reqtimesdf = ir[, c("request_id", "request_time")]
+      setkey(reqtimesdf, request_id)
+    }
+    accrpstats <- accrpstats[reqtimesdf, nomatch = 0]
+    wait_for_rp_at_beg <- accrpstats$firstTaxiLegDepAtPickup - accrpstats$firstTaxiLegPickupWalkTime - accrpstats$request_time
   }
-  
-  accrpstats <- tripstats[mode == "Taxi" | (mode == "TaxiAndPT" & firstTaxiLegVehicleId != -1 )]
-  ir <- fread(paste0(file_base, ".intermediate_results.csv"))
-  ir = ir[, c("request_id", "request_time")]
-  setkey(ir, request_id)
-  accrpstats <- accrpstats[ir, nomatch=0]
-  wait_for_rp_at_beg <- accrpstats$firstTaxiLegDepAtPickup - accrpstats$firstTaxiLegPickupWalkTime - accrpstats$request_time
+  num_rp_users <- sum(modes$mode == "Taxi" | modes$mode == "TaxiAndPT")
   df <- data.frame(
              direct_time_avg = c(mean(asgnstats$direct_od_dist) / 10), # avg direct vehicle time from origin to destination
              trip_rel_direct_avg = c(mean((asgnstats$trip_time / asgnstats$direct_od_dist)[asgnstats$direct_od_dist != 0])),
              trip_rel_direct_gmean = c(exp(mean(log((asgnstats$trip_time / asgnstats$direct_od_dist)[asgnstats$direct_od_dist != 0 & asgnstats$trip_time != 0])))),
+             trip_rel_direct_q95 = c(quantile((asgnstats$trip_time / asgnstats$direct_od_dist)[asgnstats$direct_od_dist != 0 & asgnstats$trip_time != 0], 0.95)[[1]]),
+             detour_abs_direct_avg = c(mean(asgnstats$trip_time - asgnstats$direct_od_dist) / 10),  
              trip_time_avg = c(mean(asgnstats$trip_time) / 10), # avg trip time for each request
              trip_time_q95 = c(quantile(asgnstats$trip_time, 0.95) / 10), # q95 trip time for each request
              wait_time_avg = c(mean(asgnstats$wait_time) / 10), # avg wait time for each request
@@ -92,16 +121,17 @@ quality <- function(file_base, num_vehicles=NULL, mode_name=NULL) {
              )
   
   df$op_time_avg <- df$stop_time_avg + df$empty_time_avg + df$occ_time_avg # avg total operation time for each vehicle
-  df$sum_hours_driving <- round(sum(legstats$drive_time) / 3600)
+  df$sum_hours_driving <- round(sum(legstats$drive_time) / 10 / 3600)
   df$occ_rate_avg <- sum(legstats$drive_time * legstats$occupancy) / sum(legstats$drive_time) # avg occupation rate while driving for each vehicle
+  df$num_rides_per_vehicle <- num_rp_users / num_vehicles
   df$cost <- mean(asgnstats$cost) # avg cost (according to cost function used in KaRRi) for each vehicle
-  
   
   # Reformat passenger times to MM:SS
   psg_time_cols <- c(
     "direct_time_avg",
     "trip_time_avg", "trip_time_q95",
     "wait_time_avg", "wait_time_q95", 
+    "detour_abs_direct_avg",
     "taxi_ride_time_avg", "taxi_ride_time_q95", 
     "pt_ride_time_avg", "pt_ride_time_q95",
     "walk_avg", "walk_q95",
@@ -162,6 +192,7 @@ qualityTaxiAndPT <- function(file_base, num_vehicles=NULL) {
   rp_pt_rp = tripstats[(firstTaxiLegVehicleId != -1) & (secondTaxiLegVehicleId != -1)]
   
   row_rp_pt <- data.table()
+  row_rp_pt[, type := "rp_pt"]
   row_rp_pt[, share := nrow(rp_pt) / nrow(tripstats)]
   row_rp_pt[, pwalk_acc_rp := mean(rp_pt$firstTaxiLegPickupWalkTime) / 10]
   row_rp_pt[, wait_acc_rp := mean(rp_pt$firstTaxiLegDepAtPickup - rp_pt$firstTaxiLegPickupWalkTime - rp_pt$request_time) / 10]
@@ -176,6 +207,7 @@ qualityTaxiAndPT <- function(file_base, num_vehicles=NULL) {
   row_rp_pt[, dwalk_egr_rp := 0]
   
   row_pt_rp <- data.table()
+  row_pt_rp[, type := "pt_rp"]
   row_pt_rp[, share := nrow(pt_rp) / nrow(tripstats)]
   row_pt_rp[, pwalk_acc_rp := 0]
   row_pt_rp[, wait_acc_rp := 0]
@@ -190,6 +222,7 @@ qualityTaxiAndPT <- function(file_base, num_vehicles=NULL) {
   row_pt_rp[, dwalk_egr_rp := mean(pt_rp$secondTaxiLegDropoffWalkTime) / 10]
   
   row_rp_pt_rp <- data.table()
+  row_rp_pt_rp[, type := "rp_pt_rp"]
   row_rp_pt_rp[, share := nrow(rp_pt_rp) / nrow(tripstats)]
   row_rp_pt_rp[, pwalk_acc_rp := mean(rp_pt_rp$firstTaxiLegPickupWalkTime) / 10]
   row_rp_pt_rp[, wait_acc_rp := mean(rp_pt_rp$firstTaxiLegDepAtPickup - rp_pt_rp$firstTaxiLegPickupWalkTime - rp_pt_rp$request_time) / 10]
