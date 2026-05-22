@@ -178,7 +178,7 @@ int main(int argc, char *argv[]) {
 
         // Read the station mapping file
         std::cout << "Reading station mapping from file... " << std::flush;
-        PTStations stations;
+        parrot::PTStations stations;
         int edgeId;
         int stationId = 0;
         io::CSVReader<1> stationMappingFileReader(stationMappingFileName);
@@ -198,7 +198,7 @@ int main(int argc, char *argv[]) {
         std::cout << "done.\n";
 
         // Station Buckets for first taxi leg in KaRRi
-        using StationBucketsEnv = karri::StationBucketsEnvironment<VehicleInputGraph, VehCHEnv, false>;
+        using StationBucketsEnv = parrot::StationBucketsEnvironment<VehicleInputGraph, VehCHEnv, false>;
         StationBucketsEnv stationBucketsEnv(vehicleInputGraph, *vehChEnv);
 
         std::cout << "Building buckets for stations... " << std::flush;
@@ -213,7 +213,7 @@ int main(int argc, char *argv[]) {
         std::cout << "done.\n";
 
         // Pedestrian Station Buckets for walking transfers
-        using PsgStationBucketsEnv = karri::StationBucketsEnvironment<PsgInputGraph, PsgCHEnv, true>;
+        using PsgStationBucketsEnv = parrot::StationBucketsEnvironment<PsgInputGraph, PsgCHEnv, true>;
         PsgStationBucketsEnv psgStationBucketsEnv(psgInputGraph, *psgChEnv);
 
         std::cout << "Building pedestrian buckets for stations... " << std::flush;

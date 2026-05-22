@@ -1,0 +1,14 @@
+parrot_source_dir=.
+base_input_dir=Inputs/
+instance_name=Berlin
+gtfs_source=Inputs/RawData/GTFS/Germany/
+osm_source=Inputs/RawData/OSM/Germany_Complete.osm.pbf
+boundary_inner=Inputs/RawData/Boundaries/Berlin_Inner.poly
+boundary_outer=Inputs/RawData/Boundaries/Berlin_Outer.poly
+demand_source=Inputs/RawData/Demand/Berlin-1pct.csv
+first_day=20251111
+last_day=20251112
+num_vehicles=1000
+vehicle_capacity=4
+num_threads=8
+osmium_executable=osmium

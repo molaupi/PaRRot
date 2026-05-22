@@ -252,7 +252,7 @@ public:
     ApplyBoundingBox(BasicShell& shell) :
         ParameterizedCommand(shell, "applyBoundingBox", "Applies a bounding box to the intermediate network data.") {
         addParameter("Intermediate binary");
-        addParameter("Bounding box", {"germany", "deutschland", "switzerland", "bern", "london", "stuttgart100km", "karlsruhe100km"});
+        addParameter("Bounding box", {"germany", "deutschland", "switzerland", "bern", "london", "stuttgart100km", "karlsruhe100km", "berlin"});
         addParameter("Output file");
     }
 
@@ -275,6 +275,8 @@ public:
             inter.applyBoundingBox(Stuttgart100km);
         } else if (boundingBox == "karlsruhe100km") {
             inter.applyBoundingBox(Karlsruhe100km);
+        } else if (boundingBox == "berlin") {
+            inter.applyBoundingBox(Berlin);
         }
         inter.printInfo();
         inter.serialize(outputFile);
@@ -287,6 +289,7 @@ private:
     const Geometry::Rectangle London = Geometry::Rectangle::BoundingBox(Geometry::Point(Construct::XY, -0.612, 51.233), Geometry::Point(Construct::XY, 0.715, 51.707));
     const Geometry::Rectangle Stuttgart100km = Geometry::Rectangle::BoundingBox(Geometry::Point(Construct::XY, 7.879460287011623, 47.87563934204757), Geometry::Point(Construct::XY, 10.613616111963404, 49.67744114384937));
     const Geometry::Rectangle Karlsruhe100km = Geometry::Rectangle::BoundingBox(Geometry::Point(Construct::XY, 7.0551641082906755, 48.11415061555424), Geometry::Point(Construct::XY, 9.802396374907527, 49.91595241735604));
+    const Geometry::Rectangle Berlin = Geometry::Rectangle::BoundingBox(Geometry::Point(Construct::XY, 12.920141, 52.253929), Geometry::Point(Construct::XY, 13.929365, 52.759825));
 
 };
 

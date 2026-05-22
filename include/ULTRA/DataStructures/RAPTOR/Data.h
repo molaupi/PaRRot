@@ -800,6 +800,17 @@ public:
         file.close();
     }
 
+    inline void writeStopCoordinates(const std::string& fileName) const noexcept {
+        std::ofstream file(fileName);
+        Assert(file, "cannot open file: " << fileName);
+        Assert(file.is_open(), "cannot open file: " << fileName);
+        file << "location\n";
+        for (const StopId stop : stops()) {
+            file << "(" << stopData[stop].coordinates.latitude << "|" << stopData[stop].coordinates.longitude << ")\n";
+        }
+        file.close();
+    }
+
     inline long long byteSize() const noexcept {
         long long result = Vector::byteSize(firstRouteSegmentOfStop);
         result += Vector::byteSize(firstStopIdOfRoute);

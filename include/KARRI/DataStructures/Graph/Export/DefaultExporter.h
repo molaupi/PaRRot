@@ -2,6 +2,7 @@
 /// MIT License
 ///
 /// Copyright (c) 2020 Valentin Buchhold
+/// Copyright (c) 2026 Moritz Laupichler
 ///
 /// Permission is hereby granted, free of charge, to any person obtaining a copy
 /// of this software and associated documentation files (the "Software"), to deal
@@ -24,4 +25,27 @@
 
 
 #pragma once
-class DefaultExporter { public: DefaultExporter(bool) {} void ignoreAttribute(std::string) {} };
+class DefaultExporter {
+public:
+    DefaultExporter(bool /*compress*/) {}
+
+    void ignoreAttribute(std::string /*attrName*/) {}
+
+    void init(std::string /*filename*/) {}
+
+    void writeHeader(int /*numVertices*/, int /*numEdges*/) {}
+
+    void startVertex(const int /*vertexId*/) {}
+
+    template<typename Attr>
+    void setCurrentVertexAttributeValue(const typename Attr::Type& /*value*/) {}
+
+    void finalizeVertex() {}
+
+    void startEdge(int /*tail*/, int /*head*/) {}
+
+    template<typename Attr>
+    void setCurrentEdgeAttributeValue(const typename Attr::Type& /*value*/) {}
+
+    void finalizeEdge() {}
+};

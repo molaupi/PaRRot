@@ -34,6 +34,7 @@
 
 #include "ParentInfo.h"
 #include "../../Tools/TemplateProgramming.h"
+#include "Common/Constants.h"
 
 // A set of consistent distance and parent labels for Dijkstra's algorithm. The template arguments
 // specify the number of shortest paths computed simultaneously and the kind of parent information

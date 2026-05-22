@@ -46,11 +46,10 @@
 #include "../../Tools/Workarounds.h"
 
 namespace impl {
-
-// This struct delimits the range of edges out of a particular vertex v. It always stores the
-// index of the first edge out of v. If the graph is static, the index of the last edge out of v
-// is given implicitly by the index of the first edge out of (v + 1). If the graph is dynamic, we
-// store the index of the last edge out of v explicitly.
+    // This struct delimits the range of edges out of a particular vertex v. It always stores the
+    // index of the first edge out of v. If the graph is static, the index of the last edge out of v
+    // is given implicitly by the index of the first edge out of (v + 1). If the graph is dynamic, we
+    // store the index of the last edge out of v explicitly.
 
     struct StaticOutEdgeRange {
         int first() const { return firstEdge; }
@@ -76,15 +75,14 @@ namespace impl {
         int firstEdge;
         int lastEdge;
     };
-
 }
 
 // Auxiliary classes for grouping vertex and edge attributes, respectively.
-template<typename ...Attributes>
+template<typename... Attributes>
 class VertexAttrs {
 };
 
-template<typename ...Attributes>
+template<typename... Attributes>
 class EdgeAttrs {
 };
 
@@ -95,20 +93,22 @@ class Graph;
 template<typename T>
 struct IsGraph : std::false_type {
 };
+
 template<typename T>
 struct IsGraph<const T> : IsGraph<T> {
 };
+
 template<typename VertexAttributes, typename EdgeAttributes, bool dynamic>
-struct IsGraph<Graph<VertexAttributes, EdgeAttributes, dynamic>> : std::true_type {
+struct IsGraph<Graph<VertexAttributes, EdgeAttributes, dynamic> > : std::true_type {
 };
 
 // Graph implementation using adjacency arrays. Can be instantiated as a static or dynamic data
 // structure, where the dynamic variant allows holes in the edge array in order to efficiently
 // support inserting and removing edges. Vertex and edge attributes can be added as needed.
 // Attributes are stored in a separate array each.
-template<typename ...VertexAttributes, typename ...EdgeAttributes, bool dynamic>
+template<typename... VertexAttributes, typename... EdgeAttributes, bool dynamic>
 class Graph<VertexAttrs<VertexAttributes...>, EdgeAttrs<EdgeAttributes...>, dynamic>
-        : public VertexAttributes ..., public EdgeAttributes ... {
+        : public VertexAttributes..., public EdgeAttributes... {
     // All specializations of this class template should be friends of each other.
     template<typename, typename, bool>
     friend
@@ -116,7 +116,7 @@ class Graph<VertexAttrs<VertexAttributes...>, EdgeAttrs<EdgeAttributes...>, dyna
 
 public:
     using OutEdgeRange =
-            std::conditional_t<dynamic, impl::DynamicOutEdgeRange, impl::StaticOutEdgeRange>;
+    std::conditional_t<dynamic, impl::DynamicOutEdgeRange, impl::StaticOutEdgeRange>;
 
     // Constructs an empty graph.
     Graph() {
@@ -133,10 +133,10 @@ public:
     // Constructs a graph from the specified vertex and edge arrays. The constructor enables the
     // internal data structures of the graph to be built externally.
     Graph(
-            AlignedVector<OutEdgeRange> &&outEdges, AlignedVector<int32_t> &&edgeHeads, int edgeCount,
-            AlignedVector<typename VertexAttributes::Type> &&...vertexAttrs,
-            AlignedVector<typename EdgeAttributes::Type> &&...edgeAttrs)
-            : outEdges(std::move(outEdges)), edgeHeads(std::move(edgeHeads)), edgeCount(edgeCount) {
+        AlignedVector<OutEdgeRange> &&outEdges, AlignedVector<int32_t> &&edgeHeads, int edgeCount,
+        AlignedVector<typename VertexAttributes::Type> &&... vertexAttrs,
+        AlignedVector<typename EdgeAttributes::Type> &&... edgeAttrs)
+        : outEdges(std::move(outEdges)), edgeHeads(std::move(edgeHeads)), edgeCount(edgeCount) {
         RUN_FORALL(VertexAttributes::values = std::move(vertexAttrs));
         RUN_FORALL(EdgeAttributes::values = std::move(edgeAttrs));
         assert(validate());
@@ -166,8 +166,8 @@ public:
     // associated only with the destination graph are defaulted.
     // CAUTION: IF THE DESTINATION GRAPH IS STATIC, THE SOURCE GRAPH HAS TO BE DEFRAGMENTED.
     template<
-            typename SourceT,
-            typename = std::enable_if_t<IsGraph<std::remove_reference_t<SourceT>>::value>>
+        typename SourceT,
+        typename = std::enable_if_t<IsGraph<std::remove_reference_t<SourceT> >::value> >
     explicit Graph(SourceT &&src) {
         // Assert that if the destination graph is static, the source graph has to be defragmented.
         assert(dynamic || src.isDefrag());
@@ -315,8 +315,8 @@ public:
     }
 
     // Appends a vertex with the specified attributes to the graph. Returns the ID of the new vertex.
-    template<typename ...Attrs>
-    int appendVertex(Attrs &&...attrs) {
+    template<typename... Attrs>
+    int appendVertex(Attrs &&... attrs) {
         appendVertex();
         RUN_FORALL(VertexAttributes::values.back() = std::forward<Attrs>(attrs));
         return numVertices() - 1;
@@ -356,8 +356,8 @@ public:
 
     // Inserts an edge with the specified attributes from the last inserted vertex to v. Returns the
     // index of the inserted edge. Note that v does not need to be already present in static graphs.
-    template<typename ...Attrs>
-    int appendEdge(const int v, Attrs &&...attrs) {
+    template<typename... Attrs>
+    int appendEdge(const int v, Attrs &&... attrs) {
         const int idx = appendEdge<dynamic>(v);
         RUN_FORALL(EdgeAttributes::values[idx] = std::forward<Attrs>(attrs));
         return idx;
@@ -418,8 +418,8 @@ public:
 
     // Inserts an edge with the specified attributes from u to v. Returns the index of the newly
     // inserted edge. Note that this operation is not supported by static graphs.
-    template<typename ...Attrs>
-    int insertEdge(const int u, const int v, Attrs &&...attrs) {
+    template<typename... Attrs>
+    int insertEdge(const int u, const int v, Attrs &&... attrs) {
         static_assert(dynamic, "Graph::insertEdge is not supported by static graphs.");
         const int idx = insertEdge(u, v);
         RUN_FORALL(EdgeAttributes::values[idx] = std::forward<Attrs>(attrs));
@@ -548,7 +548,7 @@ public:
     // given bitmask. The bitmask must contain one bit per vertex, which should be set iff the vertex
     // belongs to the subgraph. Optionally, writes a mapping of edge IDs of the full graph to the edge
     // IDs of the subgraph into a given edgeMapping for any edges that are kept.
-    void extractVertexInducedSubgraph(const BitVector& bitmask) {
+    void extractVertexInducedSubgraph(const BitVector &bitmask) {
         struct {
             int field;
 
@@ -559,7 +559,7 @@ public:
 
 
     template<typename EdgeMappingT>
-    void extractVertexInducedSubgraph(const BitVector& bitmask, EdgeMappingT &origToNewEdgeMapping) {
+    void extractVertexInducedSubgraph(const BitVector &bitmask, EdgeMappingT &origToNewEdgeMapping) {
         assert(bitmask.size() == numVertices());
         using std::swap;
         int nextId = 0;
@@ -722,7 +722,7 @@ public:
             assert(outEdges[im.vertexId()].first() == -1);
             outEdges[im.vertexId()].first() = 0;
             RUN_FORALL(VertexAttributes::values[im.vertexId()] =
-                               im.template getValue<VertexAttributes>());
+                im.template getValue<VertexAttributes>());
             ++vertexCount;
         }
         assert(numVertices() == vertexCount);
@@ -779,8 +779,27 @@ public:
     }
 
     // Writes a graph to disk. Different exporters support different file formats.
-    template<typename ExporterT = DefaultExporter>
-    void exportTo(const std::string & /*filename*/, ExporterT /*ex*/ = ExporterT()) const {}
+    template<typename ExporterT>
+    void exportTo(const std::string &filename, ExporterT &ex) const {
+        assert(validate());
+        assert(isDefrag());
+
+        ex.init(filename);
+        ex.writeHeader(numVertices(), numEdges());
+        for (int v = 0; v < numVertices(); ++v) {
+            ex.startVertex(v);
+            RUN_FORALL(ex.template setCurrentVertexAttributeValue<VertexAttributes>(VertexAttributes::values[v]));
+            ex.finalizeVertex();
+        }
+
+        for (int v = 0; v < numVertices(); ++v) {
+            for (int e = firstEdge(v); e != lastEdge(v); ++e) {
+                ex.startEdge(v, edgeHeads[e]);
+                RUN_FORALL(ex.template setCurrentEdgeAttributeValue<EdgeAttributes>(EdgeAttributes::values[e]));
+                ex.finalizeEdge();
+            }
+        }
+    }
 
     // Reads a graph from a binary file. Attributes that are present in the file, but not associated
     // with the graph are ignored. Attributes that are associated with the graph, but not present in
@@ -858,26 +877,26 @@ public:
         // Write the vertex attributes.
         int numVertexAttrs = 0;
         RUN_IF(
-                !contains(attrsToIgnore.begin(), attrsToIgnore.end(), use(VertexAttributes::NAME)),
-                ++numVertexAttrs);
+            !contains(attrsToIgnore.begin(), attrsToIgnore.end(), use(VertexAttributes::NAME)),
+            ++numVertexAttrs);
         bio::write(out, numVertexAttrs);
         RUN_IF(!contains(attrsToIgnore.begin(), attrsToIgnore.end(), use(VertexAttributes::NAME)), (
-                bio::write(out, VertexAttributes::NAME),
-                        bio::write(out, bio::size(VertexAttributes::values)),
-                        bio::write(out, VertexAttributes::values)
-        ));
+                   bio::write(out, VertexAttributes::NAME),
+                   bio::write(out, bio::size(VertexAttributes::values)),
+                   bio::write(out, VertexAttributes::values)
+               ));
 
         // Write the edge attributes.
         int numEdgeAttrs = 0;
         RUN_IF(
-                !contains(attrsToIgnore.begin(), attrsToIgnore.end(), use(EdgeAttributes::NAME)),
-                ++numEdgeAttrs);
+            !contains(attrsToIgnore.begin(), attrsToIgnore.end(), use(EdgeAttributes::NAME)),
+            ++numEdgeAttrs);
         bio::write(out, numEdgeAttrs);
         RUN_IF(!contains(attrsToIgnore.begin(), attrsToIgnore.end(), use(EdgeAttributes::NAME)), (
-                bio::write(out, EdgeAttributes::NAME),
-                        bio::write(out, bio::size(EdgeAttributes::values)),
-                        bio::write(out, EdgeAttributes::values)
-        ));
+                   bio::write(out, EdgeAttributes::NAME),
+                   bio::write(out, bio::size(EdgeAttributes::values)),
+                   bio::write(out, EdgeAttributes::values)
+               ));
     }
 
     // Checks if the graph is consistent.
@@ -934,16 +953,16 @@ private:
     // converted to a dynamic graph or vice versa.
 
     template<
-            typename SourceT,
-            typename = std::enable_if_t<
-                    std::is_same<OutEdgeRange, typename std::remove_reference_t<SourceT>::value_type>::value>>
+        typename SourceT,
+        typename = std::enable_if_t<
+            std::is_same<OutEdgeRange, typename std::remove_reference_t<SourceT>::value_type>::value> >
     void setOutEdges(SourceT &&srcOutEdges) {
         outEdges = std::forward<SourceT>(srcOutEdges);
     }
 
     template<
-            typename SourceOutEdgeRangeT,
-            typename = std::enable_if_t<!std::is_same<OutEdgeRange, SourceOutEdgeRangeT>::value>>
+        typename SourceOutEdgeRangeT,
+        typename = std::enable_if_t<!std::is_same<OutEdgeRange, SourceOutEdgeRangeT>::value> >
     void setOutEdges(const std::vector<SourceOutEdgeRangeT> &srcOutEdges) {
         outEdges.resize(srcOutEdges.size() + !dynamic - dynamic);
         if (numVertices() != 0) {
@@ -965,15 +984,15 @@ private:
     // attribute vectors.
 
     template<
-            typename Attr, typename SourceT,
-            typename = std::enable_if_t<std::is_base_of<Attr, std::remove_reference_t<SourceT>>::value>>
+        typename Attr, typename SourceT,
+        typename = std::enable_if_t<std::is_base_of<Attr, std::remove_reference_t<SourceT> >::value> >
     void setAttribute(SourceT &&src, const int /*size*/) {
         Attr::values = std::forward<SourceT>(src).Attr::values;
     }
 
     template<
-            typename Attr, typename SourceT,
-            typename = std::enable_if_t<!std::is_base_of<Attr, SourceT>::value>>
+        typename Attr, typename SourceT,
+        typename = std::enable_if_t<!std::is_base_of<Attr, SourceT>::value> >
     void setAttribute(const SourceT & /*src*/, const int size) {
         Attr::values.resize(size, Attr::defaultValue());
     }
@@ -987,7 +1006,7 @@ private:
     }
 
     AlignedVector<OutEdgeRange> outEdges; // The ranges of outgoing edges of the vertices.
-    AlignedVector<int32_t> edgeHeads;     // The head vertices of the edges.
+    AlignedVector<int32_t> edgeHeads; // The head vertices of the edges.
 
     int edgeCount; // The number of edges in the graph.
 };
@@ -1006,9 +1025,9 @@ inline std::ostream &operator<<(std::ostream &os, const Graph<VertexAttrs, EdgeA
 }
 
 // Alias templates for static and dynamic graphs.
-template<typename VertexAttributes = VertexAttrs<>, typename EdgeAttributes = EdgeAttrs<>>
+template<typename VertexAttributes = VertexAttrs<>, typename EdgeAttributes = EdgeAttrs<> >
 using KaRRiStaticGraph = Graph<VertexAttributes, EdgeAttributes, false>;
-template<typename VertexAttributes = VertexAttrs<>, typename EdgeAttributes = EdgeAttrs<>>
+template<typename VertexAttributes = VertexAttrs<>, typename EdgeAttributes = EdgeAttrs<> >
 using KaRRiDynamicGraph = Graph<VertexAttributes, EdgeAttributes, true>;
 
 // Iteration macros for conveniently looping through vertices or edges of a graph.

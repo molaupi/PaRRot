@@ -35,8 +35,7 @@ ULTRA_Runnables/ULTRAPHAST
 ULTRA_Runnables/Network
 
 # Generated input files
-KARRI/Inputs/
-KARRI/Publications/KaRRi/Inputs/
+Inputs/
 
 # Cache and temporary files
 **/readcache

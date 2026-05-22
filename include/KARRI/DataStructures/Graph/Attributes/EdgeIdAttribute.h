@@ -29,6 +29,7 @@
 
 #include "AbstractAttribute.h"
 #include "../../../Tools/Constants.h"
+#include "Common/Constants.h"
 
 // An attribute associating an ID with each edge of a graph.
 class EdgeIdAttribute : public AbstractAttribute<int> {

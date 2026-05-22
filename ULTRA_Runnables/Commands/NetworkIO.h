@@ -247,3 +247,24 @@ public:
         raptor.writeCSV(outputFile);
     }
 };
+
+class GetRAPTORStopCoordinates : public ParameterizedCommand {
+public:
+    GetRAPTORStopCoordinates(BasicShell& shell)
+        : ParameterizedCommand(
+            shell, "getRAPTORStopCoordinates",
+            "Write the coordinates of stations into a CSV file (in TransformLocations format).")
+    {
+        addParameter("Input file");
+        addParameter("Output csv file");
+    }
+
+    virtual void execute() noexcept
+    {
+        const std::string inputFile = getParameter("Input file");
+        const std::string outputFile = getParameter("Output csv file");
+
+        RAPTOR::Data raptor(inputFile);
+        raptor.writeStopCoordinates(outputFile);
+    }
+};

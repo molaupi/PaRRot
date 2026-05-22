@@ -68,7 +68,7 @@ int main(int argc, char** argv) {
 
     const std::string line = "runScript " + clp.value<std::string>("script");
     shell.printPrompt();
-    shell << line << Shell::newLine;
+    shell << line << ::Shell::newLine;
     shell.interpretCommand(line);
 
     return 0;

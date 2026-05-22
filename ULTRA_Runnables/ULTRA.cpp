@@ -13,8 +13,8 @@
 using namespace Shell;
 
 int main(int argc, char** argv) {
-    CommandLineParser clp(argc, argv);
-    pinThreadToCoreId(clp.value<int>("core", 1));
+    // CommandLineParser clp(argc, argv);
+    // pinThreadToCoreId(clp.value<int>("core", 1));
     checkAsserts();
     ::Shell::Shell shell;
     new BuildCH(shell);
@@ -66,6 +66,21 @@ int main(int argc, char** argv) {
     new RunMultimodalUBMRAPTORQueries(shell);
     new RunMultimodalUBMHydRAQueries(shell);
 
-    shell.run();
+    if (argc == 1) {
+        // If no arguments, enter shell mode
+        std::cout << "Entering interactive shell mode. Type 'help' for a list of available commands." << std::endl;
+        shell.run();
+    } else {
+        // If arguments exist, they should be a valid ULTRA command and its parameters
+        std::stringstream ss;
+        for (int i = 1; i < argc; i++) {
+            ss << argv[i];
+            if (i < argc - 1) ss << " ";
+        }
+        const std::string line = ss.str();
+        shell.printPrompt();
+        shell << line << ::Shell::newLine;
+        shell.interpretCommand(line);
+    }
     return 0;
 }
