@@ -63,10 +63,12 @@ endif (CMAKE_BUILD_TYPE STREQUAL "Debug")
 
 # Dependencies installed via package manager
 find_package(OpenMP)
-find_library(PROJ_LIBRARY proj)
+# find_library(PROJ_LIBRARY proj)
 
 # Dependencies from git submodules and bundled libraries
 add_subdirectory(External)
+
+include(FetchContentDependencies.cmake)
 
 set(PARROT_INCLUDE_DIR ${CMAKE_SOURCE_DIR}/include ${CMAKE_SOURCE_DIR}/PTaxi)
 

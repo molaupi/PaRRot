@@ -1,5 +1,7 @@
 #!/bin/bash
 
+set -euo pipefail
+
 config_file=$1
 
 # Check if config file exists

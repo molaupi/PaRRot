@@ -1,5 +1,7 @@
 #!/bin/bash
 
+set -euo pipefail
+
 config_file=$1
 
 # Check if config file exists
@@ -31,6 +33,11 @@ osm_dir="${cfg[base_input_dir]}/RawData/OSM/"
 # Create output directory if it doesn't exist
 graphs_dir="${cfg[base_input_dir]}/KaRRi/Graphs/"
 mkdir -p "${graphs_dir}"
+
+# Build RoutingKit
+echo "Building RoutingKit."
+rm -r "${cfg[parrot_source_dir]}"/External/RoutingKit/build "${cfg[parrot_source_dir]}"/External/RoutingKit/lib
+make -C "${cfg[parrot_source_dir]}"/External/RoutingKit lib/libroutingkit.so -j
 
 # Build and run OsmToCarAndPassengerGraph executable
 echo "Extracting KaRRi road and pedestrian networks from OSM data."

@@ -1,5 +1,8 @@
 #!/bin/bash
 
+
+set -euo pipefail
+
 config_file=$1
 
 # Check if config file exists
@@ -22,28 +25,35 @@ while IFS='=' read -r key value || [[ -n $key ]]; do
 done < "$config_file"
 
 # Check if required variables are set
+[ -z "${cfg[parrot_source_dir]}" ] && echo "parrot_source_dir is not set in the config file." && exit 1
 [ -z "${cfg[osm_source]}" ] && echo "osm_source is not set in the config file." && exit 1
 [ -z "${cfg[boundary_outer]}" ] && echo "boundary_outer is not set in the config file." && exit 1
 [ -z "${cfg[base_input_dir]}" ] && echo "base_input_dir is not set in the config file." && exit 1
 [ -z "${cfg[instance_name]}" ] && echo "instance_name is not set in the config file." && exit 1
 
-# Set osmium executable path
-if [ -z "${cfg[osmium_executable]}" ]; then
-  cfg[osmium_executable]=osmium # If user did not specify location of osmium executable, assume it is installed on default PATH
+# Set osmfilter executable path
+if [ -z "${cfg[osmfilter_executable]}" ]; then
+  cfg[osmfilter_executable]=osmfilter # If user did not specify location of osmium executable, assume it is installed on default PATH
+fi
+if [ -z "${cfg[osmconvert_executable]}" ]; then
+  cfg[osmconvert_executable]=osmconvert # If user did not specify location of osmium executable, assume it is installed on default PATH
 fi
 
 # Create output directory if it doesn't exist
 osm_dir="${cfg[base_input_dir]}/RawData/OSM/"
 mkdir -p "${osm_dir}"
 
+# Extract outer area from OSM source and convert to .o5m format
+echo "Extracting outer area from OSM source."
+${cfg[osmconvert_executable]} "${cfg[osm_source]}" -B="${cfg[boundary_outer]}" -o="${osm_dir}"/"${cfg[instance_name]}"_base.o5m
+
 # Filter OSM source for required highway types
-${cfg[osmium_executable]} tags-filter -o "${osm_dir}"/"${cfg[instance_name]}"_base_filtered.osm.pbf "${cfg[osm_source]}" w/highway=motorway,motorway_link,trunk,trunk_link,primary,primary_link,secondary,secondary_link,tertiary,tertiary_link,unclassified,residential,living_street,service,pedestrian,track,footway,bridleway,cycleway,steps,path #,corridor
-${cfg[osmium_executable]} sort -o "${osm_dir}"/"${cfg[instance_name]}"_base_filtered_sorted.osm.pbf "${osm_dir}"/"${cfg[instance_name]}"_base_filtered.osm.pbf
-mv -f "${osm_dir}"/"${cfg[instance_name]}"_base_filtered_sorted.osm.pbf "${osm_dir}"/"${cfg[instance_name]}"_base_filtered.osm.pbf
+echo "Filtering OSM data to required ways."
+${cfg[osmfilter_executable]} "${osm_dir}"/"${cfg[instance_name]}"_base.o5m --parameter-file="${cfg[parrot_source_dir]}"/ULTRA_Runnables/osmfilter_parameters.txt -o="${osm_dir}"/"${cfg[instance_name]}"_base_filtered.o5m
 
-# Extract outer area from filtered OSM source
-${cfg[osmium_executable]} extract -p "${cfg[boundary_outer]}" -o "${osm_dir}"/"${cfg[instance_name]}".osm.pbf "${osm_dir}"/"${cfg[instance_name]}"_base_filtered.osm.pbf
-
-# Clean up intermediate file
-rm "${osm_dir}"/"${cfg[instance_name]}"_base_filtered.osm.pbf
+# Convert back to .osm.pbf and clean up
+echo "Cleaning up OSM temporary data."
+${cfg[osmconvert_executable]} "${osm_dir}"/"${cfg[instance_name]}"_base_filtered.o5m -o="${osm_dir}"/"${cfg[instance_name]}".osm.pbf
+rm "${osm_dir}"/"${cfg[instance_name]}"_base.o5m
+rm "${osm_dir}"/"${cfg[instance_name]}"_base_filtered.o5m
 

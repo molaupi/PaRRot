@@ -1,14 +1,38 @@
+# Path to source directory of PaRRot repository 
 parrot_source_dir=.
+
+# Directory where input data will be constructed (can be chosen freely).
 base_input_dir=Inputs/
+
+# Name of instance (can be chosen freely).
 instance_name=Berlin
+
+# Path to directory with GTFS data for transit network encompassing at least outer area
 gtfs_source=Inputs/RawData/GTFS/Germany/
-osm_source=Inputs/RawData/OSM/Germany_Complete.osm.pbf
+
+# Path to OSM source file in PBF format encompassing at least outer area
+osm_source=Inputs/RawData/OSM/germany-latest.osm.pbf
+
+# Boundary polygons of inner and outer area in osmosis .poly format. Outer polygon has to be a rectangle at the moment.
 boundary_inner=Inputs/RawData/Boundaries/Berlin_Inner.poly
 boundary_outer=Inputs/RawData/Boundaries/Berlin_Outer.poly
+
+# Path to source demand file in CSV format with columns lon_orig, lat_orig, lon_dest, lat_dest, req_time
 demand_source=Inputs/RawData/Demand/Berlin-1pct.csv
+
+# First and last day (inclusive) to consider in PT data in YYYYMMDD format
 first_day=20251111
 last_day=20251112
+
+# Number of vehicles to generate
 num_vehicles=1000
+
+# Capacity of ever generate vehicles
 vehicle_capacity=4
-num_threads=8
-osmium_executable=osmium
+
+# Number of threads to use for ULTRA shortcut computation
+num_threads=max
+
+# Path to osmium executables for processing OSM files
+osmconvert_executable=osmconvert
+osmfilter_executable=osmfilter

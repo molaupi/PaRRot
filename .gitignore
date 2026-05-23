@@ -44,3 +44,4 @@ Inputs/
 **/*.log
 **/*~
 
+slurm*.out

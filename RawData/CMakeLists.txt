@@ -27,7 +27,7 @@
 add_executable(ConvertGraph ConvertGraph.cc)
 target_compile_definitions(ConvertGraph PRIVATE CSV_IO_NO_THREAD)
 set_target_properties(ConvertGraph PROPERTIES KASSERT_ASSERTION_LEVEL ${KASSERT_ASSERTION_LEVEL})
-target_link_libraries(ConvertGraph ${PROJ_LIBRARY} routingkit kassert rapidxml fast_cpp_csv_parser)
+target_link_libraries(ConvertGraph proj routingkit kassert rapidxml fast_cpp_csv_parser)
 target_include_directories(ConvertGraph PUBLIC ${PARROT_INCLUDE_DIR})
 
 add_executable(GenerateODPairs GenerateODPairs.cc)
