@@ -29,7 +29,8 @@ quality <- function(path_dir,
                     capacity = 4,
                     run=1,
                     mode_name=NULL, 
-                    algo="parrot") {
+                    algo="parrot",
+                    format_times=TRUE) {
   pattern <- paste0(algo,".*_",vcs,"_1_1_.*_r",radius,"_.*_n",num_vehicles,"_c",capacity,"_run", run)
   files <- dir(
     path = path_dir,
@@ -127,25 +128,27 @@ quality <- function(path_dir,
   df$cost <- mean(asgnstats$cost) # avg cost (according to cost function used in KaRRi) for each vehicle
   
   # Reformat passenger times to MM:SS
-  psg_time_cols <- c(
-    "direct_time_avg",
-    "trip_time_avg", "trip_time_q95",
-    "wait_time_avg", "wait_time_q95", 
-    "detour_abs_direct_avg",
-    "taxi_ride_time_avg", "taxi_ride_time_q95", 
-    "pt_ride_time_avg", "pt_ride_time_q95",
-    "walk_avg", "walk_q95",
-    "wait_for_rp_at_beg_avg"
-  )
-  df[, colnames(df) %in% psg_time_cols] <- convertToMMSS(df[, colnames(df) %in% psg_time_cols])
+  if (format_times) {
+    psg_time_cols <- c(
+      "direct_time_avg",
+      "trip_time_avg", "trip_time_q95",
+      "wait_time_avg", "wait_time_q95", 
+      "detour_abs_direct_avg",
+      "taxi_ride_time_avg", "taxi_ride_time_q95", 
+      "pt_ride_time_avg", "pt_ride_time_q95",
+      "walk_avg", "walk_q95",
+      "wait_for_rp_at_beg_avg"
+    )
+    df[, colnames(df) %in% psg_time_cols] <- convertToMMSS(df[, colnames(df) %in% psg_time_cols])
   
-  # Reformat vehicle times to HH:MM
-  veh_time_cols <- c("stop_time_avg", "empty_time_avg", "occ_time_avg", "op_time_avg")
-  df[, colnames(df) %in% veh_time_cols] <- convertToHHMM(df[, colnames(df) %in% veh_time_cols])
+    # Reformat vehicle times to HH:MM
+    veh_time_cols <- c("stop_time_avg", "empty_time_avg", "occ_time_avg", "op_time_avg")
+    df[, colnames(df) %in% veh_time_cols] <- convertToHHMM(df[, colnames(df) %in% veh_time_cols])
+  }
   
   df["service_rate"] <- c(shareOfMode)
   
-  print(df)
+  return(df)
 }
 
 qualityTaxiAndPT <- function(file_base, num_vehicles=NULL) {
