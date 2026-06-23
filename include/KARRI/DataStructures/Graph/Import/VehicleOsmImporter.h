@@ -67,12 +67,12 @@ class VehicleOsmImporter {
 public:
 
     VehicleOsmImporter(const bool ALLOW_EDGE_MAPPING = false,
-                       const IsRoadAccessibleByCategory &isVehicleAccessible = defaultIsVehicleAccessible,
+                       IsRoadAccessibleByCategory isVehicleAccessible = defaultIsVehicleAccessible,
                        std::function<bool(uint64_t osm_node_id,
                                           const RoutingKit::TagMap &node_tags)> make_routing_node = nullptr)
             : ALLOW_EDGE_MAPPING(ALLOW_EDGE_MAPPING),
               isVehicleAccessible(isVehicleAccessible),
-              make_routing_node(std::move(make_routing_node)) {}
+              make_routing_node(make_routing_node) {}
 
 
     // Opens the input file(s) and reads the header line(s).
@@ -383,7 +383,7 @@ private:
     };
 
     bool ALLOW_EDGE_MAPPING;
-    const IsRoadAccessibleByCategory& isVehicleAccessible;
+    IsRoadAccessibleByCategory isVehicleAccessible;
     std::function<bool(uint64_t osm_node_id, const RoutingKit::TagMap &node_tags)> make_routing_node;
 
     RoutingKit::OSMRoutingGraph osmGraph;     // The graph extracted from OSM data.
