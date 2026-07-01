@@ -26,6 +26,7 @@
 #pragma once
 
 #include "KARRI/Tools/Constants.h"
+#include <iostream>
 
 namespace karri {
 

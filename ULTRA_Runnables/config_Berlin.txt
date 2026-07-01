@@ -33,6 +33,5 @@ vehicle_capacity=4
 # Number of threads to use for ULTRA shortcut computation
 num_threads=max
 
-# Path to osmium executables for processing OSM files
-osmconvert_executable=osmconvert
-osmfilter_executable=osmfilter
+# Path to osmium executable for processing OSM files
+# osmium_executable=<path/to/osmium>
