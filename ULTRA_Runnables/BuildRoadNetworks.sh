@@ -36,7 +36,8 @@ mkdir -p "${graphs_dir}"
 
 # Build RoutingKit
 echo "Building RoutingKit."
-rm -r "${cfg[parrot_source_dir]}"/External/RoutingKit/build "${cfg[parrot_source_dir]}"/External/RoutingKit/lib
+[ ! -e "${cfg[parrot_source_dir]}"/External/RoutingKit/build ] || rm -r "${cfg[parrot_source_dir]}"/External/RoutingKit/build 
+[ ! -e "${cfg[parrot_source_dir]}"/External/RoutingKit/lib ] || rm -r "${cfg[parrot_source_dir]}"/External/RoutingKit/lib 
 make -C "${cfg[parrot_source_dir]}"/External/RoutingKit lib/libroutingkit.so -j
 
 # Build and run OsmToCarAndPassengerGraph executable
