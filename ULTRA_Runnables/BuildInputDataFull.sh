@@ -37,10 +37,30 @@ done < "$config_file"
 [ -z "${cfg[vehicle_capacity]}" ] && echo "vehicle_capacity is not set in the config file." && exit 1
 
 
+echo "Running ProcessRawOSM step."
 bash "${cfg[parrot_source_dir]}"/ULTRA_Runnables/ProcessRawOSM.sh "${config_file}"
+echo "Finished ProcessRawOSM step."
+
+echo "Running BuildRoadNetworks step."
 bash "${cfg[parrot_source_dir]}"/ULTRA_Runnables/BuildRoadNetworks.sh "${config_file}"
+echo "Finished BuildRoadNetworks step."
+
+echo "Running PrepareRequestsAndVehicles step."
 bash "${cfg[parrot_source_dir]}"/ULTRA_Runnables/PrepareRequestsAndVehicles.sh "${config_file}"
+echo "Finished PrepareRequestsAndVehicles step."
+
+echo "Running ProcessRawGTFS step."
 bash "${cfg[parrot_source_dir]}"/ULTRA_Runnables/ProcessRawGTFS.sh "${config_file}"
+echo "Finished ProcessRawGTFS step."
+
+echo "Running PrepareRAPTORData step."
 bash "${cfg[parrot_source_dir]}"/ULTRA_Runnables/PrepareRAPTORData.sh "${config_file}"
+echo "Finished PrepareRAPTORData step."
+
+echo "Running BuildTransferShortcutGraph step."
 bash "${cfg[parrot_source_dir]}"/ULTRA_Runnables/BuildTransferShortcutGraph.sh "${config_file}"
+echo "Finished BuildTransferShortcutGraph step."
+
+echo "Running PrepareRoadPTMapping step."
 bash "${cfg[parrot_source_dir]}"/ULTRA_Runnables/PrepareRoadPTMapping.sh "${config_file}"
+echo "Finished PrepareRoadPTMapping step."

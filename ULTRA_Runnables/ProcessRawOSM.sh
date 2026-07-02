@@ -42,6 +42,7 @@ mkdir -p "${osm_dir}"
 
 
 # Extract network containing all roads, streets and pathways accessible to motor traffic and/or pedestrian traffic from OSM source
+echo "Filtering OSM source to relevant highways (this may take some time)."
 ${cfg[osmium_executable]} tags-filter -o "${osm_dir}"/tmp_osm_source_Highways.osm.pbf "${cfg[osm_source]}" w/highway=motorway,motorway_link,trunk,trunk_link,primary,primary_link,secondary,secondary_link,tertiary,tertiary_link,unclassified,residential,living_street,service,pedestrian,track,footway,bridleway,cycleway,steps,path #,corridor
 ${cfg[osmium_executable]} sort -o "${osm_dir}"/tmp_osm_source_Highways_Sorted.osm.pbf "${osm_dir}"/tmp_osm_source_Highways.osm.pbf
 mv -f "${osm_dir}"/tmp_osm_source_Highways_Sorted.osm.pbf "${osm_dir}"/tmp_osm_source_Highways.osm.pbf
@@ -49,6 +50,7 @@ mv -f "${osm_dir}"/tmp_osm_source_Highways_Sorted.osm.pbf "${osm_dir}"/tmp_osm_s
 # Extract network containing only roads meant for taxi vehicles from OSM source
 ${cfg[osmium_executable]} tags-filter -o "${osm_dir}"/tmp_osm_source_VehicleHighways.osm.pbf "${osm_dir}"/tmp_osm_source_Highways.osm.pbf w/highway=motorway,motorway_link,trunk,trunk_link,primary,primary_link,secondary,secondary_link,tertiary,tertiary_link,unclassified,residential,living_street
 
+echo "Extracting OSM networks for area of operation."
 # Create full network for full area (can be used to extract pedestrian graph for public transport transfers in full area)
 ${cfg[osmium_executable]} extract -p "${cfg[boundary_outer]}" -o "${osm_dir}"/"${cfg[instance_name]}"_FullOuter.osm.pbf "${osm_dir}"/tmp_osm_source_Highways.osm.pbf
 
