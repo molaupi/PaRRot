@@ -6,7 +6,7 @@ It is based on the multimodal PT routing framework [ULTRA](https://github.com/ki
 
 ## Prerequisites
 
-To build PaRRot, you need to have some CMake and Python installed. On Debian and its derivatives
+To build PaRRot, you need to have CMake and Python installed. On Debian and its derivatives
 (such as Ubuntu) the `apt-get` tool can be used:
 
 ```
@@ -24,31 +24,46 @@ $ make -C External/RoutingKit lib/libroutingkit.so
 
 ## Input Data
 The input data for PaRRot entails a PT network, a road network, and a pedestrian network of the observation area.
+The script `ULTRA_Runnables/BuildInputData.sh` constructs the required input data based on OpenStreetMap (OSM) 
+data for the road and pedestrian networks, and GTFS data for the PT network.
+The build script uses a configuration file, in which you can specify the OSM and GTFS source files, 
+boundary polygons for the observation area and other parameters.
+An example configuration file for the city of Berlin is provided in `ULTRA_Runnables/config_Berlin.txt`.
+The required OSM source file for Germany can be downloaded from [Geofabrik](https://download.geofabrik.de/europe/germany.html).
+GTFS data is available through many public transport authorities.
+For Germany, consider [OpenData ÖPNV](https://www.opendata-oepnv.de/).
+The `Inputs` subdirectory provides boundary polygons for Berlin (separate for an inner area = city limits and an outer area = city limits + margin).
+Boundary polygons need to be in [Osmosis polygon format](https://wiki.openstreetmap.org/wiki/Osmosis/Polygon_Filter_File_Format).
+Additionally, the `Inputs` subdirectory specifies example demand data for Berlin, given as origin-destination pairs (in WGS84 degrees latitude/longitude) with request times (offset from midnight on a weekday in tenths of seconds).
+If you want to use your own demand data, you can specify it in a separate file in the same format.
 
-### Public Transport Network
-For the PT network, obtain schedule data in GTFS format.
-Build ULTRA using CMake.
-Follow the steps for constructing RAPTOR input and an ULTRAMcRAPTOR transfer shortcut graph in ULTRA.
+To run the build script, you need to have the [`osmium` tool](https://osmcode.org/osmium-tool/) installed.
+On many Linux distributions, it can be installed using the package manager.
+Otherwise, manually download and build it from the source code.
+In this case, you can specify the path to the `osmium` binary in the configuration file.
 
-### Road Network and Pedestrian Path Network
-KaRRi constructs a pair of road network and pedestrian path network based on OpenStreetMap input data.
-Follow the according steps for KaRRi.
+To run the build script, execute the following command at the top-level directory of the framework:
 
-### Station Mapping
-Create a mapping of the stations of the PT network into the road and pedestrian networks.
-For this, use the `raptorToCSV` command in the ULTRA `Network` executable, which transforms a ULTRA network in RAPTOR
-format to CSV format.
-The output contains a file for stations that includes the coordinates of each station.
-Use the `TransformLocations` to map these coordinates to edges in the road network.
-
-### Station Buckets
-The preprocessing of PaRRot requires computing BCH buckets for every station in the PT network.
-This needs to be done both on the road network and on the pedestrian network.
-Use `BuildStaticBuckets` for this.
-This executable computes the buckets and writes them to disk.
-They can then be read when running PaRRot.
+```
+$ bash ULTRA_Runnables/BuildInputData.sh ULTRA_Runnables/config_Berlin.txt
+```
 
 ## Running PaRRot
 To run PaRRot, build `PTaxi` using CMake and execute with the prepared input data.
 
+For instance, when using the provided configuration for Berlin, the parameters of `PTaxi` should be set as follows:
+```
+PTaxi \
+-veh-g Inputs/KARRI/Graphs/Berlin_veh.gr.bin \
+-psg-g Inputs/KARRI/Graphs/Berlin_psg.gr.bin \
+-v Inputs/KARRI/Vehicles/Berlin_vehicles.csv \
+-r Inputs/KARRI/Requests/Berlin.csv \
+-veh-h Inputs/KARRI/CHs/Berlin_veh_time.ch.bin \
+-psg-h Inputs/KARRI/CHs/Berlin_psg_time.ch.bin \
+-raptor-data Inputs/ULTRA/Berlin/raptor.binary \
+-station-mapping Inputs/PaRRot/Berlin_station_mapping.csv \
+-station-buckets Inputs/PaRRot/Berlin_stations_veh \
+-psg-station-buckets Inputs/PaRRot/Berlin_stations_psg \
+-o <path to output directory>
+```
 
