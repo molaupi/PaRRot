@@ -80,6 +80,12 @@ namespace karri {
             return regularCost;
         }
 
+        // Overload for call sites that pass a request context (unused, since trip cost here does not depend on it).
+        template<typename DistanceLabel, typename RequestContext>
+        static inline DistanceLabel calcKTripCosts(const DistanceLabel &tripTime, const RequestContext &) {
+            return calcKTripCosts(tripTime);
+        }
+
         static constexpr inline int calcWalkingCost(const int walkingDist, const int) {
             // Time is money => walking time is part of passengers trip time so do not count it again
             return WALKING_COST_SCALE * walkingDist;

@@ -467,6 +467,56 @@ namespace karri::stats {
         }
     };
 
+    struct RepositioningAssignmentsPerformanceStats {
+
+        int64_t numEdgeRelaxationsInSearchGraph = 0;
+        int64_t numVerticesOrLabelsSettled = 0;
+        int64_t numEntriesScanned = 0;
+        int64_t searchTime = 0;
+
+        int64_t numCandidateVehicles = 0;
+        int64_t numAssignmentsTried = 0;
+        int64_t tryAssignmentsTime = 0;
+
+        int64_t getTotalTime() const {
+            return searchTime + tryAssignmentsTime;
+        }
+
+        void clear() {
+            numEdgeRelaxationsInSearchGraph = 0;
+            numVerticesOrLabelsSettled = 0;
+            numEntriesScanned = 0;
+            searchTime = 0;
+            numCandidateVehicles = 0;
+            numAssignmentsTried = 0;
+            tryAssignmentsTime = 0;
+        }
+
+        static constexpr auto LOGGER_NAME = "perf_repositioning.csv";
+        static constexpr auto LOGGER_COLS =
+                "num_edge_relaxations,"
+                "num_vertices_or_labels_settled,"
+                "num_entries_scanned,"
+                "search_time,"
+                "num_candidate_vehicles,"
+                "num_assignments_tried,"
+                "try_assignments_time,"
+                "total_time\n";
+
+
+        std::string getLoggerRow() const {
+            std::stringstream ss;
+            ss << numEdgeRelaxationsInSearchGraph << ", "
+               << numVerticesOrLabelsSettled << ", "
+               << numEntriesScanned << ", "
+               << searchTime << ", "
+               << numCandidateVehicles << ", "
+               << numAssignmentsTried << ", "
+               << tryAssignmentsTime << ", "
+               << getTotalTime();
+            return ss.str();
+        }
+    };
 
     struct StationBchPerformanceStats {
         int64_t pickupInitializationTime = 0;
@@ -740,12 +790,14 @@ namespace karri::stats {
         PbnsAssignmentsPerformanceStats pbnsAssignmentsStats{};
         PalsAssignmentsPerformanceStats palsAssignmentsStats{};
         DalsAssignmentsPerformanceStats dalsAssignmentsStats{};
+        RepositioningAssignmentsPerformanceStats repositioningAssignmentsStats{};
 
         int64_t getTotalTime() const {
             return ordAssignmentsStats.getTotalTime() +
                    pbnsAssignmentsStats.getTotalTime() +
                    palsAssignmentsStats.getTotalTime() +
-                   dalsAssignmentsStats.getTotalTime();
+                   dalsAssignmentsStats.getTotalTime() +
+                   repositioningAssignmentsStats.getTotalTime();
         }
 
         void clear() {
@@ -753,6 +805,7 @@ namespace karri::stats {
             pbnsAssignmentsStats.clear();
             palsAssignmentsStats.clear();
             dalsAssignmentsStats.clear();
+            repositioningAssignmentsStats.clear();
         }
 
         static constexpr auto LOGGER_NAME = "perf_overall.csv";
@@ -761,6 +814,7 @@ namespace karri::stats {
                 "pbns_assignments_time,"
                 "pals_assignments_time,"
                 "dals_assignments_time,"
+                "repositioning_assignments_time,"
                 "total_time\n";
 
 
@@ -770,6 +824,7 @@ namespace karri::stats {
                     << pbnsAssignmentsStats.getTotalTime() << ","
                     << palsAssignmentsStats.getTotalTime() << ","
                     << dalsAssignmentsStats.getTotalTime() << ","
+                    << repositioningAssignmentsStats.getTotalTime() << ","
                     << getTotalTime();
             return ss.str();
         }

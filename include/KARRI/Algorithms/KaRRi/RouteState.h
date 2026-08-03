@@ -31,6 +31,7 @@
 #include "../../Tools/Constants.h"
 #include "../../DataStructures/Utilities/DynamicRagged2DArrays.h"
 #include "../../DataStructures/Containers/BitVector.h"
+#include "../../DataStructures/Containers/Subset.h"
 
 #include "BaseObjects/Vehicle.h"
 #include "BaseObjects/Assignment.h"
@@ -76,7 +77,10 @@ namespace karri {
               stopIdOfMaxLegLength(INVALID_ID),
               unusedStopIds(),
               nextUnusedStopId(fleet.size()),
-              maxStopId(fleet.size() - 1) {
+              maxStopId(fleet.size() - 1),
+              idleVehicles(fleet.size()),
+              repositioningTarget(fleet.size(), INVALID_EDGE),
+              repositioningArrTimeAtTarget(fleet.size(), INFTY) {
             for (auto i = 0; i < fleet.size(); ++i) {
                 pos[i].start = i;
                 pos[i].end = i + 1;
@@ -372,6 +376,9 @@ namespace karri {
 
             bool pickupInsertedAsNewStop = false;
             bool dropoffInsertedAsNewStop = false;
+
+            // Vehicle can no longer be idle after an insertion.
+            idleVehicles.remove(vehId);
 
             if ((pickupIndex > 0 || schedDepTimes[start] > now) && pickup.loc == stopLocations[start + pickupIndex]) {
                 KASSERT(start + pickupIndex == end - 1 || pickupIndex == dropoffIndex ||
@@ -678,7 +685,132 @@ namespace karri {
             return ss.str();
         }
 
+        void markAsIdling(const int vehId) {
+            idleVehicles.insert(vehId);
+        }
+
+        void markAsNonIdling(const int vehId) {
+            idleVehicles.remove(vehId);
+        }
+
+        bool isRepositioning(const int vehId) const {
+            KASSERT(vehId >= 0 && vehId < pos.size());
+            return repositioningTarget[vehId] != INVALID_EDGE;
+        }
+
+        int getRepositioningTargetLocation(const int vehId) const {
+            KASSERT(vehId >= 0 && vehId < pos.size());
+            KASSERT(pos[vehId].end - pos[vehId].start == 1);
+            KASSERT(isRepositioning(vehId));
+            return repositioningTarget[vehId];
+        }
+
+        int getRepositioningArrivalTime(const int vehId) const {
+            KASSERT(vehId >= 0 && vehId < pos.size());
+            KASSERT(pos[vehId].end - pos[vehId].start == 1);
+            KASSERT(isRepositioning(vehId));
+            return repositioningArrTimeAtTarget[vehId];
+        }
+
+        void markAsRepositioning(const int vehId, const int now, const int targetLocation, const int arrTimeAtTarget) {
+            KASSERT(vehId >= 0);
+            KASSERT(vehId < pos.size());
+            KASSERT(pos[vehId].end - pos[vehId].start == 1);
+            KASSERT(repositioningTarget[vehId] == INVALID_EDGE);
+            repositioningTarget[vehId] = targetLocation;
+            repositioningArrTimeAtTarget[vehId] = arrTimeAtTarget;
+
+            const int start = pos[vehId].start;
+            schedDepTimes[start] = now;
+            schedArrTimes[start] = now - InputConfig::getInstance().stopTime;
+
+            stopIdToLeeway[stopIds[start]] = INFTY;
+
+            KASSERT(idleVehicles.contains(vehId));
+            idleVehicles.remove(vehId);
+        }
+
+        void finishedRepositioning(const int vehId) {
+            KASSERT(vehId >= 0);
+            KASSERT(vehId < pos.size());
+            KASSERT(pos[vehId].end - pos[vehId].start == 1);
+            KASSERT(isRepositioning(vehId));
+
+            const int location = repositioningTarget[vehId];
+            const int arrTime = repositioningArrTimeAtTarget[vehId];
+
+            repositioningTarget[vehId] = INVALID_EDGE;
+            repositioningArrTimeAtTarget[vehId] = INFTY;
+
+            const int start = pos[vehId].start;
+            stopLocations[start] = location;
+            schedDepTimes[start] = arrTime;
+            schedArrTimes[start] = arrTime;
+            maxArrTimes[start] = arrTime;
+
+            stopIdToLeeway[stopIds[start]] = INFTY;
+
+            KASSERT(!idleVehicles.contains(vehId));
+            idleVehicles.insert(vehId);
+        }
+
+        // Cancels an ongoing repositioning trip and creates an intermediate stop at the vehicle's current location
+        // (analogous to a PBNS reroute) so that a new pickup/dropoff can be inserted after it. We do not compute the
+        // leeway of the new stop here since it is fixed up right afterwards by insert()'s call to updateLeeways().
+        void cancelRepositioningAndCreateIntermediateStopAtCurrentLocation(const int vehId, const int location,
+                                                                           const int now, const int depTime) {
+            KASSERT(vehId >= 0);
+            KASSERT(vehId < pos.size());
+            KASSERT(pos[vehId].end - pos[vehId].start == 1);
+            KASSERT(isRepositioning(vehId));
+            KASSERT(depTime >= now);
+
+            repositioningTarget[vehId] = INVALID_EDGE;
+            repositioningArrTimeAtTarget[vehId] = INFTY;
+
+            stableInsertion(vehId, 1, getUnusedStopId(), pos, stopIds, distancesToNextStop, stopLocations,
+                            schedArrTimes, schedDepTimes, vehWaitTimesPrefixSum, maxArrTimes, occupancies,
+                            numDropoffsPrefixSum, vehWaitTimesUntilDropoffsPrefixSum, isIntermediateStop);
+            const auto start = pos[vehId].start;
+            const auto end = pos[vehId].end;
+            distancesToNextStop[start + 1] = INFTY;
+            distancesToNextStop[start] = INFTY;
+            stopLocations[start + 1] = location;
+            schedArrTimes[start + 1] = depTime;
+            schedDepTimes[start + 1] = depTime;
+            maxArrTimes[start + 1] = depTime;
+            occupancies[start + 1] = occupancies[start];
+            numDropoffsPrefixSum[start + 1] = numDropoffsPrefixSum[start];
+            vehWaitTimesPrefixSum[start + 1] = vehWaitTimesPrefixSum[start];
+            vehWaitTimesUntilDropoffsPrefixSum[start + 1] = vehWaitTimesUntilDropoffsPrefixSum[start];
+            isIntermediateStop[start + 1] = static_cast<uint8_t>(true);
+
+            const int newStopId = stopIds[start + 1];
+            const auto newMinSize = newStopId + 1;
+            if (stopIdToIdOfPrevStop.size() < newMinSize) {
+                stopIdToIdOfPrevStop.resize(newMinSize, INVALID_ID);
+                stopIdToPosition.resize(newMinSize, INVALID_INDEX);
+                stopIdToLeeway.resize(newMinSize, 0);
+                stopIdToVehicleId.resize(newMinSize, INVALID_ID);
+                rangeOfRequestsPickedUpAtStop.resize(newMinSize);
+                rangeOfRequestsDroppedOffAtStop.resize(newMinSize);
+            }
+            KASSERT(start == pos[vehId].start && end == pos[vehId].end);
+            stopIdToVehicleId[newStopId] = vehId;
+            stopIdToIdOfPrevStop[newStopId] = stopIds[start];
+            for (int i = start; i < end; ++i) {
+                stopIdToPosition[stopIds[i]] = i - start;
+            }
+
+            KASSERT(!idleVehicles.contains(vehId));
+        }
+
+        const Subset &getIdleVehicles() const {
+            return idleVehicles;
+        }
+
     private:
+
         int getUnusedStopId() {
             if (!unusedStopIds.empty()) {
                 const auto id = unusedStopIds.top();
@@ -928,5 +1060,10 @@ namespace karri {
 
         // Optional callback for verifying direct distances
         DistanceChecker distanceChecker;
+
+        // Repositioning support
+        Subset idleVehicles;
+        std::vector<int> repositioningTarget;
+        std::vector<int> repositioningArrTimeAtTarget;
     };
 }

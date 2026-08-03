@@ -47,6 +47,7 @@ namespace karri {
             typename PbnsAssignmentsT,
             typename PalsAssignmentsT,
             typename DalsAssignmentsT,
+            typename RepositioningAssignmentsT,
             typename RelevantPdLocsFilterT
     >
     class AssignmentFinder {
@@ -65,6 +66,7 @@ namespace karri {
                          PbnsAssignmentsT &pbnsAssignments,
                          PalsAssignmentsT &palsAssignments,
                          DalsAssignmentsT &dalsAssignments,
+                         RepositioningAssignmentsT &repositioningAssignments,
                          RelevantPdLocsFilterT &relevantPdLocsFilter)
                 : inputGraph(inputGraph),
                   feasibleEllipticPickups(feasibleEllipticPickups),
@@ -78,6 +80,7 @@ namespace karri {
                   pbnsAssignments(pbnsAssignments),
                   palsAssignments(palsAssignments),
                   dalsAssignments(dalsAssignments),
+                  repositioningAssignments(repositioningAssignments),
                   relevantPdLocsFilter(relevantPdLocsFilter) {}
 
         RequestState findBestAssignment(const Request &req, stats::TaxiPerformanceStats &stats) {
@@ -122,6 +125,9 @@ namespace karri {
             pbnsAssignments.findAssignments(relPickupsBeforeNextStop, relOrdinaryDropoffs, relDropoffsBeforeNextStop,
                                             rs, ffPdDistances, pdLocs, stats.pbnsAssignmentsStats);
 
+            // Try repositioning assignments (vehicles currently being repositioned):
+            repositioningAssignments.findAssignments(rs, ffPdDistances, pdLocs, stats.repositioningAssignmentsStats);
+
             return rs;
         }
 
@@ -143,6 +149,7 @@ namespace karri {
             pbnsAssignments.init(requestState, pdLocs, stats.pbnsAssignmentsStats);
             palsAssignments.init(requestState, pdLocs, stats.palsAssignmentsStats);
             dalsAssignments.init(requestState, pdLocs, stats.dalsAssignmentsStats);
+            repositioningAssignments.init();
         }
 
         const InputGraphT &inputGraph;
@@ -158,6 +165,7 @@ namespace karri {
         PbnsAssignmentsT &pbnsAssignments; // Tries PBNS assignments where pickup (and possibly dropoff) is inserted before the next vehicle stop.
         PalsAssignmentsT &palsAssignments; // Tries PALS assignments where pickup and dropoff are inserted after the last stop.
         DalsAssignmentsT &dalsAssignments; // Tries DALS assignments where only the dropoff is inserted after the last stop.
+        RepositioningAssignmentsT &repositioningAssignments; // Tries repositioning assignments using a vehicle that is currently being repositioned.
         RelevantPdLocsFilterT &relevantPdLocsFilter; // Additionally filters feasible pickups/dropoffs found by elliptic BCH searches.
 
     };

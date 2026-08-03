@@ -25,35 +25,53 @@
 
 #pragma once
 
+#include <chrono>
+
 #include "RouteState.h"
 #include "LastStopSearches/OnlyLastStopsAtVerticesBucketSubstitute.h"
+#include "LastStopSearches/RepositioningBucketsEnvironment.h"
 #include "PathTracker.h"
+#include "PointToPointPathComputer.h"
+#include "RepositioningStrategies/RandomRepositioningStrategy.h"
 
 namespace karri {
     // Updates the system state consisting of the route state (schedules of vehicles and additional information about
     // stops) as well as the bucket state (precomputed information for fast shortest path queries to vehicle stops).
     template<typename InputGraphT,
         typename EllipticBucketsEnvT,
+        typename RepositioningBucketsEnvT,
         typename LastStopBucketsEnvT,
         typename StationsInEllipseT,
+        typename CHEnvT,
         typename CurVehLocsT,
         typename PathTrackerT,
+        typename RepositioningStrategyT = RepositioningStrategies::RandomRepositioningStrategy,
         typename LoggerT = NullLogger>
     class SystemStateUpdater {
+
+        static constexpr bool USE_DETERMINISTIC_REPOSITIONING_TARGETS = true;
+
     public:
-        SystemStateUpdater(const InputGraphT &inputGraph,
+        SystemStateUpdater(const InputGraphT &inputGraph, const Fleet &fleet,
                            const CurVehLocsT &curVehLocs,
                            PathTrackerT &pathTracker,
                            RouteState &routeState, EllipticBucketsEnvT &ellipticBucketsEnv,
+                           RepositioningBucketsEnvT &repositioningBucketsEnv,
                            LastStopBucketsEnvT &lastStopBucketsEnv,
-                           StationsInEllipseT &stationsInEllipse)
+                           StationsInEllipseT &stationsInEllipse,
+                           CHEnvT &chEnv,
+                           RepositioningStrategyT &repositioningStrategy)
             : inputGraph(inputGraph),
+              fleet(fleet),
               curVehLocs(curVehLocs),
               pathTracker(pathTracker),
               routeState(routeState),
               ellipticBucketsEnv(ellipticBucketsEnv),
+              repositioningBucketsEnv(repositioningBucketsEnv),
               lastStopBucketsEnv(lastStopBucketsEnv),
               stationsInEllipse(stationsInEllipse),
+              pathComputer(inputGraph, chEnv),
+              repositioningStrategy(repositioningStrategy),
               bestAssignmentsLogger(LogManager<LoggerT>::getLogger("bestassignments.csv",
                                                                    "request_id, "
                                                                    "request_time, "
@@ -73,6 +91,7 @@ namespace karri {
                                                                    "veh_dep_time_at_stop_before_pickup, "
                                                                    "veh_dep_time_at_stop_before_dropoff, "
                                                                    "not_using_vehicle, "
+                                                                   "is_vehicle_repositioning, "
                                                                    "cost\n")),
               // tripTypeLogger(LogManager<LoggerT>::getLogger("triptypes.csv",
               //                                               "request_id,"
@@ -102,7 +121,15 @@ namespace karri {
             chosenPDLocsRoadCatStats.incCountForCat(inputGraph.osmRoadCategory(asgn.dropoff.loc));
             KASSERT(asgn.vehicle != nullptr);
 
+            repositioningStrategy.notifyRequestIncoming(requestState.originalRequest);
+
             const auto vehId = asgn.vehicle->vehicleId;
+
+            if (routeState.isRepositioning(vehId)) {
+                insertRepositioningAssignment(requestState, asgn, stats, externalMaxArrTimeAtDropoff);
+                return;
+            }
+
             const auto numStopsBefore = routeState.numStopsOf(vehId);
             const auto depTimeAtLastStopBefore = routeState.schedDepTimesFor(vehId)[numStopsBefore - 1];
 
@@ -177,17 +204,28 @@ namespace karri {
             stats::UpdatePerformanceStats placeholderStats;
             stationsInEllipse.removeStationsForStop(0, veh.vehicleId, placeholderStats);
             routeState.removeStartOfCurrentLeg(veh.vehicleId);
+        }
+
+        void notifyStartup(const Vehicle &veh) {
+            stats::UpdatePerformanceStats placeholderStats;
+            if (routeState.numStopsOf(veh.vehicleId) == 1) {
+                lastStopBucketsEnv.generateIdleBucketEntries(veh, placeholderStats);
+                routeState.markAsIdling(veh.vehicleId);
+            } else {
+                lastStopBucketsEnv.generateNonIdleBucketEntries(veh, placeholderStats);
+            }
+        }
+
+        void notifyStopCompleted(const Vehicle &veh) {
+            pathTracker.logCompletedStop(veh);
 
             // If vehicle has become idle, update last stop bucket entries
             if (routeState.numStopsOf(veh.vehicleId) == 1) {
                 int64_t updateTimePlaceholder = 0;
                 lastStopBucketsEnv.updateBucketEntries(veh, 0, updateTimePlaceholder);
+                KASSERT(!routeState.getIdleVehicles().contains(veh.vehicleId));
+                routeState.markAsIdling(veh.vehicleId);
             }
-        }
-
-
-        void notifyStopCompleted(const Vehicle &veh) {
-            pathTracker.logCompletedStop(veh);
         }
 
         void notifyVehicleReachedEndOfServiceTime(const Vehicle &veh) {
@@ -198,6 +236,38 @@ namespace karri {
             lastStopBucketsEnv.removeIdleBucketEntries(veh, 0, finalRemovalStatsPlaceholder, veh.endOfServiceTime);
 
             routeState.removeStartOfCurrentLeg(vehId);
+            KASSERT(routeState.getIdleVehicles().contains(vehId));
+            routeState.markAsNonIdling(vehId);
+        }
+
+        // Notify that an idle vehicle should start repositioning. Returns ID of repositioning vehicle.
+        int notifyRepositioningEvent(const int now) {
+            auto [vehId, target] = repositioningStrategy.pickRepositioningVehicleAndTarget(routeState);
+
+            if (vehId == INVALID_ID || target == INVALID_EDGE)
+                return INVALID_ID;
+
+            startRepositioning(fleet[vehId], target, now);
+
+            return vehId;
+        }
+
+        // Notify that a vehicle finished repositioning and is now idle at its new location.
+        // This removes repositioning bucket entries, removes the old stop, and generates idle last-stop buckets.
+        void notifyRepositioningFinished(const Vehicle &veh) {
+            const auto vehId = veh.vehicleId;
+            KASSERT(routeState.isRepositioning(vehId));
+
+            // Remove repositioning bucket entries for this vehicle
+            const auto reposPath = recomputeRepositioningPath(vehId);
+            repositioningBucketsEnv.removeRepositioningBucketEntries(veh, reposPath);
+
+            // Mark vehicle as no longer repositioning, update idling location
+            routeState.finishedRepositioning(vehId);
+
+            // Now vehicle is idle again; generate idle last-stop bucket entries
+            stats::UpdatePerformanceStats placeholderStats;
+            lastStopBucketsEnv.generateIdleBucketEntries(veh, placeholderStats);
         }
 
 
@@ -208,7 +278,7 @@ namespace karri {
                     << requestState.originalReqDirectDist << ", ";
 
             if (result.getBestCost() == INFTY) {
-                bestAssignmentsLogger << "-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,inf\n";
+                bestAssignmentsLogger << "-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,inf\n";
                 return;
             }
 
@@ -237,6 +307,7 @@ namespace karri {
                     << vehDepTimeBeforePickup << ", "
                     << vehDepTimeBeforeDropoff << ", "
                     << "false, "
+                    << routeState.isRepositioning(vehId) << ", "
                     << result.getBestCost() << "\n";
         }
 
@@ -267,6 +338,134 @@ namespace karri {
         }
 
     private:
+        std::vector<int> recomputeRepositioningPath(const int vehId) {
+            KASSERT(routeState.isRepositioning(vehId));
+
+            // Compute repositioning path from previous location (stop 0) to reposition target
+            const auto fromEdge = routeState.stopLocationsFor(vehId)[0];
+            const auto toEdge = routeState.getRepositioningTargetLocation(vehId);
+
+            std::vector<int> pathEdges;
+            pathComputer.computePathEdges(fromEdge, toEdge, pathEdges);
+
+            // Convert edge path to vertex path (use edge heads)
+            std::vector<int> vertexPath;
+            vertexPath.reserve(pathEdges.size());
+            for (const auto &e: pathEdges) vertexPath.push_back(inputGraph.edgeHead(e));
+
+            return vertexPath;
+        }
+
+        void startRepositioning(const Vehicle &veh, const int targetLocation, const int now) {
+            const auto vehId = veh.vehicleId;
+            KASSERT(routeState.numStopsOf(vehId) == 1);
+            KASSERT(routeState.getIdleVehicles().contains(vehId));
+            KASSERT(!routeState.isRepositioning(vehId));
+
+            // Compute path from current vehicle location to repositioning target
+            const auto reposPath = [&] {
+                std::vector<int> pathEdges;
+                pathComputer.computePathEdges(routeState.stopLocationsFor(vehId)[0], targetLocation, pathEdges);
+
+                std::vector<int> vertexPath;
+                vertexPath.reserve(pathEdges.size());
+                for (const auto &e: pathEdges) vertexPath.push_back(inputGraph.edgeHead(e));
+                return vertexPath;
+            }();
+
+            // Calculate arrival time at repositioning target
+            int distToTarget = 0;
+            if (!reposPath.empty()) {
+                std::vector<int> pathEdges;
+                pathComputer.computePathEdges(routeState.stopLocationsFor(vehId)[0], targetLocation, pathEdges);
+                for (const auto &e: pathEdges) distToTarget += inputGraph.travelTime(e);
+            }
+
+            const int arrTimeAtTarget = now + distToTarget;
+
+            // Mark vehicle as repositioning
+            routeState.markAsRepositioning(vehId, now, targetLocation, arrTimeAtTarget);
+
+            // Generate bucket entries for repositioning
+            repositioningBucketsEnv.generateRepositioningBucketEntries(veh, reposPath);
+
+            // Remove last stop bucket entries since vehicle is no longer idle
+            stats::UpdatePerformanceStats placeholderStats;
+            lastStopBucketsEnv.removeIdleBucketEntries(veh, 0, placeholderStats, now);
+        }
+
+        // Inserts an assignment for a vehicle that is currently being repositioned. This cancels the repositioning
+        // and creates an intermediate stop at the vehicle's current location (analogous to a PBNS reroute), after
+        // which the pickup and dropoff are inserted like a regular PALS assignment. Since the vehicle had no
+        // elliptic or non-idle last-stop bucket entries while repositioning, we generate all of them for the new
+        // route from scratch.
+        void insertRepositioningAssignment(const RequestState &requestState, const Assignment &asgnIn,
+                                           stats::UpdatePerformanceStats &stats,
+                                           const int externalMaxArrTimeAtDropoff) {
+            Assignment asgn = asgnIn;
+            const auto vehId = asgn.vehicle->vehicleId;
+            KASSERT(routeState.isRepositioning(vehId));
+
+            KaRRiTimer timer;
+            const auto reposPath = recomputeRepositioningPath(vehId);
+            repositioningBucketsEnv.removeRepositioningBucketEntries(*asgn.vehicle, reposPath);
+            const auto delReposBucketEntriesTime = timer.elapsed<std::chrono::nanoseconds>();
+            stats.updateRoutesTime += delReposBucketEntriesTime;
+
+            KASSERT(curVehLocs.knowsCurrentLocationOf(vehId));
+            const auto &vehicleLocation = curVehLocs.getCurrentLocationOf(vehId);
+            routeState.cancelRepositioningAndCreateIntermediateStopAtCurrentLocation(
+                vehId, vehicleLocation.location, requestState.now(), vehicleLocation.depTimeAtHead);
+
+            // Due to the intermediate stop, the pickup and dropoff are now inserted after stop 1 in the route.
+            // The assignment is now the same as a regular PALS assignment after the intermediate stop.
+            ++asgn.pickupStopIdx;
+            ++asgn.dropoffStopIdx;
+
+            using namespace time_utils;
+            const auto asgnDepTimeAtPickup = getActualDepTimeAtPickup(asgn, requestState, routeState);
+            const auto asgnInitialPickupDetour = calcInitialPickupDetour(
+                asgn, asgnDepTimeAtPickup, requestState, routeState);
+            const auto asgnDropoffAtExistingStop = isDropoffAtExistingStop(asgn, routeState);
+            const auto asgnArrTimeAtDropoff = getArrTimeAtDropoff(asgnDepTimeAtPickup, asgn,
+                                                                  asgnInitialPickupDetour,
+                                                                  asgnDropoffAtExistingStop, routeState);
+            const auto latestVehDepTimeAtPickup = requestState.getHardConstraintMaxDepTimeAtPickup(
+                asgnDepTimeAtPickup);
+            const auto asgnTripTime = asgnArrTimeAtDropoff + asgn.dropoff.walkingDist - requestState.
+                                      originalRequest.requestTime;
+            const auto constraintMaxArrTimeAtDropoff = requestState.getHardConstraintMaxArrTimeAtDropoff(
+                asgn.dropoff, asgnTripTime);
+            const int latestVehArrTimeAtDropoff = std::min(externalMaxArrTimeAtDropoff, constraintMaxArrTimeAtDropoff);
+
+            timer.restart();
+            auto [pickupIndex, dropoffIndex] = routeState.insert(asgn, requestState, latestVehDepTimeAtPickup,
+                                                                 latestVehArrTimeAtDropoff);
+            const auto routeUpdateTime = timer.elapsed<std::chrono::nanoseconds>();
+            stats.updateRoutesTime += routeUpdateTime;
+
+            // Generate all elliptic and non-idle last-stop bucket entries for the route since there were none
+            // before (the vehicle had repositioning bucket entries instead).
+            const int numStops = routeState.numStopsOf(vehId);
+            for (int i = 0; i < numStops - 1; ++i) {
+                ellipticBucketsEnv.generateSourceBucketEntries(*asgn.vehicle, i, stats);
+                ellipticBucketsEnv.generateTargetBucketEntries(*asgn.vehicle, i + 1, stats);
+                stationsInEllipse.computeNewStationsInEllipsesForStop(i + 1, vehId, stats);
+            }
+            stationsInEllipse.updateStationsInEllipseForChangedLeewayForAllStopsOf(vehId, stats);
+            if constexpr (EllipticBucketsEnvT::SORTED_BY_REM_LEEWAY) {
+                ellipticBucketsEnv.updateLeewayInSourceBucketsForAllStopsOf(*asgn.vehicle, stats);
+                ellipticBucketsEnv.updateLeewayInTargetBucketsForAllStopsOf(*asgn.vehicle, stats);
+            }
+            lastStopBucketsEnv.generateNonIdleBucketEntries(*asgn.vehicle, stats);
+
+            const int pickupStopId = routeState.stopIdsFor(vehId)[pickupIndex];
+            const int dropoffStopId = routeState.stopIdsFor(vehId)[dropoffIndex];
+            KASSERT(pickupStopId >= 0 && dropoffStopId >= 0);
+
+            pathTracker.registerPdEventsForBestAssignment(requestState, pickupStopId, dropoffStopId);
+        }
+
         void writeTaxiPrepStats(const int requestId, const std::string &name_prefix,
                                 const stats::TaxiPrepStats &stats) const {
             logPerformance(requestId, name_prefix, stats);
@@ -512,6 +711,7 @@ namespace karri {
         // }
 
         const InputGraphT &inputGraph;
+        const Fleet &fleet;
         const CurVehLocsT &curVehLocs;
         PathTrackerT &pathTracker;
 
@@ -520,10 +720,15 @@ namespace karri {
 
         // Bucket state
         EllipticBucketsEnvT &ellipticBucketsEnv;
+        RepositioningBucketsEnvT &repositioningBucketsEnv;
         LastStopBucketsEnvT &lastStopBucketsEnv;
 
         // Stations in Ellipse
         StationsInEllipseT &stationsInEllipse;
+
+        // Path computation for repositioning
+        PointToPointPathComputer<InputGraphT, CHEnvT> pathComputer;
+        RepositioningStrategyT &repositioningStrategy;
 
         // Performance Loggers
         LoggerT &bestAssignmentsLogger;

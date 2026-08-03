@@ -16,18 +16,21 @@ namespace karri {
         typename OrdAssignmentsT,
         typename PbnsAssignmentsT,
         typename PalsAssignmentsT,
-        typename DalsAssignmentsT
+        typename DalsAssignmentsT,
+        typename RepositioningAssignmentsT
     >
     class TaxiTripFinder {
     public:
         TaxiTripFinder(OrdAssignmentsT &ordinaryAssigments,
                             PbnsAssignmentsT &pbnsAssignments,
                             PalsAssignmentsT &palsAssignments,
-                            DalsAssignmentsT &dalsAssignments)
+                            DalsAssignmentsT &dalsAssignments,
+                            RepositioningAssignmentsT &repositioningAssignments)
             : ordAssignments(ordinaryAssigments),
               pbnsAssignments(pbnsAssignments),
               palsAssignments(palsAssignments),
-              dalsAssignments(dalsAssignments) {
+              dalsAssignments(dalsAssignments),
+              repositioningAssignments(repositioningAssignments) {
         }
 
         TaxiResult findBestAssignment(const RequestState &requestState, const KaRRiBaseInfo &baseInfo, stats::TaxiPerformanceStats &stats) {
@@ -53,6 +56,10 @@ namespace karri {
                                             baseInfo.relDropoffsBeforeNextStop, requestState,
                                             baseInfo.pdDistances, baseInfo.pdLocs, result, stats.pbnsAssignmentsStats);
 
+            // Try repositioning assignments (vehicles currently being repositioned):
+            repositioningAssignments.findAssignments(requestState, baseInfo.pdDistances, baseInfo.pdLocs, result,
+                                                     stats.repositioningAssignmentsStats);
+
             return result;
         }
 
@@ -63,6 +70,7 @@ namespace karri {
             pbnsAssignments.init(requestState, pdLocs, stats.pbnsAssignmentsStats);
             palsAssignments.init(requestState, pdLocs, stats.palsAssignmentsStats);
             dalsAssignments.init(requestState, pdLocs, stats.dalsAssignmentsStats);
+            repositioningAssignments.init();
         }
 
 
@@ -74,5 +82,7 @@ namespace karri {
         PalsAssignmentsT &palsAssignments;
         // Tries DALS assignments where only the dropoff is inserted after the last stop.
         DalsAssignmentsT &dalsAssignments;
+        // Tries repositioning assignments using a vehicle that is currently being repositioned.
+        RepositioningAssignmentsT &repositioningAssignments;
     };
 }
