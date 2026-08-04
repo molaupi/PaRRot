@@ -629,8 +629,7 @@ namespace karri {
                                karri::stats::UpdatePerformanceStats &updateStats) {
             const auto &ptLeg = combinedResult.getPTLeg();
             const auto &firstTaxiLeg = combinedResult.getFirstTaxiLeg();
-            KASSERT(ptLeg.getDepartureTimeAtFirstStation() < ptLeg.getArrivalTimeAtLastStation(),
-                    "Journey: " << ptLeg.getBestJourney());
+            KASSERT(ptLeg.getDepartureTimeAtFirstStation() < ptLeg.getArrivalTimeAtLastStation());
 
             // Apply first taxi leg assignment
             if (combinedResult.isInitialTransferByTaxi()) {
