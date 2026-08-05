@@ -132,6 +132,7 @@ namespace karri {
 
             const auto numStopsBefore = routeState.numStopsOf(vehId);
             const auto depTimeAtLastStopBefore = routeState.schedDepTimesFor(vehId)[numStopsBefore - 1];
+            const bool wasIdle = routeState.getIdleVehicles().contains(vehId);
 
             // If the vehicle has to be rerouted at its current location for a PBNS assignment, we introduce an
             // intermediate stop at its current location representing the rerouting. We have to compute the vehicle's
@@ -182,7 +183,7 @@ namespace karri {
 
             updateEllipticBucketsForSingleAssignment(asgn, pickupIndex, dropoffIndex, rerouteVehicle, stats);
             updateLastStopBucketsForSingleAssignment(asgn, pickupIndex, dropoffIndex, rerouteVehicle,
-                                                     depTimeAtLastStopBefore, stats, requestState.now());
+                                                     depTimeAtLastStopBefore, wasIdle, stats, requestState.now());
             // updateBucketState(asgn, pickupIndex, dropoffIndex, rerouteVehicle, depTimeAtLastStopBefore, requestState.now(),
             //                   stats);
 
@@ -363,23 +364,12 @@ namespace karri {
             KASSERT(!routeState.isRepositioning(vehId));
 
             // Compute path from current vehicle location to repositioning target
-            const auto reposPath = [&] {
-                std::vector<int> pathEdges;
-                pathComputer.computePathEdges(routeState.stopLocationsFor(vehId)[0], targetLocation, pathEdges);
+            std::vector<int> pathEdges;
+            const int distToTarget = pathComputer.computePathEdges(routeState.stopLocationsFor(vehId)[0], targetLocation, pathEdges);
 
-                std::vector<int> vertexPath;
-                vertexPath.reserve(pathEdges.size());
-                for (const auto &e: pathEdges) vertexPath.push_back(inputGraph.edgeHead(e));
-                return vertexPath;
-            }();
-
-            // Calculate arrival time at repositioning target
-            int distToTarget = 0;
-            if (!reposPath.empty()) {
-                std::vector<int> pathEdges;
-                pathComputer.computePathEdges(routeState.stopLocationsFor(vehId)[0], targetLocation, pathEdges);
-                for (const auto &e: pathEdges) distToTarget += inputGraph.travelTime(e);
-            }
+            std::vector<int> vertexPath;
+            vertexPath.reserve(pathEdges.size());
+            for (const auto &e: pathEdges) vertexPath.push_back(inputGraph.edgeHead(e));
 
             const int arrTimeAtTarget = now + distToTarget;
 
@@ -387,7 +377,7 @@ namespace karri {
             routeState.markAsRepositioning(vehId, now, targetLocation, arrTimeAtTarget);
 
             // Generate bucket entries for repositioning
-            repositioningBucketsEnv.generateRepositioningBucketEntries(veh, reposPath);
+            repositioningBucketsEnv.generateRepositioningBucketEntries(veh, vertexPath);
 
             // Remove last stop bucket entries since vehicle is no longer idle
             stats::UpdatePerformanceStats placeholderStats;
@@ -586,6 +576,7 @@ namespace karri {
                                                       const int pickupIndex, const int dropoffIndex,
                                                       const bool insertedIntermediateStopForReroute,
                                                       const int depTimeAtLastStopBefore,
+                                                      const bool wasIdle,
                                                       stats::UpdatePerformanceStats &stats,
                                                       const int now) {
             const auto vehId = asgn.vehicle->vehicleId;
@@ -608,7 +599,8 @@ namespace karri {
 
             if (dropoffIndex == numStops - 1 && !dropoffAtExistingStop) {
                 // If dropoff is the new last stop, remove entries for former last stop, and generate for dropoff
-                if (formerLastStopIdx == 0) {
+                if (wasIdle) {
+                    KASSERT(formerLastStopIdx == 0);
                     lastStopBucketsEnv.removeIdleBucketEntries(*asgn.vehicle, formerLastStopIdx, stats, now);
                 } else {
                     lastStopBucketsEnv.removeNonIdleBucketEntries(*asgn.vehicle, formerLastStopIdx, stats, now);

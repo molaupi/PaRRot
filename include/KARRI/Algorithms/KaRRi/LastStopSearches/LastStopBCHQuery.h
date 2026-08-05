@@ -82,7 +82,6 @@ namespace karri {
                             ++numEntriesScannedHere;
 
                             const int &vehId = entry.targetId;
-                            assert(search.routeState.numStopsOf(vehId) == 1);
                             const DistanceLabel distFromLastStopToV = entry.distToTarget;
                             const DistanceLabel distViaV = distFromLastStopToV + distFromV;
                             const auto atLeastAsGoodAsCurBest = ~search.pruner.doesDistanceNotAdmitBestAsgn(distViaV, true);

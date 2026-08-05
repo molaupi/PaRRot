@@ -192,7 +192,6 @@ namespace karri {
         // already known.
         void computeExactDistancesVia(const Vehicle &vehicle, const PDLocs& pdLocs) {
 
-            assert(routeState.numStopsOf(vehicle.vehicleId) > 1);
             curLeeway = routeState.leewayOfLegStartingAt(routeState.stopIdsFor(vehicle.vehicleId)[0]);
             if (waitingQueue.empty()) return;
 

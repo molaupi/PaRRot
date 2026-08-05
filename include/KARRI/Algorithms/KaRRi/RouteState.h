@@ -297,7 +297,9 @@ namespace karri {
             KASSERT(dropoffIndex < numStops);
 
 
-            if (numStops > 1 && pickupIndex == 0) {
+            if (isRepositioning(vehId)) {
+                // TODO: Check from current vehicle location to pickup
+            } else if (numStops > 1 && pickupIndex == 0) {
                 // TODO: Check from current vehicle location to pickup
             } else if (pickup.loc == stopLocations[start + pickupIndex]) {
                 // Pickup at existing stop

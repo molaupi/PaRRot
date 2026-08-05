@@ -172,7 +172,7 @@ namespace karri {
                 currentPickups[i] = nullptr;
             }
             // reset currentMinPDDistances to INFTY
-            currentMinPDDistances = DistanceLabel();
+            currentMinPDDistances = DistanceLabel(INFTY);
         }
 
         void computeExactAndTryAssignments(const PDDistances &pdDistances, const PDLocs &pdLocs,
