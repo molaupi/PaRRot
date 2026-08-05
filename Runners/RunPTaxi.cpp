@@ -853,13 +853,6 @@ KARRI_DALS_STRATEGY == KARRI_COL || KARRI_DALS_STRATEGY == KARRI_IND
                                    lastStopBucketsEnv, stationsInEllipse, *vehChEnv, repositioningStrategy);
 
 
-        // Initialize last stop state for initial locations of vehicles
-        stats::UpdatePerformanceStats genInitialLastStopBucketsStats;
-        for (const auto &veh: fleet) {
-            lastStopBucketsEnv.generateIdleBucketEntries(veh, genInitialLastStopBucketsStats);
-        }
-
-
         using ModeChoiceCriterion = std::conditional_t<KARRI_MODE_CHOICE_METHOD == KARRI_MODE_CHOICE_LOGIT,
             parrot::mode_choice::UtilityLogitCriterion,
             parrot::mode_choice::CostCriterion>;

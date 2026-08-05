@@ -223,7 +223,7 @@ namespace karri {
             // If vehicle has become idle, update last stop bucket entries
             if (routeState.numStopsOf(veh.vehicleId) == 1) {
                 int64_t updateTimePlaceholder = 0;
-                lastStopBucketsEnv.updateBucketEntries(veh, 0, updateTimePlaceholder);
+                lastStopBucketsEnv.updateBucketEntries(veh, 0, /* isIdle = */ true, updateTimePlaceholder);
                 KASSERT(!routeState.getIdleVehicles().contains(veh.vehicleId));
                 routeState.markAsIdling(veh.vehicleId);
             }
@@ -382,6 +382,7 @@ namespace karri {
             // Remove last stop bucket entries since vehicle is no longer idle
             stats::UpdatePerformanceStats placeholderStats;
             lastStopBucketsEnv.removeIdleBucketEntries(veh, 0, placeholderStats, now);
+            KASSERT(lastStopBucketsEnv.verifyBucketConsistency());
         }
 
         // Inserts an assignment for a vehicle that is currently being repositioned. This cancels the repositioning
@@ -448,6 +449,7 @@ namespace karri {
                 ellipticBucketsEnv.updateLeewayInTargetBucketsForAllStopsOf(*asgn.vehicle, stats);
             }
             lastStopBucketsEnv.generateNonIdleBucketEntries(*asgn.vehicle, stats);
+            KASSERT(lastStopBucketsEnv.verifyBucketConsistency());
 
             const int pickupStopId = routeState.stopIdsFor(vehId)[pickupIndex];
             const int dropoffStopId = routeState.stopIdsFor(vehId)[dropoffIndex];
@@ -606,12 +608,15 @@ namespace karri {
                     lastStopBucketsEnv.removeNonIdleBucketEntries(*asgn.vehicle, formerLastStopIdx, stats, now);
                 }
                 lastStopBucketsEnv.generateNonIdleBucketEntries(*asgn.vehicle, stats);
-            } else if (depTimeAtLastChanged) {
+            } else if (depTimeAtLastChanged && !wasIdle) {
                 // If last stop does not change but departure time at last changes, update last stop bucket entries
-                // accordingly.
-                lastStopBucketsEnv.updateBucketEntries(*asgn.vehicle, numStops - 1,
+                // accordingly. If the vehicle was idle, its (idle) last-stop entries store a pure distance
+                // independent of departure time, so no update is needed in that case.
+                lastStopBucketsEnv.updateBucketEntries(*asgn.vehicle, numStops - 1, /* isIdle = */ false,
                                                        stats.lastStopBucketsUpdateEntriesTime);
             }
+
+            KASSERT(lastStopBucketsEnv.verifyBucketConsistency());
         }
 
         //

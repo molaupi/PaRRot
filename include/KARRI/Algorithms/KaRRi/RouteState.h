@@ -98,6 +98,10 @@ namespace karri {
             }
         }
 
+        int numVehicles() const {
+            return pos.size();
+        }
+
         const int &getMaxStopId() const {
             return maxStopId;
         }

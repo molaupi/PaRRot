@@ -230,7 +230,8 @@ namespace karri {
                                           entriesVisitedInSearch))),
                   nonIdleEntryDelSearch(chEnv.getForwardSearch(
                           DeleteNonIdleEntry(bucketContainer, vehicleId,
-                                             verticesVisitedInSearch, entriesVisitedInSearch))) {}
+                                             verticesVisitedInSearch, entriesVisitedInSearch))),
+                  verifyVehiclesSeen(routeState.numVehicles()) {}
 
 
         const BucketContainer &getBuckets() const {
@@ -257,7 +258,11 @@ namespace karri {
         //      more precise bucket sorting and pruning.
         // When a vehicle becomes non-idle after being idle, it's last stop always changes, so the update is expressed
         // as a delete operation for the old location and a generate operation for the new location instead.
-        void updateBucketEntries(const Vehicle &veh, const int stopIndex,
+        // isIdle (Case 2 vs Case 1) must be given explicitly by the caller rather than derived from
+        // numStopsOf() == 1: a vehicle can have exactly one (still non-idle) stop while it is still dwelling at what
+        // will become its last stop, before it has actually completed that stop and been marked idle (see
+        // SystemStateUpdater::notifyStopCompleted()).
+        void updateBucketEntries(const Vehicle &veh, const int stopIndex, const bool isIdle,
                                  int64_t& updateTime) {
 
             KaRRiTimer timer;
@@ -266,7 +271,7 @@ namespace karri {
 
             vehicleId = veh.vehicleId;
             const auto &numStops = routeState.numStopsOf(veh.vehicleId);
-            const bool isIdle = numStops == 1;
+            KASSERT(!isIdle || numStops == 1);
             depTimeOfVehAtLastStop = routeState.schedDepTimesFor(veh.vehicleId)[numStops - 1];
 
             entriesVisitedInSearch = 0;
@@ -310,6 +315,26 @@ namespace karri {
             }
 
             return vehIds;
+        }
+
+        bool verifyBucketConsistency() {
+            // Check that every vehicle can only occur at most once per vertex:
+            FORALL_VERTICES(inputGraph, v) {
+                verifyVehiclesSeen.clear();
+                for (const auto &entry : bucketContainer.getIdleBucketOf(v)) {
+                    const bool noDuplicate = verifyVehiclesSeen.insert(entry.targetId);
+                    KASSERT(noDuplicate);
+                    if (!noDuplicate)
+                        return false;
+                }
+                for (const auto &entry : bucketContainer.getNonIdleBucketOf(v)) {
+                    const bool noDuplicate = verifyVehiclesSeen.insert(entry.targetId);
+                    KASSERT(noDuplicate);
+                    if (!noDuplicate)
+                        return false;
+                }
+            }
+            return true;
         }
 
     private:
@@ -400,6 +425,8 @@ namespace karri {
         UpdateForVehicleHasBecomeIdleSearch updateForVehicleHasBecomeIdleSearch;
         DeleteIdleEntriesSearch idleEntryDelSearch;
         DeleteNonIdleEntriesSearch nonIdleEntryDelSearch;
+
+        Subset verifyVehiclesSeen;
 
     };
 }

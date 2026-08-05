@@ -35,10 +35,8 @@
 #include "../RouteState.h"
 
 namespace karri {
-
     template<typename InputGraphT, typename CHEnvT>
     class UnsortedLastStopBucketsEnvironment {
-
         // .targetId is vehicle ID, .distToTarget is distance from last stop to vertex
         using LastStopEntry = BucketEntry;
 
@@ -48,9 +46,9 @@ namespace karri {
         using BucketContainer = DynamicBucketContainer<LastStopEntry>;
 
     private:
-
         struct StopWhenDistanceExceeded {
-            explicit StopWhenDistanceExceeded(const int &maxDist) : maxDist(maxDist) {}
+            explicit StopWhenDistanceExceeded(const int &maxDist) : maxDist(maxDist) {
+            }
 
             template<typename DistLabelT, typename DistLabelContT>
             bool operator()(const int, DistLabelT &distToV, const DistLabelContT &) {
@@ -63,7 +61,8 @@ namespace karri {
 
         struct GenerateEntry {
             explicit GenerateEntry(BucketContainer &bucketContainer, int &curVehId, int &verticesVisited)
-                    : bucketContainer(bucketContainer), curVehId(curVehId), verticesVisited(verticesVisited) {}
+                : bucketContainer(bucketContainer), curVehId(curVehId), verticesVisited(verticesVisited) {
+            }
 
             template<typename DistLabelT, typename DistLabelContT>
             bool operator()(const int v, DistLabelT &distToV, const DistLabelContT &) {
@@ -80,9 +79,10 @@ namespace karri {
 
         struct DeleteEntry {
             explicit DeleteEntry(BucketContainer &bucketContainer, int &curVehId, int &verticesVisited,
-                                     int &entriesVisited)
-                    : bucketContainer(bucketContainer), curVehId(curVehId), verticesVisited(verticesVisited),
-                      entriesVisited(entriesVisited) {}
+                                 int &entriesVisited)
+                : bucketContainer(bucketContainer), curVehId(curVehId), verticesVisited(verticesVisited),
+                  entriesVisited(entriesVisited) {
+            }
 
             template<typename DistLabelT, typename DistLabelContT>
             bool operator()(const int v, DistLabelT &, const DistLabelContT &) {
@@ -99,20 +99,21 @@ namespace karri {
         };
 
     public:
-
         UnsortedLastStopBucketsEnvironment(const InputGraphT &inputGraph, const CHEnvT &chEnv,
-                                         const RouteState &routeState)
-                : inputGraph(inputGraph),
-                  ch(chEnv.getCH()),
-                  searchGraph(ch.upwardGraph()),
-                  routeState(routeState),
-                  bucketContainer(searchGraph.numVertices()),
-                  entryGenSearch(
-                          chEnv.getForwardSearch(GenerateEntry(bucketContainer, vehicleId, verticesVisitedInSearch),
-                                                 StopWhenDistanceExceeded(maxDetourUntilEndOfServiceTime))),
-                  entryDelSearch(chEnv.getForwardSearch(
-                          DeleteEntry(bucketContainer, vehicleId, verticesVisitedInSearch,
-                                          entriesVisitedInSearch))) {}
+                                           const RouteState &routeState)
+            : inputGraph(inputGraph),
+              ch(chEnv.getCH()),
+              searchGraph(ch.upwardGraph()),
+              routeState(routeState),
+              bucketContainer(searchGraph.numVertices()),
+              entryGenSearch(
+                  chEnv.getForwardSearch(GenerateEntry(bucketContainer, vehicleId, verticesVisitedInSearch),
+                                         StopWhenDistanceExceeded(maxDetourUntilEndOfServiceTime))),
+              entryDelSearch(chEnv.getForwardSearch(
+                  DeleteEntry(bucketContainer, vehicleId, verticesVisitedInSearch,
+                              entriesVisitedInSearch))),
+              verifyVehiclesSeen(routeState.numVehicles()) {
+        }
 
 
         const BucketContainer &getBuckets() const {
@@ -126,7 +127,7 @@ namespace karri {
             generateBucketEntries(veh, stats);
         }
 
-        void generateNonIdleBucketEntries(const Vehicle& veh,
+        void generateNonIdleBucketEntries(const Vehicle &veh,
                                           karri::stats::UpdatePerformanceStats &stats) {
             // No differentiation between idle and non-idle vehicles.
             generateBucketEntries(veh, stats);
@@ -134,7 +135,6 @@ namespace karri {
 
         void generateBucketEntries(const Vehicle &veh,
                                    karri::stats::UpdatePerformanceStats &stats) {
-
             KaRRiTimer timer;
             vehicleId = veh.vehicleId;
             const auto &numStops = routeState.numStopsOf(veh.vehicleId);
@@ -150,7 +150,7 @@ namespace karri {
             stats.lastStopBucketsGenerateEntriesTime += time;
         }
 
-        void updateBucketEntries(const Vehicle &, const int, int64_t &) {
+        void updateBucketEntries(const Vehicle &, const int, const bool, int64_t &) {
             // No op since bucket updates are only needed for buckets that are sorted by arrival time at last stop
             // for non-idle vehicles.
         }
@@ -162,7 +162,7 @@ namespace karri {
         }
 
         void removeNonIdleBucketEntries(const Vehicle &veh, const int prevLastStopIdx,
-                                     karri::stats::UpdatePerformanceStats &stats) {
+                                        karri::stats::UpdatePerformanceStats &stats) {
             // No differentiation between idle and non-idle vehicles.
             removeBucketEntries(veh, prevLastStopIdx, stats);
         }
@@ -186,8 +186,21 @@ namespace karri {
             stats.lastStopBucketsDeleteEntriesTime += time;
         }
 
-    private:
+        bool verifyBucketConsistency() {
+            // Check that every vehicle can only occur at most once per vertex:
+            FORALL_VERTICES(inputGraph, v) {
+                verifyVehiclesSeen.clear();
+                for (const auto &entry: bucketContainer.getBucketOf(v)) {
+                    const bool noDuplicate = verifyVehiclesSeen.insert(entry.targetId);
+                    KASSERT(noDuplicate);
+                    if (!noDuplicate)
+                        return false;
+                }
+            }
+            return true;
+        }
 
+    private:
         using GenerateEntriesSearch = typename CHEnvT::template UpwardSearch<GenerateEntry, StopWhenDistanceExceeded>;
         using DeleteEntriesSearch = typename CHEnvT::template UpwardSearch<DeleteEntry>;
 
@@ -207,5 +220,6 @@ namespace karri {
         GenerateEntriesSearch entryGenSearch;
         DeleteEntriesSearch entryDelSearch;
 
+        Subset verifyVehiclesSeen;
     };
 }

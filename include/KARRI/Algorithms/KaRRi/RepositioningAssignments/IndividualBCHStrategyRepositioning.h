@@ -178,6 +178,8 @@ namespace karri {
         void computeExactAndTryAssignments(const PDDistances &pdDistances, const PDLocs &pdLocs,
             int64_t &numAssignmentsTried) {
             Assignment asgn;
+            asgn.pickupStopIdx = 0;
+            asgn.dropoffStopIdx = 0;
             for (const auto vehId : candidateSubset) {
                 const auto &veh = fleet[vehId];
 
@@ -188,6 +190,10 @@ namespace karri {
                     curVehLocToPickupSearches.addPickupForProcessing(p.id, INFTY);
                 }
 
+                if (curReqState->originalRequest.requestId == 3391 && vehId == 2695) {
+                    std::cout << "";
+                }
+
                 curVehLocToPickupSearches.computeExactDistancesVia(veh, pdLocs);
 
                 for (const auto &p : pdLocs.pickups) {
@@ -196,8 +202,6 @@ namespace karri {
                     asgn.pickup = p;
                     KASSERT(curVehLocToPickupSearches.knowsDistance(veh.vehicleId, p.id));
                     asgn.distToPickup = curVehLocToPickupSearches.getDistance(veh.vehicleId, p.id);
-                    asgn.pickupStopIdx = 0;
-                    asgn.dropoffStopIdx = 0;
 
                     for (const auto &d : pdLocs.dropoffs) {
                         asgn.dropoff = d;
