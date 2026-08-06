@@ -32,6 +32,7 @@
 #include "../../Tools/Timer.h"
 #include "BaseObjects/Request.h"
 #include "BaseObjects/Vehicle.h"
+#include "InputConfig.h"
 #include "Stats/PerformanceStats.h"
 
 namespace karri {
@@ -46,10 +47,6 @@ namespace karri {
         typename SystemStateUpdaterT,
         typename ScheduledStopsT>
     class EventSimulation {
-
-        // Every REPOSITIONING_INTERVAL timesteps, an idle vehicle starts repositioning. We trigger this event using
-        // a dummy vehicle event in the queue that reoccurs every REPOSITIONING_INTERVAL timesteps.
-        static constexpr int REPOSITIONING_INTERVAL = 600;
 
         enum VehicleState {
             OUT_OF_SERVICE,
@@ -241,7 +238,7 @@ namespace karri {
                 requestEvents.insert(req.requestId, req.requestTime);
             }
 
-            vehicleEvents.insert(DUMMY_VEHICLE_ID_REPOSITIONING_TIMER, REPOSITIONING_INTERVAL);
+            vehicleEvents.insert(DUMMY_VEHICLE_ID_REPOSITIONING_TIMER, InputConfig::getInstance().repositioningInterval);
         }
 
         void run() {
@@ -382,7 +379,8 @@ namespace karri {
             }
 
             // Reinsert repositioning timer event into queue:
-            vehicleEvents.increaseKey(DUMMY_VEHICLE_ID_REPOSITIONING_TIMER, occTime + REPOSITIONING_INTERVAL);
+            vehicleEvents.increaseKey(DUMMY_VEHICLE_ID_REPOSITIONING_TIMER,
+                                      occTime + InputConfig::getInstance().repositioningInterval);
 
             const int vehId = systemStateUpdater.notifyRepositioningEvent(occTime);
             if (vehId == INVALID_ID)

@@ -70,6 +70,10 @@ namespace karri {
         double parrotEgressTravelTimeHeuristicSlope = 0.0;
 
         int triggerEgressDispatchBuffer = 0;
+
+        // Interval at which repositioning operations are triggered, i.e. every repositioningInterval timesteps,
+        // an idle vehicle starts repositioning (see EventSimulation).
+        int repositioningInterval = -1;
     };
 
 }
