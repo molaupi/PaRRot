@@ -162,6 +162,9 @@ namespace karri {
             const auto routeUpdateTime = timer.elapsed<std::chrono::nanoseconds>();
             stats.updateRoutesTime += routeUpdateTime;
 
+            if (wasIdle)
+                repositioningStrategy.notifyBecameNonIdle(vehId);
+
             if (rerouteVehicle) {
                 KASSERT(curVehLocs.knowsCurrentLocationOf(vehId));
                 auto loc = curVehLocs.getCurrentLocationOf(vehId);
@@ -212,6 +215,7 @@ namespace karri {
             if (routeState.numStopsOf(veh.vehicleId) == 1) {
                 lastStopBucketsEnv.generateIdleBucketEntries(veh, placeholderStats);
                 routeState.markAsIdling(veh.vehicleId);
+                repositioningStrategy.notifyBecameIdle(veh.vehicleId);
             } else {
                 lastStopBucketsEnv.generateNonIdleBucketEntries(veh, placeholderStats);
             }
@@ -226,6 +230,7 @@ namespace karri {
                 lastStopBucketsEnv.updateBucketEntries(veh, 0, /* isIdle = */ true, updateTimePlaceholder);
                 KASSERT(!routeState.getIdleVehicles().contains(veh.vehicleId));
                 routeState.markAsIdling(veh.vehicleId);
+                repositioningStrategy.notifyBecameIdle(veh.vehicleId);
             }
         }
 
@@ -239,6 +244,7 @@ namespace karri {
             routeState.removeStartOfCurrentLeg(vehId);
             KASSERT(routeState.getIdleVehicles().contains(vehId));
             routeState.markAsNonIdling(vehId);
+            repositioningStrategy.notifyBecameNonIdle(vehId);
         }
 
         // Notify that an idle vehicle should start repositioning. Returns ID of repositioning vehicle.
@@ -248,6 +254,7 @@ namespace karri {
             if (vehId == INVALID_ID || target == INVALID_EDGE)
                 return INVALID_ID;
 
+            repositioningStrategy.notifyBecameNonIdle(vehId);
             startRepositioning(fleet[vehId], target, now);
 
             return vehId;
@@ -265,6 +272,7 @@ namespace karri {
 
             // Mark vehicle as no longer repositioning, update idling location
             routeState.finishedRepositioning(vehId);
+            repositioningStrategy.notifyBecameIdle(vehId);
 
             // Now vehicle is idle again; generate idle last-stop bucket entries
             stats::UpdatePerformanceStats placeholderStats;

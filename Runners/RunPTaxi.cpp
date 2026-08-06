@@ -98,6 +98,7 @@
 
 #include "NoOpPTAndTaxiTripFinder.h"
 #include "../PTaxi/CarTripFinder.h"
+#include "KARRI/Algorithms/KaRRi/RepositioningStrategies/LongestIdleRepositioningStrategy.h"
 #include "PTLeg/ParrotPTOnlyULTRARAPTOR.h"
 #include "Station/NoOpStationsInEllipse.h"
 #include "ULTRA/Algorithms/RAPTOR/Profiler.h"
@@ -668,7 +669,8 @@ KARRI_DALS_STRATEGY == KARRI_COL || KARRI_DALS_STRATEGY == KARRI_IND
 
         // Construct repositioning strategy and assignment finder:
         CostCalculator calculator(routeState);
-        RepositioningStrategies::RandomRepositioningStrategy repositioningStrategy(fleet);
+        using RepositioningStrategyImpl = RepositioningStrategies::LongestIdleRepositioningStrategy;
+        RepositioningStrategyImpl repositioningStrategy(fleet);
         using RepositioningFinderStrategy = IndividualBCHStrategyRepositioning<VehicleInputGraph, VehCHEnv,
             RepositioningBucketsEnv, CurVehLocToPickupSearchesImpl>;
         RepositioningFinderStrategy repositioningFinderStrategy(vehicleInputGraph, fleet, *vehChEnv, calculator,
@@ -846,7 +848,7 @@ KARRI_DALS_STRATEGY == KARRI_COL || KARRI_DALS_STRATEGY == KARRI_IND
 
         using SystemStateUpdaterImpl = SystemStateUpdater<VehicleInputGraph, EllipticBucketsEnv, RepositioningBucketsEnv,
             LastStopBucketsEnv, StationsInEllipseImpl, VehCHEnv, CurVehLocToPickupSearchesImpl, VehPathTracker,
-            RepositioningStrategies::RandomRepositioningStrategy, std::ofstream>;
+            RepositioningStrategyImpl, std::ofstream>;
         SystemStateUpdaterImpl
                 systemStateUpdater(vehicleInputGraph, fleet, curVehLocToPickupSearches,
                                    pathTracker, routeState, ellipticBucketsEnv, repositioningBucketsEnv,

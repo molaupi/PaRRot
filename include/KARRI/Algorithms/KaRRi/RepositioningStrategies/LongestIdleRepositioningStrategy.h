@@ -29,21 +29,28 @@
 #include "../BaseObjects/Request.h"
 #include "../RouteState.h"
 #include "../../../Tools/Constants.h"
+#include "../../../Tools/Workarounds.h"
+#include "../../../DataStructures/Queues/AddressableFIFOQueue.h"
 
 
 namespace karri::RepositioningStrategies {
 
-    // Strategy for randomly choosing which idle vehicle should reposition and where.
-    // Repositioning targets are chosen from previously seen request origins,
-    // weighted by frequency.
-    class RandomRepositioningStrategy {
+    // Strategy that always repositions the idle vehicle that has been idle the longest (ties broken
+    // arbitrarily). Vehicles becoming idle/non-idle are tracked via notifyBecameIdle()/notifyBecameNonIdle()
+    // in an addressable FIFO queue: a vehicle is appended to the back of the queue when it becomes idle, and
+    // removed from wherever it is in the queue when it becomes non-idle. pickRepositioningVehicleAndTarget()
+    // pops the vehicle at the front of the queue, i.e. the one that has been idle the longest.
+    // Repositioning targets are chosen exactly as in RandomRepositioningStrategy: from previously seen request
+    // origins, weighted by frequency.
+    class LongestIdleRepositioningStrategy {
 
     public:
         static constexpr bool USE_DETERMINISTIC = true;
 
-        explicit RandomRepositioningStrategy(const Fleet &)
+        explicit LongestIdleRepositioningStrategy(const Fleet &fleet)
             : seenOriginLocations(),
-              gen(USE_DETERMINISTIC ? 0 : std::random_device{}()) {}
+              gen(USE_DETERMINISTIC ? 0 : std::random_device{}()),
+              idleQueue(static_cast<int>(fleet.size())) {}
 
         // Notify the strategy about an incoming request.
         // Tracks the origin location for future repositioning target selection.
@@ -51,26 +58,30 @@ namespace karri::RepositioningStrategies {
             seenOriginLocations.push_back(request.origin);
         }
 
-        // Notify the strategy that a vehicle has become idle. Unused since idle vehicles are read directly
-        // from the RouteState in pickRepositioningVehicleAndTarget().
-        void notifyBecameIdle(const int) {}
+        // Notify the strategy that a vehicle has become idle. Appends it to the back of the idle queue.
+        void notifyBecameIdle(const int vehId) {
+            idleQueue.push(vehId);
+        }
 
-        // Notify the strategy that a vehicle is no longer idle. Unused since idle vehicles are read directly
-        // from the RouteState in pickRepositioningVehicleAndTarget().
-        void notifyBecameNonIdle(const int) {}
+        // Notify the strategy that a vehicle is no longer idle. Removes it from the idle queue, wherever it
+        // currently is.
+        void notifyBecameNonIdle(const int vehId) {
+            idleQueue.remove(vehId);
+        }
 
-        // Pick an idle vehicle and a repositioning target location.
+        // Pick the idle vehicle that has been idle the longest and a repositioning target location.
         // Returns a pair of (vehicle ID, target location).
         // Returns (INVALID_ID, INVALID_EDGE) if no valid choice can be made.
-        std::pair<int, int> pickRepositioningVehicleAndTarget(const RouteState &routeState) const {
-            // Choose a random idle vehicle
-            const auto& idle = routeState.getIdleVehicles();
-            if (idle.size() == 0 || seenOriginLocations.empty()) {
+        std::pair<int, int> pickRepositioningVehicleAndTarget(const RouteState &routeState) {
+            unused(routeState);
+            if (idleQueue.empty() || seenOriginLocations.empty()) {
                 return {INVALID_ID, INVALID_EDGE};
             }
 
-            std::uniform_int_distribution<size_t> vehDis(0, idle.size() - 1);
-            const int vehId = *(idle.begin() + vehDis(gen));
+            // Vehicle that has been idle the longest is at the front of the queue.
+            // Since vehicle becomes non-idle, next call to notifyBecameNonIdle will also try to remove this
+            // vehicle from the queue, but that's okay.
+            const int vehId = idleQueue.popFront();
 
             // Choose a repositioning target from previously seen origins
             std::uniform_int_distribution<size_t> targetLocDis(0, seenOriginLocations.size() - 1);
@@ -84,7 +95,10 @@ namespace karri::RepositioningStrategies {
         std::vector<int> seenOriginLocations;
 
         // Random number generator
-        mutable std::mt19937 gen;
+        std::mt19937 gen;
+
+        // Idle vehicles in order of becoming idle, i.e. the vehicle at the front has been idle the longest.
+        AddressableFIFOQueue idleQueue;
     };
 
 }
