@@ -565,12 +565,14 @@ namespace karri {
             reqData.directOdDist = requestState.originalReqDirectDist;
             reqData.mode = mode;
 
+            int costOfChosenMode = INFTY;
             using parrot::mode_choice::TransportMode;
             if (mode == TransportMode::Ped || mode == TransportMode::Car) {
                 const int arrTime = mode == TransportMode::Ped
                                         ? request.requestTime + walkOnlyResult.walkingDist
                                         : request.requestTime + requestState.originalReqDirectDist;
                 processChoiceOtherMode(reqId, occTime, arrTime);
+                costOfChosenMode = mode == TransportMode::Ped? walkOnlyResult.cost : INFTY; // assume car has cost INFTY
             } else if (mode == TransportMode::PublicTransport) {
                 reqData.ptLegCost = ptOnlyResult.getCost();
                 reqData.ptLegDepTime = request.requestTime;
@@ -578,6 +580,7 @@ namespace karri {
                 reqData.ptLegRideTime = ptOnlyResult.getTotalInVehicleTime();
                 reqData.ptLegWalkTime = ptOnlyResult.getTotalTransferTime();
                 processChoiceOtherMode(reqId, occTime, ptOnlyResult.getArrivalTime());
+                costOfChosenMode = ptOnlyResult.getCost();
             } else if (mode == TransportMode::Taxi) {
                 riderState[reqId] = WAITING_FOR_PICKUP;
                 const auto &asgn = taxiOnlyResult.getBestAssignment();
@@ -586,6 +589,7 @@ namespace karri {
                 reqData.firstTaxiLegDropoffWalkTime = asgn.dropoff.walkingDist;
                 reqData.firstTaxiLegVehicleId = asgn.vehicle ? asgn.vehicle->vehicleId : INVALID_ID;
                 applyAssignment(requestState, asgn, reqId, stats.updateStats);
+                costOfChosenMode = taxiOnlyResult.getBestCost();
             } else if (mode == TransportMode::TaxiAndPT) {
                 riderState[reqId] = WAITING_FOR_PICKUP;
                 // Calculated costs
@@ -614,11 +618,14 @@ namespace karri {
                 reqData.hasSecondTaxiLeg = ptAndTaxiResult.isFinalTransferByTaxi();
 
                 applyCombinedTrip(requestState, ptAndTaxiResult, reqId, occTime, stats.updateStats);
+                costOfChosenMode = ptAndTaxiResult.getBestCost();
             } else if (mode == TransportMode::None) {
                 processNoMode(reqId);
             } else {
                 KASSERT(false);
             }
+
+            systemStateUpdater.notifyRequestProcessed(request, mode, costOfChosenMode);
 
             // systemStateUpdater.writeTripTypeLogs(reqId, ptAndTaxiTripFinderResponse);
             systemStateUpdater.writeReceiveRequestLogs(reqId, stats);

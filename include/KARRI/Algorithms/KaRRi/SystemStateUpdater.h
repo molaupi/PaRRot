@@ -33,6 +33,7 @@
 #include "PathTracker.h"
 #include "PointToPointPathComputer.h"
 #include "RepositioningStrategies/RandomRepositioningStrategy.h"
+#include "RiderModeChoice/TransportMode.h"
 
 namespace karri {
     // Updates the system state consisting of the route state (schedules of vehicles and additional information about
@@ -121,8 +122,6 @@ namespace karri {
             chosenPDLocsRoadCatStats.incCountForCat(inputGraph.osmRoadCategory(asgn.dropoff.loc));
             KASSERT(asgn.vehicle != nullptr);
 
-            repositioningStrategy.notifyRequestIncoming(requestState.originalRequest);
-
             const auto vehId = asgn.vehicle->vehicleId;
 
             if (routeState.isRepositioning(vehId)) {
@@ -200,6 +199,10 @@ namespace karri {
             pathTracker.registerPdEventsForBestAssignment(requestState, pickupStopId, dropoffStopId);
         }
 
+        void notifyRequestProcessed(const Request &request, const parrot::mode_choice::TransportMode mode, const int cost) {
+            repositioningStrategy.notifyRequestProcessed(request, mode, cost);
+        }
+
         void notifyStopStarted(const Vehicle &veh) {
             // Update buckets and route state
             ellipticBucketsEnv.deleteSourceBucketEntries(veh, 0);
@@ -249,7 +252,7 @@ namespace karri {
 
         // Notify that an idle vehicle should start repositioning. Returns ID of repositioning vehicle.
         int notifyRepositioningEvent(const int now) {
-            auto [vehId, target] = repositioningStrategy.pickRepositioningVehicleAndTarget(routeState);
+            auto [vehId, target] = repositioningStrategy.pickRepositioningVehicleAndTarget(routeState, now);
 
             if (vehId == INVALID_ID || target == INVALID_EDGE)
                 return INVALID_ID;

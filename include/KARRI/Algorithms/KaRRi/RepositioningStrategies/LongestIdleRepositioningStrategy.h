@@ -26,11 +26,13 @@
 
 #include <random>
 #include <vector>
-#include "../BaseObjects/Request.h"
-#include "../RouteState.h"
-#include "../../../Tools/Constants.h"
-#include "../../../Tools/Workarounds.h"
-#include "../../../DataStructures/Queues/AddressableFIFOQueue.h"
+#include <KARRI/Algorithms/KaRRi/BaseObjects/Request.h>
+#include <KARRI/Algorithms/KaRRi//RouteState.h>
+#include <KARRI/Tools/Constants.h>
+#include <KARRI/Tools/Workarounds.h>
+#include <KARRI/DataStructures/Queues/AddressableFIFOQueue.h>
+
+#include "KARRI/DataStructures/Utilities/RunningQuantile.h"
 
 
 namespace karri::RepositioningStrategies {
@@ -47,15 +49,26 @@ namespace karri::RepositioningStrategies {
     public:
         static constexpr bool USE_DETERMINISTIC = true;
 
+        // Seen origin locations time out as valid repositioning targets after SEEN_ORIGIN_TIMEOUT time steps.
+        static constexpr int SEEN_ORIGIN_TIMEOUT = 36000; // one hour
+
         explicit LongestIdleRepositioningStrategy(const Fleet &fleet)
             : seenOriginLocations(),
               gen(USE_DETERMINISTIC ? 0 : std::random_device{}()),
               idleQueue(static_cast<int>(fleet.size())) {}
 
-        // Notify the strategy about an incoming request.
-        // Tracks the origin location for future repositioning target selection.
-        void notifyRequestIncoming(const Request &request) {
-            seenOriginLocations.push_back(request.origin);
+        // Notify the strategy about a request that has been processed by the dispatcher and the chosen mode.
+        void notifyRequestProcessed(const Request &request, const parrot::mode_choice::TransportMode , const int cost) {
+
+            // Add cost of request to running quantile
+            runningCostQuantile.addValue(cost);
+
+            // If the cost of this request is in the 90th percentile of requests processed so far, we consider it a
+            // bad assignment and we allow repositioning to the requests origin location to improve the assignment for
+            // future requests in the vicinity.
+            if (cost < runningCostQuantile.getQuantile())
+                return;
+            seenOriginLocations.emplace_back(request.origin, request.requestTime);
         }
 
         // Notify the strategy that a vehicle has become idle. Appends it to the back of the idle queue.
@@ -72,8 +85,16 @@ namespace karri::RepositioningStrategies {
         // Pick the idle vehicle that has been idle the longest and a repositioning target location.
         // Returns a pair of (vehicle ID, target location).
         // Returns (INVALID_ID, INVALID_EDGE) if no valid choice can be made.
-        std::pair<int, int> pickRepositioningVehicleAndTarget(const RouteState &routeState) {
+        std::pair<int, int> pickRepositioningVehicleAndTarget(const RouteState &routeState, const int now) {
             unused(routeState);
+
+            // Remove timed out origin locations
+            int i = 0;
+            while (i < seenOriginLocations.size() && seenOriginLocations[i].second + SEEN_ORIGIN_TIMEOUT <= now)
+                ++i;
+            seenOriginLocations.erase(seenOriginLocations.begin(), seenOriginLocations.begin() + i);
+
+            // Do not perform repositioning if there are no idle vehicles or no relevant target locations
             if (idleQueue.empty() || seenOriginLocations.empty()) {
                 return {INVALID_ID, INVALID_EDGE};
             }
@@ -85,14 +106,17 @@ namespace karri::RepositioningStrategies {
 
             // Choose a repositioning target from previously seen origins
             std::uniform_int_distribution<size_t> targetLocDis(0, seenOriginLocations.size() - 1);
-            const int target = seenOriginLocations[targetLocDis(gen)];
+            const int target = seenOriginLocations[targetLocDis(gen)].first;
 
             return {vehId, target};
         }
 
     private:
-        // Track seen origin locations of requests for target selection
-        std::vector<int> seenOriginLocations;
+
+        RunningQuantile<0.9> runningCostQuantile;
+
+        // Track seen origin locations and their request time for target selection
+        std::vector<std::pair<int, int>> seenOriginLocations;
 
         // Random number generator
         std::mt19937 gen;
