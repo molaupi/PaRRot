@@ -58,15 +58,23 @@ namespace karri::RepositioningStrategies {
               idleQueue(static_cast<int>(fleet.size())) {}
 
         // Notify the strategy about a request that has been processed by the dispatcher and the chosen mode.
-        void notifyRequestProcessed(const Request &request, const parrot::mode_choice::TransportMode , const int cost) {
+        void notifyRequestProcessed(const Request &request, const parrot::mode_choice::TransportMode mode, const int directOdDist, const int tripTime) {
+            unused(mode);
 
-            // Add cost of request to running quantile
-            runningCostQuantile.addValue(cost);
+            // Short distance requests do not partake
+            static constexpr int IGNORE_SHORT_DISTANCE_REQUESTS_THRESHOLD = 6000; // 10 min
+            if (directOdDist <= IGNORE_SHORT_DISTANCE_REQUESTS_THRESHOLD)
+                return;
 
-            // If the cost of this request is in the 90th percentile of requests processed so far, we consider it a
+            const auto score = static_cast<double>(tripTime) / directOdDist;
+
+            // Add delay of request to running quantile
+            runningScoreQuantile.addValue(score);
+
+            // If the score of this request is in the 90th percentile of requests processed so far, we consider it a
             // bad assignment and we allow repositioning to the requests origin location to improve the assignment for
             // future requests in the vicinity.
-            if (cost < runningCostQuantile.getQuantile())
+            if (score < runningScoreQuantile.getQuantile())
                 return;
             seenOriginLocations.emplace_back(request.origin, request.requestTime);
         }
@@ -113,7 +121,7 @@ namespace karri::RepositioningStrategies {
 
     private:
 
-        RunningQuantile<0.9> runningCostQuantile;
+        RunningQuantile<0.9, double> runningScoreQuantile;
 
         // Track seen origin locations and their request time for target selection
         std::vector<std::pair<int, int>> seenOriginLocations;

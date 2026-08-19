@@ -66,7 +66,7 @@ namespace parrot::mode_choice {
 
             // Taxi trips with an excessive wait time do not take part in mode choice
             if (taxiOnlyWaitTime <= InputConfig::getInstance().modeChoiceMaxTaxiWaitTime) {
-                taxiCost = taxiOnlyResult.bestCost;
+                taxiCost = taxiOnlyResult.getBestCost();
             }
             stats.taxiTravelTime = taxiOnlyTravelTime;
             stats.taxiWaitTime = taxiOnlyWaitTime;

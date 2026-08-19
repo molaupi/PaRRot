@@ -17,7 +17,7 @@
 #include "../../../DataStructures/Labels/BasicLabelSet.h"
 #include "../PDDistanceQueries/PDDistances.h"
 #include "../Stats/PerformanceStats.h"
-#include <TaxiResult.h>
+#include "../BaseObjects/InternalTaxiResult.h"
 #include <array>
 
 namespace karri {
@@ -48,7 +48,7 @@ namespace karri {
         }
 
         void tryRepositioningAssignments(const RequestState &requestState, const PDDistances &pdDistances,
-                                         const PDLocs &pdLocs, TaxiResult &result,
+                                         const PDLocs &pdLocs, InternalTaxiResult &result,
                                          stats::RepositioningAssignmentsPerformanceStats &stats) {
             curReqState = &requestState;
             curResult = &result;
@@ -229,7 +229,7 @@ namespace karri {
 
         // Transient per-request context, set at the start of tryRepositioningAssignments().
         const RequestState *curReqState;
-        TaxiResult *curResult;
+        InternalTaxiResult *curResult;
 
         // Current per-search context accessed by ScanBucket: K pickups in a batch
         std::array<const PDLoc*, K> currentPickups{};

@@ -1,7 +1,7 @@
 #pragma once
 
 #include <vector>
-#include "../TaxiResult.h"
+#include "../../include/KARRI/Algorithms/KaRRi/BaseObjects/InternalTaxiResult.h"
 #include <KARRI/Algorithms/KaRRi/BaseObjects/Assignment.h>
 
 #include "AccessRPTrip.h"

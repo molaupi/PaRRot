@@ -48,7 +48,7 @@ namespace karri {
                              const RequestState &requestState,
                              const PDDistances &pdDistances,
                              const PDLocs &pdLocs,
-                             TaxiResult &result,
+                             InternalTaxiResult &result,
                              stats::OrdAssignmentsPerformanceStats &stats) const {
             findOrdinaryAssignments(relPickups, relDropoffs, requestState, pdLocs, result, stats);
             findOrdinaryPairedAssignments(pdDistances, relPickups, relDropoffs, requestState, pdLocs, result, stats);
@@ -64,7 +64,7 @@ namespace karri {
         // dropoff after a last stop.
         void findOrdinaryAssignments(const RelevantPDLocs &relPickups, const RelevantPDLocs &relDropoffs,
                                      const RequestState &requestState, const PDLocs &pdLocs,
-                                     TaxiResult &result,
+                                     InternalTaxiResult &result,
                                      stats::OrdAssignmentsPerformanceStats &stats) const {
             KaRRiTimer timer;
             int numCandidateVehicles = 0;
@@ -120,7 +120,7 @@ namespace karri {
                                       const RelevantPDLocs &relDropoffs,
                                       const RequestState &requestState,
                                       const PDLocs &pdLocs,
-                                      TaxiResult &result) const {
+                                      InternalTaxiResult &result) const {
             assert(asgn.vehicle && asgn.pickup.id != INVALID_ID);
             const auto &vehId = asgn.vehicle->vehicleId;
 
@@ -168,7 +168,7 @@ namespace karri {
         void findOrdinaryPairedAssignments(const PDDistances &pdDistances, const RelevantPDLocs &relPickups,
                                            const RelevantPDLocs &relDropoffs,
                                            const RequestState &requestState, const PDLocs &pdLocs,
-                                           TaxiResult &result,
+                                           InternalTaxiResult &result,
                                            stats::OrdAssignmentsPerformanceStats &stats) const {
             KaRRiTimer timer;
             int numAssignmentsTried = 0;

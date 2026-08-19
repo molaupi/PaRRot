@@ -835,7 +835,7 @@ KARRI_DALS_STRATEGY == KARRI_COL || KARRI_DALS_STRATEGY == KARRI_IND
         using TaxiTripFinderImpl = TaxiTripFinder<OrdinaryAssignmentsFinderImpl, PBNSInsertionsFinderImpl,
             PALSInsertionsFinderImpl, DALSInsertionsFinderImpl, RepositioningInsertionsFinderImpl>;
         TaxiTripFinderImpl taxiTripFinder(ordinaryInsertionsFinder, pbnsInsertionsFinder, palsInsertionsFinder,
-                                          dalsInsertionsFinder, repositioningInsertionsFinder);
+                                          dalsInsertionsFinder, repositioningInsertionsFinder, routeState);
 
         using PTTripFinderImpl = parrot::PTJourneyFinder<EdgeQuery, PTAlgorithm>;
         PTTripFinderImpl ptTripFinder(queries, ptAlgorithm);

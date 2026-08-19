@@ -168,7 +168,7 @@ namespace karri::PickupAfterLastStopStrategies {
                   vehiclesSeenForPickups(fleet.size()) {}
 
         void tryPickupAfterLastStop(const RequestState& requestState, const PDDistances& pdDistances, const PDLocs& pdLocs,
-            TaxiResult &result,
+            InternalTaxiResult &result,
             stats::PalsAssignmentsPerformanceStats& stats) {
             runBchSearches(requestState, pdDistances, pdLocs, result, stats);
             enumerateAssignments(requestState, pdDistances, pdLocs, result, stats);
@@ -184,7 +184,7 @@ namespace karri::PickupAfterLastStopStrategies {
 
         // Run BCH searches that find distances from last stops to pickups
         void runBchSearches(const RequestState& requestState, const PDDistances& pdDistances, const PDLocs& pdLocs,
-            const TaxiResult &result,
+            const InternalTaxiResult &result,
             stats::PalsAssignmentsPerformanceStats& stats) {
             KaRRiTimer timer;
 
@@ -202,7 +202,7 @@ namespace karri::PickupAfterLastStopStrategies {
 
         // Enumerate assignments with pickup after last stop
         void enumerateAssignments(const RequestState& requestState, const PDDistances& pdDistances, const PDLocs& pdLocs,
-            TaxiResult &result,
+            InternalTaxiResult &result,
             stats::PalsAssignmentsPerformanceStats& stats) {
             using namespace time_utils;
 
@@ -266,7 +266,7 @@ namespace karri::PickupAfterLastStopStrategies {
         }
 
         void initPickupSearches(const RequestState& requestState, const PDLocs& pdLocs,
-            const TaxiResult &result, const int minDirectPdDist) {
+            const InternalTaxiResult &result, const int minDirectPdDist) {
             totalNumEdgeRelaxations = 0;
             totalNumVerticesSettled = 0;
             totalNumEntriesScanned = 0;

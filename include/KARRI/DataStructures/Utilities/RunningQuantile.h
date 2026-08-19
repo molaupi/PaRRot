@@ -30,7 +30,7 @@
 #include <type_traits>
 #include <vector>
 
-// Maintains the q-quantile of a multiset of integer values to which values may only be added
+// Maintains the q-quantile of a multiset of numerical values to which values may only be added
 // (never removed), using two priority queues. This generalizes the classic two-heap technique
 // for a running median: a max-heap holds the smallest ceil(q * n) values added so far (n being
 // the number of values added so far), while a min-heap holds the remaining, larger values. The
@@ -39,7 +39,6 @@
 template<double q, typename T = int>
 class RunningQuantile {
 
-    static_assert(std::is_integral_v<T>, "T must be an integer type.");
     static_assert(q >= 0.0 && q <= 1.0, "q must be a quantile between 0 and 1.");
 
 public:
@@ -75,13 +74,13 @@ private:
     void rebalance() {
         // Subtracting a small epsilon before rounding up guards against q * n overshooting the
         // nearest integer due to floating-point rounding (e.g. q == 0.9 and n == 10).
-        const int targetLowerSize = static_cast<int>(std::ceil(q * n - 1e-9));
+        const int targetLowerSize = static_cast<size_t>(std::ceil(q * n - 1e-9));
 
-        while (static_cast<int>(lowerHeap.size()) > targetLowerSize) {
+        while (lowerHeap.size() > targetLowerSize) {
             upperHeap.push(lowerHeap.top());
             lowerHeap.pop();
         }
-        while (static_cast<int>(lowerHeap.size()) < targetLowerSize) {
+        while (lowerHeap.size() < targetLowerSize) {
             lowerHeap.push(upperHeap.top());
             upperHeap.pop();
         }

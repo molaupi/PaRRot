@@ -85,7 +85,7 @@ namespace karri::DropoffAfterLastStopStrategies {
         void tryDropoffAfterLastStop(const RelevantPDLocs &relevantOrdinaryPickups,
                                      const RelevantPDLocs &relevantPickupsBeforeNextStop,
                                      const RequestState& requestState, const PDLocs& pdLocs,
-                                     TaxiResult &result,
+                                     InternalTaxiResult &result,
                                      stats::DalsAssignmentsPerformanceStats& stats) {
             curRelOrdinaryPickups = &relevantOrdinaryPickups;
             curRelPickupsBns = &relevantPickupsBeforeNextStop;
@@ -97,7 +97,7 @@ namespace karri::DropoffAfterLastStopStrategies {
 
     private:
 
-        void runCollectiveSearch(const RequestState& requestState, const PDLocs& pdLocs, TaxiResult &result, stats::DalsAssignmentsPerformanceStats& stats) {
+        void runCollectiveSearch(const RequestState& requestState, const PDLocs& pdLocs, InternalTaxiResult &result, stats::DalsAssignmentsPerformanceStats& stats) {
             KaRRiTimer timer;
 
             minCostSearch.run(requestState, pdLocs, result);
@@ -125,7 +125,7 @@ namespace karri::DropoffAfterLastStopStrategies {
         void enumerateAssignments(const RelevantPDLocs &relevantOrdinaryPickups,
                                   const RelevantPDLocs &relevantPickupsBeforeNextStop,
                                   const RequestState& requestState, const PDLocs& pdLocs,
-                                  TaxiResult &result,
+                                  InternalTaxiResult &result,
                                   stats::DalsAssignmentsPerformanceStats& stats) {
             const int64_t pbnsTimeBefore = curVehLocToPickupSearches.getTotalLocatingVehiclesTimeForRequest() +
                                            curVehLocToPickupSearches.getTotalVehicleToPickupSearchTimeForRequest();
@@ -166,7 +166,7 @@ namespace karri::DropoffAfterLastStopStrategies {
                                                     int &numFallBackChSearches, bool &ranClosestDropoffSearch,
                                                     const RelevantPDLocs &relevantOrdinaryPickups,
                                                     const RequestState& requestState, const PDLocs& pdLocs,
-                                                    TaxiResult &result) {
+                                                    InternalTaxiResult &result) {
             using namespace time_utils;
             Assignment asgn;
 
@@ -280,7 +280,7 @@ namespace karri::DropoffAfterLastStopStrategies {
         enumerateAssignmentsWithPBNS(int &numAssignmentsTried, int &, int &numFallBackChSearches,
                                      bool &ranClosestDropoffSearch, const RelevantPDLocs &relevantPickupsBeforeNextStop,
                                      const RequestState& requestState, const PDLocs& pdLocs,
-                                     TaxiResult &result) {
+                                     InternalTaxiResult &result) {
             using namespace time_utils;
 
             Assignment asgn;
@@ -421,7 +421,7 @@ namespace karri::DropoffAfterLastStopStrategies {
         // constraint. We now filter out the constraint breakers that lead to cost worse than that.
         // Constraint breakers have to be given ordered by vehicles.
         // We maintain the order of constraint breakers.
-        void filterConstraintBreakersBasedOnCost(const RequestState& requestState, const TaxiResult &result) {
+        void filterConstraintBreakersBasedOnCost(const RequestState& requestState, const InternalTaxiResult &result) {
             int cur = 0;
             int nextGoodOffset = 0;
             while (cur + nextGoodOffset < constraintBreakers.size()) {
@@ -484,7 +484,7 @@ namespace karri::DropoffAfterLastStopStrategies {
         // Constraint breakers have to be given ordered by vehicles.
         void evaluateConstraintBreakersWithAllDropoffs(int &numAssignmentsTried, int &numFallbackChSearchesRun,
                                                        const RequestState& requestState, const PDLocs& pdLocs,
-                                                       TaxiResult &result) {
+                                                       InternalTaxiResult &result) {
 
             int lastVehId = constraintBreakers.empty() ? INVALID_ID : constraintBreakers[0].vehicle->vehicleId;
             int startOfLastVehId = 0;

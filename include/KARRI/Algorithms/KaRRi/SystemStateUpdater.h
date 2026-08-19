@@ -32,6 +32,7 @@
 #include "LastStopSearches/RepositioningBucketsEnvironment.h"
 #include "PathTracker.h"
 #include "PointToPointPathComputer.h"
+#include "TaxiResult.h"
 #include "RepositioningStrategies/RandomRepositioningStrategy.h"
 #include "RiderModeChoice/TransportMode.h"
 
@@ -199,8 +200,8 @@ namespace karri {
             pathTracker.registerPdEventsForBestAssignment(requestState, pickupStopId, dropoffStopId);
         }
 
-        void notifyRequestProcessed(const Request &request, const parrot::mode_choice::TransportMode mode, const int cost) {
-            repositioningStrategy.notifyRequestProcessed(request, mode, cost);
+        void notifyRequestProcessed(const Request &request, const parrot::mode_choice::TransportMode mode, const int directOdDist, const int tripTime) {
+            repositioningStrategy.notifyRequestProcessed(request, mode, directOdDist, tripTime);
         }
 
         void notifyStopStarted(const Vehicle &veh) {
@@ -283,7 +284,7 @@ namespace karri {
         }
 
 
-        void writeBestAssignmentToLogger(const RequestState &requestState, const TaxiResult &result) {
+        void writeBestAssignmentToLogger(const RequestState &requestState, const parrot::TaxiResult &result) {
             bestAssignmentsLogger
                     << requestState.originalRequest.requestId << ", "
                     << requestState.originalRequest.requestTime << ", "

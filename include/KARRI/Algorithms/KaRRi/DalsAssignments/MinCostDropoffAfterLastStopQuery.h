@@ -71,7 +71,7 @@ namespace karri::DropoffAfterLastStopStrategies {
                   vehicleLabelBuckets(fleet.size()),
                   vehiclesSeen(fleet.size()) {}
 
-        void run(const RequestState& requestState, const PDLocs& pdLocs, const TaxiResult& result) {
+        void run(const RequestState& requestState, const PDLocs& pdLocs, const InternalTaxiResult& result) {
             KaRRiTimer timer;
 
             init(requestState, pdLocs, result);
@@ -126,7 +126,7 @@ namespace karri::DropoffAfterLastStopStrategies {
 
     private:
 
-       inline bool stopSearch(const TaxiResult& result) const {
+       inline bool stopSearch(const InternalTaxiResult& result) const {
 
             if (reverseQueue.empty()) return true;
 
@@ -135,7 +135,7 @@ namespace karri::DropoffAfterLastStopStrategies {
             return minCostLowerBound > result.getBestCost();
         }
 
-        void init(const RequestState& requestState, const PDLocs& pdLocs, const TaxiResult &result) {
+        void init(const RequestState& requestState, const PDLocs& pdLocs, const InternalTaxiResult &result) {
             numEdgeRelaxations = 0;
             numLabelsRelaxed = 0;
             numEntriesScanned = 0;
@@ -333,7 +333,7 @@ namespace karri::DropoffAfterLastStopStrategies {
         }
 
         void scanVehicleBucket(const int v, const DropoffLabel &label, const RequestState& requestState, const PDLocs& pdLocs,
-            const TaxiResult &result) {
+            const InternalTaxiResult &result) {
             using namespace time_utils;
 
             const auto &dropoff = pdLocs.dropoffs[label.dropoffId];

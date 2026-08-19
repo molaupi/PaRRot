@@ -6,7 +6,7 @@
 #include "../RequestState/RequestState.h"
 #include "../PDDistanceQueries/PDDistances.h"
 #include "../Stats/PerformanceStats.h"
-#include <TaxiResult.h>
+#include "../BaseObjects/InternalTaxiResult.h"
 
 namespace karri {
 
@@ -16,7 +16,7 @@ namespace karri {
         explicit RepositioningAssignmentsFinder(StrategyT &strategy) : strategy(strategy) {}
 
         void findAssignments(const RequestState &requestState, const PDDistances &pdDistances, const PDLocs &pdLocs,
-                             TaxiResult &result, stats::RepositioningAssignmentsPerformanceStats &stats) {
+                             InternalTaxiResult &result, stats::RepositioningAssignmentsPerformanceStats &stats) {
             strategy.tryRepositioningAssignments(requestState, pdDistances, pdLocs, result, stats);
         }
 

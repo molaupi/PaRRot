@@ -49,7 +49,7 @@ namespace karri {
                   routeState(routeState) {}
 
         void findAssignments(const RequestState& requestState, const PDDistances& pdDistances, const PDLocs& pdLocs,
-            TaxiResult &result,
+            InternalTaxiResult &result,
             stats::PalsAssignmentsPerformanceStats& stats) {
             findAssignmentsWherePickupCoincidesWithLastStop(requestState, pdDistances, pdLocs, result, stats);
             strategy.tryPickupAfterLastStop(requestState, pdDistances, pdLocs, result, stats);
@@ -66,7 +66,7 @@ namespace karri {
         void findAssignmentsWherePickupCoincidesWithLastStop(const RequestState& requestState,
             const PDDistances& pdDistances,
             const PDLocs& pdLocs,
-            TaxiResult &result,
+            InternalTaxiResult &result,
             stats::PalsAssignmentsPerformanceStats& stats) {
             int numInsertionsForCoinciding = 0;
             int numCandidateVehiclesForCoinciding = 0;

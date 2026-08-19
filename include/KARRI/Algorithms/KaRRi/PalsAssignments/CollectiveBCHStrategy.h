@@ -67,7 +67,7 @@ namespace karri::PickupAfterLastStopStrategies {
                   vehicleToPDLocQuery(vehicleToPDLocQuery),
                   fallbackStrategy(inputGraph, fleet, chEnv, lastStopBucketsEnv, routeState) {}
 
-        void tryPickupAfterLastStop(const RequestState& requestState, const PDDistances& pdDistances, const PDLocs& pdLocs, TaxiResult &result, stats::PalsAssignmentsPerformanceStats& stats) {
+        void tryPickupAfterLastStop(const RequestState& requestState, const PDDistances& pdDistances, const PDLocs& pdLocs, InternalTaxiResult &result, stats::PalsAssignmentsPerformanceStats& stats) {
 
 
             KaRRiTimer timer;

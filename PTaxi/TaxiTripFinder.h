@@ -7,7 +7,9 @@
 
 #include "KaRRiBaseInfo.h"
 #include "KARRI/Algorithms/KaRRi/PDDistanceQueries/PDDistances.h"
-#include <TaxiResult.h>
+#include <../include/KARRI/Algorithms/KaRRi/BaseObjects/InternalTaxiResult.h>
+
+#include "TaxiResult.h"
 
 namespace karri {
     // Given a ride request r, this facility finds the optimal assignment of r to the route of a ride-pooling
@@ -25,16 +27,17 @@ namespace karri {
                             PbnsAssignmentsT &pbnsAssignments,
                             PalsAssignmentsT &palsAssignments,
                             DalsAssignmentsT &dalsAssignments,
-                            RepositioningAssignmentsT &repositioningAssignments)
+                            RepositioningAssignmentsT &repositioningAssignments,
+                            const RouteState &routeState)
             : ordAssignments(ordinaryAssigments),
               pbnsAssignments(pbnsAssignments),
               palsAssignments(palsAssignments),
               dalsAssignments(dalsAssignments),
-              repositioningAssignments(repositioningAssignments) {
-        }
+              repositioningAssignments(repositioningAssignments),
+              routeState(routeState) {}
 
-        TaxiResult findBestAssignment(const RequestState &requestState, const KaRRiBaseInfo &baseInfo, stats::TaxiPerformanceStats &stats) {
-            TaxiResult result;
+        parrot::TaxiResult findBestAssignment(const RequestState &requestState, const KaRRiBaseInfo &baseInfo, stats::TaxiPerformanceStats &stats) {
+            InternalTaxiResult result;
 
             initializeComponentsForRequest(requestState, baseInfo.pdLocs, stats);
 
@@ -60,7 +63,8 @@ namespace karri {
             repositioningAssignments.findAssignments(requestState, baseInfo.pdDistances, baseInfo.pdLocs, result,
                                                      stats.repositioningAssignmentsStats);
 
-            return result;
+            const int arrivalTime = result.isValid() ? time_utils::calcArrivalTime(result.getBestAssignment(), requestState, routeState) : INFTY;
+            return {result, arrivalTime};
         }
 
         void initializeComponentsForRequest(const RequestState &requestState, const PDLocs &pdLocs,
@@ -84,5 +88,7 @@ namespace karri {
         DalsAssignmentsT &dalsAssignments;
         // Tries repositioning assignments using a vehicle that is currently being repositioned.
         RepositioningAssignmentsT &repositioningAssignments;
+
+        const RouteState &routeState;
     };
 }

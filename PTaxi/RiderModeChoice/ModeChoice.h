@@ -12,7 +12,7 @@
 #include "UtilityLogit/types.h"
 #include "PTJourneyData.h"
 #include "../WalkingResult.h"
-#include "../TaxiResult.h"
+#include "../../include/KARRI/Algorithms/KaRRi/BaseObjects/InternalTaxiResult.h"
 #include "../PTLeg/PTResult.h"
 #include "../FirstTaxiLeg/FirstTaxiLegResult.h"
 #include "../ApproximateCombinedTripResult.h"

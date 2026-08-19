@@ -65,7 +65,7 @@ namespace karri {
                              const RequestState& requestState,
                              const PDDistances& pdDistances,
                              const PDLocs& pdLocs,
-                             TaxiResult &result,
+                             InternalTaxiResult &result,
                              stats::PbnsAssignmentsPerformanceStats& stats) {
             numAssignmentsTriedWithPickupBeforeNextStop = 0;
             KaRRiTimer timer;
@@ -122,7 +122,7 @@ namespace karri {
                                               const RequestState& requestState,
                                               const PDDistances& pdDistances,
                                               const PDLocs& pdLocs,
-                                              const TaxiResult &result) {
+                                              const InternalTaxiResult &result) {
 
             const auto &relOrdinaryDropoffsForVeh = relOrdinaryDropoffs.relevantSpotsFor(veh.vehicleId);
             const auto &relDropoffsBeforeNextStopForVeh = relDropoffsBns.relevantSpotsFor(veh.vehicleId);
@@ -179,7 +179,7 @@ namespace karri {
         // which the exact distance is first needed or one-past-end iterator if all combinations could be filtered.
         RelevantPDLocs::It tryLowerBoundsForPaired(Assignment &asgn, const RelevantPDLocs &relDropoffsBns,
             const RequestState& requestState, const PDDistances& pdDistances, const PDLocs& pdLocs,
-            const TaxiResult &result) {
+            const InternalTaxiResult &result) {
             assert(asgn.vehicle && asgn.pickup.id != INVALID_ID);
             const auto vehId = asgn.vehicle->vehicleId;
 
@@ -219,7 +219,7 @@ namespace karri {
         // vehicle until an assignment requires the exact distance to the pickup via the vehicle. Returns an iterator to the
         // dropoff at which the exact distance is first needed or one-past-end iterator if all combinations could be filtered.
         RelevantPDLocs::It tryLowerBoundsForOrdinary(Assignment &asgn, const RelevantPDLocs& relOrdinaryDropoffs,
-            const RequestState& requestState, const PDLocs& pdLocs, const TaxiResult &result) {
+            const RequestState& requestState, const PDLocs& pdLocs, const InternalTaxiResult &result) {
             using namespace time_utils;
             assert(asgn.vehicle && asgn.pickup.id != INVALID_ID);
             const auto vehId = asgn.vehicle->vehicleId;
@@ -262,7 +262,7 @@ namespace karri {
 
         void finishContinuations(const Vehicle &veh, const RelevantPDLocs& relOrdinaryDropoffs,
             const RelevantPDLocs& relDropoffsBns, const RequestState& requestState,
-            const PDDistances& pdDistances, const PDLocs& pdLocs, TaxiResult &result) {
+            const PDDistances& pdDistances, const PDLocs& pdLocs, InternalTaxiResult &result) {
             const auto stopLocations = routeState.stopLocationsFor(veh.vehicleId);
             const auto numStops = routeState.numStopsOf(veh.vehicleId);
             Assignment asgn(&veh);

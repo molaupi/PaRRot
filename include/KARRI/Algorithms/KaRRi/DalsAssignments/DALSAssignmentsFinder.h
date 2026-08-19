@@ -41,7 +41,7 @@ namespace karri {
                              const RelevantPDLocs &relevantPickupsBeforeNextStop,
                              const RequestState& requestState,
                              const PDLocs& pdLocs,
-                             TaxiResult &result,
+                             InternalTaxiResult &result,
                              stats::DalsAssignmentsPerformanceStats& stats) {
             strategy.tryDropoffAfterLastStop(relevantOrdinaryPickups, relevantPickupsBeforeNextStop, requestState, pdLocs, result, stats);
         }
