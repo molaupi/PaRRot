@@ -219,7 +219,7 @@ namespace parrot {
             const int stopRank = ch.rank(stopVertex);
             const int lengthOfLegStartingAtStop = time_utils::calcLengthOfLegStartingAt(stopIndex, vehId, routeState);
 
-            assert(stopIndex < routeState.numStopsOf(vehId) - 1);
+            KASSERT(stopIndex < routeState.numStopsOf(vehId) - 1);
 
             const int nextStopLoc = routeState.stopLocationsFor(vehId)[stopIndex + 1];
             const int nextStopVertex = inputGraph.edgeTail(nextStopLoc);

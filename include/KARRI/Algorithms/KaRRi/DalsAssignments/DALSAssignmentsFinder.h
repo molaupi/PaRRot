@@ -42,8 +42,9 @@ namespace karri {
                              const RequestState& requestState,
                              const PDLocs& pdLocs,
                              InternalTaxiResult &result,
-                             stats::DalsAssignmentsPerformanceStats& stats) {
-            strategy.tryDropoffAfterLastStop(relevantOrdinaryPickups, relevantPickupsBeforeNextStop, requestState, pdLocs, result, stats);
+                             stats::DalsAssignmentsPerformanceStats &dalsStats,
+                             stats::PbnsAssignmentsPerformanceStats &pbnsStats) {
+            strategy.tryDropoffAfterLastStop(relevantOrdinaryPickups, relevantPickupsBeforeNextStop, requestState, pdLocs, result, dalsStats, pbnsStats);
         }
 
         void init(const RequestState&, const PDLocs&, stats::DalsAssignmentsPerformanceStats&) {

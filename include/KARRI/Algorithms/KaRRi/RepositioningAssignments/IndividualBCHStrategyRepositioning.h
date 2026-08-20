@@ -22,7 +22,7 @@
 
 namespace karri {
 
-    template<typename InputGraphT, typename CHEnvT, typename RepositioningBucketsEnvT, typename CurVehLocToPickupSearchesT, typename LabelSetT = BasicLabelSet<0, ParentInfo::NO_PARENT_INFO>>
+    template<typename InputGraphT, typename CHEnvT, typename RepositioningBucketsEnvT, typename VehicleLocatorT, typename CurVehLocToPickupSearchesT, typename LabelSetT = BasicLabelSet<0, ParentInfo::NO_PARENT_INFO>>
     class IndividualBCHStrategyRepositioning {
     public:
         using LabelSet = LabelSetT;
@@ -35,11 +35,12 @@ namespace karri {
                                            const CostCalculator &calculator,
                                            const RepositioningBucketsEnvT &repositionBucketsEnv,
                                            const RouteState &routeState,
+                                           VehicleLocatorT &vehicleLocator,
                                            CurVehLocToPickupSearchesT& curVehLocToPickupSearches)
                 : inputGraph(inputGraph), fleet(fleet), chEnv(chEnv), ch(chEnv.getCH()), chFullQuery(chEnv.template getFullCHQuery<>()),
                   calculator(calculator), repositionBuckets(repositionBucketsEnv.getBuckets()), routeState(routeState),
                   curVehLocToPickupSearches(curVehLocToPickupSearches),
-                  vehicleLocator(inputGraph, chEnv, routeState), candidateSubset(static_cast<int>(fleet.size())),
+                  vehicleLocator(vehicleLocator), candidateSubset(static_cast<int>(fleet.size())),
                   curReqState(nullptr), curResult(nullptr),
                   reverseSearch(chEnv.template getReverseSearch<ScanBucket, dij::NoCriterion, LabelSet>(ScanBucket(*this), dij::NoCriterion())) {}
 
@@ -102,7 +103,7 @@ namespace karri {
 
             // For each candidate vehicle, compute exact location and exact CH distances to pickups, then try assignments
             int64_t numAssignmentsTried = 0;
-            computeExactAndTryAssignments(pdDistances, pdLocs, numAssignmentsTried);
+            computeExactAndTryAssignments(requestState, pdDistances, pdLocs, numAssignmentsTried);
 
             const auto tryAssignmentsTime = timer.elapsed<std::chrono::nanoseconds>();
             stats.numCandidateVehicles += candidateSubset.size();
@@ -175,7 +176,7 @@ namespace karri {
             currentMinPDDistances = DistanceLabel(INFTY);
         }
 
-        void computeExactAndTryAssignments(const PDDistances &pdDistances, const PDLocs &pdLocs,
+        void computeExactAndTryAssignments(const RequestState &requestState, const PDDistances &pdDistances, const PDLocs &pdLocs,
             int64_t &numAssignmentsTried) {
             Assignment asgn;
             asgn.pickupStopIdx = 0;
@@ -184,17 +185,12 @@ namespace karri {
                 const auto &veh = fleet[vehId];
 
                 for (const auto &p : pdLocs.pickups) {
-                    // Technically, the second argument should be the distance from the repositioning vehicle's
-                    // previous idle position to the pickup location. But we don't know this distance. It is only
-                    // relevant if the vehicle is still at that position.
-                    curVehLocToPickupSearches.addPickupForProcessing(p.id, INFTY);
+                    curVehLocToPickupSearches.addPickupForProcessing(p.id);
                 }
 
-                if (curReqState->originalRequest.requestId == 3391 && vehId == 2695) {
-                    std::cout << "";
-                }
-
-                curVehLocToPickupSearches.computeExactDistancesVia(veh, pdLocs);
+                int64_t dummyStat;
+                const auto vehLocation = vehicleLocator.getCurrentLocation(vehId, requestState.now(), dummyStat);
+                curVehLocToPickupSearches.computeDistances(vehId, vehLocation.location, pdLocs, dummyStat, dummyStat);
 
                 for (const auto &p : pdLocs.pickups) {
 
@@ -224,7 +220,7 @@ namespace karri {
         const RouteState &routeState;
         CurVehLocToPickupSearchesT& curVehLocToPickupSearches;
 
-        VehicleLocator<InputGraphT, CHEnvT> vehicleLocator;
+        VehicleLocatorT &vehicleLocator;
         LightweightSubset candidateSubset;
 
         // Transient per-request context, set at the start of tryRepositioningAssignments().

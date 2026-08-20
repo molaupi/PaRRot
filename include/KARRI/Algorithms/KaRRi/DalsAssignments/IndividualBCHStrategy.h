@@ -39,6 +39,7 @@ namespace karri::DropoffAfterLastStopStrategies {
     template<typename InputGraphT,
             typename CHEnvT,
             typename LastStopBucketsEnvT,
+            typename VehicleLocatorT,
             typename CurVehLocToPickupSearchesT,
             typename LabelSet>
     struct IndividualBCHStrategy {
@@ -137,11 +138,13 @@ namespace karri::DropoffAfterLastStopStrategies {
                               const Fleet &fleet,
                               const CHEnvT &chEnv,
                               const LastStopBucketsEnvT &lastStopBucketsEnv,
+                              VehicleLocatorT &vehicleLocator,
                               CurVehLocToPickupSearchesT &curVehLocToPickupSearchesT,
                               const RouteState &routeState)
                 : inputGraph(inputGraph),
                   fleet(fleet),
                   calculator(routeState),
+                  vehicleLocator(vehicleLocator),
                   curVehLocToPickupSearches(curVehLocToPickupSearchesT),
                   routeState(routeState),
                   checkPBNSForVehicle(fleet.size()),
@@ -154,20 +157,21 @@ namespace karri::DropoffAfterLastStopStrategies {
         void tryDropoffAfterLastStop(const RelevantPDLocs &relevantOrdinaryPickups,
                                      const RelevantPDLocs &relevantPickupsBeforeNextStop,
                                      const RequestState& requestState, const PDLocs& pdLocs,
-                                     TaxiResult &result,
-                                     stats::DalsAssignmentsPerformanceStats& stats) {
+                                     InternalTaxiResult &result,
+                                     stats::DalsAssignmentsPerformanceStats &dalsStats,
+                                     stats::PbnsAssignmentsPerformanceStats &pbnsStats) {
             curReqState = &requestState;
             curRelOrdinaryPickups = &relevantOrdinaryPickups;
             curRelPickupsBns = &relevantPickupsBeforeNextStop;
 
-            runBchQueries(pdLocs, result, stats);
-            enumerateAssignments(relevantOrdinaryPickups, relevantPickupsBeforeNextStop, requestState, pdLocs, stats);
+            runBchQueries(pdLocs, result, dalsStats);
+            enumerateAssignments(relevantOrdinaryPickups, relevantPickupsBeforeNextStop, requestState, pdLocs, dalsStats);
         }
 
     private:
 
         // Run BCH queries that obtain distances from last stops to dropoffs
-        void runBchQueries(const PDLocs& pdLocs, const TaxiResult &result, stats::DalsAssignmentsPerformanceStats& stats) {
+        void runBchQueries(const PDLocs& pdLocs, const InternalTaxiResult &result, stats::DalsAssignmentsPerformanceStats& stats) {
             KaRRiTimer timer;
 
             initDropoffSearches(pdLocs, result);
@@ -186,32 +190,30 @@ namespace karri::DropoffAfterLastStopStrategies {
         void enumerateAssignments(const RelevantPDLocs &relevantOrdinaryPickups,
                                   const RelevantPDLocs &relevantPickupsBeforeNextStop,
                                   const RequestState& requestState, const PDLocs& pdLocs,
-                                  TaxiResult &result,
-                                  stats::DalsAssignmentsPerformanceStats& stats) {
+                                  InternalTaxiResult &result,
+                                  stats::DalsAssignmentsPerformanceStats& dalsStats,
+                                  stats::PbnsAssignmentsPerformanceStats &pbnsStats) {
             int numAssignmentsTried = 0;
-            const int64_t pbnsTimeBefore = curVehLocToPickupSearches.getTotalLocatingVehiclesTimeForRequest() +
-                                           curVehLocToPickupSearches.getTotalVehicleToPickupSearchTimeForRequest();
+            const int64_t pbnsTimeBefore = pbnsStats.locatingVehiclesTime + pbnsStats.directCHSearchTime;
             KaRRiTimer timer;
 
             enumerateAssignmentsWithOrdinaryPickup(numAssignmentsTried, relevantOrdinaryPickups, requestState, pdLocs, result);
-            enumerateAssignmentsWithPBNS(numAssignmentsTried, relevantPickupsBeforeNextStop, requestState, pdLocs, result);
+            enumerateAssignmentsWithPBNS(numAssignmentsTried, relevantPickupsBeforeNextStop, requestState, pdLocs, result, pbnsStats);
 
             // Time spent to locate vehicles and compute distances from current vehicle locations to pickups is counted
             // into PBNS time so subtract it here.
-            const int64_t pbnsTime = curVehLocToPickupSearches.getTotalLocatingVehiclesTimeForRequest() +
-                                     curVehLocToPickupSearches.getTotalVehicleToPickupSearchTimeForRequest() -
-                                     pbnsTimeBefore;
+            const int64_t pbnsTime = pbnsStats.locatingVehiclesTime + pbnsStats.directCHSearchTime - pbnsTimeBefore;
 
             const int64_t tryAssignmentsTime = timer.elapsed<std::chrono::nanoseconds>() - pbnsTime;
-            stats.tryAssignmentsTime += tryAssignmentsTime;
-            stats.numAssignmentsTried += numAssignmentsTried;
+            dalsStats.tryAssignmentsTime += tryAssignmentsTime;
+            dalsStats.numAssignmentsTried += numAssignmentsTried;
 
             // Find total number of candidate dropoffs for statistics
             int totalNumberOfCandidateDropoffs = 0;
             for (const auto &vehId: vehiclesSeenForDropoffs)
                 for (const auto &dropoff: pdLocs.dropoffs)
                     totalNumberOfCandidateDropoffs += (getDistanceToDropoff(vehId, dropoff.id) < INFTY);
-            stats.numCandidateDropoffsAcrossAllVehicles += totalNumberOfCandidateDropoffs;
+            dalsStats.numCandidateDropoffsAcrossAllVehicles += totalNumberOfCandidateDropoffs;
         }
 
         // Enumerate assignments where pickup is after next stop (ordinary pickup):
@@ -219,7 +221,7 @@ namespace karri::DropoffAfterLastStopStrategies {
                                                     const RelevantPDLocs &relevantOrdinaryPickups,
                                                     const RequestState& requestState,
                                                     const PDLocs& pdLocs,
-                                                    TaxiResult &result) {
+                                                    InternalTaxiResult &result) {
             Assignment asgn;
 
             checkPBNSForVehicle.reset();
@@ -291,7 +293,8 @@ namespace karri::DropoffAfterLastStopStrategies {
                                           const RelevantPDLocs &relevantPickupsBeforeNextStop,
                                           const RequestState& requestState,
                                           const PDLocs& pdLocs,
-                                          TaxiResult &result) {
+                                          InternalTaxiResult &result,
+                                          stats::PbnsAssignmentsPerformanceStats &pbnsStats) {
             Assignment asgn;
             asgn.pickupStopIdx = 0;
 
@@ -314,6 +317,10 @@ namespace karri::DropoffAfterLastStopStrategies {
                 asgn.dropoffStopIdx = numStops - 1;
 
 
+                const auto vehLocation = vehicleLocator.getCurrentLocation(vehId, requestState.now(), pbnsStats.locatingVehiclesTime);
+                const int distToCurLoc = vehLocation.depTimeAtHead - routeState.schedDepTimesFor(vehId)[0];
+
+
                 for (auto &entry: relevantPickupsBeforeNextStop.relevantSpotsFor(vehId)) {
                     asgn.pickup = pdLocs.pickups[entry.pdId];
                     asgn.distFromPickup = entry.distFromPDLocToNextStop;
@@ -327,7 +334,7 @@ namespace karri::DropoffAfterLastStopStrategies {
                             continue;
 
                         if (curVehLocToPickupSearches.knowsDistance(vehId, asgn.pickup.id)) {
-                            asgn.distToPickup = curVehLocToPickupSearches.getDistance(vehId, asgn.pickup.id);
+                            asgn.distToPickup = distToCurLoc + curVehLocToPickupSearches.getDistance(vehId, asgn.pickup.id);
                             result.tryAssignmentWithKnownCost(asgn, calculator.calc(asgn, requestState));
                             ++numAssignmentsTried;
                         } else {
@@ -349,14 +356,13 @@ namespace karri::DropoffAfterLastStopStrategies {
                 }
 
                 // Continue with assignments for pickups where exact distance via vehicle location is needed
-                curVehLocToPickupSearches.computeExactDistancesVia(fleet[vehId], pdLocs);
+                curVehLocToPickupSearches.computeDistances(vehId, vehLocation.location, pdLocs, pbnsStats.directCHSearchTime, pbnsStats.numCHSearches);
                 for (const auto &continuation: pbnsContinuations) {
                     assert(continuation.pickupID >= 0 && continuation.pickupID < pdLocs.numPickups());
                     assert(continuation.fromDropoffID >= 0 && continuation.fromDropoffID < pdLocs.numDropoffs());
                     asgn.pickup = pdLocs.pickups[continuation.pickupID];
 
-                    asgn.distToPickup = curVehLocToPickupSearches.getDistance(vehId,
-                                                                              continuation.pickupID);
+                    asgn.distToPickup = distToCurLoc + curVehLocToPickupSearches.getDistance(vehId, continuation.pickupID);
                     if (asgn.distToPickup >= INFTY)
                         continue;
 
@@ -383,7 +389,7 @@ namespace karri::DropoffAfterLastStopStrategies {
             return lastStopDistances.getDistance(vehId, dropoffId);
         }
 
-        void initDropoffSearches(const PDLocs& pdLocs, const TaxiResult& result) {
+        void initDropoffSearches(const PDLocs& pdLocs, const InternalTaxiResult& result) {
             totalNumEdgeRelaxations = 0;
             totalNumVerticesSettled = 0;
             totalNumEntriesScanned = 0;
@@ -425,6 +431,7 @@ namespace karri::DropoffAfterLastStopStrategies {
         const InputGraphT &inputGraph;
         const Fleet &fleet;
         CostCalculator calculator;
+        VehicleLocatorT &vehicleLocator;
         CurVehLocToPickupSearchesT &curVehLocToPickupSearches;
         const RouteState &routeState;
 

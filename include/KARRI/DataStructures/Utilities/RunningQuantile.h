@@ -74,7 +74,7 @@ private:
     void rebalance() {
         // Subtracting a small epsilon before rounding up guards against q * n overshooting the
         // nearest integer due to floating-point rounding (e.g. q == 0.9 and n == 10).
-        const int targetLowerSize = static_cast<size_t>(std::ceil(q * n - 1e-9));
+        const int targetLowerSize = static_cast<int>(std::ceil(q * n - 1e-9));
 
         while (lowerHeap.size() > targetLowerSize) {
             upperHeap.push(lowerHeap.top());

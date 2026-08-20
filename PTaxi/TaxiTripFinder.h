@@ -52,7 +52,7 @@ namespace karri {
 
             // Try DALS assignments:
             dalsAssignments.findAssignments(baseInfo.relOrdinaryPickups, baseInfo.relPickupsBeforeNextStop,
-                                            requestState, baseInfo.pdLocs, result, stats.dalsAssignmentsStats);
+                                            requestState, baseInfo.pdLocs, result, stats.dalsAssignmentsStats, stats.pbnsAssignmentsStats);
 
             // Try PBNS assignments:
             pbnsAssignments.findAssignments(baseInfo.relPickupsBeforeNextStop, baseInfo.relOrdinaryDropoffs,

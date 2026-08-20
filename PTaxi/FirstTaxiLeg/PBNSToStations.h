@@ -39,7 +39,7 @@ namespace parrot {
     // (The case of pickup before next stop and dropoff station after last stop is considered by the DALSToStation.)
     //
     // Works based on filtered relevant pickups before next stop as well as stations in ellipse and station distances to pickups.
-    template<typename CurVehLocToPickupSearchesT, typename StationsInEllipseT, typename StationDistancesT>
+    template<typename VehicleLocatorT, typename CurVehLocToPickupSearchesT, typename StationsInEllipseT, typename StationDistancesT>
     class PBNSToStations {
         // Algorithm iterates through combinations of pickups and dropoffs and filters based on lower bound cost.
         // If exact distance from vehicle's current location to a pickup is ever needed, we delay the computation of that
@@ -53,9 +53,11 @@ namespace parrot {
         };
 
     public:
-        PBNSToStations(CurVehLocToPickupSearchesT &curVehLocToPickupSearches,
+        PBNSToStations(VehicleLocatorT &vehicleLocator,
+            CurVehLocToPickupSearchesT &curVehLocToPickupSearches,
                        const Fleet &fleet, const RouteState &routeState)
-            : curVehLocToPickupSearches(curVehLocToPickupSearches),
+            : vehicleLocator(vehicleLocator),
+              curVehLocToPickupSearches(curVehLocToPickupSearches),
               fleet(fleet),
               calculator(routeState),
               routeState(routeState) {
@@ -73,6 +75,7 @@ namespace parrot {
 
             int numCandidateVehicles = 0;
             for (const auto &vehId: relPickupsBns.getVehiclesWithRelevantPDLocs()) {
+                timer.restart();
                 ++numCandidateVehicles;
 
                 ordinaryContinuations.clear();
@@ -85,21 +88,20 @@ namespace parrot {
                 determineNecessaryExactDistances(fleet[vehId], relPickupsBns, stations, stationsInEllipse,
                                                  stationDistances, requestState, pdLocs, firstTaxiLegResult);
 
-                curVehLocToPickupSearches.computeExactDistancesVia(fleet[vehId], pdLocs);
+                stats.tryAssignmentsTime += timer.elapsed<std::chrono::nanoseconds>();
 
+                const auto vehLocation = vehicleLocator.getCurrentLocation(vehId, requestState.now(), stats.locatingVehiclesTime);
+                curVehLocToPickupSearches.computeDistances(vehId, vehLocation.location, pdLocs, stats.directCHSearchTime, stats.numCHSearches);
+                const int distToCurLoc = vehLocation.depTimeAtHead - routeState.schedDepTimesFor(vehId)[0];
+
+                timer.restart();
                 finishContinuations(fleet[vehId], stations, stationsInEllipse, stationDistances, requestState, pdLocs,
-                                    firstTaxiLegResult);
+                                    distToCurLoc, firstTaxiLegResult);
+                stats.tryAssignmentsTime += timer.elapsed<std::chrono::nanoseconds>();
             }
 
-            const auto time = timer.elapsed<std::chrono::nanoseconds>() -
-                              curVehLocToPickupSearches.getTotalLocatingVehiclesTimeForRequest();
-            stats.tryAssignmentsTime += time;
             stats.numCandidateVehicles += numCandidateVehicles;
             stats.numAssignmentsTried += numAssignmentsTriedWithPickupBeforeNextStop;
-
-            stats.locatingVehiclesTime += curVehLocToPickupSearches.getTotalLocatingVehiclesTimeForRequest();
-            stats.numCHSearches += curVehLocToPickupSearches.getTotalNumCHSearchesRunForRequest();
-            stats.directCHSearchTime += curVehLocToPickupSearches.getTotalVehicleToPickupSearchTimeForRequest();
         }
 
         void setExternalCostUpperBound(const int bestCost) {
@@ -148,7 +150,7 @@ namespace parrot {
                         // the vehicle. Postpone computation of the yet unknown exact distance and the rest of the paired
                         // assignments as well as all assignments with later dropoffs. That way, the exact distances can be
                         // computed in a bundled fashion and the postponed assignments can use exact distances afterward.
-                        curVehLocToPickupSearches.addPickupForProcessing(asgn.pickup.id, asgn.distToPickup);
+                        curVehLocToPickupSearches.addPickupForProcessing(asgn.pickup.id);
                         pairedContinuations.push_back({asgn.pickup.id, 0, INVALID_INDEX});
                         ++numAssignmentsTriedWithPickupBeforeNextStop; // Count first ordinary continuation
                         ordinaryContinuations.push_back({asgn.pickup.id, distFromPickup, 1});
@@ -169,7 +171,7 @@ namespace parrot {
                     // of the yet unknown exact distance and the rest of the assignments with later dropoffs. That way,
                     // the exact distances can be computed in a bundled fashion and the postponed assignments can use
                     // exact distances afterward.
-                    curVehLocToPickupSearches.addPickupForProcessing(asgn.pickup.id, asgn.distToPickup);
+                    curVehLocToPickupSearches.addPickupForProcessing(asgn.pickup.id);
                     ordinaryContinuations.push_back({asgn.pickup.id, distFromPickup, scannedUntilIndex});
                 }
             }
@@ -368,6 +370,7 @@ namespace parrot {
                                  StationDistancesT &stationDistances,
                                  const RequestState &requestState,
                                  const PDLocs &pdLocs,
+                                 const int distToCurVehLoc,
                                  FirstTaxiLegResult &firstTaxiLegResult) {
             using namespace time_utils;
             static int stopTime = InputConfig::getInstance().stopTime;
@@ -386,7 +389,7 @@ namespace parrot {
             for (const auto &continuation: ordinaryContinuations) {
                 asgn.pickup = pdLocs.pickups[continuation.pickupId];
 
-                asgn.distToPickup = curVehLocToPickupSearches.getDistance(veh.vehicleId, continuation.pickupId);
+                asgn.distToPickup = distToCurVehLoc + curVehLocToPickupSearches.getDistance(veh.vehicleId, continuation.pickupId);
                 if (asgn.distToPickup >= INFTY)
                     continue;
 
@@ -490,7 +493,7 @@ namespace parrot {
                 asgn.pickup = pdLocs.pickups[continuation.pickupId];
 
                 asgn.dropoffStopIdx = 0;
-                asgn.distToPickup = curVehLocToPickupSearches.getDistance(veh.vehicleId, continuation.pickupId);
+                asgn.distToPickup = distToCurVehLoc + curVehLocToPickupSearches.getDistance(veh.vehicleId, continuation.pickupId);
                 if (asgn.distToPickup >= INFTY)
                     continue;
 
@@ -565,6 +568,7 @@ namespace parrot {
         int upperBoundCost;
         int externalUpperBoundCost;
 
+        VehicleLocatorT &vehicleLocator;
         CurVehLocToPickupSearchesT &curVehLocToPickupSearches;
         const Fleet &fleet;
         CostCalculator calculator;

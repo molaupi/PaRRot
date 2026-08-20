@@ -875,7 +875,7 @@ namespace karri {
                         InputConfig::getInstance().stopTime;
                 // The leeway is only allowed to be negative if the stop at idx 1 is an intermediate stop that has
                 // just been created but is not considered reached yet as multiple requests are being inserted at the same time.
-                KASSERT((idx == start && schedDepTimes[start + 1] == schedArrTimes[start + 1]) || leeway >= 0);
+                KASSERT((idx == start && static_cast<bool>(isIntermediateStop[start + 1])) || leeway >= 0);
                 stopIdToLeeway[stopId] = leeway;
 
                 if (leeway > maxLeeway) {

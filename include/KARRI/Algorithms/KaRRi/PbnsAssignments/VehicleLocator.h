@@ -39,20 +39,42 @@ namespace karri {
 // travelling.
     template<typename InputGraphT, typename CHEnvT>
     class VehicleLocator {
+        static constexpr VehicleLocation INITIAL_INVALID_LOC = {INVALID_EDGE, -1};
 
     public:
-        VehicleLocator(const InputGraphT &inputGraph, const CHEnvT &chEnv, const RouteState &routeState)
+        VehicleLocator(const InputGraphT &inputGraph, const CHEnvT &chEnv, const Fleet &fleet, const RouteState &routeState)
                 : inputGraph(inputGraph),
+        fleet(fleet),
                   ch(chEnv.getCH()),
                   chQuery(chEnv.template getFullCHQuery<>()),
                   unpacker(ch),
                   routeState(routeState),
-                  path() {}
+                  path(),
+                  cachedLocations(fleet.size(), INITIAL_INVALID_LOC) {}
+
+        bool knowsCurrentLocation(const int vehId, const int now) const {
+            return cachedLocations[vehId].depTimeAtHead >= now;
+        }
+
+        VehicleLocation getCurrentLocation(const int vehId, const int now, int64_t &locatingTimeStat) {
+            KaRRiTimer timer;
+            KASSERT(routeState.numStopsOf(vehId) > 0);
+
+            // Check if cached location is expired. If so, recompute location.
+            if (cachedLocations[vehId].depTimeAtHead < now) {
+                cachedLocations[vehId] = computeCurrentLocation(fleet[vehId], now);
+            }
+
+            locatingTimeStat += timer.elapsed<std::chrono::nanoseconds>();
+            return cachedLocations[vehId];
+        }
+
+    private:
 
 
         VehicleLocation computeCurrentLocation(const Vehicle &veh, const int now) {
             const auto &vehId = veh.vehicleId;
-            assert(routeState.numStopsOf(vehId) > 0);
+            KASSERT(routeState.numStopsOf(vehId) > 0);
 
             const auto prevOrCurLoc = routeState.stopLocationsFor(vehId)[0];
             const auto &schedDepTimes = routeState.schedDepTimesFor(vehId);
@@ -114,16 +136,17 @@ namespace karri {
             return {};
         }
 
-
-    private:
-
         const InputGraphT &inputGraph;
+        const Fleet &fleet;
         const CH &ch;
         typename CHEnvT::template FullCHQuery<> chQuery;
         CHPathUnpacker unpacker;
         const RouteState &routeState;
 
         std::vector<int> path;
+
+
+        std::vector<VehicleLocation> cachedLocations;
 
 
     };

@@ -515,7 +515,7 @@ int main(int argc, char *argv[]) {
         });
 
         using VehicleLocatorImpl = VehicleLocator<VehicleInputGraph, VehCHEnv>;
-        VehicleLocatorImpl locator(vehicleInputGraph, *vehChEnv, routeState);
+        VehicleLocatorImpl locator(vehicleInputGraph, *vehChEnv, fleet, routeState);
 
         // Construct Elliptic BCH bucket environment:
         static constexpr bool ELLIPTIC_SORTED_BUCKETS = KARRI_ELLIPTIC_BCH_SORTED_BUCKETS;
@@ -599,14 +599,13 @@ KARRI_DALS_STRATEGY == KARRI_COL || KARRI_DALS_STRATEGY == KARRI_IND
 
         // Construct PBNS assignments finder:
         using CurVehLocToPickupLabelSet = PDDistancesLabelSet;
-        using CurVehLocToPickupSearchesImpl = CurVehLocToPickupSearches<VehicleInputGraph, VehicleLocatorImpl, VehCHEnv,
+        using CurVehLocToPickupSearchesImpl = CurVehLocToPickupSearches<VehicleInputGraph, VehCHEnv,
             CurVehLocToPickupLabelSet>;
-        CurVehLocToPickupSearchesImpl curVehLocToPickupSearches(vehicleInputGraph, locator, *vehChEnv, routeState,
-                                                                fleet.size());
+        CurVehLocToPickupSearchesImpl curVehLocToPickupSearches(vehicleInputGraph, *vehChEnv, routeState, fleet.size());
 
 
-        using PBNSInsertionsFinderImpl = PBNSAssignmentsFinder<CurVehLocToPickupSearchesImpl>;
-        PBNSInsertionsFinderImpl pbnsInsertionsFinder(curVehLocToPickupSearches, fleet, routeState);
+        using PBNSInsertionsFinderImpl = PBNSAssignmentsFinder<VehicleLocatorImpl, CurVehLocToPickupSearchesImpl>;
+        PBNSInsertionsFinderImpl pbnsInsertionsFinder(locator, curVehLocToPickupSearches, fleet, routeState);
 
         // Construct PALS strategy and assignment finder:
         using PALSLabelSet = std::conditional_t<KARRI_PALS_USE_SIMD,
@@ -646,24 +645,24 @@ KARRI_DALS_STRATEGY == KARRI_COL || KARRI_DALS_STRATEGY == KARRI_IND
 #if KARRI_DALS_STRATEGY == KARRI_COL
         // Use Collective-BCH DALS Strategy
         using DALSStrategy = DropoffAfterLastStopStrategies::CollectiveBCHStrategy<VehicleInputGraph, VehCHEnv,
-            LastStopBucketsEnv, CurVehLocToPickupSearchesImpl>;
+            LastStopBucketsEnv, VehicleLocatorImpl, CurVehLocToPickupSearchesImpl>;
         DALSStrategy dalsStrategy(vehicleInputGraph, fleet, routeState, *vehChEnv, lastStopBucketsEnv,
-                                  curVehLocToPickupSearches);
+                                  locator, curVehLocToPickupSearches);
 #elif KARRI_DALS_STRATEGY == KARRI_IND
         // Use Individual-BCH DALS Strategy
         using DALSStrategy = DropoffAfterLastStopStrategies::IndividualBCHStrategy<VehicleInputGraph, VehCHEnv,
-            LastStopBucketsEnv, CurVehLocToPickupSearchesImpl, DALSLabelSet>;
-        DALSStrategy dalsStrategy(vehicleInputGraph, fleet, *vehChEnv, lastStopBucketsEnv, curVehLocToPickupSearches,
-                                  routeState);
+            LastStopBucketsEnv, VehicleLocatorImpl, CurVehLocToPickupSearchesImpl, DALSLabelSet>;
+        DALSStrategy dalsStrategy(vehicleInputGraph, fleet, *vehChEnv, lastStopBucketsEnv, locator,
+            curVehLocToPickupSearches, routeState);
 #else // KARRI_DALS_STRATEGY == KARRI_DIJ
         // Use Dijkstra DALS Strategy
         using DALSLabelSet = std::conditional_t<KARRI_DALS_USE_SIMD,
             SimdLabelSet<KARRI_DALS_LOG_K, ParentInfo::NO_PARENT_INFO>,
             BasicLabelSet<KARRI_DALS_LOG_K, ParentInfo::NO_PARENT_INFO> >;
         using DALSStrategy = DropoffAfterLastStopStrategies::DijkstraStrategy<VehicleInputGraph, LastStopBucketsEnv,
-            CurVehLocToPickupSearchesImpl, DALSLabelSet>;
-        DALSStrategy dalsStrategy(vehicleInputGraph, revVehicleGraph, fleet, curVehLocToPickupSearches, routeState,
-                                  lastStopBucketsEnv);
+            VehicleLocatorImpl, CurVehLocToPickupSearchesImpl, DALSLabelSet>;
+        DALSStrategy dalsStrategy(vehicleInputGraph, revVehicleGraph, fleet, locator, curVehLocToPickupSearches,
+            routeState, lastStopBucketsEnv);
 #endif
 
         using DALSInsertionsFinderImpl = DALSAssignmentsFinder<DALSStrategy>;
@@ -674,10 +673,10 @@ KARRI_DALS_STRATEGY == KARRI_COL || KARRI_DALS_STRATEGY == KARRI_IND
         using RepositioningStrategyImpl = RepositioningStrategies::LongestIdleRepositioningStrategy;
         RepositioningStrategyImpl repositioningStrategy(fleet);
         using RepositioningFinderStrategy = IndividualBCHStrategyRepositioning<VehicleInputGraph, VehCHEnv,
-            RepositioningBucketsEnv, CurVehLocToPickupSearchesImpl>;
+            RepositioningBucketsEnv, VehicleLocatorImpl, CurVehLocToPickupSearchesImpl>;
         RepositioningFinderStrategy repositioningFinderStrategy(vehicleInputGraph, fleet, *vehChEnv, calculator,
                                                                 repositioningBucketsEnv, routeState,
-                                                                curVehLocToPickupSearches);
+                                                                locator, curVehLocToPickupSearches);
         using RepositioningInsertionsFinderImpl = RepositioningAssignmentsFinder<RepositioningFinderStrategy>;
         RepositioningInsertionsFinderImpl repositioningInsertionsFinder(repositioningFinderStrategy);
 
@@ -779,9 +778,9 @@ KARRI_DALS_STRATEGY == KARRI_COL || KARRI_DALS_STRATEGY == KARRI_IND
 
         // DALS for stations
         using DALSToStationsLabelSet = BasicLabelSet<0, ParentInfo::NO_PARENT_INFO>;
-        using DALSToStationsImpl = parrot::DALSToStations<VehicleInputGraph, VehCHEnv, CurVehLocToPickupSearchesImpl,
+        using DALSToStationsImpl = parrot::DALSToStations<VehicleInputGraph, VehCHEnv, VehicleLocatorImpl, CurVehLocToPickupSearchesImpl,
             StationBucketsEnv, DALSToStationsLabelSet>;
-        DALSToStationsImpl dalsToStations(vehicleInputGraph, fleet, *vehChEnv, curVehLocToPickupSearches, routeState,
+        DALSToStationsImpl dalsToStations(vehicleInputGraph, fleet, *vehChEnv, locator, curVehLocToPickupSearches, routeState,
                                           stationBucketsEnv, stations, stationsAtLocations);
 
         using StationsInEllipseImpl = parrot::StationsInEllipse<VehicleInputGraph, VehCHEnv, StationBucketsEnv>;
@@ -792,9 +791,9 @@ KARRI_DALS_STRATEGY == KARRI_COL || KARRI_DALS_STRATEGY == KARRI_IND
         using OrdinaryToStationsImpl = parrot::OrdinaryToStations<StationsInEllipseImpl, StationBCH::StationDistances>;
 
         // PBNS for stations
-        using PBNSToStationsImpl = parrot::PBNSToStations<CurVehLocToPickupSearchesImpl, StationsInEllipseImpl,
+        using PBNSToStationsImpl = parrot::PBNSToStations<VehicleLocatorImpl, CurVehLocToPickupSearchesImpl, StationsInEllipseImpl,
             StationBCH::StationDistances>;
-        PBNSToStationsImpl pbnsToStations(curVehLocToPickupSearches, fleet, routeState);
+        PBNSToStationsImpl pbnsToStations(locator, curVehLocToPickupSearches, fleet, routeState);
 
         using TaxiLegApproximationImpl = parrot::HeuristicEgressTripFinder<VehicleInputGraph, VehCHEnv, StationBucketsEnv>;
 
@@ -849,10 +848,10 @@ KARRI_DALS_STRATEGY == KARRI_COL || KARRI_DALS_STRATEGY == KARRI_IND
 #endif
 
         using SystemStateUpdaterImpl = SystemStateUpdater<VehicleInputGraph, EllipticBucketsEnv, RepositioningBucketsEnv,
-            LastStopBucketsEnv, StationsInEllipseImpl, VehCHEnv, CurVehLocToPickupSearchesImpl, VehPathTracker,
+            LastStopBucketsEnv, StationsInEllipseImpl, VehCHEnv, VehicleLocatorImpl, VehPathTracker,
             RepositioningStrategyImpl, std::ofstream>;
         SystemStateUpdaterImpl
-                systemStateUpdater(vehicleInputGraph, fleet, curVehLocToPickupSearches,
+                systemStateUpdater(vehicleInputGraph, fleet, locator,
                                    pathTracker, routeState, ellipticBucketsEnv, repositioningBucketsEnv,
                                    lastStopBucketsEnv, stationsInEllipse, *vehChEnv, repositioningStrategy);
 

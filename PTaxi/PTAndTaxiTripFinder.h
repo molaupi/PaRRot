@@ -207,7 +207,7 @@ namespace parrot {
             runOrdinary(rs, pdLocs, relOrdinaryPickups, stats.ordAssignmentsStats,
                         upperBoundCost);
             runDALS(rs, pdLocs, relOrdinaryPickups, relPickupsBeforeNextStop, upperBoundCost,
-                    stats.dalsAssignmentsStats);
+                    stats.dalsAssignmentsStats, stats.pbnsAssignmentsStats);
             runPBNS(rs, pdLocs, relPickupsBeforeNextStop, upperBoundCost, stats.pbnsAssignmentsStats);
         }
 
@@ -240,9 +240,10 @@ namespace parrot {
         void runDALS(const RequestState &rs, const PDLocs &pdLocs,
                      const RelevantPDLocs &relOrdinaryPickups, const RelevantPDLocs &relPickupsBeforeNextStop,
                      const int upperBoundCost,
-                     stats::DalsAssignmentsPerformanceStats &stats) {
+                     stats::DalsAssignmentsPerformanceStats &dalsStats,
+                     stats::PbnsAssignmentsPerformanceStats &pbnsStats) {
             dalsToStations.setExternalCostUpperBound(upperBoundCost);
-            dalsToStations.tryDropoffAfterLastStop(rs, pdLocs, relOrdinaryPickups, relPickupsBeforeNextStop, stats,
+            dalsToStations.tryDropoffAfterLastStop(rs, pdLocs, relOrdinaryPickups, relPickupsBeforeNextStop, dalsStats, pbnsStats,
                                                    firstTaxiLegResult);
         }
 

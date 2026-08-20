@@ -55,7 +55,7 @@ namespace karri {
 
     public:
         SystemStateUpdater(const InputGraphT &inputGraph, const Fleet &fleet,
-                           const CurVehLocsT &curVehLocs,
+                           CurVehLocsT &curVehLocs,
                            PathTrackerT &pathTracker,
                            RouteState &routeState, EllipticBucketsEnvT &ellipticBucketsEnv,
                            RepositioningBucketsEnvT &repositioningBucketsEnv,
@@ -166,8 +166,9 @@ namespace karri {
                 repositioningStrategy.notifyBecameNonIdle(vehId);
 
             if (rerouteVehicle) {
-                KASSERT(curVehLocs.knowsCurrentLocationOf(vehId));
-                auto loc = curVehLocs.getCurrentLocationOf(vehId);
+                KASSERT(curVehLocs.knowsCurrentLocation(vehId, requestState.now()));
+                int64_t dummyStat;
+                auto loc = curVehLocs.getCurrentLocation(vehId, requestState.now(), dummyStat);
                 LIGHT_KASSERT(loc.depTimeAtHead >= requestState.now());
                 if (loc.location == routeState.stopLocationsFor(vehId)[1]) {
                     // No need to create intermediate stop if vehicle is already at the location of the inserted stop.
@@ -415,8 +416,9 @@ namespace karri {
             const auto delReposBucketEntriesTime = timer.elapsed<std::chrono::nanoseconds>();
             stats.updateRoutesTime += delReposBucketEntriesTime;
 
-            KASSERT(curVehLocs.knowsCurrentLocationOf(vehId));
-            const auto &vehicleLocation = curVehLocs.getCurrentLocationOf(vehId);
+            KASSERT(curVehLocs.knowsCurrentLocation(vehId, requestState.now()));
+            int64_t dummyStat;
+            const auto vehicleLocation = curVehLocs.getCurrentLocation(vehId, requestState.now(), dummyStat);
             routeState.cancelRepositioningAndCreateIntermediateStopAtCurrentLocation(
                 vehId, vehicleLocation.location, requestState.now(), vehicleLocation.depTimeAtHead);
 
@@ -453,7 +455,7 @@ namespace karri {
             for (int i = 0; i < numStops - 1; ++i) {
                 ellipticBucketsEnv.generateSourceBucketEntries(*asgn.vehicle, i, stats);
                 ellipticBucketsEnv.generateTargetBucketEntries(*asgn.vehicle, i + 1, stats);
-                stationsInEllipse.computeNewStationsInEllipsesForStop(i + 1, vehId, stats);
+                stationsInEllipse.computeNewStationsInEllipsesForStop(i, vehId, stats);
             }
             stationsInEllipse.updateStationsInEllipseForChangedLeewayForAllStopsOf(vehId, stats);
             if constexpr (EllipticBucketsEnvT::SORTED_BY_REM_LEEWAY) {
@@ -721,7 +723,7 @@ namespace karri {
 
         const InputGraphT &inputGraph;
         const Fleet &fleet;
-        const CurVehLocsT &curVehLocs;
+        CurVehLocsT &curVehLocs;
         PathTrackerT &pathTracker;
 
         // Route state

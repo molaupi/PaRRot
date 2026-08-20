@@ -61,6 +61,10 @@ namespace karri::RepositioningStrategies {
         void notifyRequestProcessed(const Request &request, const parrot::mode_choice::TransportMode mode, const int directOdDist, const int tripTime) {
             unused(mode);
 
+            // Ignore trips with invalid trip time
+            if (tripTime >= INFTY)
+                return;
+
             // Short distance requests do not partake
             static constexpr int IGNORE_SHORT_DISTANCE_REQUESTS_THRESHOLD = 6000; // 10 min
             if (directOdDist <= IGNORE_SHORT_DISTANCE_REQUESTS_THRESHOLD)

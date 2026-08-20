@@ -39,6 +39,7 @@ namespace parrot {
 
     template<typename InputGraphT,
         typename CHEnvT,
+    typename VehicleLocatorT,
         typename CurVehLocToPickupSearchesT,
         typename StationBucketsEnvT,
         typename LabelSet>
@@ -133,6 +134,7 @@ namespace parrot {
         DALSToStations(const InputGraphT &inputGraph,
                        const Fleet &fleet,
                        const CHEnvT &chEnv,
+                       VehicleLocatorT &vehicleLocator,
                        CurVehLocToPickupSearchesT &curVehLocToPickupSearchesT,
                        const RouteState &routeState,
                        const StationBucketsEnvT &stationBucketsEnv,
@@ -144,6 +146,7 @@ namespace parrot {
               calculator(routeState),
               upwardSearch(chEnv.template getForwardSearch<ScanBucket, StopStationBCH, LabelSet>(
                   ScanBucket(*this), StopStationBCH(*this))),
+        vehicleLocator(vehicleLocator),
               curVehLocToPickupSearches(curVehLocToPickupSearchesT),
               routeState(routeState),
               checkPBNSForVehicle(fleet.size()),
@@ -161,7 +164,8 @@ namespace parrot {
         void tryDropoffAfterLastStop(const RequestState &requestState, const PDLocs &pdLocs,
                                      const RelevantPDLocs &relevantOrdinaryPickups,
                                      const RelevantPDLocs &relevantPickupsBeforeNextStop,
-                                     stats::DalsAssignmentsPerformanceStats &stats,
+                                     stats::DalsAssignmentsPerformanceStats &dalsStats,
+                                     stats::PbnsAssignmentsPerformanceStats &pbnsStats,
                                      FirstTaxiLegResult &firstTaxiLegResult) {
             curReqState = &requestState;
             curRelOrdinaryPickups = &relevantOrdinaryPickups;
@@ -169,10 +173,9 @@ namespace parrot {
 
             initLastStopSearches(requestState);
 
-            const int64_t pbnsTimeBefore = curVehLocToPickupSearches.getTotalLocatingVehiclesTimeForRequest() +
-                                           curVehLocToPickupSearches.getTotalVehicleToPickupSearchTimeForRequest();
+            const int64_t pbnsTimeBefore = pbnsStats.locatingVehiclesTime + pbnsStats.directCHSearchTime;
 
-            initRelevantVehicles(relevantOrdinaryPickups, relevantPickupsBeforeNextStop, requestState, pdLocs, stats);
+            initRelevantVehicles(relevantOrdinaryPickups, relevantPickupsBeforeNextStop, requestState, pdLocs, dalsStats);
 
             totalNumberOfCandidateDropoffs = 0;
             for (unsigned int i = 0; i < relevantVehicleIdsForRequest.size(); i += K) {
@@ -190,28 +193,27 @@ namespace parrot {
                     curMinCostToLastStop[j] = relevantVehiclesMinCostToLastStop[i];
                     KASSERT(curMinCostToLastStop[j] >= 0 && curMinCostToLastStop[j] < INFTY);
                 }
-                stats.searchTime += timer.elapsed<std::chrono::nanoseconds>();
+                dalsStats.searchTime += timer.elapsed<std::chrono::nanoseconds>();
 
-                initializeDistancesForStationsAtLastStops(i, stats);
-                runSearchesForVehicleBatch(i, stats);
+                initializeDistancesForStationsAtLastStops(i, dalsStats);
+                runSearchesForVehicleBatch(i, dalsStats);
                 totalNumberOfCandidateDropoffs += stationsWithValidDistances.size() * K;
                 enumerateAssignmentsForVehicleBatch(i, relevantOrdinaryPickups, relevantPickupsBeforeNextStop,
-                                                    requestState, pdLocs, stats, firstTaxiLegResult);
+                                                    requestState, pdLocs, dalsStats, pbnsStats, firstTaxiLegResult);
             }
 
             // Time spent to locate vehicles and compute distances from current vehicle locations to pickups is counted
             // into PBNS time so subtract it here.
-            const int64_t pbnsTime = curVehLocToPickupSearches.getTotalLocatingVehiclesTimeForRequest() +
-                                     curVehLocToPickupSearches.getTotalVehicleToPickupSearchTimeForRequest() -
-                                     pbnsTimeBefore;
+            const int64_t pbnsTimeSpent =
+                pbnsStats.locatingVehiclesTime + pbnsStats.directCHSearchTime - pbnsTimeBefore;
 
-            stats.tryAssignmentsTime -= pbnsTime;
+            dalsStats.tryAssignmentsTime -= pbnsTimeSpent;
 
-            stats.numCandidateDropoffsAcrossAllVehicles += totalNumberOfCandidateDropoffs;
-            stats.numEdgeRelaxationsInSearchGraph += totalNumEdgeRelaxations;
-            stats.numVerticesOrLabelsSettled += totalNumVerticesSettled;
-            stats.numEntriesOrLastStopsScanned += totalNumEntriesScanned;
-            stats.numCandidateVehicles += relevantVehicleIdsForRequest.size();
+            dalsStats.numCandidateDropoffsAcrossAllVehicles += totalNumberOfCandidateDropoffs;
+            dalsStats.numEdgeRelaxationsInSearchGraph += totalNumEdgeRelaxations;
+            dalsStats.numVerticesOrLabelsSettled += totalNumVerticesSettled;
+            dalsStats.numEntriesOrLastStopsScanned += totalNumEntriesScanned;
+            dalsStats.numCandidateVehicles += relevantVehicleIdsForRequest.size();
         }
 
         void setExternalCostUpperBound(const int bestCost) {
@@ -378,7 +380,9 @@ namespace parrot {
                                                  const RelevantPDLocs &relevantOrdinaryPickups,
                                                  const RelevantPDLocs &relevantPickupsBeforeNextStop,
                                                  const RequestState &requestState,
-                                                 const PDLocs &pdLocs, stats::DalsAssignmentsPerformanceStats &stats,
+                                                 const PDLocs &pdLocs,
+                                                 stats::DalsAssignmentsPerformanceStats &dalsStats,
+                                                 stats::PbnsAssignmentsPerformanceStats &pbnsStats,
                                                  FirstTaxiLegResult &firstTaxiLegResult) {
             int numAssignmentsTried = 0;
             KaRRiTimer timer;
@@ -419,11 +423,11 @@ namespace parrot {
                                                                   firstTaxiLegResult);
             enumerateAssignmentsWithPBNSForVehicleBatch(indexOfFirstVeh, numAssignmentsTried,
                                                         relevantPickupsBeforeNextStop,
-                                                        requestState, pdLocs, firstTaxiLegResult);
+                                                        requestState, pdLocs, firstTaxiLegResult, pbnsStats);
 
             const int64_t tryAssignmentsTime = timer.elapsed<std::chrono::nanoseconds>();
-            stats.tryAssignmentsTime += tryAssignmentsTime;
-            stats.numAssignmentsTried += numAssignmentsTried;
+            dalsStats.tryAssignmentsTime += tryAssignmentsTime;
+            dalsStats.numAssignmentsTried += numAssignmentsTried;
         }
 
         // Enumerate assignments where pickup is after next stop (ordinary pickup):
@@ -552,7 +556,8 @@ namespace parrot {
                                                          const RelevantPDLocs &relevantPickupsBeforeNextStop,
                                                          const RequestState &requestState,
                                                          const PDLocs &pdLocs,
-                                                         FirstTaxiLegResult &firstTaxiLegResult) {
+                                                         FirstTaxiLegResult &firstTaxiLegResult,
+                                                         stats::PbnsAssignmentsPerformanceStats &pbnsStats) {
             const int reqTime = requestState.earliestDeparture();
             Assignment asgn;
             asgn.pickupStopIdx = 0;
@@ -580,6 +585,9 @@ namespace parrot {
                 const int lastStopLoc = routeState.stopLocationsFor(vehId)[numStops - 1];
                 asgn.vehicle = &fleet[vehId];
                 asgn.dropoffStopIdx = numStops - 1;
+
+                const auto vehLocation = vehicleLocator.getCurrentLocation(vehId, requestState.now(), pbnsStats.locatingVehiclesTime);
+                const int distToCurVehLoc = vehLocation.depTimeAtHead - routeState.schedDepTimesFor(vehId)[0];
 
 
                 for (auto &entry: relevantPickupsBeforeNextStop.relevantSpotsFor(vehId)) {
@@ -629,7 +637,7 @@ namespace parrot {
                         const bool stationAtExistingStop = asgn.dropoff.loc == lastStopLoc;
 
                         if (curVehLocToPickupSearches.knowsDistance(vehId, asgn.pickup.id)) {
-                            asgn.distToPickup = curVehLocToPickupSearches.getDistance(vehId, asgn.pickup.id);
+                            asgn.distToPickup = distToCurVehLoc + curVehLocToPickupSearches.getDistance(vehId, asgn.pickup.id);
                             // requestState.tryAssignmentWithKnownCost(asgn, calculator.calc(asgn, requestState));
                             firstTaxiLegResult.tryAssignmentForStation(
                                 station.stationId, asgn, calculator.calc(asgn, requestState),
@@ -653,7 +661,7 @@ namespace parrot {
                                 // vehicle. We postpone computation of that distance to be able to bundle it with the
                                 // computation of distances to other pickups via the vehicle location. Then all remaining
                                 // assignments with this pickup can be tried with the exact distance later.
-                                curVehLocToPickupSearches.addPickupForProcessing(asgn.pickup.id, asgn.distToPickup);
+                                curVehLocToPickupSearches.addPickupForProcessing(asgn.pickup.id);
                                 pbnsContinuations.push_back({asgn.pickup.id, asgn.distFromPickup, idxInValid});
                                 break;
                             }
@@ -662,7 +670,7 @@ namespace parrot {
                 }
 
                 // Continue with assignments for pickups where exact distance via vehicle location is needed
-                curVehLocToPickupSearches.computeExactDistancesVia(fleet[vehId], pdLocs);
+                curVehLocToPickupSearches.computeDistances(vehId, vehLocation.location, pdLocs, pbnsStats.directCHSearchTime, pbnsStats.numCHSearches);
                 for (const auto &continuation: pbnsContinuations) {
                     KASSERT(continuation.pickupID >= 0 && continuation.pickupID < pdLocs.numPickups());
                     KASSERT(
@@ -670,7 +678,7 @@ namespace parrot {
                         stationsWithValidDistances.size());
                     asgn.pickup = pdLocs.pickups[continuation.pickupID];
 
-                    asgn.distToPickup = curVehLocToPickupSearches.getDistance(vehId, continuation.pickupID);
+                    asgn.distToPickup = distToCurVehLoc + curVehLocToPickupSearches.getDistance(vehId, continuation.pickupID);
                     asgn.distFromPickup = continuation.distFromPickup;
                     if (asgn.distToPickup >= INFTY)
                         continue;
@@ -754,6 +762,7 @@ namespace parrot {
         const CH &ch;
         const Fleet &fleet;
         CostCalculator calculator;
+        VehicleLocatorT &vehicleLocator;
         CurVehLocToPickupSearchesT &curVehLocToPickupSearches;
         const RouteState &routeState;
 
