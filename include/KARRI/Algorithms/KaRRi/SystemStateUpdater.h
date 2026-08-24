@@ -201,8 +201,9 @@ namespace karri {
             pathTracker.registerPdEventsForBestAssignment(requestState, pickupStopId, dropoffStopId);
         }
 
-        void notifyRequestProcessed(const Request &request, const parrot::mode_choice::TransportMode mode, const int directOdDist, const int tripTime) {
-            repositioningStrategy.notifyRequestProcessed(request, mode, directOdDist, tripTime);
+
+        bool notifyRequestProcessed(const Request &request, const parrot::mode_choice::TransportMode mode, const int directOdDist, const int tripTime) {
+            return repositioningStrategy.notifyRequestProcessed(request, mode, directOdDist, tripTime);
         }
 
         void notifyStopStarted(const Vehicle &veh) {

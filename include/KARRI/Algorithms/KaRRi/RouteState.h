@@ -384,7 +384,8 @@ namespace karri {
             bool dropoffInsertedAsNewStop = false;
 
             // Vehicle can no longer be idle after an insertion.
-            idleVehicles.remove(vehId);
+            const bool wasIdle = idleVehicles.remove(vehId);
+            KASSERT(!wasIdle || end - start == 1);
 
             if ((pickupIndex > 0 || schedDepTimes[start] > now) && pickup.loc == stopLocations[start + pickupIndex]) {
                 KASSERT(start + pickupIndex == end - 1 || pickupIndex == dropoffIndex ||
@@ -407,8 +408,11 @@ namespace karri {
             } else {
                 // If vehicle is currently idle, the vehicle can leave its current stop at the earliest when the
                 // request is made. In that case, we update the arrival time to count the idling as one stopTime.
-                schedDepTimes[end - 1] = std::max(schedDepTimes[end - 1], requestState.now());
-                schedArrTimes[end - 1] = schedDepTimes[end - 1] - InputConfig::getInstance().stopTime;
+                if (wasIdle) {
+                    KASSERT(now >= schedDepTimes[end - 1]);
+                    schedDepTimes[end - 1] = now;
+                    schedArrTimes[end - 1] = now - InputConfig::getInstance().stopTime;
+                }
                 ++pickupIndex;
                 ++dropoffIndex;
                 stableInsertion(vehId, pickupIndex, getUnusedStopId(), pos, stopIds, distancesToNextStop, stopLocations,

@@ -58,17 +58,18 @@ namespace karri::RepositioningStrategies {
               idleQueue(static_cast<int>(fleet.size())) {}
 
         // Notify the strategy about a request that has been processed by the dispatcher and the chosen mode.
-        void notifyRequestProcessed(const Request &request, const parrot::mode_choice::TransportMode mode, const int directOdDist, const int tripTime) {
+        // Returns true if repositioning should be started now or false otherwise.
+        bool notifyRequestProcessed(const Request &request, const parrot::mode_choice::TransportMode mode, const int directOdDist, const int tripTime) {
             unused(mode);
 
             // Ignore trips with invalid trip time
             if (tripTime >= INFTY)
-                return;
+                return false;
 
             // Short distance requests do not partake
             static constexpr int IGNORE_SHORT_DISTANCE_REQUESTS_THRESHOLD = 6000; // 10 min
             if (directOdDist <= IGNORE_SHORT_DISTANCE_REQUESTS_THRESHOLD)
-                return;
+                return false;
 
             const auto score = static_cast<double>(tripTime) / directOdDist;
 
@@ -79,8 +80,11 @@ namespace karri::RepositioningStrategies {
             // bad assignment and we allow repositioning to the requests origin location to improve the assignment for
             // future requests in the vicinity.
             if (score < runningScoreQuantile.getQuantile())
-                return;
+                return false;
             seenOriginLocations.emplace_back(request.origin, request.requestTime);
+
+            // Start repositioning if this was a bad assignment.
+            return true;
         }
 
         // Notify the strategy that a vehicle has become idle. Appends it to the back of the idle queue.

@@ -182,7 +182,6 @@ namespace karri {
               riderState(requests.size(), NOT_RECEIVED),
               requestData(requests.size(), RequestData()),
               ptStationsForSecondTaxiLeg(requests.size(), INVALID_ID),
-              DUMMY_VEHICLE_ID_REPOSITIONING_TIMER(fleet.size()),
               eventSimulationStatsLogger(LogManager<std::ofstream>::getLogger("eventsimulationstats.csv",
                                                                               "occurrence_time,"
                                                                               "type,"
@@ -237,8 +236,6 @@ namespace karri {
                 nextRiderEvents[req.requestId] = RECEIVE;
                 requestEvents.insert(req.requestId, req.requestTime);
             }
-
-            vehicleEvents.insert(DUMMY_VEHICLE_ID_REPOSITIONING_TIMER, InputConfig::getInstance().repositioningInterval);
         }
 
         void run() {
@@ -271,12 +268,6 @@ namespace karri {
 
     private:
         void handleVehicleEvent(const int vehId, const int occTime) {
-
-            // If this is a dummy repositioning event, process it and continue
-            if (vehId == DUMMY_VEHICLE_ID_REPOSITIONING_TIMER) {
-                handleRepositioningTimerEvent(occTime);
-                return;
-            }
 
             // Process regular vehicle event
             switch (nextVehicleEvents[vehId]) {
@@ -365,36 +356,6 @@ namespace karri {
 
             const auto time = timer.elapsed<std::chrono::nanoseconds>();
             eventSimulationStatsLogger << occTime << ",VehicleShutdown," << time << '\n';
-        }
-
-        void handleRepositioningTimerEvent(const int occTime) {
-            KaRRiTimer timer;
-
-            // If no more future vehicle events exist, stop repositioning loop (end of simulation):
-            if (vehicleEvents.size() == 1) {
-                KASSERT(vehicleEvents.minId() == DUMMY_VEHICLE_ID_REPOSITIONING_TIMER);
-                int id, key;
-                vehicleEvents.deleteMin(id, key);
-                return;
-            }
-
-            // Reinsert repositioning timer event into queue:
-            vehicleEvents.increaseKey(DUMMY_VEHICLE_ID_REPOSITIONING_TIMER,
-                                      occTime + InputConfig::getInstance().repositioningInterval);
-
-            const int vehId = systemStateUpdater.notifyRepositioningEvent(occTime);
-            if (vehId == INVALID_ID)
-                return;
-
-            // Insert repositioning arrival event for vehicle:
-            KASSERT(vehicleState[vehId] == IDLING);
-            vehicleState[vehId] = REPOSITIONING;
-            nextVehicleEvents[vehId] = REPOSITIONING_ARRIVE;
-            vehicleEvents.updateKey(vehId, std::min(scheduledStops.getRepositioningArrivalTime(vehId), fleet[vehId].endOfServiceTime));
-
-
-            const auto time = timer.elapsed<std::chrono::nanoseconds>();
-            eventSimulationStatsLogger << occTime << ",RepositioningStart," << time << '\n';
         }
 
         void handleVehicleArrivalAtRepositioningTarget(const int vehId, const int occTime) {
@@ -626,13 +587,34 @@ namespace karri {
                 KASSERT(false);
             }
 
-            systemStateUpdater.notifyRequestProcessed(request, mode, directOdDist, tripTime);
+            const bool repositionNow = systemStateUpdater.notifyRequestProcessed(request, mode, directOdDist, tripTime);
 
             // systemStateUpdater.writeTripTypeLogs(reqId, ptAndTaxiTripFinderResponse);
             systemStateUpdater.writeReceiveRequestLogs(reqId, stats);
 
             const auto time = timer.elapsed<std::chrono::nanoseconds>();
             eventSimulationStatsLogger << occTime << ",RequestReceipt," << time << '\n';
+
+            if (repositionNow) {
+                handleRepositioningEvent(occTime);
+            }
+        }
+
+        void handleRepositioningEvent(const int occTime) {
+            KaRRiTimer timer;
+
+            const int vehId = systemStateUpdater.notifyRepositioningEvent(occTime);
+            if (vehId == INVALID_ID)
+                return;
+
+            // Insert repositioning arrival event for vehicle:
+            KASSERT(vehicleState[vehId] == IDLING);
+            vehicleState[vehId] = REPOSITIONING;
+            nextVehicleEvents[vehId] = REPOSITIONING_ARRIVE;
+            vehicleEvents.updateKey(vehId, std::min(scheduledStops.getRepositioningArrivalTime(vehId), fleet[vehId].endOfServiceTime));
+
+            const auto time = timer.elapsed<std::chrono::nanoseconds>();
+            eventSimulationStatsLogger << occTime << ",RepositioningStart," << time << '\n';
         }
 
         void applyAssignment(const RequestState &requestState, const Assignment &asgn, const int reqId,
@@ -923,8 +905,6 @@ namespace karri {
         std::vector<RequestData> requestData;
 
         std::vector<int> ptStationsForSecondTaxiLeg;
-
-        const int DUMMY_VEHICLE_ID_REPOSITIONING_TIMER;
 
         std::ofstream &eventSimulationStatsLogger;
         std::ofstream &assignmentQualityStats;
