@@ -62,6 +62,8 @@ public:
             secondTaxiLegCost = CostCalculator::calcHeuristicCostForFinalTransferTimeByRP(secondTaxiLegApproximationTravelTime);
             bestCost += secondTaxiLegCost;
             arrivalTime += secondTaxiLegApproximationTravelTime;
+        } else {
+            secondTaxiLegCost = 0;
         }
         if (firstLegByTaxi) {
             // remove taxi leg in beginning
@@ -70,6 +72,8 @@ public:
             firstTaxiLeg = accessRpTrip;
             firstTaxiLegCost = firstTaxiLeg.costWithoutTrip + CostCalculator::calcTripCost(firstTaxiLeg.arrivalTime - requestTime);
             bestCost += firstTaxiLegCost;
+        } else {
+            firstTaxiLegCost = 0;
         }
         KASSERT(!journey.empty());
 
