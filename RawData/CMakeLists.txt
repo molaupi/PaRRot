@@ -111,6 +111,12 @@ set_target_properties(KarriRequestsToParrotRawFormat PROPERTIES KASSERT_ASSERTIO
 target_link_libraries(KarriRequestsToParrotRawFormat PRIVATE kassert fast_cpp_csv_parser)
 target_include_directories(KarriRequestsToParrotRawFormat PUBLIC ${PARROT_INCLUDE_DIR})
 
+add_executable(DumpEdgeCoords DumpEdgeCoords.cc)
+target_compile_definitions(DumpEdgeCoords PRIVATE CSV_IO_NO_THREAD)
+set_target_properties(DumpEdgeCoords PROPERTIES KASSERT_ASSERTION_LEVEL ${KASSERT_ASSERTION_LEVEL})
+target_link_libraries(DumpEdgeCoords kassert fast_cpp_csv_parser)
+target_include_directories(DumpEdgeCoords PUBLIC ${PARROT_INCLUDE_DIR})
+
 # Executable for P2P Algorithms
 add_executable(RunP2PAlgo RunP2PAlgo.cc)
 target_compile_definitions(RunP2PAlgo PRIVATE CSV_IO_NO_THREAD)
