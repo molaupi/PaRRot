@@ -35,6 +35,7 @@
 #include "../../Tools/Constants.h"
 #include "../../Tools/Math.h"
 #include "../../Tools/Workarounds.h"
+#include "Common/Constants.h"
 
 // This class represents a geographic point, specified by its latitude and longitude.
 class LatLng {
