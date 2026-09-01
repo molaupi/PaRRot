@@ -26,97 +26,60 @@
 #include <iostream>
 #include "KARRI/Tools/CommandLine/CommandLineParser.h"
 #include "KARRI/DataStructures/Geometry/LatLng.h"
-#include "KARRI/DataStructures/Containers/BitVector.h"
 #include "KARRI/DataStructures/Graph/Attributes/LatLngAttribute.h"
 #include "KARRI/DataStructures/Graph/Graph.h"
 #include "KARRI/DataStructures/Graph/Attributes/EdgeIdAttribute.h"
 #include "KARRI/DataStructures/Graph/Attributes/EdgeTailAttribute.h"
 #include <nlohmann/json.hpp>
 #include <fstream>
-#include <random>
 
 inline void printUsage() {
     std::cout <<
-              "Usage: GenerateGeoJsonForEdges -g <file> -o <file>\n"
-              "Outputs all vertices (or edges) in a given road network as GeoJson.\n"
+              "Usage: GenerateGeoJsonForLocations -g <file> -l <file> -o <file>\n"
+              "Outputs a GeoJson depicting a set of locations in a road network. Each location is\n"
+              "given as an edge ID in a single column of a CSV file.\n"
               "  -g <file>         input road network in binary format.\n"
-              "  -edges            If set, outputs edges instead of vertices.\n"
-              "  -p <[0,1]>        only outputs <[0,1]> * 100 % of vertices or edges (dflt: 1)\n"
+              "  -l <file>         input locations (edge IDs) in CSV format.\n"
+              "  -l-col-name <name>   name of the location column in the CSV file, default: 'location'.\n"
               "  -o <file>         place GeoJSON in <file>\n"
               "  -help             display this help and exit\n";
 }
 
+// Dark-ish orange used as stroke color for the location edges.
+static constexpr const char *LOCATION_STROKE_COLOR = "#CC6600";
+
 template<typename InputGraphT>
-nlohmann::json generateGeoJsonObjectForEdges(const InputGraphT &inputGraph, const double ratio) {
-    // Construct the needed path GeoJSON objects
-    nlohmann::json topGeoJson;
-    topGeoJson["type"] = "FeatureCollection";
-    // static char color[] = "black";
+nlohmann::json generateGeoJsonFeatureForEdge(const InputGraphT &inputGraph, const int e, const int locId) {
+    nlohmann::json feature;
+    feature["type"] = "Feature";
 
-    int numEdgesOutput = 0;
-    int numEdgesToOutput = inputGraph.numEdges() * ratio;
-    FORALL_VALID_EDGES(inputGraph, v, e) {
+    feature["properties"] = {{"stroke",      LOCATION_STROKE_COLOR},
+                             {"edge_id",     e},
+                             {"location_id", locId}};
 
-            // Construct edge feature
-            nlohmann::json feature;
-            feature["type"] = "Feature";
-            feature["properties"] = {{"edge_id",      e}
-//                                         {"stroke-width", 3},
-                                     // {"stroke",       color}
-            };
+    nlohmann::json geometry;
+    geometry["type"] = "LineString";
 
-            nlohmann::json edgeGeometry;
-            edgeGeometry["type"] = "LineString";
+    const auto tailLatLng = inputGraph.latLng(inputGraph.edgeTail(e));
+    geometry["coordinates"].push_back(nlohmann::json::array({tailLatLng.lngInDeg(), tailLatLng.latInDeg()}));
 
-            const auto tailLatLng = inputGraph.latLng(v);
-            const auto tailCoordinate = nlohmann::json::array({tailLatLng.lngInDeg(), tailLatLng.latInDeg()});
-            edgeGeometry["coordinates"].push_back(tailCoordinate);
+    const auto headLatLng = inputGraph.latLng(inputGraph.edgeHead(e));
+    geometry["coordinates"].push_back(nlohmann::json::array({headLatLng.lngInDeg(), headLatLng.latInDeg()}));
 
-            const auto headLatLng = inputGraph.latLng(inputGraph.edgeHead(e));
-            const auto headCoordinate = nlohmann::json::array({headLatLng.lngInDeg(), headLatLng.latInDeg()});
-            edgeGeometry["coordinates"].push_back(headCoordinate);
+    feature["geometry"] = geometry;
 
-            feature["geometry"] = edgeGeometry;
-            topGeoJson["features"].push_back(feature);
-
-            if (++numEdgesOutput >= numEdgesToOutput)
-                return topGeoJson;
-        }
-
-    return topGeoJson;
+    return feature;
 }
 
 template<typename InputGraphT>
-nlohmann::json generateGeoJsonObjectForVertices(const InputGraphT &inputGraph, const double ratio) {
-
-
-    // Construct the needed path GeoJSON objects
+nlohmann::json generateGeoJsonObjectForLocations(const InputGraphT &inputGraph, const std::vector<int> &locations) {
     nlohmann::json topGeoJson;
     topGeoJson["type"] = "FeatureCollection";
-    // static char color[] = "black";
 
-    int numVerticesOutput = 0;
-    int numVerticesToOutput = inputGraph.numVertices() * ratio;
-    FORALL_VERTICES(inputGraph, v) {
-
-        nlohmann::json feature;
-        feature["type"] = "Feature";
-        feature["properties"] = {{"vertex_id", v}
-                                 // {"stroke",    color}
-        };
-
-        nlohmann::json vertexGeometry;
-        vertexGeometry["type"] = "Point";
-
-        const auto latLng = inputGraph.latLng(v);
-        const auto coordinate = nlohmann::json::array({latLng.lngInDeg(), latLng.latInDeg()});
-        vertexGeometry["coordinates"] = coordinate;
-
-        feature["geometry"] = vertexGeometry;
-        topGeoJson["features"].push_back(feature);
-
-        if (++numVerticesOutput >= numVerticesToOutput)
-            return topGeoJson;
+    for (int i = 0; i < static_cast<int>(locations.size()); ++i) {
+        if (locations[i] < 0 || locations[i] >= inputGraph.numEdges())
+            continue;
+        topGeoJson["features"].push_back(generateGeoJsonFeatureForEdge(inputGraph, locations[i], i));
     }
 
     return topGeoJson;
@@ -133,12 +96,13 @@ int main(int argc, char *argv[]) {
         auto inputGraphFileName = clp.getValue<std::string>("g");
         if (!endsWith(inputGraphFileName, ".gr.bin"))
             inputGraphFileName += ".gr.bin";
+        auto locationsFileName = clp.getValue<std::string>("l");
+        if (!endsWith(locationsFileName, ".csv"))
+            locationsFileName += ".csv";
+        const auto locationColName = clp.getValue<std::string>("l-col-name", "location");
         auto outputFileName = clp.getValue<std::string>("o");
         if (!endsWith(outputFileName, ".geojson"))
             outputFileName += ".geojson";
-
-        const bool outputEdges = clp.isSet("edges");
-        const double ratio = clp.getValue<double>("p", 1.0);
 
         // Read the source network from file.
         std::cout << "Reading source network from file... " << std::flush;
@@ -148,18 +112,27 @@ int main(int argc, char *argv[]) {
             throw std::invalid_argument("file not found -- '" + inputGraphFileName + "'");
         InputGraph inputGraph(inputGraphFile);
         inputGraphFile.close();
+        FORALL_VALID_EDGES(inputGraph, v, e) {
+            inputGraph.edgeTail(e) = v;
+        }
         std::cout << "done.\n";
 
+        // Read the locations from file.
+        std::cout << "Reading locations from file... " << std::flush;
+        std::vector<int> locations;
+        int location;
+        io::CSVReader<1, io::trim_chars<' '>> locFileReader(locationsFileName);
+        locFileReader.read_header(io::ignore_extra_column, locationColName);
+        while (locFileReader.read_row(location)) {
+            // if (location < 0 || location >= inputGraph.numEdges())
+            //     throw std::invalid_argument("location is not a valid edge ID -- '" + std::to_string(location) + "'");
+            locations.push_back(location);
+        }
+        std::cout << "done.\n";
 
         std::cout << "Generating GeoJson object ..." << std::flush;
-        nlohmann::json geoJson;
-        if (outputEdges) {
-            geoJson = generateGeoJsonObjectForEdges(inputGraph, ratio);
-        } else {
-            geoJson = generateGeoJsonObjectForVertices(inputGraph, ratio);
-        }
+        nlohmann::json geoJson = generateGeoJsonObjectForLocations(inputGraph, locations);
         std::cout << " done." << std::endl;
-
 
         std::cout << "Writing GeoJSON to output file... " << std::flush;
         // Open the output file and write the GeoJson.

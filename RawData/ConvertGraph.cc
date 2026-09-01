@@ -57,6 +57,7 @@
 #include "KARRI/DataStructures/Graph/Import/VisumImporter.h"
 #include "KARRI/DataStructures/Graph/Import/XatfImporter.h"
 #include "KARRI/DataStructures/Graph/Export/DimacsExporter.h"
+#include "KARRI/DataStructures/Graph/Import/PedestrianOsmImporter.h"
 #include "KARRI/Tools/CommandLine/CommandLineParser.h"
 #include "KARRI/Tools/ContainerHelpers.h"
 
@@ -67,7 +68,7 @@ inline void printUsage() {
       "possibly extracting the largest strongly connected component of the input graph.\n"
       "  -s <fmt>          source file format\n"
       "                      possible values:\n"
-      "                        binary default dimacs matsim osm visum xatf\n"
+      "                        binary default dimacs matsim osm osm-ped visum xatf \n"
       "  -d <fmt>          destination file format\n"
       "                      possible values:\n"
       "                        binary default dimacs\n"
@@ -135,6 +136,8 @@ inline GraphT importGraph(const CommandLineParser& clp) {
     return GraphT(infile, MatSimImporter(sys, crs));
   } else if (format == "osm") {
     return GraphT(infile, VehicleOsmImporter());
+  } else if (format == "osm-ped") {
+    return GraphT(infile, PedestrianOsmImporter());
   } else if (format == "visum") {
     const auto sys = clp.getValue<std::string>("ts", "P");
     const auto crs = clp.getValue<int>("cs", 31467);

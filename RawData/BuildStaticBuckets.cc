@@ -179,21 +179,22 @@ int main(int argc, char *argv[]) {
         // Read the station mapping file
         std::cout << "Reading station mapping from file... " << std::flush;
         parrot::PTStations stations;
-        int edgeId;
+        int vehEdgeId, psgEdgeId;
         int stationId = 0;
-        io::CSVReader<1> stationMappingFileReader(stationMappingFileName);
+        io::CSVReader<2> stationMappingFileReader(stationMappingFileName);
 
-        stationMappingFileReader.read_header(io::ignore_extra_column, "initial_location");
+        stationMappingFileReader.read_header(io::ignore_extra_column, "veh_edge", "psg_edge");
 
-        while (stationMappingFileReader.read_row(edgeId)) {
-            if (edgeId < 0) {
-                throw std::invalid_argument("invalid edge id for a station-- '" + std::to_string(edgeId) + "'");
+        while (stationMappingFileReader.read_row(vehEdgeId, psgEdgeId)) {
+            if (vehEdgeId < 0) {
+                throw std::invalid_argument("invalid vehicle edge id for a station-- '" + std::to_string(vehEdgeId) + "'");
+            }
+            if (psgEdgeId < -1) {
+                throw std::invalid_argument("invalid psg edge id for a station-- '" + std::to_string(psgEdgeId) + "'");
             }
 
-            // edge id in the station mapping file is the edge id in the road network
-            int psgEdgeId = vehicleInputGraph.toPsgEdge(edgeId);
-            stations.push_back({stationId, psgEdgeId, edgeId});
-            stationId++;
+            stations.push_back({stationId, psgEdgeId, vehEdgeId});
+            ++stationId;
         }
         std::cout << "done.\n";
 

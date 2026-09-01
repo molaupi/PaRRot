@@ -88,8 +88,9 @@ void generateGraph(const CommandLineParser &clp, const IsRoadAccessibleByCategor
         std::cout << "\t done." << std::endl;
 
         std::cout << "\tExtracting the largest SCC..." << std::flush;
-        auto psgGraphToSccEdgeMap = std::make_unique<std::vector<int> >(psgGraph.numEdges(), INVALID_ID);
-        psgGraph.extractVertexInducedSubgraph(psgScc.getLargestSccAsBitmask(), *psgGraphToSccEdgeMap);
+        auto psgGraphToSccVertexMap = std::make_unique<std::vector<int> >(psgGraph.numVertices(), INVALID_VERTEX);
+        auto psgGraphToSccEdgeMap = std::make_unique<std::vector<int> >(psgGraph.numEdges(), INVALID_EDGE);
+        psgGraph.extractVertexInducedSubgraph(psgScc.getLargestSccAsBitmask(), *psgGraphToSccVertexMap, *psgGraphToSccEdgeMap);
         std::cout << "\t done." << std::endl;
     }
 

@@ -698,24 +698,21 @@ KARRI_DALS_STRATEGY == KARRI_COL || KARRI_DALS_STRATEGY == KARRI_IND
         // Read the station mapping file
         std::cout << "Reading station mapping from file... " << std::flush;
         parrot::PTStations stations;
-        int edgeId;
+        int vehEdgeId, psgEdgeId, walkingTimeFromVehEdgeId;
         int stationId = 0;
-        io::CSVReader<1> stationMappingFileReader(stationMappingFileName);
+        io::CSVReader<3> stationMappingFileReader(stationMappingFileName);
 
-        stationMappingFileReader.read_header(io::ignore_extra_column, "initial_location");
+        stationMappingFileReader.read_header(io::ignore_extra_column, "veh_edge", "psg_edge", "walking_time");
 
-        while (stationMappingFileReader.read_row(edgeId)) {
-            if (edgeId < 0) {
-                throw std::invalid_argument("invalid edge id for a station-- '" + std::to_string(edgeId) + "'");
+        while (stationMappingFileReader.read_row(vehEdgeId, psgEdgeId, walkingTimeFromVehEdgeId)) {
+            if (vehEdgeId < 0) {
+                throw std::invalid_argument("invalid vehicle edge id for a station-- '" + std::to_string(vehEdgeId) + "'");
             }
-
-            // edge id in the station mapping file is the edge id in the road network
-            int psgEdgeId = vehicleInputGraph.toPsgEdge(edgeId);
-            if (psgEdgeId == CarEdgeToPsgEdgeAttribute::defaultValue()) {
-                psgEdgeId = INVALID_EDGE;
+            if (psgEdgeId < -1) {
+                throw std::invalid_argument("invalid passenger edge id for a station-- '" + std::to_string(psgEdgeId) + "'");
             }
-            stations.push_back({stationId, psgEdgeId, edgeId});
-            stationId++;
+            stations.push_back({stationId, psgEdgeId, vehEdgeId, walkingTimeFromVehEdgeId});
+            ++stationId;
         }
         std::cout << "done.\n";
 

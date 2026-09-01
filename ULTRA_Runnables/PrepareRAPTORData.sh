@@ -70,7 +70,7 @@ cmake --build "${cfg[parrot_source_dir]}"/Build/Release --target Network -j
 echo "Loading underlying pedestrian network for transfer graph."
 cmake --build "${cfg[parrot_source_dir]}"/Build/Release --target Network -j
 "${cfg[parrot_source_dir]}"/Build/Release/ULTRA_Runnables/Network loadDimacsGraph \
-  "${cfg[base_input_dir]}"/KaRRi/Graphs/DIMACS/"${cfg[instance_name]}"_psg \
+  "${cfg[base_input_dir]}"/KaRRi/Graphs/DIMACS/"${cfg[instance_name]}"_psg_outer \
   "${pt_dir}"/underlying_psg_graph.binary
 
 # Add underlying pedestrian graph as transfer graph.

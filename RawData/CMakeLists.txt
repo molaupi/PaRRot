@@ -69,6 +69,12 @@ set_target_properties(TransformLocations PROPERTIES KASSERT_ASSERTION_LEVEL ${KA
 target_link_libraries(TransformLocations proj routingkit kassert fast_cpp_csv_parser)
 target_include_directories(TransformLocations PUBLIC ${PARROT_INCLUDE_DIR})
 
+add_executable(MapStationsToEdges MapStationsToEdges.cc)
+target_compile_definitions(MapStationsToEdges PRIVATE CSV_IO_NO_THREAD)
+set_target_properties(MapStationsToEdges PROPERTIES KASSERT_ASSERTION_LEVEL ${KASSERT_ASSERTION_LEVEL})
+target_link_libraries(MapStationsToEdges proj routingkit kassert fast_cpp_csv_parser)
+target_include_directories(MapStationsToEdges PUBLIC ${PARROT_INCLUDE_DIR})
+
 add_executable(CheckExistingAttributesInNetworkFile CheckExistingAttributesInNetworkFile.cc)
 target_compile_definitions(CheckExistingAttributesInNetworkFile PRIVATE CSV_IO_NO_THREAD)
 set_target_properties(CheckExistingAttributesInNetworkFile PROPERTIES KASSERT_ASSERTION_LEVEL ${KASSERT_ASSERTION_LEVEL})
@@ -93,6 +99,12 @@ set_target_properties(GenerateGeoJsonForRequests PROPERTIES KASSERT_ASSERTION_LE
 target_link_libraries(GenerateGeoJsonForRequests PRIVATE nlohmann_json kassert fast_cpp_csv_parser)
 target_include_directories(GenerateGeoJsonForRequests PUBLIC ${PARROT_INCLUDE_DIR})
 
+add_executable(GenerateGeoJsonForLocations GenerateGeoJsonForLocations.cc)
+target_compile_definitions(GenerateGeoJsonForLocations PRIVATE CSV_IO_NO_THREAD)
+set_target_properties(GenerateGeoJsonForLocations PROPERTIES KASSERT_ASSERTION_LEVEL ${KASSERT_ASSERTION_LEVEL})
+target_link_libraries(GenerateGeoJsonForLocations PRIVATE nlohmann_json kassert fast_cpp_csv_parser)
+target_include_directories(GenerateGeoJsonForLocations PUBLIC ${PARROT_INCLUDE_DIR})
+
 add_executable(BuildStaticBuckets BuildStaticBuckets.cc)
 target_compile_definitions(BuildStaticBuckets PRIVATE CSV_IO_NO_THREAD)
 set_target_properties(BuildStaticBuckets PROPERTIES KASSERT_ASSERTION_LEVEL ${KASSERT_ASSERTION_LEVEL})
@@ -110,6 +122,12 @@ target_compile_definitions(KarriRequestsToParrotRawFormat PRIVATE CSV_IO_NO_THRE
 set_target_properties(KarriRequestsToParrotRawFormat PROPERTIES KASSERT_ASSERTION_LEVEL ${KASSERT_ASSERTION_LEVEL})
 target_link_libraries(KarriRequestsToParrotRawFormat PRIVATE kassert fast_cpp_csv_parser)
 target_include_directories(KarriRequestsToParrotRawFormat PUBLIC ${PARROT_INCLUDE_DIR})
+
+add_executable(DumpEdgeCoords DumpEdgeCoords.cc)
+target_compile_definitions(DumpEdgeCoords PRIVATE CSV_IO_NO_THREAD)
+set_target_properties(DumpEdgeCoords PROPERTIES KASSERT_ASSERTION_LEVEL ${KASSERT_ASSERTION_LEVEL})
+target_link_libraries(DumpEdgeCoords kassert fast_cpp_csv_parser)
+target_include_directories(DumpEdgeCoords PUBLIC ${PARROT_INCLUDE_DIR})
 
 # Executable for P2P Algorithms
 add_executable(RunP2PAlgo RunP2PAlgo.cc)

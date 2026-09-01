@@ -367,8 +367,9 @@ namespace karri::time_utils {
         const int initialPickupDetour = calcInitialPickupDetour(asgn, actualDepTimeAtPickup, requestState,
                                                                 routeState);
         const bool dropoffAtExistingStop = isDropoffAtExistingStop(asgn, routeState);
-        return getArrTimeAtDropoff(actualDepTimeAtPickup, asgn, initialPickupDetour, dropoffAtExistingStop,
+        const int arrAtDropoff = getArrTimeAtDropoff(actualDepTimeAtPickup, asgn, initialPickupDetour, dropoffAtExistingStop,
                                    routeState);
+        return arrAtDropoff + asgn.dropoff.walkingDist;
     }
 
     template<typename RequestContext>

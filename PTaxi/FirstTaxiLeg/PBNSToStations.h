@@ -243,9 +243,9 @@ namespace parrot {
                     station.stationId, // PDLoc ID
                     station.vehEdgeId, // Location in road network
                     station.psgEdgeId, // Location in passenger road network
-                    0, // Walking time from this dropoff to destination
-                    0, // Vehicle driving time from this dropoff to the destination
-                    0, // Vehicle driving time from destination to this dropoff
+                    station.walkingTimeFromVehEdge, // Walking time from vehEdge to station
+                    0, // Dummy vehicle driving time from this dropoff to the destination
+                    0, // Dummy vehicle driving time from destination to this dropoff,
                     true
                 };
 
@@ -340,9 +340,9 @@ namespace parrot {
                         station.stationId, // PDLoc ID
                         station.vehEdgeId, // Location in road network
                         station.psgEdgeId, // Location in passenger road network
-                        0, // Walking time from this dropoff to destination
-                        0, // Vehicle driving time from this dropoff to the destination
-                        0, // Vehicle driving time from destination to this dropoff
+                        station.walkingTimeFromVehEdge, // Walking time from vehEdge to station
+                        0, // Dummy vehicle driving time from this dropoff to the destination
+                        0, // Dummy vehicle driving time from destination to this dropoff,
                         true
                     };
 
@@ -456,9 +456,9 @@ namespace parrot {
                             station.stationId, // PDLoc ID
                             station.vehEdgeId, // Location in road network
                             station.psgEdgeId, // Location in passenger road network
-                            0, // Walking time from this dropoff to destination
-                            0, // Vehicle driving time from this dropoff to the destination
-                            0, // Vehicle driving time from destination to this dropoff
+                            station.walkingTimeFromVehEdge, // Walking time from vehEdge to station
+                            0, // Dummy vehicle driving time from this dropoff to the destination
+                            0, // Dummy vehicle driving time from destination to this dropoff,
                             true
                         };
 
@@ -472,7 +472,7 @@ namespace parrot {
 
                             // requestState.tryAssignmentWithKnownCost(asgn, cost);
                             const int arrivalTime =
-                                    stationAtExistingStop ? arrTimeAtJ : depTimeAtJ + asgn.distToDropoff;
+                                    (stationAtExistingStop ? arrTimeAtJ : depTimeAtJ + asgn.distToDropoff) + asgn.dropoff.walkingDist;
                             KASSERT(arrivalTime == calcArrivalTime(asgn, requestState, routeState));
                             firstTaxiLegResult.tryAssignmentForStation(
                                 station.stationId, asgn, cost, arrivalTime, PBNS);
@@ -539,9 +539,9 @@ namespace parrot {
                         station.stationId, // PDLoc ID
                         station.vehEdgeId, // Location in road network
                         station.psgEdgeId, // Location in passenger road network
-                        0, // Walking time from this dropoff to destination
-                        0, // Vehicle driving time from this dropoff to the destination
-                        0, // Vehicle driving time from destination to this dropoff
+                        station.walkingTimeFromVehEdge, // Walking time from vehEdge to station
+                        0, // Dummy vehicle driving time from this dropoff to the destination
+                        0, // Dummy vehicle driving time from destination to this dropoff,
                         true
                     };
 
@@ -556,7 +556,7 @@ namespace parrot {
                         // Cost is better than best known cost => Update best known cost and assignment
 
                         // requestState.tryAssignmentWithKnownCost(asgn, calculator.calc(asgn, requestState));
-                        const int arrivalTime = depTimeAtPickup + asgn.distToDropoff;
+                        const int arrivalTime = depTimeAtPickup + asgn.distToDropoff + asgn.dropoff.walkingDist;
                         KASSERT(arrivalTime == calcArrivalTime(asgn, requestState, routeState));
                         firstTaxiLegResult.tryAssignmentForStation(
                             station.stationId, asgn, calculator.calc(asgn, requestState), arrivalTime, PBNS);

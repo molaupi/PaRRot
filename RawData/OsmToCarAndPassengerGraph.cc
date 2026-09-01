@@ -47,7 +47,9 @@
 #include "KARRI/DataStructures/Graph/Attributes/XatfRoadCategoryAttribute.h"
 #include "KARRI/DataStructures/Graph/Attributes/PsgEdgeToCarEdgeAttribute.h"
 #include "KARRI/DataStructures/Graph/Attributes/CarEdgeToPsgEdgeAttribute.h"
+#include "KARRI/DataStructures/Graph/Attributes/CarVertexToPsgVertexAttribute.h"
 #include "KARRI/DataStructures/Graph/Attributes/OsmNodeIdAttribute.h"
+#include "KARRI/DataStructures/Graph/Attributes/PsgVertexToCarVertexAttribute.h"
 #include "KARRI/Tools/CommandLine/CommandLineParser.h"
 
 // Graph converter specifically for generating two matching graphs, one for cars and one for pedestrians or cyclists.
@@ -78,9 +80,15 @@ inline void printUsage() {
 
 // A graph data structure encompassing all vertex and edge attributes available for output.
 using CarVertexAttributes = VertexAttrs<
-        CoordinateAttribute, LatLngAttribute, SequentialVertexIdAttribute, VertexIdAttribute, OsmNodeIdAttribute
+        CarVertexToPsgVertexAttribute,
+        CoordinateAttribute,
+        LatLngAttribute,
+        SequentialVertexIdAttribute,
+        VertexIdAttribute,
+        OsmNodeIdAttribute
 >;
 using CarEdgeAttributes = EdgeAttrs<
+        CarEdgeToPsgEdgeAttribute,
         CapacityAttribute,
         EdgeIdAttribute,
         FreeFlowSpeedAttribute,
@@ -90,12 +98,12 @@ using CarEdgeAttributes = EdgeAttrs<
         RoadGeometryAttribute,
         SpeedLimitAttribute,
         TravelTimeAttribute,
-        XatfRoadCategoryAttribute,
-        CarEdgeToPsgEdgeAttribute
+        XatfRoadCategoryAttribute
 >;
 using CarGraphT = KaRRiStaticGraph<CarVertexAttributes, CarEdgeAttributes>;
 
 using PsgVertexAttributes = VertexAttrs<
+        PsgVertexToCarVertexAttribute,
         CoordinateAttribute,
         LatLngAttribute,
         SequentialVertexIdAttribute,
@@ -185,8 +193,9 @@ void generateGraphs(const CommandLineParser &clp, const IsRoadAccessibleByCatego
     std::cout << "\t done." << std::endl;
 
     std::cout << "\tExtracting the largest SCC..." << std::flush;
-    auto psgGraphToSccEdgeMap = std::make_unique<std::vector<int>>(psgGraph.numEdges(), INVALID_ID);
-    psgGraph.extractVertexInducedSubgraph(psgScc.getLargestSccAsBitmask(), *psgGraphToSccEdgeMap);
+    auto psgGraphToSccVertexMap = std::make_unique<std::vector<int>>(psgGraph.numVertices(), INVALID_VERTEX);
+    auto psgGraphToSccEdgeMap = std::make_unique<std::vector<int>>(psgGraph.numEdges(), INVALID_EDGE);
+    psgGraph.extractVertexInducedSubgraph(psgScc.getLargestSccAsBitmask(), *psgGraphToSccVertexMap, *psgGraphToSccEdgeMap);
     std::cout << "\t done." << std::endl;
 
     std::cout << "\tStoring relevant OSM mapping..." << std::flush;
@@ -203,6 +212,7 @@ void generateGraphs(const CommandLineParser &clp, const IsRoadAccessibleByCatego
         osmWayIdAndHeadVertexId[eInScc] = psgImporter->getOsmIdsForEdgeAndHead(eInOrigGraph);
         assert(psgGraph.osmNodeId(psgGraph.edgeHead(eInScc)) == osmWayIdAndHeadVertexId[eInScc].second);
     }
+    psgGraphToSccVertexMap.reset();
     psgGraphToSccEdgeMap.reset();
 
     psgImporter->close();
@@ -225,17 +235,42 @@ void generateGraphs(const CommandLineParser &clp, const IsRoadAccessibleByCatego
     std::cout << "\t done." << std::endl;
 
     std::cout << "\tExtract largest SCC..." << std::flush;
-    auto carGraphToSccEdgeMap = std::vector<int>(carGraph.numEdges(), INVALID_ID);
-    carGraph.extractVertexInducedSubgraph(carScc.getLargestSccAsBitmask(), carGraphToSccEdgeMap);
+    std::vector<int> carGraphToSccVertexMap(carGraph.numVertices(), INVALID_VERTEX);
+    std::vector<int> carGraphToSccEdgeMap(carGraph.numEdges(), INVALID_EDGE);
+    carGraph.extractVertexInducedSubgraph(carScc.getLargestSccAsBitmask(), carGraphToSccVertexMap, carGraphToSccEdgeMap);
     std::cout << "\t done." << std::endl;
 
     std::cout << " done." << std::endl;
 
     is_routing_node.reset();
 
+    std::cout << "Map shared vertices..." << std::flush;
+    uint64_t numVerticesWithValidMapping = 0;
+    // Iterate over edges in psgGraph and check if head vertex of edge also exists in vehicle graph. If so, store
+    // mapping. (May look at each vertex multiple times, but by iterating over edges we can use osmWayIdAndHeadVertex.)
+    FORALL_VALID_EDGES(psgGraph, u, e) {
+        const auto [_, osmHeadNodeId] = osmWayIdAndHeadVertexId[e];
+        const auto vertexInFullCarGraph = carImporter.getVertexForOSMNodeId(osmHeadNodeId);
+        if (vertexInFullCarGraph == PsgVertexToCarVertexAttribute::defaultValue())
+            continue;
+
+        const auto vertexInPsgGraph = psgGraph.edgeHead(e);
+        KASSERT(psgGraph.osmNodeId(vertexInPsgGraph) == osmHeadNodeId);
+        const auto vertexInCarSCC = carGraphToSccVertexMap[vertexInFullCarGraph];
+        if (vertexInCarSCC == INVALID_VERTEX)
+            continue;
+        KASSERT(psgGraph.latLng(vertexInPsgGraph) == carGraph.latLng(vertexInCarSCC));
+        KASSERT(psgGraph.osmNodeId(vertexInPsgGraph) == carGraph.osmNodeId(vertexInCarSCC));
+        if (psgGraph.toCarVertex(vertexInPsgGraph) == PsgVertexToCarVertexAttribute::defaultValue())
+            ++numVerticesWithValidMapping; // Count if this is the first time seeing this vertex
+        psgGraph.toCarVertex(vertexInPsgGraph) = vertexInCarSCC;
+        carGraph.toPsgVertex(vertexInCarSCC) = vertexInPsgGraph;
+    }
+    std::cout << " done (" << numVerticesWithValidMapping << "/" << psgGraph.numVertices() << " vertices in passenger graph have valid mapping)." << std::endl;
+
     std::cout << "Map shared edges..." << std::flush;
     uint64_t numEdgesInPsgWithValidMapping = 0;
-    FORALL_VALID_EDGES(psgGraph, v, e) {
+    FORALL_VALID_EDGES(psgGraph, u, e) {
             const auto cat = psgGraph.osmRoadCategory(e);
             assert(isPsgAccessible(cat));
             if (isVehicleAccessible(cat)) {
@@ -248,7 +283,7 @@ void generateGraphs(const CommandLineParser &clp, const IsRoadAccessibleByCatego
                 assert(eInFullCarGraph < int(carGraphToSccEdgeMap.size()));
                 const auto eInCarSCC = carGraphToSccEdgeMap[eInFullCarGraph];
 
-                if (eInCarSCC == INVALID_ID)
+                if (eInCarSCC == INVALID_EDGE)
                     continue;
 
 
@@ -286,9 +321,7 @@ void generateGraphs(const CommandLineParser &clp, const IsRoadAccessibleByCatego
             assert(carGraph.toPsgEdge(e) == CarEdgeToPsgEdgeAttribute::defaultValue() ||
                    carGraph.toPsgEdge(e) < psgGraph.numEdges());
         }
-
-
-    std::cout << " done." << std::endl;
+    std::cout << " done (" << numEdgesInPsgWithValidMapping << "/" << psgGraph.numEdges() << " edges in passenger graph have valid mapping)." << std::endl;
 
     if (clp.isSet("co")) {
         std::cout << "Write the car graph output file..." << std::flush;
@@ -301,6 +334,7 @@ void generateGraphs(const CommandLineParser &clp, const IsRoadAccessibleByCatego
         std::vector<std::string> attrsToIgnore;
         std::vector<std::string> attrsToOutput = clp.getValues<std::string>("a");
         attrsToOutput.emplace_back("car_edge_to_psg_edge"); // Always output edge mapping to passenger graph
+        attrsToOutput.emplace_back("car_vertex_to_psg_vertex"); // Always output vertex mapping to passenger graph
         for (const auto &attr: CarGraphT::getAttributeNames())
             if (!contains(attrsToOutput.begin(), attrsToOutput.end(), attr))
                 attrsToIgnore.push_back(attr);

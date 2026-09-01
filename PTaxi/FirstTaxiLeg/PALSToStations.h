@@ -277,9 +277,9 @@ namespace parrot {
                             station.stationId, // PDLoc ID
                             station.vehEdgeId, // Location in road network
                             station.psgEdgeId, // Location in passenger road network
-                            0, // Walking time from this dropoff to destination
-                            0, // Vehicle driving time from this dropoff to the destination
-                            0, // Vehicle driving time from destination to this dropoff
+                            station.walkingTimeFromVehEdge, // Walking time from vehEdge to station
+                            0, // Dummy vehicle driving time from this dropoff to the destination
+                            0, // Dummy vehicle driving time from destination to this dropoff,
                             true
                         };
 
@@ -385,9 +385,9 @@ namespace parrot {
                             station.stationId, // PDLoc ID
                             station.vehEdgeId, // Location in road network
                             station.psgEdgeId, // Location in passenger road network
-                            0, // Walking time from this dropoff to destination
-                            0, // Vehicle driving time from this dropoff to the destination
-                            0, // Vehicle driving time from destination to this dropoff
+                            station.walkingTimeFromVehEdge, // Walking time from vehEdge to station
+                            0, // Dummy vehicle driving time from this dropoff to the destination
+                            0, // Dummy vehicle driving time from destination to this dropoff,
                             true
                         };
 

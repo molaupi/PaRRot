@@ -57,6 +57,7 @@
 #include "../../../Tools/EnumParser.h"
 #include "../../../Tools/LexicalCast.h"
 #include "../../../Tools/StringHelpers.h"
+#include "KARRI/DataStructures/Graph/Attributes/PsgVertexToCarVertexAttribute.h"
 
 // An importer for reading graphs from OpenStreetMap data. The OSM data must be given as a file in
 // PBF format. Edge attributes depending on the mode of transportation (such as free-flow speed or
@@ -313,9 +314,19 @@ public:
     // Closes the input file(s).
     void close() {}
 
+    int getVertexForOSMNodeId(const uint64_t osmNodeId) const {
+        if (!nodeIDMapper.is_global_id_mapped(osmNodeId))
+            return PsgVertexToCarVertexAttribute::defaultValue();
+
+        uint64_t vertex_graph_id = nodeIDMapper.to_local(osmNodeId, INFTY);
+        assert(nodeIDMapper.to_global(vertex_graph_id) == osmNodeId);
+        assert(vertex_graph_id < osmGraph.first_out.size());
+        return static_cast<int>(vertex_graph_id);
+    }
+
     // Returns the arc in the graph that represents the part of the osm way with the given global osm way id that ends
     // at the head vertex corresponding to the osm node with the given global osm node id.
-    unsigned getEdgeForOSMIdOfWayAndHead(const uint64_t osmWayId, const uint64_t headOsmNodeId) const {
+    int getEdgeForOSMIdOfWayAndHead(const uint64_t osmWayId, const uint64_t headOsmNodeId) const {
         assert(ALLOW_EDGE_MAPPING);
 //        assert(edgeIDMapper.is_global_id_mapped(osmWayId));
         if (!edgeIDMapper.is_global_id_mapped(osmWayId) || !nodeIDMapper.is_global_id_mapped(headOsmNodeId))
@@ -336,7 +347,7 @@ public:
             const auto arc_graph_id = arcsRepresentingRoutingWay[i];
             assert(arc_graph_id < osmGraph.arc_count());
             if (osmGraph.head[arc_graph_id] == head_vertex_graph_id)
-                return arc_graph_id;
+                return static_cast<int>(arc_graph_id);
         }
 //        assert(false);
         return PsgEdgeToCarEdgeAttribute::defaultValue();
