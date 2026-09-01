@@ -60,5 +60,5 @@ cmake --build "${cfg[parrot_source_dir]}"/Build/Release --target ULTRA -j
     0 3600 true false "${cfg[num_threads]}"
 
 # Cleanup: result of computeMcStopToStopShortcuts is finished input data
-mv -f "${shortcuts_dir}"/raptor.binary "${pt_dir}"/raptor.binary
+mv -f "${shortcuts_dir}"/raptor.binary* "${pt_dir}"
 rm -r "${corech_dir}" "${shortcuts_dir}"
