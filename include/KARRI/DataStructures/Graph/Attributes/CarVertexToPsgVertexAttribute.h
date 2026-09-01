@@ -24,16 +24,34 @@
 
 
 #pragma once
-#include <vector>
 
-namespace parrot {
-    // Models a station with a station ID and a corresponding edge ID in the passenger road network.
-    struct Station {
-        int stationId;
-        int psgEdgeId; // edge ID in the passenger road network
-        int vehEdgeId; // edge ID in the vehicle road network
-        int walkingTimeFromVehEdge; // walking time from vehicle edge to station
-    };
+#include <cassert>
 
-    using PTStations = std::vector<Station>;
-}
+#include "AbstractAttribute.h"
+#include "../../../Tools/Constants.h"
+
+// A vertex attribute mapping a vertex in a car graph to a vertex in a passenger graph.
+class CarVertexToPsgVertexAttribute : public AbstractAttribute<int> {
+public:
+    // Returns the attribute's default value.
+    static Type defaultValue() {
+        return INVALID_VERTEX;
+    }
+
+    // Returns the vertex v' in the passenger graph that is equivalent to the given vertex v in the car graph.
+    const Type &toPsgVertex(const int v) const {
+        assert(v >= 0);
+        assert(v < values.size());
+        return values[v];
+    }
+
+    // Returns a reference to the stored value v' that the given vertex v in the car graph maps to.
+    Type &toPsgVertex(const int v) {
+        assert(v >= 0);
+        assert(v < values.size());
+        return values[v];
+    }
+
+protected:
+    static constexpr const char *NAME = "car_vertex_to_psg_vertex"; // The attribute's unique name.
+};

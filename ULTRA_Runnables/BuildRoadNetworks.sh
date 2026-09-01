@@ -46,26 +46,26 @@ cmake -S "${cfg[parrot_source_dir]}" -B "${cfg[parrot_source_dir]}"/Build/Releas
 cmake --build "${cfg[parrot_source_dir]}"/Build/Release --target OsmToCarAndPassengerGraph -j
 "${cfg[parrot_source_dir]}"/Build/Release/RawData/OsmToCarAndPassengerGraph \
   -a lat_lng osm_node_id length travel_time \
-  -psg-mode pedestrian -no-union-nodes -no-veh-on-service \
+  -psg-mode pedestrian \
   -i "${osm_dir}"/"${cfg[instance_name]}".osm.pbf \
   -co "${graphs_dir}"/"${cfg[instance_name]}"_veh.gr.bin \
   -po "${graphs_dir}"/"${cfg[instance_name]}"_psg.gr.bin
 
 
-# Convert graph to DIMACS format for use as transfer graph in ULTRA
-echo "Converting pedestrian graph to DIMACS format for use as transfer graph in ULTRA."
+# Convert full pedestrian graph of outer area to DIMACS format for use as transfer graph in ULTRA
+echo "Converting full pedestrian network to DIMACS format for use as transfer graph in ULTRA."
 cmake -S "${cfg[parrot_source_dir]}" -B "${cfg[parrot_source_dir]}"/Build/Release -DCMAKE_BUILD_TYPE=Release
 cmake --build "${cfg[parrot_source_dir]}"/Build/Release --target ConvertGraph -j
 mkdir -p "${graphs_dir}"/DIMACS/
 "${cfg[parrot_source_dir]}"/Build/Release/RawData/ConvertGraph \
-  -s binary -d dimacs \
-  -i "${graphs_dir}"/"${cfg[instance_name]}"_psg \
-  -o "${graphs_dir}"/DIMACS/"${cfg[instance_name]}"_psg
+  -s osm-ped -d dimacs \
+  -i "${osm_dir}"/"${cfg[instance_name]}"_PedestrianOuter \
+  -o "${graphs_dir}"/DIMACS/"${cfg[instance_name]}"_psg_outer
 
 # Divide weights by 10 to get travel times in seconds (instead of deciseconds) for use in ULTRA
-mv "${graphs_dir}"/DIMACS/"${cfg[instance_name]}"_psg.gr "${graphs_dir}"/DIMACS/"${cfg[instance_name]}"_psg_tenths_of_seconds.gr
-bash "${cfg[parrot_source_dir]}"/RawData/divide_weights_by_10_in_dimacs.sh "${graphs_dir}"/DIMACS/"${cfg[instance_name]}"_psg_tenths_of_seconds.gr "${graphs_dir}"/DIMACS/"${cfg[instance_name]}"_psg.gr
-rm "${graphs_dir}"/DIMACS/"${cfg[instance_name]}"_psg_tenths_of_seconds.gr
+mv "${graphs_dir}"/DIMACS/"${cfg[instance_name]}"_psg_outer.gr "${graphs_dir}"/DIMACS/"${cfg[instance_name]}"_psg_outer_tenths_of_seconds.gr
+bash "${cfg[parrot_source_dir]}"/RawData/divide_weights_by_10_in_dimacs.sh "${graphs_dir}"/DIMACS/"${cfg[instance_name]}"_psg_outer_tenths_of_seconds.gr "${graphs_dir}"/DIMACS/"${cfg[instance_name]}"_psg_outer.gr
+rm "${graphs_dir}"/DIMACS/"${cfg[instance_name]}"_psg_outer_tenths_of_seconds.gr
 
 
 # Construct contraction hierarchy for vehicle and pedestrian networks

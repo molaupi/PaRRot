@@ -69,6 +69,12 @@ set_target_properties(TransformLocations PROPERTIES KASSERT_ASSERTION_LEVEL ${KA
 target_link_libraries(TransformLocations proj routingkit kassert fast_cpp_csv_parser)
 target_include_directories(TransformLocations PUBLIC ${PARROT_INCLUDE_DIR})
 
+add_executable(MapStationsToEdges MapStationsToEdges.cc)
+target_compile_definitions(MapStationsToEdges PRIVATE CSV_IO_NO_THREAD)
+set_target_properties(MapStationsToEdges PROPERTIES KASSERT_ASSERTION_LEVEL ${KASSERT_ASSERTION_LEVEL})
+target_link_libraries(MapStationsToEdges proj routingkit kassert fast_cpp_csv_parser)
+target_include_directories(MapStationsToEdges PUBLIC ${PARROT_INCLUDE_DIR})
+
 add_executable(CheckExistingAttributesInNetworkFile CheckExistingAttributesInNetworkFile.cc)
 target_compile_definitions(CheckExistingAttributesInNetworkFile PRIVATE CSV_IO_NO_THREAD)
 set_target_properties(CheckExistingAttributesInNetworkFile PROPERTIES KASSERT_ASSERTION_LEVEL ${KASSERT_ASSERTION_LEVEL})

@@ -26,6 +26,7 @@ done < "$config_file"
 # Check if required variables are set
 [ -z "${cfg[base_input_dir]}" ] && echo "base_input_dir is not set in the config file." && exit 1
 [ -z "${cfg[instance_name]}" ] && echo "instance_name is not set in the config file." && exit 1
+[ -z "${cfg[boundary_inner]}" ] && echo "boundary_inner is not set in the config file." && exit 1
 
 
 parrot_inputs_dir="${cfg[base_input_dir]}/PaRRot/"
@@ -42,19 +43,17 @@ cmake --build "${cfg[parrot_source_dir]}"/Build/Release --target Network -j
 # Map station locations into road network
 echo "Mapping station locations into road network."
 cmake -S "${cfg[parrot_source_dir]}" -B "${cfg[parrot_source_dir]}"/Build/Release -DCMAKE_BUILD_TYPE=Release
-cmake --build "${cfg[parrot_source_dir]}"/Build/Release --target TransformLocations -j
-"${cfg[parrot_source_dir]}"/Build/Release/RawData/TransformLocations \
-  -psg \
-  -v "${parrot_inputs_dir}"/"${cfg[instance_name]}"_raptor_stop_locations.csv \
-  -l-col-name location \
-  -in-repr lat-lng \
-  -out-repr edge-id \
-  -tar-g "${cfg[base_input_dir]}"/KaRRi/Graphs/"${cfg[instance_name]}"_veh.gr.bin \
+cmake --build "${cfg[parrot_source_dir]}"/Build/Release --target MapStationsToEdges -j
+"${cfg[parrot_source_dir]}"/Build/Release/RawData/MapStationsToEdges \
+  -veh-g "${cfg[base_input_dir]}"/KaRRi/Graphs/"${cfg[instance_name]}"_veh.gr.bin \
+  -psg-g "${cfg[base_input_dir]}"/KaRRi/Graphs/"${cfg[instance_name]}"_psg.gr.bin \
+  -b "${cfg[boundary_inner]}" \
+  -s "${parrot_inputs_dir}"/"${cfg[instance_name]}"_raptor_stop_locations.csv \
+  -s-col-name location \
   -o "${parrot_inputs_dir}"/"${cfg[instance_name]}"_station_mapping.csv
 
-# Remove temporary file with RAPTOR stop locations and vertexmatches file
+# Remove temporary file with RAPTOR stop locations
 rm "${parrot_inputs_dir}"/"${cfg[instance_name]}"_raptor_stop_locations.csv
-rm "${parrot_inputs_dir}"/"${cfg[instance_name]}"_station_mapping.vertexmatches.csv
 
 # Build static station buckets in vehicle and pedestrian network
 echo "Building static station buckets in vehicle and pedestrian network."

@@ -500,9 +500,9 @@ namespace parrot {
                             station.stationId, // PDLoc ID
                             station.vehEdgeId, // Location in road network
                             station.psgEdgeId, // Location in passenger road network
-                            0, // Walking time from this dropoff to destination
-                            0, // Vehicle driving time from this dropoff to the destination
-                            0, // Vehicle driving time from destination to this dropoff,
+                            station.walkingTimeFromVehEdge, // Walking time from vehEdge to station
+                            0, // Dummy vehicle driving time from this dropoff to the destination
+                            0, // Dummy vehicle driving time from destination to this dropoff,
                             true
                         };
 
@@ -522,13 +522,15 @@ namespace parrot {
 
                         using F = CostCalculator::CostFunction;
                         const int arrivalTime =
-                                (stationAtExistingStop ? arrTimeAtLastStop : depTimeAtLastStop) + asgn.distToDropoff;
+                                (stationAtExistingStop ? arrTimeAtLastStop : depTimeAtLastStop + asgn.distToDropoff) + asgn.dropoff.walkingDist;
                         KASSERT(arrivalTime == calcArrivalTime(asgn, requestState, routeState));
                         static const int &stopTime = InputConfig::getInstance().stopTime;
                         const int vehDist = asgn.distToDropoff + (stationAtExistingStop ? 0 : stopTime);
                         const int cost = costNoTripUntilDepAtLastStop +
                                          F::calcVehicleCost(vehDist) +
-                                         F::calcTripCost(arrivalTime - reqTime);
+                                             F::calcTripCost(arrivalTime - reqTime)  +
+                                                     F::calcWalkingCost(asgn.pickup.walkingDist, INFTY) +
+                                                 F::calcWalkingCost(asgn.dropoff.walkingDist, INFTY);
                         KASSERT(cost == calculator.calc(asgn, requestState),
                                 "RequestState=" << requestState << ", Assignment=" << asgn << ", Route=" << routeState.
                                 printRouteOf(vehId));
@@ -613,9 +615,9 @@ namespace parrot {
                             station.stationId, // PDLoc ID
                             station.vehEdgeId, // Location in road network
                             station.psgEdgeId, // Location in passenger road network
-                            0, // Walking time from this dropoff to destination
-                            0, // Vehicle driving time from this dropoff to the destination
-                            0, // Vehicle driving time from destination to this dropoff
+                            station.walkingTimeFromVehEdge, // Walking time from vehEdge to station
+                            0, // Dummy vehicle driving time from this dropoff to the destination
+                            0, // Dummy vehicle driving time from destination to this dropoff,
                             true
                         };
 
@@ -640,7 +642,7 @@ namespace parrot {
                             using F = CostCalculator::CostFunction;
                             const auto lowerBoundArrTime = (stationAtExistingStop
                                                                 ? lowerBoundArrTimeAtLastStop
-                                                                : lowerBoundDepTimeAtLastStop) + asgn.distToDropoff;;
+                                                                : lowerBoundDepTimeAtLastStop + asgn.distToDropoff) + asgn.dropoff.walkingDist;
                             KASSERT(lowerBoundArrTime == calcArrivalTime(asgn, requestState, routeState));
                             static const int &stopTime = InputConfig::getInstance().stopTime;
                             const int vehDist = asgn.distToDropoff + (stationAtExistingStop ? 0 : stopTime);
@@ -702,9 +704,9 @@ namespace parrot {
                             station.stationId, // PDLoc ID
                             station.vehEdgeId, // Location in road network
                             station.psgEdgeId, // Location in passenger road network
-                            0, // Walking time from this dropoff to destination
-                            0, // Vehicle driving time from this dropoff to the destination
-                            0, // Vehicle driving time from destination to this dropoff
+                            station.walkingTimeFromVehEdge, // Walking time from vehEdge to station
+                            0, // Dummy vehicle driving time from this dropoff to the destination
+                            0, // Dummy vehicle driving time from destination to this dropoff,
                             true
                         };
 
@@ -729,13 +731,15 @@ namespace parrot {
                         // requestState.tryAssignmentWithKnownCost(asgn, calculator.calc(asgn, requestState));
                         using F = CostCalculator::CostFunction;
                         const int arrivalTime =
-                                (stationAtExistingStop ? arrTimeAtLastStop : depTimeAtLastStop) + asgn.distToDropoff;
+                                (stationAtExistingStop ? arrTimeAtLastStop : depTimeAtLastStop + asgn.distToDropoff) + asgn.dropoff.walkingDist;
                         KASSERT(arrivalTime == calcArrivalTime(asgn, requestState, routeState));
                         static const int &stopTime = InputConfig::getInstance().stopTime;
                         const int vehDist = asgn.distToDropoff + (stationAtExistingStop ? 0 : stopTime);
                         const int cost = costNoTripUntilDepAtLastStop +
                                          F::calcVehicleCost(vehDist) +
-                                         F::calcTripCost(arrivalTime - reqTime);
+                                             F::calcTripCost(arrivalTime - reqTime) +
+                                                 F::calcWalkingCost(asgn.pickup.walkingDist, INFTY) +
+                                             F::calcWalkingCost(asgn.dropoff.walkingDist, INFTY);
                         KASSERT(cost == calculator.calc(asgn, requestState),
                                 "RequestState=" << requestState << ", Assignment=" << asgn << ", Route=" << routeState.
                                 printRouteOf(vehId));

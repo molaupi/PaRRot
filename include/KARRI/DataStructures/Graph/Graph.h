@@ -549,23 +549,20 @@ public:
     // belongs to the subgraph. Optionally, writes a mapping of edge IDs of the full graph to the edge
     // IDs of the subgraph into a given edgeMapping for any edges that are kept.
     void extractVertexInducedSubgraph(const BitVector &bitmask) {
-        struct {
-            int field;
-
-            int &operator[](const int) { return field; }
-        } noopMap;
-        extractVertexInducedSubgraph(bitmask, noopMap);
+        std::vector<int> origToNewVertexMapping(numVertices(), INVALID_VERTEX);
+        std::vector<int> origToNewEdgeMapping(numEdges(), INVALID_EDGE);
+        extractVertexInducedSubgraph(bitmask, origToNewVertexMapping, origToNewEdgeMapping);
     }
 
 
-    template<typename EdgeMappingT>
-    void extractVertexInducedSubgraph(const BitVector &bitmask, EdgeMappingT &origToNewEdgeMapping) {
+    void extractVertexInducedSubgraph(const BitVector &bitmask, std::vector<int> &origToNewVertexMapping, std::vector<int> &origToNewEdgeMapping) {
         assert(bitmask.size() == numVertices());
+        assert(origToNewVertexMapping.size() == numVertices());
+        assert(origToNewEdgeMapping.size() == numEdges());
         using std::swap;
         int nextId = 0;
-        std::vector<int> origToNewIds(numVertices(), -1);
         for (int v = bitmask.firstSetBit(); v != -1; v = bitmask.nextSetBit(v))
-            origToNewIds[v] = nextId++;
+            origToNewVertexMapping[v] = nextId++;
 
         edgeCount = 0;
         for (int i = 0, u = bitmask.firstSetBit(); i != nextId; ++i, u = bitmask.nextSetBit(u)) {
@@ -576,7 +573,7 @@ public:
 
             // Copy the edges out of u going to vertices belonging to the subgraph.
             for (int e = firstEdge(u); e != lastEdge(u); ++e) {
-                const int v = origToNewIds[edgeHeads[e]];
+                const int v = origToNewVertexMapping[edgeHeads[e]];
                 if (v != -1) {
                     origToNewEdgeMapping[e] = edgeCount;
                     edgeHeads[edgeCount] = v;

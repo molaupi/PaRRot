@@ -51,7 +51,7 @@ nlohmann::json generateGeoJsonObjectForEdges(const InputGraphT &inputGraph, cons
     // Construct the needed path GeoJSON objects
     nlohmann::json topGeoJson;
     topGeoJson["type"] = "FeatureCollection";
-    static char color[] = "black";
+    // static char color[] = "black";
 
     int numEdgesOutput = 0;
     int numEdgesToOutput = inputGraph.numEdges() * ratio;
@@ -60,9 +60,9 @@ nlohmann::json generateGeoJsonObjectForEdges(const InputGraphT &inputGraph, cons
             // Construct edge feature
             nlohmann::json feature;
             feature["type"] = "Feature";
-            feature["properties"] = {{"edge_id",      e},
+            feature["properties"] = {{"edge_id",      e}
 //                                         {"stroke-width", 3},
-                                     {"stroke",       color}
+                                     // {"stroke",       color}
             };
 
             nlohmann::json edgeGeometry;
@@ -93,7 +93,7 @@ nlohmann::json generateGeoJsonObjectForVertices(const InputGraphT &inputGraph, c
     // Construct the needed path GeoJSON objects
     nlohmann::json topGeoJson;
     topGeoJson["type"] = "FeatureCollection";
-    static char color[] = "black";
+    // static char color[] = "black";
 
     int numVerticesOutput = 0;
     int numVerticesToOutput = inputGraph.numVertices() * ratio;
@@ -101,8 +101,9 @@ nlohmann::json generateGeoJsonObjectForVertices(const InputGraphT &inputGraph, c
 
         nlohmann::json feature;
         feature["type"] = "Feature";
-        feature["properties"] = {{"vertex_id", v},
-                                 {"stroke",    color}};
+        feature["properties"] = {{"vertex_id", v}
+                                 // {"stroke",    color}
+        };
 
         nlohmann::json vertexGeometry;
         vertexGeometry["type"] = "Point";

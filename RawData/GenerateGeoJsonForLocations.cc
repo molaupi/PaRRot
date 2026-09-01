@@ -77,6 +77,8 @@ nlohmann::json generateGeoJsonObjectForLocations(const InputGraphT &inputGraph, 
     topGeoJson["type"] = "FeatureCollection";
 
     for (int i = 0; i < static_cast<int>(locations.size()); ++i) {
+        if (locations[i] < 0 || locations[i] >= inputGraph.numEdges())
+            continue;
         topGeoJson["features"].push_back(generateGeoJsonFeatureForEdge(inputGraph, locations[i], i));
     }
 
@@ -122,8 +124,8 @@ int main(int argc, char *argv[]) {
         io::CSVReader<1, io::trim_chars<' '>> locFileReader(locationsFileName);
         locFileReader.read_header(io::ignore_extra_column, locationColName);
         while (locFileReader.read_row(location)) {
-            if (location < 0 || location >= inputGraph.numEdges())
-                throw std::invalid_argument("location is not a valid edge ID -- '" + std::to_string(location) + "'");
+            // if (location < 0 || location >= inputGraph.numEdges())
+            //     throw std::invalid_argument("location is not a valid edge ID -- '" + std::to_string(location) + "'");
             locations.push_back(location);
         }
         std::cout << "done.\n";
