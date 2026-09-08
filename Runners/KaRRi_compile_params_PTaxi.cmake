@@ -205,12 +205,15 @@ else()
     target_compile_definitions(PTaxi PRIVATE KARRI_MODE_CHOICE_METHOD=${MODE_CHOICE_COST_CODE}) # Cost
 endif()
 
-# If set, use this value as fixed seed for RNG. Use for debugging.
+# If set, use this value as fixed seed for logit RNG. Use for debugging.
 if (DEFINED KARRI_LOGIT_FIXED_SEED)
     target_compile_definitions(PTaxi PRIVATE KARRI_LOGIT_FIXED_SEED=${KARRI_LOGIT_FIXED_SEED})
 endif (DEFINED KARRI_LOGIT_FIXED_SEED)
 
-
+# If set, use this value as fixed seed for repositioning target RNG. Use for debugging.
+if (DEFINED PARROT_REPOSITIONING_FIXED_SEED)
+    target_compile_definitions(PTaxi PRIVATE PARROT_REPOSITIONING_FIXED_SEED=${PARROT_REPOSITIONING_FIXED_SEED})
+endif(DEFINED PARROT_REPOSITIONING_FIXED_SEED)
 
 # If set, does not find combined journeys, but only uses RP-only.
 option(PARROT_NO_COMBINED "Turn off combined journeys (i.e. run KaRRi instead of PaRRot)" OFF)

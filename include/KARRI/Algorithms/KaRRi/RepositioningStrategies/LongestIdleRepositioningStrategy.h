@@ -46,15 +46,26 @@ namespace karri::RepositioningStrategies {
     // origins, weighted by frequency.
     class LongestIdleRepositioningStrategy {
 
+#ifdef PARROT_REPOSITIONING_FIXED_SEED
+        static constexpr uint32_t FIXED_SEED = PARROT_REPOSITIONING_FIXED_SEED;
+        static uint32_t getSeed() {
+            return FIXED_SEED;
+        }
+#else
+        static uint32_t getSeed() {
+            return std::random_device{}();
+        }
+
+#endif
+
     public:
-        static constexpr bool USE_DETERMINISTIC = true;
 
         // Seen origin locations time out as valid repositioning targets after SEEN_ORIGIN_TIMEOUT time steps.
         static constexpr int SEEN_ORIGIN_TIMEOUT = 36000; // one hour
 
         explicit LongestIdleRepositioningStrategy(const Fleet &fleet)
             : seenOriginLocations(),
-              gen(USE_DETERMINISTIC ? 0 : std::random_device{}()),
+              gen(getSeed()),
               idleQueue(static_cast<int>(fleet.size())) {}
 
         // Notify the strategy about a request that has been processed by the dispatcher and the chosen mode.
