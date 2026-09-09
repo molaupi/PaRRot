@@ -19,6 +19,22 @@ convertToHHMM <- function(seconds) {
 }
 
 
+quality_full_path <- function(file_base,
+                              num_vehicles,
+                              algo="parrot",
+                              mode_name=NULL, 
+                              format_times=TRUE) {
+  
+  asgnstats <- fread(paste0(file_base, ".assignmentquality.csv"))
+  legstats <- fread(paste0(file_base, ".legstats.csv"))
+  modes <- fread(paste0(file_base, ".modechoice.csv"))
+  tripstats <- fread(paste0(file_base, ".tripstats.csv"))
+  bestasgns <- fread(paste0(file_base, ".bestassignments.csv"))
+  intermediate_results <- fread(paste0(file_base, ".intermediate_results.csv"))
+  
+  return(quality_base(asgnstats, legstats, modes, tripstats, bestasgns, intermediate_results, num_vehicles, algo, mode_name, format_times))
+}
+
 # Given the path to the result files of a KaRRi run (e.g. 
 # "<output-dir>/Berlin-1pct_pedestrian/karri-col-simd_300_300"), 
 # this function returns an overview over the solution quality of the assignments.
@@ -28,8 +44,8 @@ quality <- function(path_dir,
                     radius = 0,
                     capacity = 4,
                     run=1,
-                    mode_name=NULL, 
                     algo="parrot",
+                    mode_name=NULL, 
                     format_times=TRUE) {
   pattern <- paste0(algo,".*_",vcs,"_1_1_.*_r",radius,"_.*_n",num_vehicles,"_c",capacity,"_run", run)
   files <- dir(
@@ -40,17 +56,23 @@ quality <- function(path_dir,
   )
   
   asgnstats <- fread(files[endsWith(files, ".assignmentquality.csv")][[1]])
-  # asgnstats <- fread(paste0(file_base, ".assignmentquality.csv"))
-  setkey(asgnstats, request_id)
-  # asgnstats <- asgnstats[order(asgnstats$request_id)]
   legstats <- fread(files[endsWith(files, ".legstats.csv")][[1]])
-  # legstats <- fread(paste0(file_base, ".legstats.csv"))
-  # bestasgns <- bestasgns[order(bestasgns$request_id)]
   modes <- fread(files[endsWith(files, ".modechoice.csv")][[1]])
-  # modes <- fread(paste0(file_base, ".modechoice.csv"))
-  setkey(modes, request_id)
   tripstats <- fread(files[endsWith(files, ".tripstats.csv")][[1]])
-  # tripstats <- fread(paste0(file_base, ".tripstats.csv"))
+  bestasgns <- fread(files[endsWith(files, ".bestassignments.csv")][[1]])
+  intermediate_results <- fread(files[endsWith(files, ".intermediate_results.csv")][[1]])
+  
+  return(quality_base(asgnstats, legstats, modes, tripstats, bestasgns, intermediate_results, num_vehicles, algo, mode_name, format_times))
+}
+
+quality_base <- function(asgnstats, legstats, modes, tripstats, bestasgns, intermediate_results,
+                         num_vehicles,
+                         algo="parrot",
+                         mode_name=NULL, 
+                         format_times=TRUE) {
+  
+  setkey(asgnstats, request_id)
+  setkey(modes, request_id)
   setkey(tripstats, request_id)
   shareOfMode <- 1
   if (!is.null(mode_name)) {
@@ -86,14 +108,10 @@ quality <- function(path_dir,
     accrpstats <- tripstats[mode == "Taxi" | (mode == "TaxiAndPT" & firstTaxiLegVehicleId != -1 )]
     reqtimesdf <- NULL
     if (algo == "karri") {
-      ba <- fread(files[endsWith(files, ".bestassignments.csv")][[1]])
-      # ba <- fread(paste0(file_base, ".bestassignments.csv"))
-      reqtimesdf = ba[, c("request_id", "request_time")]
+      reqtimesdf = bestasgns[, c("request_id", "request_time")]
       setkey(reqtimesdf, request_id)
     } else {
-      ir <- fread(files[endsWith(files, ".intermediate_results.csv")][[1]])
-      # ir <- fread(paste0(file_base, ".intermediate_results.csv"))
-      reqtimesdf = ir[, c("request_id", "request_time")]
+      reqtimesdf = intermediate_results[, c("request_id", "request_time")]
       setkey(reqtimesdf, request_id)
     }
     accrpstats <- accrpstats[reqtimesdf, nomatch = 0]

@@ -80,6 +80,7 @@
 #include <KARRI/Algorithms/KaRRi/LastStopSearches/UnsortedLastStopBucketsEnvironment.h>
 #include <KARRI/Algorithms/KaRRi/LastStopSearches/RepositioningBucketsEnvironment.h>
 #include <KARRI/Algorithms/KaRRi/RepositioningStrategies/RandomRepositioningStrategy.h>
+#include <KARRI/Algorithms/KaRRi/RepositioningStrategies/NoOpRepositioningStrategy.h>
 #include <KARRI/Algorithms/KaRRi/RepositioningAssignments/IndividualBCHStrategyRepositioning.h>
 #include <KARRI/Algorithms/KaRRi/RepositioningAssignments/RepositioningAssignmentsFinder.h>
 #include <KARRI/Algorithms/KaRRi/RequestState/VehicleToPDLocQuery.h>
@@ -98,6 +99,8 @@
 
 #include "NoOpPTAndTaxiTripFinder.h"
 #include "../PTaxi/CarTripFinder.h"
+#include "KARRI/Algorithms/KaRRi/LastStopSearches/NoOpRepositioningBucketsEnvironment.h"
+#include "KARRI/Algorithms/KaRRi/RepositioningAssignments/NoOpRepositioningAssignmentsFinder.h"
 #include "KARRI/Algorithms/KaRRi/RepositioningStrategies/LongestIdleRepositioningStrategy.h"
 #include "PTLeg/ParrotPTOnlyULTRARAPTOR.h"
 #include "Station/NoOpStationsInEllipse.h"
@@ -539,11 +542,6 @@ KARRI_DALS_STRATEGY == KARRI_COL || KARRI_DALS_STRATEGY == KARRI_IND
         // Last stop bucket environment (or substitute) also serves as a source of information on the last stops at vertices.
         using LastStopAtVerticesInfo = LastStopBucketsEnv;
 
-        // Construct Repositioning buckets environment
-        stats::UpdatePerformanceStats repositioningBucketsStats;
-        using RepositioningBucketsEnv = RepositioningBucketsEnvironment<VehicleInputGraph, VehCHEnv>;
-        RepositioningBucketsEnv repositioningBucketsEnv(vehicleInputGraph, *vehChEnv, repositioningBucketsStats);
-
         using EllipticBCHLabelSet = std::conditional_t<KARRI_ELLIPTIC_BCH_USE_SIMD,
             SimdLabelSet<KARRI_ELLIPTIC_BCH_LOG_K, ParentInfo::NO_PARENT_INFO>,
             BasicLabelSet<KARRI_ELLIPTIC_BCH_LOG_K, ParentInfo::NO_PARENT_INFO> >;
@@ -668,8 +666,28 @@ KARRI_DALS_STRATEGY == KARRI_COL || KARRI_DALS_STRATEGY == KARRI_IND
 
         // Construct repositioning strategy and assignment finder:
         CostCalculator calculator(routeState);
+
+#if PARROT_REPOSITIONING_STRATEGY == PARROT_REPOSITION_NONE
+        using RepositioningStrategyImpl = RepositioningStrategies::NoOpRepositioningStrategy;
+        RepositioningStrategyImpl repositioningStrategy;
+#else// PARROT_REPOSITIONING_STRATEGY == PARROT_REPOSITION_LONGEST_IDLE
         using RepositioningStrategyImpl = RepositioningStrategies::LongestIdleRepositioningStrategy;
         RepositioningStrategyImpl repositioningStrategy(fleet);
+#endif
+
+
+#if PARROT_REPOSITIONING_STRATEGY == PARROT_REPOSITION_NONE
+        // If there is no repositioning, we don't need to deal with repositioning assignments
+        using RepositioningBucketsEnv = NoOpRepositioningBucketsEnvironment;
+        RepositioningBucketsEnv repositioningBucketsEnv;
+        using RepositioningInsertionsFinderImpl = NoOpRepositioningAssignmentsFinder;
+        RepositioningInsertionsFinderImpl repositioningInsertionsFinder;
+#else// Any repositioning
+
+        stats::UpdatePerformanceStats repositioningBucketsStats;
+        using RepositioningBucketsEnv = RepositioningBucketsEnvironment<VehicleInputGraph, VehCHEnv>;
+        RepositioningBucketsEnv repositioningBucketsEnv(vehicleInputGraph, *vehChEnv, repositioningBucketsStats);
+
         using RepositioningFinderStrategy = IndividualBCHStrategyRepositioning<VehicleInputGraph, VehCHEnv,
             RepositioningBucketsEnv, VehicleLocatorImpl, CurVehLocToPickupSearchesImpl>;
         RepositioningFinderStrategy repositioningFinderStrategy(vehicleInputGraph, fleet, *vehChEnv, calculator,
@@ -677,6 +695,8 @@ KARRI_DALS_STRATEGY == KARRI_COL || KARRI_DALS_STRATEGY == KARRI_IND
                                                                 locator, curVehLocToPickupSearches);
         using RepositioningInsertionsFinderImpl = RepositioningAssignmentsFinder<RepositioningFinderStrategy>;
         RepositioningInsertionsFinderImpl repositioningInsertionsFinder(repositioningFinderStrategy);
+#endif
+
 
         using RequestStateInitializerImpl = RequestStateInitializer<VehicleInputGraph, VehCHEnv>;
         RequestStateInitializerImpl requestStateInitializer(vehicleInputGraph, *vehChEnv);
