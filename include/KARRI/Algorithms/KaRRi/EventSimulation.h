@@ -622,6 +622,7 @@ namespace karri {
                              const int externalMaxArrTimeAtDropoff = INFTY) {
             // || !bestAsgn.pickup || !bestAsgn.dropoff
             if (!asgn.vehicle) {
+                // TODO: If this is the second taxi leg and we do not find an assignment, the rider is stranded. Implement contingency plan.
                 riderState[reqId] = FINISHED;
                 return;
             }
@@ -820,6 +821,8 @@ namespace karri {
                         reqData.firstTaxiLegArrAtDropoff + reqData.firstTaxiLegDropoffWalkTime);
                     walkTime += reqData.firstTaxiLegPickupWalkTime + reqData.firstTaxiLegDropoffWalkTime;
                     taxiRideTime += reqData.firstTaxiLegArrAtDropoff - reqData.firstTaxiLegDepAtPickup;
+                } else {
+                    waitTime += reqData.ptLegDepTime - requests[reqId].requestTime;
                 }
                 waitTime += reqData.ptLegArrTime - reqData.ptLegDepTime - reqData.ptLegRideTime - reqData.ptLegWalkTime;
                 walkTime += reqData.ptLegWalkTime;

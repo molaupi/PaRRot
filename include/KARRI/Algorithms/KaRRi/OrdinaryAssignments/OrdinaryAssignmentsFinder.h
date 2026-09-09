@@ -88,6 +88,8 @@ namespace karri {
                 for (const auto &pickupEntry: relPickups.relevantSpotsFor(vehId)) {
                     // Find first stop position after the pickup's stop position that has relevant dropoffs.
                     const auto &stopPos = pickupEntry.stopIndex;
+                    // TODO: If we hit any leg where occupancy = capacity in this loop, there are no ordinary insertions for this pickup stop index.
+                    //  Only exception: if the leg stopPos+1 has occupancy = capacity, then dropoffs _at_ stop stopPos+1 are still possible.
                     while (curFirstDropoffIt < relevantDropoffs.end() &&
                            curFirstDropoffIt->stopIndex <= stopPos) {
                         ++curFirstDropoffIt;
@@ -138,6 +140,9 @@ namespace karri {
 
             for (auto dropoffIt = startItInRegularDropoffs; dropoffIt < relevantDropoffs.end(); ++dropoffIt) {
                 const auto &dropoffEntry = *dropoffIt;
+
+                // TODO: BREAK if occupancy = capacity -> cannot serve with pickup earlier and dropoff later
+
                 asgn.dropoff = pdLocs.dropoffs[dropoffEntry.pdId];
 
                 if (dropoffEntry.stopIndex + 1 < numStops &&

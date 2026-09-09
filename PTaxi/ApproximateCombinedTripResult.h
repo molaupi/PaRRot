@@ -32,6 +32,8 @@ public:
                         ptLeg(),
                         firstStationId(INVALID_ID),
                         lastStationId(INVALID_ID),
+    usesFirstTaxiLeg(false),
+    usesSecondTaxiLeg(false),
                         firstTaxiLegCost(INFTY),
                         secondTaxiLegCost(INFTY),
                         ptLegCost(INFTY),
@@ -62,6 +64,7 @@ public:
             secondTaxiLegCost = CostCalculator::calcHeuristicCostForFinalTransferTimeByRP(secondTaxiLegApproximationTravelTime);
             bestCost += secondTaxiLegCost;
             arrivalTime += secondTaxiLegApproximationTravelTime;
+            usesSecondTaxiLeg = true;
         } else {
             secondTaxiLegCost = 0;
         }
@@ -72,6 +75,7 @@ public:
             firstTaxiLeg = accessRpTrip;
             firstTaxiLegCost = firstTaxiLeg.costWithoutTrip + CostCalculator::calcTripCost(firstTaxiLeg.arrivalTime - requestTime);
             bestCost += firstTaxiLegCost;
+            usesFirstTaxiLeg = true;
         } else {
             firstTaxiLegCost = 0;
         }
@@ -95,11 +99,11 @@ public:
     }
 
     bool isInitialTransferByTaxi() const {
-        return firstTaxiLeg.isValid();
+        return usesFirstTaxiLeg;
     }
         
     bool isFinalTransferByTaxi() const {
-        return secondTaxiLegCost != INFTY;
+        return usesSecondTaxiLeg;
     }
 
     InsertionType getFirstTaxiLegInsertionType() const {
@@ -135,6 +139,8 @@ private:
     PTResult ptLeg;
     int firstStationId;
     int lastStationId;
+    bool usesFirstTaxiLeg;
+    bool usesSecondTaxiLeg;
     int firstTaxiLegCost;
     int secondTaxiLegCost;
     int ptLegCost;
