@@ -129,12 +129,12 @@ namespace karri::PickupAfterLastStopStrategies {
             if (!asgn.vehicle)
                 return;
 
-            const auto totalDetour = asgn.distToPickup + InputConfig::getInstance().stopTime + asgn.distToDropoff + InputConfig::getInstance().stopTime;
+            const auto totalDetour = requestState.earliestDeparture() + asgn.distToPickup + InputConfig::getInstance().stopTime + asgn.distToDropoff + InputConfig::getInstance().stopTime - time_utils::getVehDepTimeAtStopForRequest(asgn.vehicle->vehicleId, asgn.pickupStopIdx, requestState.now(), routeState);
             using time_utils::isServiceTimeConstraintViolated;
             if (!isServiceTimeConstraintViolated(*asgn.vehicle, requestState, totalDetour, routeState)) {
                 // If assignment found by collective search adheres to service time constraint, we have found the
                 // best PALS assignment.
-                assert(calculator.calc(asgn, requestState) == minCost);
+                KASSERT(calculator.calc(asgn, requestState) == minCost);
                 result.tryAssignmentWithKnownCost(asgn, minCost);
 
                 const auto tryAssignmentsTime = timer.elapsed<std::chrono::nanoseconds>();
