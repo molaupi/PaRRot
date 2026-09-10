@@ -197,9 +197,18 @@ namespace karri::DropoffAfterLastStopStrategies {
             for (const auto &vehId: vehiclesWithLastStopAtV) {
                 ++numLastStopsVisited;
 
-                const auto occupancies = routeState.occupanciesFor(vehId);
+                const auto numStops = routeState.numStopsOf(vehId);
+                const auto occs = routeState.occupanciesFor(vehId);
                 asgn.vehicle = &fleet[vehId];
-                dropoffIndex = routeState.numStopsOf(vehId) - 1;
+                dropoffIndex = numStops - 1;
+
+                // Find largest stop index at which new rider(s) would break vehicle capacity.
+                // Pickup has to be made after this index.
+                int capacityBrokenIndex = numStops - 2;
+                const int cap = asgn.vehicle->capacity;
+                while (capacityBrokenIndex >= 0 && occs[capacityBrokenIndex] + requestState.originalRequest.numRiders <= cap) {
+                    --capacityBrokenIndex;
+                }
 
                 if (curRelOrdinaryPickups->hasRelevantSpotsFor(vehId)) {
                     vehiclesSeen.insert(vehId);
@@ -216,8 +225,7 @@ namespace karri::DropoffAfterLastStopStrategies {
                              pickupIt < relevantPickupsInRevOrder.end(); ++pickupIt) {
                             const auto &entry = *pickupIt;
 
-                            if (occupancies[entry.stopIndex] + requestState.originalRequest.numRiders >
-                                asgn.vehicle->capacity)
+                            if (entry.stopIndex <= capacityBrokenIndex)
                                 break;
 
                             asgn.pickup = pdLocs.pickups[entry.pdId];
@@ -234,8 +242,7 @@ namespace karri::DropoffAfterLastStopStrategies {
                     }
                 }
 
-                if (curRelPickupsBns->hasRelevantSpotsFor(vehId) &&
-                    occupancies[0] != asgn.vehicle->capacity) {
+                if (curRelPickupsBns->hasRelevantSpotsFor(vehId) && capacityBrokenIndex < 0) {
                     vehiclesSeen.insert(vehId);
                     asgn.pickupStopIdx = 0;
 

@@ -233,10 +233,18 @@ namespace karri::DropoffAfterLastStopStrategies {
                 }
 
                 const auto &numStops = routeState.numStopsOf(vehId);
-                const auto &occupancies = routeState.occupanciesFor(vehId);
+                const auto &occs = routeState.occupanciesFor(vehId);
                 const auto relevantPickupsInRevOrder = relevantOrdinaryPickups.relevantSpotsForInReverseOrder(vehId);
                 asgn.vehicle = &fleet[vehId];
                 asgn.dropoffStopIdx = numStops - 1;
+
+                // Find largest stop index at which new rider(s) would break vehicle capacity.
+                // Pickup has to be made after this index.
+                int capacityBrokenIndex = numStops - 2;
+                const int cap = asgn.vehicle->capacity;
+                while (capacityBrokenIndex >= 0 && occs[capacityBrokenIndex] + requestState.originalRequest.numRiders <= cap) {
+                    --capacityBrokenIndex;
+                }
 
                 for (const auto &dropoff: pdLocs.dropoffs) {
                     asgn.dropoff = dropoff;
@@ -254,7 +262,7 @@ namespace karri::DropoffAfterLastStopStrategies {
                         if (entry.stopIndex < curPickupIndex) {
                             // New smaller pickup index reached: Check if seating capacity and cost lower bound admit
                             // any valid assignments at this or earlier indices.
-                            if (occupancies[entry.stopIndex] + requestState.originalRequest.numRiders > asgn.vehicle->capacity)
+                            if (entry.stopIndex <= capacityBrokenIndex)
                                 break;
 
                             assert(entry.stopIndex < numStops - 1);

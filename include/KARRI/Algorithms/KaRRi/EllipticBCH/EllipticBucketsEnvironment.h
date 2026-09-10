@@ -121,10 +121,18 @@ namespace karri {
             if (leeway <= 0)
                 return;
 
+
             currentLeeway = leeway;
 
             const int newStopLoc = routeState.stopLocationsFor(veh.vehicleId)[stopIndex];
             const int newStopRoot = ch.rank(inputGraph.edgeHead(newStopLoc));
+
+            // If the vehicle is full on this leg, no pickup can be inserted here. A dropoff can be inserted only at
+            // the source stop of the leg. Thus, we only insert a bucket entry at the source stop itself.
+            if (routeState.occupanciesFor(veh.vehicleId)[stopIndex] >= veh.capacity) {
+                sourceBuckets.insert(newStopRoot, {stopId, 0, leeway});
+                return;
+            }
 
             const int nextStopLoc = routeState.stopLocationsFor(veh.vehicleId)[stopIndex + 1];
             const int nextStopRoot = ch.rank(inputGraph.edgeTail(nextStopLoc));
@@ -151,6 +159,11 @@ namespace karri {
             const int newStopLoc = routeState.stopLocationsFor(veh.vehicleId)[stopIndex];
             const int newStopRoot = ch.rank(inputGraph.edgeTail(newStopLoc));
             const int newStopOffset = inputGraph.travelTime(newStopLoc);
+
+            // If the vehicle is full on this leg, no pickup or dropoff can be inserted along the leg.
+            if (routeState.occupanciesFor(veh.vehicleId)[stopIndex - 1] >= veh.capacity) {
+                return;
+            }
 
             const int prevStopLoc = routeState.stopLocationsFor(veh.vehicleId)[stopIndex - 1];
             const int prevStopRoot = ch.rank(inputGraph.edgeHead(prevStopLoc));

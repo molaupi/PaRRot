@@ -80,6 +80,7 @@ namespace parrot {
             const auto schedArrTimes = routeState.schedArrTimesFor(vehId);
             const auto schedDepTimes = routeState.schedDepTimesFor(vehId);
             const auto maxArrTimes = routeState.maxArrTimesFor(vehId);
+            const auto occs = routeState.occupanciesFor(vehId);
 
             Assignment asgn(&fleet[vehId]);
 
@@ -97,8 +98,18 @@ namespace parrot {
                     vehId, i, INVALID_INDEX, depTimeAtPickup,
                     pickupEntry.distFromPDLocToNextStop, requestState, routeState);
 
+                // Compute smallest stop index after pickup at which capacity of vehicle would be broken (end of route
+                // if never broken). Dropoff has to be made before this index.
+                int capacityBrokenIndex = asgn.pickupStopIdx;
+                const int cap = asgn.vehicle->capacity;
+                while (capacityBrokenIndex < numStops - 1 && occs[capacityBrokenIndex] + requestState.originalRequest.numRiders <= cap) {
+                    ++capacityBrokenIndex;
+                }
+                // Need to allow dropoff at capacityBrokenIndex, since dropoff may be made at stop.
+                const int endDropoffIndex = std::min(capacityBrokenIndex + 1, numStops - 1);
+
                 // Iterates through stops (pickup's stop index; last stop) and try to find a station as a dropoff.
-                for (int j = i + 1; j < routeState.numStopsOf(vehId) - 1; ++j) {
+                for (int j = i + 1; j < endDropoffIndex; ++j) {
                     asgn.dropoffStopIdx = j;
                     const auto curStopId = routeState.stopIdsFor(vehId)[j];
                     const auto curStopLoc = stopLocations[j];

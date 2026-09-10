@@ -246,9 +246,23 @@ namespace parrot {
 
             // Find minimum residual detour at end of route for any relevant pickups and set min trip time to last stop accordingly
             const auto numStops = routeState.numStopsOf(vehId);
+            const auto occs = routeState.occupanciesFor(vehId);
             const auto schedArrTimeAtLastStop = routeState.schedArrTimesFor(vehId)[numStops - 1];
+
+            // Find largest stop index at which new rider(s) would break vehicle capacity.
+            // Pickup has to be made after this index.
+            int capacityBrokenIndex = numStops - 2;
+            const int cap = fleet[vehId].capacity;
+            while (capacityBrokenIndex >= 0 && occs[capacityBrokenIndex] + rs.originalRequest.numRiders <= cap) {
+                --capacityBrokenIndex;
+            }
+
             int bestCostToLastStop = INFTY;
-            for (const auto &e: relPdLocs.relevantSpotsFor(vehId)) {
+            for (const auto &e: relPdLocs.relevantSpotsForInReverseOrder(vehId)) {
+
+                if (e.stopIndex <= capacityBrokenIndex)
+                    break;
+
                 const auto &p = pdLocs.pickups[e.pdId];
                 const auto depTime = getActualDepTimeAtPickup(vehId, e.stopIndex, e.distToPDLoc, p, rs, routeState);
                 const auto initialPickupDetour = calcInitialPickupDetour(
@@ -454,11 +468,19 @@ namespace parrot {
                 }
 
                 const auto &numStops = routeState.numStopsOf(vehId);
-                const auto &occupancies = routeState.occupanciesFor(vehId);
+                const auto &occs = routeState.occupanciesFor(vehId);
                 const auto lastStopLoc = routeState.stopLocationsFor(vehId)[numStops - 1];
                 const auto relevantPickupsInRevOrder = relevantOrdinaryPickups.relevantSpotsForInReverseOrder(vehId);
                 asgn.vehicle = &fleet[vehId];
                 asgn.dropoffStopIdx = numStops - 1;
+
+                // Find largest stop index at which new rider(s) would break vehicle capacity.
+                // Pickup has to be made after this index.
+                int capacityBrokenIndex = numStops - 2;
+                const int cap = fleet[vehId].capacity;
+                while (capacityBrokenIndex >= 0 && occs[capacityBrokenIndex] + requestState.originalRequest.numRiders <= cap) {
+                    --capacityBrokenIndex;
+                }
 
                 KASSERT(asgn.distToDropoff >= 0 && asgn.distToDropoff < INFTY);
                 // int curPickupIndex = numStops - 1;
@@ -466,8 +488,7 @@ namespace parrot {
                 for (; pickupIt < relevantPickupsInRevOrder.end(); ++pickupIt) {
                     const auto &entry = *pickupIt;
 
-                    // If capacity is broken in leg of pickup, no earlier pickups are possible either, break
-                    if (occupancies[entry.stopIndex] + requestState.originalRequest.numRiders > asgn.vehicle->capacity)
+                    if (entry.stopIndex <= capacityBrokenIndex)
                         break;
 
                     asgn.pickup = pdLocs.pickups[entry.pdId];
@@ -576,14 +597,24 @@ namespace parrot {
                 if (!checkPBNSForVehicle.isSet(vehId))
                     continue;
 
-                if (routeState.numStopsOf(vehId) == 0 ||
-                    routeState.occupanciesFor(vehId)[0] + requestState.originalRequest.numRiders > fleet[vehId].
-                    capacity)
+                if (routeState.numStopsOf(vehId) == 0)
+                    continue;
+
+                const auto numStops = routeState.numStopsOf(vehId);
+                const auto occs = routeState.occupanciesFor(vehId);
+
+                // Find largest stop index at which new rider(s) would break vehicle capacity.
+                // Pickup has to be made after this index.
+                int capacityBrokenIndex = numStops - 2;
+                const int cap = fleet[vehId].capacity;
+                while (capacityBrokenIndex >= 0 && occs[capacityBrokenIndex] + requestState.originalRequest.numRiders <= cap) {
+                    --capacityBrokenIndex;
+                }
+                if (capacityBrokenIndex >= 0)
                     continue;
 
                 pbnsContinuations.clear();
 
-                const auto numStops = routeState.numStopsOf(vehId);
                 const int lastStopLoc = routeState.stopLocationsFor(vehId)[numStops - 1];
                 asgn.vehicle = &fleet[vehId];
                 asgn.dropoffStopIdx = numStops - 1;

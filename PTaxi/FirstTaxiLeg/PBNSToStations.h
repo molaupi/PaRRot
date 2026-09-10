@@ -85,7 +85,20 @@ namespace parrot {
                     routeState.occupanciesFor(vehId)[0] + requestState.originalRequest.numRiders <= fleet[vehId].
                     capacity);
 
-                determineNecessaryExactDistances(fleet[vehId], relPickupsBns, stations, stationsInEllipse,
+                const auto numStops = routeState.numStopsOf(vehId);
+                const auto occs = routeState.occupanciesFor(vehId);
+
+                // Compute smallest stop index at which capacity of vehicle would be broken by new rider(s) (end of route
+                // if never broken). Dropoff has to be made before this index.
+                int capacityBrokenIndex = 0;
+                const int cap = fleet[vehId].capacity;
+                while (capacityBrokenIndex < numStops - 1 && occs[capacityBrokenIndex] + requestState.originalRequest.numRiders <= cap) {
+                    ++capacityBrokenIndex;
+                }
+                // Need to allow dropoff at capacityBrokenIndex, since dropoff may be made at stop.
+                const int endDropoffIndex = std::min(capacityBrokenIndex + 1, numStops - 1);
+
+                determineNecessaryExactDistances(fleet[vehId], endDropoffIndex, relPickupsBns, stations, stationsInEllipse,
                                                  stationDistances, requestState, pdLocs, firstTaxiLegResult);
 
                 stats.tryAssignmentsTime += timer.elapsed<std::chrono::nanoseconds>();
@@ -95,7 +108,7 @@ namespace parrot {
                 const int distToCurLoc = vehLocation.depTimeAtHead - routeState.schedDepTimesFor(vehId)[0];
 
                 timer.restart();
-                finishContinuations(fleet[vehId], stations, stationsInEllipse, stationDistances, requestState, pdLocs,
+                finishContinuations(fleet[vehId], endDropoffIndex, stations, stationsInEllipse, stationDistances, requestState, pdLocs,
                                     distToCurLoc, firstTaxiLegResult);
                 stats.tryAssignmentsTime += timer.elapsed<std::chrono::nanoseconds>();
             }
@@ -115,7 +128,7 @@ namespace parrot {
         // location to the pickup.
         // These pickups are added to the queue of curVehLocToPickupSearches and continuations are stored to restart
         // the iteration of combinations for that pickup after the computation of exact distances.
-        void determineNecessaryExactDistances(const Vehicle &veh, const RelevantPDLocs &relPickupsBns,
+        void determineNecessaryExactDistances(const Vehicle &veh, const int endDropoffIndex, const RelevantPDLocs &relPickupsBns,
                                               const PTStations &stations, StationsInEllipseT &stationsInEllipse,
                                               StationDistancesT &stationDistances,
                                               const RequestState &requestState, const PDLocs &pdLocs,
@@ -163,9 +176,9 @@ namespace parrot {
                 const int minPickupDetour = calcInitialPickupDetour(
                     veh.vehicleId, 0, INVALID_INDEX, minDepTimeAtPickup, asgn.distFromPickup, requestState, routeState);
                 const auto scannedUntilIndex = tryLowerBoundsForOrdinary(
-                    asgn, minPickupDetour, stations, stationsInEllipse, requestState, pdLocs, firstTaxiLegResult);
+                    asgn, endDropoffIndex, minPickupDetour, stations, stationsInEllipse, requestState, pdLocs, firstTaxiLegResult);
 
-                if (scannedUntilIndex < routeState.numStopsOf(veh.vehicleId)) {
+                if (scannedUntilIndex < endDropoffIndex) {
                     // In this case some assignment with the pickup before the next stop and an ordinary dropoff
                     // needs the exact distance to pickup via the vehicle. Postpone computation
                     // of the yet unknown exact distance and the rest of the assignments with later dropoffs. That way,
@@ -268,6 +281,7 @@ namespace parrot {
         // vehicle until an assignment requires the exact distance to the pickup via the vehicle. Returns a stop index in the vehicle's route
         // at which the exact distance is first needed or the vehicle's number of stops if all combinations could be filtered.
         int tryLowerBoundsForOrdinary(Assignment &asgn,
+                                      const int endDropoffIndex,
                                       const int initialPickupDetour,
                                       const PTStations &stations,
                                       StationsInEllipseT &stationsInEllipse,
@@ -285,7 +299,7 @@ namespace parrot {
             const auto schedArrTimes = routeState.schedArrTimesFor(vehId);
             const auto maxArrTimes = routeState.maxArrTimesFor(vehId);
 
-            for (int j = 1; j < numStops - 1; ++j) {
+            for (int j = 1; j < endDropoffIndex; ++j) {
                 const auto curStopId = stopIds[j];
                 const int maxDetourAtJ = maxArrTimes[j + 1] - schedArrTimes[j + 1];
                 const auto lengthOfLegJ = calcLengthOfLegStartingAt(j, vehId, routeState);
@@ -361,10 +375,11 @@ namespace parrot {
                 }
             }
 
-            return numStops;
+            return endDropoffIndex;
         }
 
         void finishContinuations(const Vehicle &veh,
+            const int endDropoffIndex,
                                  const PTStations &stations,
                                  StationsInEllipseT &stationsInEllipse,
                                  StationDistancesT &stationDistances,
@@ -400,7 +415,7 @@ namespace parrot {
                 const int initialPickupDetour = calcInitialPickupDetour(
                     veh.vehicleId, 0, INVALID_INDEX, depTimeAtPickup, asgn.distFromPickup, requestState, routeState);
 
-                for (auto j = continuation.continueStopIndex; j < numStops - 1; ++j) {
+                for (auto j = continuation.continueStopIndex; j < endDropoffIndex; ++j) {
                     asgn.dropoffStopIdx = j;
 
                     const auto curStopId = stopIds[j];

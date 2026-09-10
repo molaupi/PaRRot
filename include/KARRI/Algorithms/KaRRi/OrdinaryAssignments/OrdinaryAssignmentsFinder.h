@@ -88,8 +88,6 @@ namespace karri {
                 for (const auto &pickupEntry: relPickups.relevantSpotsFor(vehId)) {
                     // Find first stop position after the pickup's stop position that has relevant dropoffs.
                     const auto &stopPos = pickupEntry.stopIndex;
-                    // TODO: If we hit any leg where occupancy = capacity in this loop, there are no ordinary insertions for this pickup stop index.
-                    //  Only exception: if the leg stopPos+1 has occupancy = capacity, then dropoffs _at_ stop stopPos+1 are still possible.
                     while (curFirstDropoffIt < relevantDropoffs.end() &&
                            curFirstDropoffIt->stopIndex <= stopPos) {
                         ++curFirstDropoffIt;
@@ -125,6 +123,7 @@ namespace karri {
                                       InternalTaxiResult &result) const {
             assert(asgn.vehicle && asgn.pickup.id != INVALID_ID);
             const auto &vehId = asgn.vehicle->vehicleId;
+            const auto occs = routeState.occupanciesFor(vehId);
 
             const auto relevantDropoffs = relDropoffs.relevantSpotsFor(vehId);
             assert(startItInRegularDropoffs >= relevantDropoffs.begin() &&
@@ -138,10 +137,22 @@ namespace karri {
             const auto &numStops = routeState.numStopsOf(vehId);
             const auto &stopLocations = routeState.stopLocationsFor(vehId);
 
+            // Compute smallest stop index after pickup at which capacity of vehicle would be broken (end of route
+            // if never broken). Dropoff has to be made before this index.
+            int capacityBrokenIndex = asgn.pickupStopIdx;
+            const int cap = asgn.vehicle->capacity;
+            while (capacityBrokenIndex < numStops && occs[capacityBrokenIndex] + requestState.originalRequest.numRiders <= cap) {
+                ++capacityBrokenIndex;
+            }
+
             for (auto dropoffIt = startItInRegularDropoffs; dropoffIt < relevantDropoffs.end(); ++dropoffIt) {
                 const auto &dropoffEntry = *dropoffIt;
 
-                // TODO: BREAK if occupancy = capacity -> cannot serve with pickup earlier and dropoff later
+                if (dropoffEntry.stopIndex > capacityBrokenIndex) {
+                    // All remaining dropoffs would be after the stop where capacity is broken. Need to allow dropoff
+                    // at capacityBrokenIndex, since dropoff may be made at stop.
+                    break;
+                }
 
                 asgn.dropoff = pdLocs.dropoffs[dropoffEntry.pdId];
 
