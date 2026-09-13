@@ -25,20 +25,51 @@
 
 #pragma once
 
+#include <cassert>
+#include <cmath>
+#include <cstdint>
+
 namespace karri {
 
 
-    template<int PASSENGER_COST_SCALE = 1, int WALKING_COST_SCALE = 0, int VEHICLE_COST_SCALE = 1,
-             int TRANSFER_COST_SCALE = 0, int TRANSFER_INCONVENIENCE_WEIGHT = 10>
+    template<double PASSENGER_COST_SCALE = 1.0, double WALKING_COST_SCALE = 1.0, double VEHICLE_COST_SCALE = 1.0,
+             double TRANSFER_COST_SCALE = 0.0, int TRANSFER_INCONVENIENCE_WEIGHT = 10>
     struct TimeIsMoneyCostFunction {
 
-        static constexpr int PSG_WEIGHT = PASSENGER_COST_SCALE;
-        static constexpr int WALK_WEIGHT = WALKING_COST_SCALE;
-        static constexpr int VEH_WEIGHT = VEHICLE_COST_SCALE;
+        static constexpr double PSG_WEIGHT = PASSENGER_COST_SCALE;
+        static constexpr double WALK_WEIGHT = WALKING_COST_SCALE;
+        static constexpr double VEH_WEIGHT = VEHICLE_COST_SCALE;
+
+    private:
+
+        // Since the weights are now real-valued parameters of a mathematical expression instead of
+        // integers, a weight times an integer quantity is in general not an integer anymore. Rounds
+        // to the nearest integer, breaking ties away from zero (matching std::lround), instead of
+        // relying on the truncation of the implicit double-to-int conversion on return.
+        static inline int roundToInt(const double x) {
+            return static_cast<int>(std::lround(x));
+        }
+
+        // Returns the smallest non-negative integer x with x * scale >= value. Used to invert cost
+        // terms of the form x * scale for pruning purposes. Since scale and value are now
+        // floating-point, a plain std::ceil(value / scale) can be off by one due to floating-point
+        // rounding; the result is therefore verified and, if necessary, corrected using exact
+        // integer arithmetic so it is never an over-estimate (which would make pruning unsound).
+        static inline int ceilDiv(const double value, const double scale) {
+            assert(scale > 0);
+            auto x = static_cast<int64_t>(std::ceil(value / scale));
+            while (x > 0 && static_cast<double>(x - 1) * scale >= value)
+                --x;
+            while (static_cast<double>(x) * scale < value)
+                ++x;
+            return static_cast<int>(x);
+        }
+
+    public:
 
         template<typename RequestContext>
         static inline int calcUpperBoundTripCostDifference(const int tripTimeDifference, const RequestContext &) {
-            return PASSENGER_COST_SCALE * tripTimeDifference;
+            return roundToInt(PASSENGER_COST_SCALE * tripTimeDifference);
         }
 
         template<typename DistanceLabel, typename RequestContext>
@@ -51,12 +82,12 @@ namespace karri {
 
         static inline int calcUpperBoundTripViolationCostDifference(const int tripTimeDifference) {
             assert(tripTimeDifference >= 0);
-            return PASSENGER_COST_SCALE * tripTimeDifference;
+            return roundToInt(PASSENGER_COST_SCALE * tripTimeDifference);
         }
 
         template<typename RequestContext>
         static inline int calcLowerBoundTripCostDifference(const int tripTimeDifference, const RequestContext &) {
-            return PASSENGER_COST_SCALE * tripTimeDifference;
+            return roundToInt(PASSENGER_COST_SCALE * tripTimeDifference);
         }
 
         template<typename DistanceLabel, typename RequestContext>
@@ -68,7 +99,7 @@ namespace karri {
         }
 
         static inline int calcTripCost(const int tripTime) {
-            const auto regularCost = PASSENGER_COST_SCALE * tripTime;
+            const auto regularCost = roundToInt(PASSENGER_COST_SCALE * tripTime);
             return regularCost;
         }
 
@@ -86,18 +117,18 @@ namespace karri {
             return calcKTripCosts(tripTime);
         }
 
-        static constexpr inline int calcWalkingCost(const int walkingDist, const int) {
+        static inline int calcWalkingCost(const int walkingDist, const int) {
             // Time is money => walking time is part of passengers trip time so do not count it again
-            return WALKING_COST_SCALE * walkingDist;
+            return roundToInt(WALKING_COST_SCALE * walkingDist);
         }
 
-        static constexpr inline int calcWalkingCost(const int walkingDist) {
+        static inline int calcWalkingCost(const int walkingDist) {
             // Time is money => walking time is part of passengers trip time so do not count it again
-            return WALKING_COST_SCALE * walkingDist;
+            return roundToInt(WALKING_COST_SCALE * walkingDist);
         }
 
         template<typename DistanceLabel>
-        static constexpr inline DistanceLabel calcKWalkingCosts(const DistanceLabel &walkingDist, const int) {
+        static inline DistanceLabel calcKWalkingCosts(const DistanceLabel &walkingDist, const int) {
             // Time is money => walking time is part of passengers trip time so do not count it again
             auto cost = walkingDist;
             cost.multiplyWithScalar(WALKING_COST_SCALE);
@@ -105,7 +136,7 @@ namespace karri {
         }
 
         template<typename DistanceLabel>
-        static constexpr inline DistanceLabel calcKWalkingCosts(const DistanceLabel &walkingDist) {
+        static inline DistanceLabel calcKWalkingCosts(const DistanceLabel &walkingDist) {
             // Time is money => walking time is part of passengers trip time so do not count it again
             auto cost = walkingDist;
             cost.multiplyWithScalar(WALKING_COST_SCALE);
@@ -136,7 +167,7 @@ namespace karri {
         }
 
         static inline int calcChangeInTripCostsOfExistingPassengers(const int addedTripTimeForExistingPassengers) {
-            return PASSENGER_COST_SCALE * addedTripTimeForExistingPassengers;
+            return roundToInt(PASSENGER_COST_SCALE * addedTripTimeForExistingPassengers);
         }
 
         static inline int calcUpperBoundVehicleCostDifference(const int detourDiff) {
@@ -148,12 +179,12 @@ namespace karri {
         }
 
         static inline int calcVehicleCost(const int residualDetourAtEnd) {
-            return VEHICLE_COST_SCALE * residualDetourAtEnd;
+            return roundToInt(VEHICLE_COST_SCALE * residualDetourAtEnd);
         }
-        
+
         // waiting time / trip time
         static inline int calcTransferCost(const int totalTransferTime) {
-            return TRANSFER_COST_SCALE * totalTransferTime;
+            return roundToInt(TRANSFER_COST_SCALE * totalTransferTime);
         }
 
         static inline int calcTransferPenalty(const int numberOfTransfers) {
@@ -172,10 +203,10 @@ namespace karri {
         // any route leg to get a global lower bound on the detour.
         static inline int
         calcMinDistFromOrToPDLocSuchThatVehCostReachesMinCost(const int cost, const int maxLegLength) {
-            if constexpr (VEHICLE_COST_SCALE == 0)
+            if constexpr (VEHICLE_COST_SCALE == 0.0)
                 return INFTY;
             else
-                return cost / VEHICLE_COST_SCALE + (cost % VEHICLE_COST_SCALE != 0) + maxLegLength;
+                return ceilDiv(cost, VEHICLE_COST_SCALE) + maxLegLength;
         }
 
         // Returns the smallest distance from a pickup or to a dropoff (distance that is part of the detour and the trip
@@ -183,10 +214,10 @@ namespace karri {
         // any route leg to get a global lower bound on the detour.
         static inline int
         calcMinDistFromOrToPDLocSuchThatVehAndTripCostsReachMinCost(const int cost, const int maxLegLength) {
-            const auto c = cost + VEHICLE_COST_SCALE * maxLegLength;
-            const auto d = VEHICLE_COST_SCALE + PASSENGER_COST_SCALE;
+            const double c = cost + VEHICLE_COST_SCALE * maxLegLength;
+            const double d = VEHICLE_COST_SCALE + PASSENGER_COST_SCALE;
             assert(d != 0);
-            return c / d + (c % d != 0);
+            return ceilDiv(c, d);
         }
 
     };

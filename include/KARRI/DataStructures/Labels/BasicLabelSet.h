@@ -29,6 +29,7 @@
 #include <algorithm>
 #include <array>
 #include <cassert>
+#include <cmath>
 #include <type_traits>
 
 #include "ParentInfo.h"
@@ -271,6 +272,13 @@ public:
         void multiplyWithScalar(const int s) {
             for (int i = 0; i < K; ++i)
                 values[i] = s * values[i];
+        }
+
+        // Multiply all entries in this label with a floating-point scalar factor, rounding each
+        // resulting value to the nearest integer (ties broken away from zero, like std::lround).
+        void multiplyWithScalar(const double s) {
+            for (int i = 0; i < K; ++i)
+                values[i] = static_cast<int>(std::lround(s * values[i]));
         }
 
         // Sets this label at all slots i where mask[i] = true.

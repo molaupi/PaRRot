@@ -318,6 +318,13 @@ public:
                 values[i] = s * values[i];
         }
 
+        // Multiply all entries in this label with a floating-point scalar factor, rounding each
+        // resulting value to the nearest integer (ties broken away from zero, like std::lround).
+        void multiplyWithScalar(const double s) {
+            for (int i = 0; i < NUM_VECTORS; ++i)
+                values[i] = multiplyWithDoubleScalar(values[i], s);
+        }
+
         // Sets this label at all slots i where mask[i] = true.
         void setIf(const DistanceLabel &other, const LabelMask &mask) {
             for (int i = 0; i < NUM_VECTORS; ++i)
@@ -334,6 +341,25 @@ public:
         }
 
     private:
+        // Rounds each lane of a double vector to the nearest integer, breaking ties away from
+        // zero (matching std::lround), and packs the result into an int32 vector.
+        static inline Vec4i roundToNearestInt(const Vec4d &v) {
+            return ::truncate_to_int32(v + ::sign_combine(Vec4d(0.5), v));
+        }
+
+        // Multiplies a Vec4i by a floating-point scalar with correct rounding to the nearest
+        // integer (ties away from zero). Goes through double precision, which is exact for
+        // 32-bit integers, since there is no rounded integer multiply-by-double instruction.
+        static inline Vec4i multiplyWithDoubleScalar(const Vec4i &v, const double s) {
+            return roundToNearestInt(::to_double(v) * s);
+        }
+
+        // Same as above for Vec8i. There is no native 8-lane double vector without AVX-512, so
+        // this is done as two Vec4i/Vec4d halves.
+        static inline Vec8i multiplyWithDoubleScalar(const Vec8i &v, const double s) {
+            return Vec8i(multiplyWithDoubleScalar(v.get_low(), s), multiplyWithDoubleScalar(v.get_high(), s));
+        }
+
         IntegerLabel values; // The k distance values, one for each simultaneous source.
     };
 

@@ -719,9 +719,9 @@ namespace karri {
         const int stopTime;
     };
 
-    static constexpr int PSG_COST_SCALE = KARRI_PSG_COST_SCALE; // CMake compile time parameter
-    static constexpr int VEH_COST_SCALE = KARRI_VEH_COST_SCALE; // CMake compile time parameter
-    static constexpr int WALKING_COST_SCALE = KARRI_WALKING_COST_SCALE; // CMake compile time parameter
+    static constexpr double PSG_COST_SCALE = KARRI_PSG_COST_SCALE; // CMake compile time parameter
+    static constexpr double VEH_COST_SCALE = KARRI_VEH_COST_SCALE; // CMake compile time parameter
+    static constexpr double WALKING_COST_SCALE = KARRI_WALKING_COST_SCALE; // CMake compile time parameter
     using CostCalculator = CostCalculatorTemplate<TimeIsMoneyCostFunction<PSG_COST_SCALE, WALKING_COST_SCALE,
         VEH_COST_SCALE> >;
 }
