@@ -504,7 +504,7 @@ namespace karri {
             const auto walkOnlyResult = walkTripFinder.findWalkingTrip(requestState, stats.walkOnlyStats);
             const auto carOnlyResult = carTripFinder.findCarTrip(requestState, stats.carOnlyStats);
             const auto taxiOnlyResult = taxiTripFinder.findBestAssignment(requestState, baseInfo, stats.taxiOnlyStats);
-            systemStateUpdater.writeBestAssignmentToLogger(requestState, taxiOnlyResult);
+            systemStateUpdater.writeBestTaxiOnlyAssignmentToLogger(requestState, taxiOnlyResult);
             const auto ptOnlyResult = ptTripFinder.findBestJourney(requestState, stats.ptOnlyStats);
 
             // const int ptOnlyCostBound = ptOnlyResult.getCost();
@@ -769,6 +769,7 @@ namespace karri {
             applyAssignment(requestState, asgn, reqId, secondTaxiLegStats.updateStats);
 
             systemStateUpdater.writeSecondTaxiLegLogs(reqId, secondTaxiLegStats);
+            systemStateUpdater.writeBestSecondTaxiLegAssignmentToLogger(requestState, secondLegResult);
         }
 
         void handleRiderArrivalAtDest(const int reqId, const int occTime) {

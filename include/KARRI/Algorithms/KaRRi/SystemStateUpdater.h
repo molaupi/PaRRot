@@ -53,6 +53,28 @@ namespace karri {
 
         static constexpr bool USE_DETERMINISTIC_REPOSITIONING_TARGETS = true;
 
+        static constexpr auto BEST_ASSIGNMENTS_COLUMN_NAMES = "request_id,"
+                                                                   "request_time,"
+                                                                   "dispatching_time,"
+                                                                   "direct_od_dist,"
+                                                                   "vehicle_id,"
+                                                                   "pickup_insertion_point,"
+                                                                   "dropoff_insertion_point,"
+                                                                   "dist_to_pickup,"
+                                                                   "dist_from_pickup,"
+                                                                   "dist_to_dropoff,"
+                                                                   "dist_from_dropoff,"
+                                                                   "pickup_id,"
+                                                                   "pickup_walking_dist,"
+                                                                   "dropoff_id,"
+                                                                   "dropoff_walking_dist,"
+                                                                   "num_stops,"
+                                                                   "veh_dep_time_at_stop_before_pickup,"
+                                                                   "veh_dep_time_at_stop_before_dropoff,"
+                                                                   "not_using_vehicle,"
+                                                                   "is_vehicle_repositioning,"
+                                                                   "cost\n";
+
     public:
         SystemStateUpdater(const InputGraphT &inputGraph, const Fleet &fleet,
                            CurVehLocsT &curVehLocs,
@@ -75,26 +97,9 @@ namespace karri {
               pathComputer(inputGraph, chEnv),
               repositioningStrategy(repositioningStrategy),
               bestAssignmentsLogger(LogManager<LoggerT>::getLogger("bestassignments.csv",
-                                                                   "request_id, "
-                                                                   "request_time, "
-                                                                   "direct_od_dist, "
-                                                                   "vehicle_id, "
-                                                                   "pickup_insertion_point, "
-                                                                   "dropoff_insertion_point, "
-                                                                   "dist_to_pickup, "
-                                                                   "dist_from_pickup, "
-                                                                   "dist_to_dropoff, "
-                                                                   "dist_from_dropoff, "
-                                                                   "pickup_id, "
-                                                                   "pickup_walking_dist, "
-                                                                   "dropoff_id, "
-                                                                   "dropoff_walking_dist, "
-                                                                   "num_stops, "
-                                                                   "veh_dep_time_at_stop_before_pickup, "
-                                                                   "veh_dep_time_at_stop_before_dropoff, "
-                                                                   "not_using_vehicle, "
-                                                                   "is_vehicle_repositioning, "
-                                                                   "cost\n")),
+              BEST_ASSIGNMENTS_COLUMN_NAMES)),
+              secondTaxiLegBestAssignmentsLogger(LogManager<LoggerT>::getLogger("second_taxi_leg_bestassignments.csv",
+              BEST_ASSIGNMENTS_COLUMN_NAMES)),
               // tripTypeLogger(LogManager<LoggerT>::getLogger("triptypes.csv",
               //                                               "request_id,"
               //                                               "is_taxi_only,"
@@ -286,46 +291,6 @@ namespace karri {
         }
 
 
-        void writeBestAssignmentToLogger(const RequestState &requestState, const parrot::TaxiResult &result) {
-            bestAssignmentsLogger
-                    << requestState.originalRequest.requestId << ", "
-                    << requestState.originalRequest.requestTime << ", "
-                    << requestState.originalReqDirectDist << ", ";
-
-            if (result.getBestCost() == INFTY) {
-                bestAssignmentsLogger << "-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,inf\n";
-                return;
-            }
-
-            const auto &bestAsgn = result.getBestAssignment();
-
-            const auto &vehId = bestAsgn.vehicle->vehicleId;
-            const auto &numStops = routeState.numStopsOf(vehId);
-            using time_utils::getVehDepTimeAtStopForRequest;
-            const auto &vehDepTimeBeforePickup = getVehDepTimeAtStopForRequest(vehId, bestAsgn.pickupStopIdx,
-                                                                               requestState.now(), routeState);
-            const auto &vehDepTimeBeforeDropoff = getVehDepTimeAtStopForRequest(vehId, bestAsgn.dropoffStopIdx,
-                requestState.now(), routeState);
-            bestAssignmentsLogger
-                    << vehId << ", "
-                    << bestAsgn.pickupStopIdx << ", "
-                    << bestAsgn.dropoffStopIdx << ", "
-                    << bestAsgn.distToPickup << ", "
-                    << bestAsgn.distFromPickup << ", "
-                    << bestAsgn.distToDropoff << ", "
-                    << bestAsgn.distFromDropoff << ", "
-                    << bestAsgn.pickup.id << ", "
-                    << bestAsgn.pickup.walkingDist << ", "
-                    << bestAsgn.dropoff.id << ", "
-                    << bestAsgn.dropoff.walkingDist << ", "
-                    << numStops << ", "
-                    << vehDepTimeBeforePickup << ", "
-                    << vehDepTimeBeforeDropoff << ", "
-                    << "false, "
-                    << routeState.isRepositioning(vehId) << ", "
-                    << result.getBestCost() << "\n";
-        }
-
         void writeReceiveRequestLogs(const int requestId, const stats::RequestReceiveStats &stats) const {
             logPerformance(requestId, "", stats);
             logPerformance(requestId, "", stats.walkOnlyStats);
@@ -352,7 +317,56 @@ namespace karri {
             chosenPDLocsRoadCatStats.reset();
         }
 
+        void writeBestTaxiOnlyAssignmentToLogger(const RequestState &requestState, const parrot::TaxiResult &result) {
+            writeBestAssignmentToLogger(requestState, result, bestAssignmentsLogger);
+        }
+
+        void writeBestSecondTaxiLegAssignmentToLogger(const RequestState &requestState, const parrot::TaxiResult &result) {
+            writeBestAssignmentToLogger(requestState, result, secondTaxiLegBestAssignmentsLogger);
+        }
+
     private:
+        void writeBestAssignmentToLogger(const RequestState &requestState, const parrot::TaxiResult &result, LoggerT& logger) {
+            logger
+                    << requestState.originalRequest.requestId << ", "
+                    << requestState.originalRequest.requestTime << ", "
+                    << requestState.now() << ", "
+                    << requestState.originalReqDirectDist << ", ";
+
+            if (result.getBestCost() == INFTY) {
+                logger << "-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,inf\n";
+                return;
+            }
+
+            const auto &bestAsgn = result.getBestAssignment();
+
+            const auto &vehId = bestAsgn.vehicle->vehicleId;
+            const auto &numStops = routeState.numStopsOf(vehId);
+            using time_utils::getVehDepTimeAtStopForRequest;
+            const auto &vehDepTimeBeforePickup = getVehDepTimeAtStopForRequest(vehId, bestAsgn.pickupStopIdx,
+                                                                               requestState.now(), routeState);
+            const auto &vehDepTimeBeforeDropoff = getVehDepTimeAtStopForRequest(vehId, bestAsgn.dropoffStopIdx,
+                requestState.now(), routeState);
+            logger
+                    << vehId << ", "
+                    << bestAsgn.pickupStopIdx << ", "
+                    << bestAsgn.dropoffStopIdx << ", "
+                    << bestAsgn.distToPickup << ", "
+                    << bestAsgn.distFromPickup << ", "
+                    << bestAsgn.distToDropoff << ", "
+                    << bestAsgn.distFromDropoff << ", "
+                    << bestAsgn.pickup.id << ", "
+                    << bestAsgn.pickup.walkingDist << ", "
+                    << bestAsgn.dropoff.id << ", "
+                    << bestAsgn.dropoff.walkingDist << ", "
+                    << numStops << ", "
+                    << vehDepTimeBeforePickup << ", "
+                    << vehDepTimeBeforeDropoff << ", "
+                    << "false, "
+                    << routeState.isRepositioning(vehId) << ", "
+                    << result.getBestCost() << "\n";
+        }
+
         std::vector<int> recomputeRepositioningPath(const int vehId) {
             KASSERT(routeState.isRepositioning(vehId));
 
@@ -744,6 +758,7 @@ namespace karri {
 
         // Performance Loggers
         LoggerT &bestAssignmentsLogger;
+        LoggerT &secondTaxiLegBestAssignmentsLogger;
         // LoggerT &tripTypeLogger;
         LoggerT &roadCatLogger;
 
