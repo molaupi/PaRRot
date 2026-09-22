@@ -105,6 +105,8 @@ namespace karri {
             int firstTaxiLegVehicleId = INVALID_ID;
 
             // PT leg
+            int ptAccessStation = INVALID_ID;
+            int ptEgressStation = INVALID_ID;
             int ptLegDepTime = 0;
             int ptLegArrTime = 0;
             int ptLegWalkTime = 0;
@@ -206,6 +208,8 @@ namespace karri {
                                                                    "firstTaxiLegArrAtDropoff,"
                                                                    "firstTaxiLegDropoffWalkTime,"
                                                                    "firstTaxiLegVehicleId,"
+                                                                   "ptAccessStation,"
+                                                                   "ptEgressStation,"
                                                                    "ptLegDepTime,"
                                                                    "ptLegArrTime,"
                                                                    "ptLegWalkTime,"
@@ -536,6 +540,8 @@ namespace karri {
                 processChoiceOtherMode(reqId, occTime, arrTime);
                 tripTime = mode == TransportMode::Ped? walkOnlyResult.walkingDist : INFTY; // Assume car has infinitely bad trip time
             } else if (mode == TransportMode::PublicTransport) {
+                reqData.ptAccessStation = ptOnlyResult.getFirstStation();
+                reqData.ptEgressStation = ptOnlyResult.getLastStation();
                 reqData.ptLegCost = ptOnlyResult.getCost();
                 reqData.ptLegDepTime = request.requestTime;
                 reqData.ptLegArrTime = ptOnlyResult.getArrivalTime();
@@ -571,6 +577,8 @@ namespace karri {
                 }
 
                 KASSERT(!ptAndTaxiResult.getPTLeg().journey.empty());
+                reqData.ptAccessStation = ptAndTaxiResult.getPTLeg().getFirstStation();
+                reqData.ptEgressStation = ptAndTaxiResult.getPTLeg().getLastStation();
                 reqData.ptLegCost = ptAndTaxiResult.getPTLeg().getCost();
                 reqData.ptLegDepTime = ptAndTaxiResult.getPTLeg().getDepartureTime();
                 reqData.ptLegArrTime = ptAndTaxiResult.getPTLeg().getArrivalTime();
@@ -676,6 +684,7 @@ namespace karri {
                     << -1 << ','
                     << -1 << '\n';
             tripStatsLogger << reqId << ','
+                    << -1 << ','
                     << -1 << ','
                     << -1 << ','
                     << -1 << ','
@@ -868,6 +877,8 @@ namespace karri {
                     << reqData.firstTaxiLegArrAtDropoff << ','
                     << reqData.firstTaxiLegDropoffWalkTime << ','
                     << reqData.firstTaxiLegVehicleId << ','
+                    << reqData.ptAccessStation << ','
+                    << reqData.ptEgressStation << ','
                     << reqData.ptLegDepTime << ','
                     << reqData.ptLegArrTime << ','
                     << reqData.ptLegWalkTime << ','

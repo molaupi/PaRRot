@@ -28,6 +28,22 @@ namespace parrot {
             return journey;
         }
 
+        int getFirstStation() const {
+            return journey.empty()
+                       ? INVALID_ID
+                       : static_cast<int>(journey.front().usesRoute
+                             ? journey.front().from.value()
+                             : journey.front().to.value());
+        }
+
+        int getLastStation() const {
+            return journey.empty()
+                       ? INVALID_ID
+                       : static_cast<int>(journey.back().usesRoute
+                             ? journey.back().to.value()
+                             : journey.back().from.value());
+        }
+
         // at Destination
         int getArrivalTime() const {
             return journey.empty() ? INFTY : parrot::ultraToKarriTime(journey.back().arrivalTime);
@@ -68,22 +84,6 @@ namespace parrot {
             return journey.empty()
                        ? INFTY
                        : parrot::ultraToKarriTime(journey.back().arrivalTime - journey.back().departureTime);
-        }
-
-        int getFirstStation() const {
-            return journey.empty()
-                       ? INVALID_ID
-                       : journey.front().usesRoute
-                             ? journey.front().from.value()
-                             : journey.front().to.value();
-        }
-
-        int getLastStation() const {
-            return journey.empty()
-                       ? INVALID_ID
-                       : journey.back().usesRoute
-                             ? journey.back().to.value()
-                             : journey.back().from.value();
         }
 
         int getAccessEgressTransferTime() const {
