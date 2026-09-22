@@ -698,3 +698,93 @@ countBestAssignmentTypes <- function(file_base) {
                "DALS: ", num_dals, " (", pct_dals, "%)"))
   
 }
+
+# Run PaRRot with -DPARROT_NO_COMBINED=ON to get a result without combined 
+# journeys. Then pass the path of the output to this function to get 
+# the slope and intercept for the RP egress trip cost heuristic.
+calibrateEgressRPLegCostHeuristic <- function(file_base) {
+  mc <- fread(paste0(file_base, ".modechoice.csv"))
+  as <- fread(paste0(file_base, ".assignmentquality.csv"))
+  ba <- fread(paste0(file_base, ".bestassignments.csv"))
+  setkey(mc, request_id)
+  setkey(as, request_id)
+  setkey(ba, request_id)
+  
+  df <- NULL
+  mc <- mc[mode == "Taxi"]
+  as <- as[mc, nomatch=0]
+  ba <- ba[mc, nomatch=0]
+  as[, cost_no_trip := cost - trip_time]
+  
+  df <- data.table(tt = ba$direct_od_dist, var_vals = as[["cost"]])
+  df <- df[tt <= as$taxi_ride_time]
+  df <- df[tt >= 0]
+  df <- df[order(tt)]
+  
+  x = lm(formula = var_vals ~ tt, data=df)
+  result <- data.table(
+    slope = x$coefficients["tt"][[1]],
+    intercept = as.integer(round(x$coefficients["(Intercept)"][[1]] / 10)),
+    r_squared = summary(x)$r.squared
+  )
+  return(result)
+}
+
+# Run PaRRot with -DPARROT_NO_COMBINED=ON to get a result without combined 
+# journeys. Then pass the path of the output to this function to get 
+# the slope and intercept for the RP egress trip travel time heuristic.
+calibrateEgressRPLegTravelTimeHeuristic <- function(file_base) {
+  mc <- fread(paste0(file_base, ".modechoice.csv"))
+  as <- fread(paste0(file_base, ".assignmentquality.csv"))
+  ba <- fread(paste0(file_base, ".bestassignments.csv"))
+  setkey(mc, request_id)
+  setkey(as, request_id)
+  setkey(ba, request_id)
+  
+  df <- NULL
+  mc <- mc[mode == "Taxi"]
+  as <- as[mc, nomatch=0]
+  ba <- ba[mc, nomatch=0]
+  as[, cost_no_trip := cost - trip_time]
+  
+  df <- data.table(tt = ba$direct_od_dist, var_vals = as[["trip_time"]])
+  df <- df[tt <= as$taxi_ride_time]
+  df <- df[tt >= 0]
+  df <- df[order(tt)]
+  
+  x = lm(formula = var_vals ~ tt, data=df)
+  result <- data.table(
+    slope = x$coefficients["tt"][[1]],
+    intercept = as.integer(round(x$coefficients["(Intercept)"][[1]] / 10)),
+    r_squared = summary(x)$r.squared
+  )
+  return(result)
+}
+
+egressRPLegHeuristicAccuracy <- function(file_base) {
+  
+  as <- fread(paste0(file_base, ".assignmentquality.csv"))
+  mc <- fread(paste0(file_base, ".modechoice.csv"))
+  ir <- fread(paste0(file_base, ".intermediate_results.csv"))
+  
+  setkey(as, request_id)
+  setkey(ir, request_id)
+  setkey(mc, request_id)
+  mc = mc[mode == "TaxiAndPT"]
+  ir = ir[mc, nomatch=0]
+  ir = ir[, expected_cost_2nd_taxi_leg := cost_2nd_taxi_leg]
+  ir = ir[, cost_2nd_taxi_leg := NULL]
+  ir = ir[expected_cost_2nd_taxi_leg > 0]
+  as = as[ir, nomatch = 0]
+  
+  ratios = as$expected_cost_2nd_taxi_leg / as$cost_2nd_taxi_leg
+  qs = quantile(ratios, c(0.05, 0.25, 0.5, 0.75, 0.95))
+  return(data.table(
+    q5 = qs[[1]],
+    q25 = qs[[2]],
+    q50 = qs[[3]],
+    q75 = qs[[4]],
+    q95 = qs[[5]],
+    geom_mean = exp(mean(log(ratios)))
+  ))
+}

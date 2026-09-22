@@ -183,12 +183,13 @@ namespace RAPTOR {
         }
 
 
-        void runWithTaxi(const int origPsgEdge, const int origVehEdge,
+        void runWithTaxi(const int requestId, const int origPsgEdge, const int origVehEdge,
                          const int destPsgEdge, const int destVehEdge,
                          const int departureTime,
                          const parrot::FirstTaxiLegResult &firstTaxiLeg, const std::vector<int> &distFromStations,
                          const int ptOnlyUpperBoundCost,
                          karri::stats::PtPerformanceStats &stats, const size_t maxRounds = INFTY) noexcept {
+            curRequestId = requestId;
             run<true>(origPsgEdge, origVehEdge, destPsgEdge, destVehEdge, departureTime, firstTaxiLeg, distFromStations,
                       ptOnlyUpperBoundCost, stats, maxRounds);
         }
@@ -650,6 +651,7 @@ namespace RAPTOR {
                     // arrivalByTransfer(targetStop, newLabel, stats);
                     const int arrivalTime = bag[i].arrivalTime + parrot::karriToULTRATime(taxiTravelDistance);
                     const int cost = fullCost(bag[i]) + Calc::calcHeuristicCostForFinalTransferTimeByRP(taxiTravelDistance) + transferPenalty;
+
                     TargetLabel candidate(cost, arrivalTime, StopId(stationId), i, bag[i].arrivalTime, round, false,
                                           true);
                     candidate.transferId = noEdge;
@@ -799,5 +801,7 @@ namespace RAPTOR {
 
 
         Profiler profiler;
+
+        int curRequestId = INVALID_ID;
     };
 }
