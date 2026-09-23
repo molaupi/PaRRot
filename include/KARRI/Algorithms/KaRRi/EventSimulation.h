@@ -504,7 +504,7 @@ namespace karri {
 
             auto requestState = rsInitializer.initializeRequestState(request, request.requestTime,
                                                                      stats.taxiPrepStats.initializationStats);
-            const auto baseInfo = karriPrep.prepareBaseInfo(requestState, stats.taxiPrepStats);
+            const auto baseInfo = karriPrep.prepareBaseInfo(requestState, false, stats.taxiPrepStats);
             const auto walkOnlyResult = walkTripFinder.findWalkingTrip(requestState, stats.walkOnlyStats);
             const auto carOnlyResult = carTripFinder.findCarTrip(requestState, stats.carOnlyStats);
             const auto taxiOnlyResult = taxiTripFinder.findBestAssignment(requestState, baseInfo, stats.taxiOnlyStats);
@@ -739,10 +739,10 @@ namespace karri {
             nextRiderEvents[reqId] = RIDER_NO_EVENT;
 
             const auto &originalRequest = requests[reqId];
-            const auto stationEdgeId = stations[ptStationsForSecondTaxiLeg[reqId]].vehEdgeId;
+            const auto &station = stations[ptStationsForSecondTaxiLeg[reqId]];
             const Request &newReq = {
                 reqId,
-                stationEdgeId,
+                station.vehEdgeId,
                 originalRequest.destination,
                 requestData[reqId].ptLegArrTime,
                 originalRequest.numRiders
@@ -752,9 +752,13 @@ namespace karri {
             auto requestState = rsInitializer.initializeRequestState(newReq, occTime,
                                                                      secondTaxiLegStats.taxiPrepStats.
                                                                      initializationStats);
-            auto baseInfo = karriPrep.prepareBaseInfo(requestState, secondTaxiLegStats.taxiPrepStats);
-            for (auto &p: baseInfo.pdLocs.pickups)
-                p.isStation = true;
+            auto baseInfo = karriPrep.prepareBaseInfo(requestState, true, secondTaxiLegStats.taxiPrepStats);
+            KASSERT(baseInfo.pdLocs.numPickups() == 1);
+            auto& p = baseInfo.pdLocs.pickups[0];
+            p.isStation = true;
+            p.psgLoc = station.psgEdgeId;
+            p.walkingDist = station.walkingTimeFromVehEdge;
+
             const auto secondLegResult = taxiTripFinder.findBestAssignment(
                 requestState, baseInfo, secondTaxiLegStats.taxiSecondLegStats);
             // auto asgnFinderResponse = ptAndTaxiTripFinder.findBestSecondTaxiLeg(

@@ -236,16 +236,17 @@ namespace karri {
         }
 
 
-        PDLocs findPDLocs(const int origin, const int destination, stats::InitializationPerformanceStats &stats) {
+        PDLocs findPDLocs(const int origin, const int destination, const bool isSecondTaxiLeg,
+            stats::InitializationPerformanceStats &stats) {
             KaRRiTimer timer;
 
             PDLocs pdLocs;
-            if (vehInputGraph.toPsgEdge(origin) != CarEdgeToPsgEdgeAttribute::defaultValue()) {
+            if (!isSecondTaxiLeg && vehInputGraph.toPsgEdge(origin) != CarEdgeToPsgEdgeAttribute::defaultValue()) {
                 KASSERT(psgInputGraph.toCarEdge(vehInputGraph.toPsgEdge(origin)) == origin);
                 const auto originInPsgGraph = vehInputGraph.toPsgEdge(origin);
                 findPdLocsInRadiusQuery.findPickups(originInPsgGraph, pdLocs.pickups);
             } else {
-                // If the origin is not accessible on foot, the origin is the only pickup location.
+                // If the origin is not accessible on foot (or we disallow walking since we are considering a second (egress) taxi leg), the origin is the only pickup location.
                 pdLocs.pickups = {{0, origin, INVALID_EDGE, 0, INFTY, INFTY}};
             }
 

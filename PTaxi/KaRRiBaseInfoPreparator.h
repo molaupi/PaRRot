@@ -34,13 +34,14 @@ namespace karri {
               pdDistanceSearches(pdDistanceSearches) {
         }
 
-        KaRRiBaseInfo prepareBaseInfo(const RequestState &requestState, stats::TaxiPrepStats &stats) {
+        KaRRiBaseInfo prepareBaseInfo(const RequestState &requestState, const bool isSecondTaxiLeg,
+            stats::TaxiPrepStats &stats) {
             KaRRiBaseInfo bi;
 
             const auto &req = requestState.originalRequest;
 
             // Generate PDLocs
-            bi.pdLocs = pdLocsFinder.findPDLocs(req.origin, req.destination, stats.initializationStats);
+            bi.pdLocs = pdLocsFinder.findPDLocs(req.origin, req.destination, isSecondTaxiLeg, stats.initializationStats);
             stats.numPickups = bi.pdLocs.numPickups();
             stats.numDropoffs = bi.pdLocs.numDropoffs();
 
