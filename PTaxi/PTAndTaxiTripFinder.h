@@ -39,7 +39,6 @@ namespace parrot {
             const std::vector<PTQueryT> &queries,
             StationBucketsEnvT &stationBucketsEnv,
             StationsAtLocations &stationsAtLocations,
-            const DeparturesPerStation &departuresPerStation,
             PALSToStationsT &palsToStations,
             StationsInEllipseT &stationsInEllipse,
             DALSToStationsT &dalsToStations,
@@ -52,7 +51,7 @@ namespace parrot {
               stations(stations),
               queries(queries),
               stationBucketsEnv(stationBucketsEnv),
-              firstTaxiLegResult(routeState, departuresPerStation, stations.size()),
+              firstTaxiLegResult(routeState, stations.size()),
               stationDistanceFinder(vehInputGraph, vehChEnv, routeState, stationBucketsEnv, stations,
                                     stationsAtLocations),
               palsToStations(palsToStations),
@@ -103,11 +102,12 @@ namespace parrot {
                 requestState, baseInfo.pdLocs, baseInfo.relOrdinaryPickups, baseInfo.relPickupsBeforeNextStop,
                 rpAccEgrUpperBoundCost, stats.stationBchStats, stats.taxiFirstLegStats);
 
+
             int ptBasedUpperBoundCost = static_cast<int>(
                 InputConfig::getInstance().parrotCostTolerance * static_cast<double>(ptOnlyCost));
             ptBasedUpperBoundCost = std::min(ptBasedUpperBoundCost, egressOnlyUpperBoundCost);
             const auto &distFromStations = heuristicRPEgress.getDistancesFromStations();
-            ptAlgorithmWithTaxi.runWithTaxi(requestState.originalRequest.requestId, originPsgEdge, originVehEdge, destPsgEdge, destVehEdge,
+            ptAlgorithmWithTaxi.runWithTaxi(originPsgEdge, originVehEdge, destPsgEdge, destVehEdge,
                                             query.departureTime, firstTaxiLegResult, distFromStations,
                                             ptBasedUpperBoundCost, stats.ptWithTaxiStats);
             // auto ptLegParetoFront = ptAlgorithmWithTaxi.getJourneys();

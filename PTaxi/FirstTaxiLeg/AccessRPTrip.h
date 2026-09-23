@@ -10,13 +10,12 @@ namespace parrot {
     struct AccessRPTrip {
         AccessRPTrip() noexcept = default;
 
-        AccessRPTrip(const int costWithoutTrip, const int arrivalTime, const int nextDepartureIndex, const Assignment &asgn, const InsertionType insertionType) noexcept
-            : costWithoutTrip(costWithoutTrip), arrivalTime(arrivalTime), nextDepartureIndex(nextDepartureIndex), bestAssignment(asgn), insertionType(insertionType) {
+        AccessRPTrip(const int costWithoutTrip, const int arrivalTime, const Assignment &asgn, const InsertionType insertionType) noexcept
+            : costWithoutTrip(costWithoutTrip), arrivalTime(arrivalTime), bestAssignment(asgn), insertionType(insertionType) {
         }
 
         int costWithoutTrip = INFTY;
         int arrivalTime = INFTY;
-        int nextDepartureIndex = INFTY;
         Assignment bestAssignment;
         InsertionType insertionType = InsertionType::UNDEFINED;
 
@@ -37,12 +36,18 @@ namespace parrot {
                    INVALID_ID;
         }
 
-        friend bool dominates(const AccessRPTrip &r1, const AccessRPTrip &r2) {
-            if (r1.costWithoutTrip > r2.costWithoutTrip || r1.nextDepartureIndex > r2.nextDepartureIndex)
+        bool dominatesMetrics(const int cost, const int arrTime) const {
+            if (costWithoutTrip > cost || arrivalTime > arrTime)
                 return false;
-            const bool departureIndexStronglyBetter = r1.nextDepartureIndex < r2.nextDepartureIndex;
+            return costWithoutTrip < cost || arrivalTime < arrTime;
+        }
+
+        friend bool dominates(const AccessRPTrip &r1, const AccessRPTrip &r2) {
+            if (r1.costWithoutTrip > r2.costWithoutTrip || r1.arrivalTime > r2.arrivalTime)
+                return false;
+            const bool arrivalTimeStronglyBetter = r1.arrivalTime < r2.arrivalTime;
             const bool costStronglyBetter = r1.costWithoutTrip < r2.costWithoutTrip || (r1.costWithoutTrip == r2.costWithoutTrip && breakCostTie(r1.bestAssignment, r2.bestAssignment));
-            return departureIndexStronglyBetter || costStronglyBetter;
+            return arrivalTimeStronglyBetter || costStronglyBetter;
         }
     };
 }

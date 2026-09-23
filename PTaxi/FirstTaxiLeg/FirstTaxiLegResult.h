@@ -5,7 +5,6 @@
 #include <KARRI/Algorithms/KaRRi/BaseObjects/Assignment.h>
 
 #include "AccessRPTrip.h"
-#include "DeparturesPerStation.h"
 #include "KARRI/DataStructures/Utilities/DynamicRagged2DArrays.h"
 
 namespace parrot {
@@ -16,10 +15,8 @@ namespace parrot {
 
 
     public:
-        explicit FirstTaxiLegResult(const RouteState &routeState, const DeparturesPerStation &departuresPerStation,
-                                    const int numStations)
+        explicit FirstTaxiLegResult(const RouteState &routeState, const int numStations)
             : routeState(routeState),
-              departuresPerStation(departuresPerStation),
               calculator(routeState), externalUpperBoundCost(INFTY),
               pos(numStations),
               paretoResults(numStations) {
@@ -40,13 +37,12 @@ namespace parrot {
         }
 
         bool tryAssignmentForStation(const int stationId, const Assignment &asgn,
-                                     const int cost, const int arrivalTime, const InsertionType insertionType) {
+                                     const int cost, const int arrivalTime, InsertionType insertionType) {
             if (cost >= externalUpperBoundCost) return false;
             if (stationId < 0 || stationId >= pos.size()) return false;
 
-            const int costWithoutTrip = cost - CostCalculator::calcTripCost(arrivalTime - curRequest.requestTime);
-            const int nextDepartureIndex = departuresPerStation.getNextDepartureIndex(stationId, arrivalTime);
-            const AccessRPTrip newResult(costWithoutTrip, arrivalTime, nextDepartureIndex, asgn, insertionType);
+            const int costWithoutTrip = cost - calculator.calcTripCost(arrivalTime - curRequest.requestTime);
+            const AccessRPTrip newResult(costWithoutTrip, arrivalTime, asgn, insertionType);
 
             // Check if new result is dominated
             const auto [start, end] = pos[stationId];
@@ -93,7 +89,6 @@ namespace parrot {
 
     private:
         const RouteState &routeState;
-        const DeparturesPerStation &departuresPerStation;
         CostCalculator calculator;
         int externalUpperBoundCost;
         Request curRequest;

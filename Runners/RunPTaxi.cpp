@@ -767,7 +767,6 @@ KARRI_DALS_STRATEGY == KARRI_COL || KARRI_DALS_STRATEGY == KARRI_IND
 #else
 
         parrot::StationsAtLocations stationsAtLocations(stations, vehicleInputGraph.numEdges());
-        parrot::DeparturesPerStation departuresPerStation(raptor);
 
         // Buckets for PT stations (vehicle graph)
         using StationBucketsEnv = parrot::StationBucketsEnvironment<VehicleInputGraph, VehCHEnv, false>;
@@ -829,7 +828,6 @@ KARRI_DALS_STRATEGY == KARRI_COL || KARRI_DALS_STRATEGY == KARRI_IND
             TaxiLegApproximationImpl>;
         PTAndTaxiTripFinderImpl ptAndTaxiTripFinder(vehicleInputGraph, *vehChEnv, fleet, routeState,
                                                     stations, queries, stationBucketsEnv, stationsAtLocations,
-                                                    departuresPerStation,
                                                     palsToStations, stationsInEllipse, dalsToStations, pbnsToStations,
                                                     ptAlgorithmWithTaxi);
 #endif
