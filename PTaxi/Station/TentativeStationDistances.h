@@ -60,6 +60,10 @@ namespace parrot {
             curBatchIdx = batchIdx;
         }
 
+        bool hasValidDistances(const int stationId) {
+            return startIdxForStation[stationId] != INVALID_INDEX;
+        }
+
         int getDistance(const int &stationId, const int &pdLocId) {
             assert(stationId < startIdxForStation.size());
             const int startIdx = startIdxForStation[stationId];
@@ -68,6 +72,19 @@ namespace parrot {
 
             const int batchIdx = pdLocId / K;
             return distances[startIdx + batchIdx][pdLocId % K];
+        }
+
+        int getMinDistanceForStation(const int &stationId) {
+            assert(stationId < startIdxForStation.size());
+            const int startIdx = startIdxForStation[stationId];
+            if (startIdx == INVALID_INDEX)
+                return INFTY;
+
+            DistanceLabel minDist(INFTY);
+            for (int batchIdx = 0; batchIdx < curNumBatches; ++batchIdx) {
+                minDist.min(distances[startIdx + batchIdx]);
+            }
+            return minDist.horizontalMin();
         }
 
         int getMinDistanceForPDLoc(const int &pdLocId) {

@@ -67,6 +67,18 @@ namespace parrot {
             return true;
         }
 
+        bool isLabelDominated(const int stationId, const int costWithoutTrip, const int arrivalTime) const {
+            if (stationId < 0 || stationId >= pos.size()) return false;
+            const auto [start, end] = pos[stationId];
+            for (int i = start; i < end; ++i) {
+                const AccessRPTrip &existingResult = paretoResults[i];
+                if (existingResult.costWithoutTrip <= costWithoutTrip && existingResult.arrivalTime <= arrivalTime) {
+                    return true; // new result is dominated
+                }
+            }
+            return false;
+        }
+
         const std::vector<int> &getStationsWithResults() const {
             return stationsWithResults;
         }

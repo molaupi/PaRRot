@@ -213,38 +213,26 @@ namespace parrot {
             Assignment asgn(&fleet[vehId]);
             asgn.distFromPickup = 0;
 
-            for (const auto &pickupEntry: relPickups.relevantSpotsFor(vehId)) {
-                const int i = pickupEntry.stopIndex;
-                const int j = i;
-                const int nextStopLoc = stopLocations[j + 1];
-                asgn.pickup = pdLocs.pickups[pickupEntry.pdId];
-                asgn.pickupStopIdx = i;
-                asgn.dropoffStopIdx = j;
-                asgn.distToPickup = pickupEntry.distToPDLoc;
+            const auto &entries = relPickups.relevantSpotsFor(vehId);
+            if (entries.empty())
+                return;
+            int curStopIdx = entries[0].stopIndex;
+            int beginEntryIdx = 0;
+            using namespace time_utils;
+            for (int entryIdx = 0; entryIdx <= entries.size(); ++entryIdx) {
+                if (entryIdx < entries.size() && entries[entryIdx].stopIndex == curStopIdx)
+                    continue;
+                const int endEntryIdx = entryIdx;
 
-                using namespace time_utils;
-                const auto lengthOfLegJ = calcLengthOfLegStartingAt(j, vehId, routeState);
-                const int depTimeAtPickup = getActualDepTimeAtPickup(
-                    vehId, i, pickupEntry.distToPDLoc, asgn.pickup, requestState, routeState);
+                // All entries at indices [beginEntryIdx, endEntryIdx) have the same stop index curStopIdx.
+                // Consider stations in ellipse for curStopIdx and the paired assignments with the entries.
+                const auto curStopId = routeState.stopIdsFor(vehId)[curStopIdx];
+                const int nextStopLoc = stopLocations[curStopIdx + 1];
 
-                const int minPickupToStationDist = stationDistances.getMinDistanceForPDLoc(asgn.pickup.id);
-                const auto timeUntilDep = depTimeAtPickup - schedDepTimes[j];
-                const int minDetour = timeUntilDep + std::max(pickupEntry.distFromPDLocToNextStop,
-                                                              minPickupToStationDist) + stopTime - lengthOfLegJ;
-
-                const int minTripTime = depTimeAtPickup + minPickupToStationDist - reqTime;
-
-                const auto curStopId = routeState.stopIdsFor(vehId)[j];
-                const int remainingLeeway = routeState.leewayOfLegStartingAt(curStopId) - asgn.distToPickup -
-                                            InputConfig::getInstance().stopTime;
-
-                // for each station in ellipse, try assignment
+                asgn.pickupStopIdx = curStopIdx;
+                asgn.dropoffStopIdx = curStopIdx;
                 for (const auto &entry: stationsInEllipse.getStationsInEllipse(curStopId)) {
                     const auto &station = stations[entry.targetId];
-
-                    const int pickupToStationDist = stationDistances.getDistance(station.stationId, asgn.pickup.id);
-                    if (pickupToStationDist + entry.distFromStationToStop > remainingLeeway)
-                        continue;
 
                     if (nextStopLoc == station.vehEdgeId) {
                         // If the station is at the location of the following stop, do not try an assignment here as it would
@@ -252,25 +240,33 @@ namespace parrot {
                         // Instead, this will be dealt with as an assignment at dropoffIndex + 1 afterwards.
                         continue;
                     }
-
-                    if (asgn.pickup.loc == station.vehEdgeId)
+                    if (!stationDistances.hasValidDistances(station.stationId))
                         continue;
 
-                    // Stations in ellipse are sorted by detour so that we can break after the first station
-                    // that has a detour that is large enough to lead to a total cost that is above the external upper bound.
-                    // (We use a lower bound that does not consider the trip time from stop i to the station as
-                    // this is not respected in the order of stations).
-                    int detourRightAfterStation = std::max(minDetour, entry.distFromStopToStation + stopTime +
-                                                                      entry.distFromStationToStop - lengthOfLegJ);
-                    const int totalResDetour = calcResidualTotalDetourForStopAfterDropoff(
-                        vehId, j, numStops - 1, detourRightAfterStation, routeState);
-                    const int addedTripTime = calcAddedTripTimeAffectedByPickupAndDropoff(
-                        vehId, j, detourRightAfterStation, routeState);
-                    const int minCost = calculator.calcMinCostForOrdinaryToStations(
-                        totalResDetour, minTripTime, addedTripTime);
-                    if (minCost >= externalUpperBoundCost)
-                        break;
+                    // The pickup with the smallest arrival time at the station has the smallest arrival time and
+                    // non-trip cost, so its label Pareto-dominates all other pickups. Find it and only test the
+                    // assignment with this pickup.
+                    int bestPickupIdx = INVALID_INDEX;
+                    int bestArrivalTime = INFTY;
+                    for (int i = beginEntryIdx; i < endEntryIdx; ++i) {
+                        const auto &pickupEntry = entries[i];
+                        const auto &p = pdLocs.pickups[pickupEntry.pdId];
 
+                        const int depTimeAtPickup = getActualDepTimeAtPickup(
+                            vehId, curStopIdx, pickupEntry.distToPDLoc, p, requestState, routeState);
+                        const int distPickupToStation = stationDistances.getDistance(station.stationId, p.id);
+                        const int arrivalTime = depTimeAtPickup + distPickupToStation + station.walkingTimeFromVehEdge;
+                        if (arrivalTime < bestArrivalTime) {
+                            bestArrivalTime = arrivalTime;
+                            bestPickupIdx = i;
+                        }
+                    }
+                    if (bestPickupIdx == INVALID_INDEX)
+                        continue;
+
+                    // Try the best pickup entry for this station.
+                    const auto &pickupEntry = entries[bestPickupIdx];
+                    asgn.pickup = pdLocs.pickups[pickupEntry.pdId];
                     asgn.dropoff = {
                         station.stationId, // PDLoc ID
                         station.vehEdgeId, // Location in road network
@@ -280,18 +276,124 @@ namespace parrot {
                         0, // Dummy vehicle driving time from destination to this dropoff,
                         true
                     };
-
-                    ++stats.numPairedAssignmentsTried;
-                    asgn.distToDropoff = pickupToStationDist;
+                    asgn.distToPickup = pickupEntry.distToPDLoc;
+                    asgn.distToDropoff = stationDistances.getDistance(station.stationId, asgn.pickup.id);
                     asgn.distFromDropoff = entry.distFromStationToStop;
 
-                    // requestState.tryAssignmentWithKnownCost(asgn, calculator.calc(asgn, requestState));
-                    const int arrivalTime = depTimeAtPickup + asgn.distToDropoff + asgn.dropoff.walkingDist;
-                    KASSERT(arrivalTime == calcArrivalTime(asgn, requestState, routeState));
+                    ++stats.numPairedAssignmentsTried;
+                    KASSERT(bestArrivalTime == calcArrivalTime(asgn, requestState, routeState));
                     firstTaxiLegResult.tryAssignmentForStation(
-                        station.stationId, asgn, calculator.calc(asgn, requestState), arrivalTime, ORDINARY);
+                        station.stationId, asgn, calculator.calc(asgn, requestState), bestArrivalTime, ORDINARY);
+                }
+
+                // Following entries are at new stop index
+                if (entryIdx < entries.size()) {
+                    beginEntryIdx = entryIdx;
+                    curStopIdx = entries[entryIdx].stopIndex;
                 }
             }
+
+            // const auto &entries = relPickups.relevantSpotsFor(vehId);
+            // if (entries.empty())
+            //     return;
+            // int curStopIdx = entries[0].stopIndex;
+            // int beginEntryIdx = 0;
+            // using namespace time_utils;
+            // std::vector<int> depTimesAtPickups(entries.size(), INFTY);
+            // for (int entryIdx = 0; entryIdx <= entries.size(); ++entryIdx) {
+            //     // Compute the actual departure time at pickup for the next entry (if any) and store it in depTimesAtPickups.
+            //     if (entryIdx < entries.size()) {
+            //         depTimesAtPickups[entryIdx] = getActualDepTimeAtPickup(
+            //             vehId, curStopIdx, entries[entryIdx].distToPDLoc, pdLocs.pickups[entries[entryIdx].pdId], requestState, routeState);
+            //         if (entries[entryIdx].stopIndex == curStopIdx)
+            //             continue;
+            //     }
+            //     const int endEntryIdx = entryIdx;
+            //
+            //     // All entries at indices [beginEntryIdx, endEntryIdx) have the same stop index curStopIdx.
+            //     // Consider stations in ellipse for curStopIdx and the paired assignments with the entries.
+            //
+            //     const auto lengthOfLeg = calcLengthOfLegStartingAt(curStopIdx, vehId, routeState);
+            //
+            //     int minDistToPickup = INFTY;
+            //     int minDepTimeAtPickup = INFTY;
+            //     for (int i = beginEntryIdx; i < endEntryIdx; ++i) {
+            //         const auto &pickupEntry = entries[i];
+            //         minDistToPickup = std::min(minDistToPickup, pickupEntry.distToPDLoc);
+            //         minDepTimeAtPickup = std::min(minDepTimeAtPickup, depTimesAtPickups[i]);
+            //     }
+            //
+            //     const auto curStopId = routeState.stopIdsFor(vehId)[curStopIdx];
+            //     const int nextStopLoc = stopLocations[curStopIdx + 1];
+            //     const int remainingLeeway = routeState.leewayOfLegStartingAt(curStopId) - minDistToPickup -
+            //                                 InputConfig::getInstance().stopTime;
+            //
+            //     for (const auto &entry: stationsInEllipse.getStationsInEllipse(curStopId)) {
+            //         const auto &station = stations[entry.targetId];
+            //
+            //         if (nextStopLoc == station.vehEdgeId) {
+            //             // If the station is at the location of the following stop, do not try an assignment here as it would
+            //             // introduce a new stop after dropoffIndex that is at the same location as dropoffIndex + 1.
+            //             // Instead, this will be dealt with as an assignment at dropoffIndex + 1 afterwards.
+            //             continue;
+            //         }
+            //
+            //         const int minPickupToStationDist = stationDistances.getMinDistanceForStation(station.stationId);
+            //
+            //         if (minPickupToStationDist + entry.distFromStationToStop > remainingLeeway)
+            //             continue;
+            //
+            //         // Compute a lower bound on the arrival time and non-trip cost to this station that can be reached
+            //         // with an ordinary paired assignment with any of the pickup entries.
+            //         // If these lower bounds are dominated by an existing label at the station, we skip all pickup
+            //         // entries for this station.
+            //         const int minArrTimeAtStation = minDepTimeAtPickup + minPickupToStationDist;
+            //         const int minDetourRightAfterStation = minArrTimeAtStation + stopTime + entry.distFromStationToStop - schedDepTimes[curStopIdx] - lengthOfLeg;
+            //         const int totalResDetour = calcResidualTotalDetourForStopAfterDropoff(
+            //             vehId, curStopIdx, numStops - 1, minDetourRightAfterStation, routeState);
+            //         const int addedTripTime = calcAddedTripTimeAffectedByPickupAndDropoff(
+            //             vehId, curStopIdx, minDetourRightAfterStation, routeState);
+            //         const int minNonTripCost = calculator.calcMinCostForOrdinaryToStations(
+            //             totalResDetour, 0, addedTripTime);
+            //         if (firstTaxiLegResult.isLabelDominated(station.stationId, minArrTimeAtStation, minNonTripCost))
+            //             continue;
+            //
+            //         // Try all pickup entries for this station.
+            //         asgn.dropoff = {
+            //             station.stationId, // PDLoc ID
+            //             station.vehEdgeId, // Location in road network
+            //             station.psgEdgeId, // Location in passenger road network
+            //             station.walkingTimeFromVehEdge, // Walking time from vehEdge to station
+            //             0, // Dummy vehicle driving time from this dropoff to the destination
+            //             0, // Dummy vehicle driving time from destination to this dropoff,
+            //             true
+            //         };
+            //
+            //         asgn.distFromDropoff = entry.distFromStationToStop;
+            //
+            //         for (int i = beginEntryIdx; i < endEntryIdx; ++i) {
+            //             const auto &pickupEntry = entries[i];
+            //             asgn.pickup = pdLocs.pickups[pickupEntry.pdId];
+            //             asgn.pickupStopIdx = curStopIdx;
+            //             asgn.distToPickup = pickupEntry.distToPDLoc;
+            //             asgn.distToDropoff = stationDistances.getDistance(station.stationId, asgn.pickup.id);
+            //
+            //             ++stats.numPairedAssignmentsTried;
+            //             const int depTimeAtPickup = depTimesAtPickups[i];
+            //             const int arrivalTime = depTimeAtPickup + asgn.distToDropoff + asgn.dropoff.walkingDist;
+            //             KASSERT(arrivalTime == calcArrivalTime(asgn, requestState, routeState));
+            //             firstTaxiLegResult.tryAssignmentForStation(
+            //                 station.stationId, asgn, calculator.calc(asgn, requestState), arrivalTime, ORDINARY);
+            //         }
+            //     }
+            //
+            //     // Following entries are at new stop index
+            //     if (entryIdx < entries.size()) {
+            //         beginEntryIdx = entryIdx;
+            //         curStopIdx = entries[entryIdx].stopIndex;
+            //     }
+            // }
+
             stats.tryPairedAssignmentsTime += timer.elapsed<std::chrono::nanoseconds>();
         }
 
