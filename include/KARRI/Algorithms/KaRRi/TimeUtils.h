@@ -132,16 +132,14 @@ namespace karri::time_utils {
     }
 
     static int
-    getArrTimeAtDropoff(const int actualDepTimeAtPickup, const Assignment &asgn, const int initialPickupDetour,
+    getArrTimeAtDropoff(const int vehId, const int pickupIndex, const int dropoffIndex, const int actualDepTimeAtPickup, const int distToDropoff, const int initialPickupDetour,
                         const bool dropoffAtExistingStop, const RouteState &routeState) {
-        const auto pickupIndex = asgn.pickupStopIdx;
-        const auto dropoffIndex = asgn.dropoffStopIdx;
-        const auto &minDepTimes = routeState.schedDepTimesFor(asgn.vehicle->vehicleId);
-        const auto &minArrTimes = routeState.schedArrTimesFor(asgn.vehicle->vehicleId);
-        const auto &vehWaitTimesPrefixSum = routeState.vehWaitTimesPrefixSumFor(asgn.vehicle->vehicleId);
+        const auto &minDepTimes = routeState.schedDepTimesFor(vehId);
+        const auto &minArrTimes = routeState.schedArrTimesFor(vehId);
+        const auto &vehWaitTimesPrefixSum = routeState.vehWaitTimesPrefixSumFor(vehId);
 
         if (pickupIndex == dropoffIndex) {
-            return actualDepTimeAtPickup + asgn.distToDropoff;
+            return actualDepTimeAtPickup + distToDropoff;
         }
 
         assert(dropoffIndex > 0);
@@ -155,7 +153,15 @@ namespace karri::time_utils {
 
         const auto depTimeAtPrevious = std::max(minDepTimes[dropoffIndex],
                                                 arrTimeAtPrevious + InputConfig::getInstance().stopTime);
-        return depTimeAtPrevious + asgn.distToDropoff;
+        return depTimeAtPrevious + distToDropoff;
+    }
+
+    static int
+    getArrTimeAtDropoff(const int actualDepTimeAtPickup, const Assignment &asgn, const int initialPickupDetour,
+                        const bool dropoffAtExistingStop, const RouteState &routeState) {
+        return getArrTimeAtDropoff(asgn.vehicle->vehicleId, asgn.pickupStopIdx, asgn.dropoffStopIdx,
+                                actualDepTimeAtPickup, asgn.distToDropoff, initialPickupDetour,
+                                dropoffAtExistingStop, routeState);
     }
 
     // Returns the accumulated vehicle wait time in the stop interval (fromIndex, toIndex].

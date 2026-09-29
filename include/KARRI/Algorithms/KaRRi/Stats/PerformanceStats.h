@@ -193,6 +193,7 @@ namespace karri::stats {
         int64_t initializationTime = 0;
 
         int64_t numCandidateVehicles = 0;
+        int64_t preFilteringTime = 0;
         int64_t numNonPairedAssignmentsTried = 0;
         int64_t numPairedAssignmentsTried = 0;
         int64_t tryNonPairedAssignmentsTime = 0;
@@ -207,6 +208,7 @@ namespace karri::stats {
             initializationTime = 0;
 
             numCandidateVehicles = 0;
+            preFilteringTime = 0;
             numNonPairedAssignmentsTried = 0;
             numPairedAssignmentsTried = 0;
             tryNonPairedAssignmentsTime = 0;
@@ -217,6 +219,7 @@ namespace karri::stats {
         static constexpr auto LOGGER_COLS =
                 "initialization_time,"
                 "num_candidate_vehicles,"
+                "pre_filtering_time,"
                 "num_non_paired_assignments_tried,"
                 "num_paired_assignments_tried,"
                 "try_non_paired_assignments_time,"
@@ -228,6 +231,7 @@ namespace karri::stats {
             std::stringstream ss;
             ss << initializationTime << ","
                     << numCandidateVehicles << ","
+                    << preFilteringTime << ","
                     << numNonPairedAssignmentsTried << ","
                     << numPairedAssignmentsTried << ","
                     << tryNonPairedAssignmentsTime << ","
