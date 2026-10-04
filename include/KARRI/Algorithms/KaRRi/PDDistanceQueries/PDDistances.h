@@ -114,7 +114,7 @@ namespace karri {
                 label.store(startOfLabel);
                 minDirectDist = std::min(minDirectDist, dist.horizontalMin());
                 label.load(minDirectDistancesPerPickup.data() + firstPickupId);
-                label.setIf(dist, smaller);
+                label.min(dist);
                 label.store(minDirectDistancesPerPickup.data() + firstPickupId);
                 KASSERT(minDirectDist <= label.horizontalMin());
             }
