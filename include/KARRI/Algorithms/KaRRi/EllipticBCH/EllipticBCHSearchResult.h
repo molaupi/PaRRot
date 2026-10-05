@@ -40,7 +40,7 @@ namespace karri {
 
 
     template<typename LabelSetT, bool StoreMeetingVertices = false>
-    class FeasibleEllipticDistances {
+    class EllipticBCHSearchResult {
 
 
         static constexpr int K = LabelSetT::K;
@@ -52,13 +52,11 @@ namespace karri {
 
     public:
 
-        explicit FeasibleEllipticDistances(const int fleetSize, const RouteState &routeState)
+        explicit EllipticBCHSearchResult(const int fleetSize, const RouteState &routeState)
                 : routeState(routeState),
                   fleetSize(fleetSize),
                   maxStopId(routeState.getMaxStopId()),
-                  startOfRangeInValueArray(fleetSize, INVALID_INDEX),
-                  minDistToPDLoc(fleetSize),
-                  minDistFromPDLocToNextStop(fleetSize) {}
+                  startOfRangeInValueArray(fleetSize, INVALID_INDEX) {}
 
         void init(const int newNumPDLocs, stats::EllipticBCHPerformanceStats& stats) {
             KaRRiTimer timer;
@@ -66,8 +64,6 @@ namespace karri {
 
             if (maxStopId >= startOfRangeInValueArray.size()) {
                 startOfRangeInValueArray.resize(maxStopId + 1, INVALID_INDEX);
-                minDistToPDLoc.resize(maxStopId + 1);
-                minDistFromPDLocToNextStop.resize(maxStopId + 1);
             }
 
             // Reset startOfRangeInValueArray using stopIdsWithRelevantPDLocs from previous run,
@@ -145,9 +141,6 @@ namespace karri {
             } else {
                 distToRelevantPDLocs[idx].min(newDistToPDLoc);
             }
-
-            auto &globalMin = minDistToPDLoc[stopId];
-            globalMin.min(newDistToPDLoc);
         }
 
         // Updates the distance from the PD loc to the stop that follows stopId. Distance is written only if entries
@@ -171,9 +164,6 @@ namespace karri {
             } else {
                 distFromRelevantPDLocsToNextStop[idx].min(newDistFromPDLocToNextStop);
             }
-
-            auto &globalMin = minDistFromPDLocToNextStop[stopId];
-            globalMin.min(newDistFromPDLocToNextStop);
         }
 
         bool hasPotentiallyRelevantPDLocs(const int stopId) const {
@@ -196,7 +186,7 @@ namespace karri {
             }
 
         private:
-            friend FeasibleEllipticDistances;
+            friend EllipticBCHSearchResult;
 
             PerPDLocFacade(const It labelBegin, const int numLabelsPerStop) : labelBegin(labelBegin),
                                                                               numLabelsPerStop(numLabelsPerStop) {}
@@ -212,12 +202,6 @@ namespace karri {
             const auto start = startOfRangeInValueArray[stopId];
             assert(distToRelevantPDLocs.begin() + start + numLabelsPerStop <= distToRelevantPDLocs.end());
             return {distToRelevantPDLocs.begin() + start, numLabelsPerStop};
-        }
-
-        int minDistToRelevantPDLocsFor(const int stopId) const {
-            assert(stopId <= maxStopId);
-            assert(startOfRangeInValueArray[stopId] != INVALID_INDEX);
-            return minDistToPDLoc[stopId].horizontalMin();
         }
 
         PerPDLocFacade meetingVerticesToRelevantPDLocsFor(const int stopId) const requires StoreMeetingVertices {
@@ -236,12 +220,6 @@ namespace karri {
             assert(distFromRelevantPDLocsToNextStop.begin() + start + numLabelsPerStop <=
                    distFromRelevantPDLocsToNextStop.end());
             return {distFromRelevantPDLocsToNextStop.begin() + start, numLabelsPerStop};
-        }
-
-        int minDistFromPDLocToNextStopOf(const int stopId) const {
-            assert(stopId <= maxStopId);
-            assert(startOfRangeInValueArray[stopId] != INVALID_INDEX);
-            return minDistFromPDLocToNextStop[stopId].horizontalMin();
         }
 
         PerPDLocFacade meetingVerticesFromRelevantPDLocsToNextStopOf(const int stopId) const requires StoreMeetingVertices {
@@ -264,7 +242,7 @@ namespace karri {
         }
 
 
-        std::vector<int>& getStopIdsWithRelevantPDLocs() {
+        const std::vector<int>& getStopIdsWithRelevantPDLocs() const {
             return stopIdsWithRelevantPDLocs;
         }
 
@@ -289,9 +267,6 @@ namespace karri {
                 meetingVerticesFromRelevantPDLocsToNextStop.insert(meetingVerticesFromRelevantPDLocsToNextStop.end(),
                                                                    numLabelsPerStop, DistanceLabel(INVALID_VERTEX));
             }
-
-            minDistToPDLoc[stopId] = INFTY;
-            minDistFromPDLocToNextStop[stopId] = INFTY;
         }
 
         const RouteState &routeState;
@@ -312,9 +287,6 @@ namespace karri {
 
         // Iterable set of stop IDs that have relevant PD locs.
         std::vector<int> stopIdsWithRelevantPDLocs;
-
-        std::vector<DistanceLabel> minDistToPDLoc;
-        std::vector<DistanceLabel> minDistFromPDLocToNextStop;
 
     };
 

@@ -13,10 +13,6 @@ namespace karri {
         int bestCost = INFTY;
         Assignment bestAssignment;
 
-        bool operator==(const InternalTaxiResult &other) const {
-            return bestCost == other.bestCost;
-        }
-
         bool tryAssignmentWithKnownCost(const Assignment &asgn, const int cost) {
             if (asgn.pickup.loc == asgn.dropoff.loc)
                 return false;

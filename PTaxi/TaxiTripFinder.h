@@ -24,19 +24,21 @@ namespace karri {
     class TaxiTripFinder {
     public:
         TaxiTripFinder(OrdAssignmentsT &ordinaryAssigments,
-                            PbnsAssignmentsT &pbnsAssignments,
-                            PalsAssignmentsT &palsAssignments,
-                            DalsAssignmentsT &dalsAssignments,
-                            RepositioningAssignmentsT &repositioningAssignments,
-                            const RouteState &routeState)
+                       PbnsAssignmentsT &pbnsAssignments,
+                       PalsAssignmentsT &palsAssignments,
+                       DalsAssignmentsT &dalsAssignments,
+                       RepositioningAssignmentsT &repositioningAssignments,
+                       const RouteState &routeState)
             : ordAssignments(ordinaryAssigments),
               pbnsAssignments(pbnsAssignments),
               palsAssignments(palsAssignments),
               dalsAssignments(dalsAssignments),
               repositioningAssignments(repositioningAssignments),
-              routeState(routeState) {}
+              routeState(routeState) {
+        }
 
-        parrot::TaxiResult findBestAssignment(const RequestState &requestState, const KaRRiBaseInfo &baseInfo, stats::TaxiPerformanceStats &stats) {
+        parrot::TaxiResult findBestAssignment(const RequestState &requestState, const KaRRiBaseInfo &baseInfo,
+                                              stats::TaxiPerformanceStats &stats) {
             InternalTaxiResult result;
 
             initializeComponentsForRequest(requestState, baseInfo.pdLocs, stats);
@@ -47,23 +49,28 @@ namespace karri {
 
             // Try ordinary assignments:
             ordAssignments.findAssignments(baseInfo.relOrdinaryPickups, baseInfo.relOrdinaryDropoffs,
+                                           baseInfo.feasiblePickups, baseInfo.feasibleDropoffs,
                                            requestState, baseInfo.pdDistances, baseInfo.pdLocs,
                                            result, stats.ordAssignmentsStats);
 
             // Try DALS assignments:
             dalsAssignments.findAssignments(baseInfo.relOrdinaryPickups, baseInfo.relPickupsBeforeNextStop,
-                                            requestState, baseInfo.pdLocs, result, stats.dalsAssignmentsStats, stats.pbnsAssignmentsStats);
+                                            requestState, baseInfo.pdLocs, result, stats.dalsAssignmentsStats,
+                                            stats.pbnsAssignmentsStats);
 
             // Try PBNS assignments:
             pbnsAssignments.findAssignments(baseInfo.relPickupsBeforeNextStop, baseInfo.relOrdinaryDropoffs,
-                                            baseInfo.relDropoffsBeforeNextStop, requestState,
+                                            baseInfo.feasiblePickups, baseInfo.feasibleDropoffs, requestState,
                                             baseInfo.pdDistances, baseInfo.pdLocs, result, stats.pbnsAssignmentsStats);
 
             // Try repositioning assignments (vehicles currently being repositioned):
             repositioningAssignments.findAssignments(requestState, baseInfo.pdDistances, baseInfo.pdLocs, result,
                                                      stats.repositioningAssignmentsStats);
 
-            const int arrivalTime = result.isValid() ? time_utils::calcArrivalTime(result.getBestAssignment(), requestState, routeState) : INFTY;
+            const int arrivalTime = result.isValid()
+                                        ? time_utils::calcArrivalTime(result.getBestAssignment(), requestState,
+                                                                      routeState)
+                                        : INFTY;
             return {result, arrivalTime};
         }
 

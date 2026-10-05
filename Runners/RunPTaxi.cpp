@@ -65,7 +65,7 @@
 #include <KARRI/Algorithms/KaRRi/BaseObjects/Vehicle.h>
 #include <KARRI/Algorithms/KaRRi/BaseObjects/Request.h>
 #include <KARRI/Algorithms/KaRRi/PbnsAssignments/VehicleLocator.h>
-#include <KARRI/Algorithms/KaRRi/EllipticBCH/FeasibleEllipticDistances.h>
+#include <KARRI/Algorithms/KaRRi/EllipticBCH/EllipticBCHSearchResult.h>
 #include <KARRI/Algorithms/KaRRi/EllipticBCH/EllipticBucketsEnvironment.h>
 #include <KARRI/Algorithms/KaRRi/EllipticBCH/EllipticBCHSearches.h>
 #include <KARRI/Algorithms/KaRRi/EllipticBCH/PDLocsAtExistingStopsFinder.h>
@@ -545,7 +545,7 @@ KARRI_DALS_STRATEGY == KARRI_COL || KARRI_DALS_STRATEGY == KARRI_IND
         using EllipticBCHLabelSet = std::conditional_t<KARRI_ELLIPTIC_BCH_USE_SIMD,
             SimdLabelSet<KARRI_ELLIPTIC_BCH_LOG_K, ParentInfo::NO_PARENT_INFO>,
             BasicLabelSet<KARRI_ELLIPTIC_BCH_LOG_K, ParentInfo::NO_PARENT_INFO> >;
-        using FeasibleEllipticDistancesImpl = FeasibleEllipticDistances<EllipticBCHLabelSet>;
+        using EllipticBCHSearchResultImpl = EllipticBCHSearchResult<EllipticBCHLabelSet>;
 
         using PDLocsAtExistingStopsFinderImpl = PDLocsAtExistingStopsFinder<VehicleInputGraph, VehCHEnv, typename
             EllipticBucketsEnv::BucketContainer, LastStopAtVerticesInfo>;
@@ -554,14 +554,13 @@ KARRI_DALS_STRATEGY == KARRI_COL || KARRI_DALS_STRATEGY == KARRI_IND
                                                               routeState);
 
         using EllipticBCHSearchesImpl = EllipticBCHSearches<VehicleInputGraph, VehCHEnv, CostCalculator::CostFunction,
-            EllipticBucketsEnv, LastStopAtVerticesInfo, FeasibleEllipticDistancesImpl, EllipticBCHLabelSet>;
+            EllipticBucketsEnv, LastStopAtVerticesInfo, EllipticBCHSearchResultImpl, EllipticBCHLabelSet>;
         EllipticBCHSearchesImpl ellipticSearches(vehicleInputGraph, fleet, ellipticBucketsEnv, lastStopBucketsEnv,
                                                  *vehChEnv, routeState);
 
 
         // Construct remaining request state
-        using RelevantPDLocsFilterImpl = RelevantPDLocsFilter<FeasibleEllipticDistancesImpl, VehicleInputGraph,
-            VehCHEnv>;
+        using RelevantPDLocsFilterImpl = RelevantPDLocsFilter<VehicleInputGraph, VehCHEnv>;
         RelevantPDLocsFilterImpl relevantPdLocsFilter(fleet, vehicleInputGraph, *vehChEnv, routeState);
 
 
@@ -834,7 +833,7 @@ KARRI_DALS_STRATEGY == KARRI_COL || KARRI_DALS_STRATEGY == KARRI_IND
 
 
         using KaRRiBaseInfoPreparatorImpl = KaRRiBaseInfoPreparator<VehicleInputGraph, VehCHEnv,
-            FeasibleEllipticDistancesImpl, PDLocsFinderImpl, PDLocsAtExistingStopsFinderImpl, EllipticBCHSearchesImpl,
+            EllipticBCHSearchResultImpl, PDLocsFinderImpl, PDLocsAtExistingStopsFinderImpl, EllipticBCHSearchesImpl,
             PDDistanceQueryImpl, RelevantPDLocsFilterImpl>;
         KaRRiBaseInfoPreparatorImpl kaRRiBaseInfoPreparator(vehicleInputGraph, *vehChEnv, fleet, routeState,
                                                             pdLocsFinder, pdLocsAtExistingStops, ellipticSearches,

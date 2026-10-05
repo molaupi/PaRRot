@@ -100,6 +100,7 @@ namespace parrot {
 
             runFirstTaxiSharingLeg(
                 requestState, baseInfo.pdLocs, baseInfo.relOrdinaryPickups, baseInfo.relPickupsBeforeNextStop,
+                baseInfo.feasiblePickups,
                 rpAccEgrUpperBoundCost, stats.stationBchStats, stats.taxiFirstLegStats);
 
 
@@ -197,6 +198,7 @@ namespace parrot {
         void runFirstTaxiSharingLeg(const RequestState &rs, const PDLocs &pdLocs,
                                     const RelevantPDLocs &relOrdinaryPickups,
                                     const RelevantPDLocs &relPickupsBeforeNextStop,
+                                    const FeasiblePDLocs &feasiblePickups,
                                     const int upperBoundCost,
                                     stats::StationBchPerformanceStats &stationBchStats,
                                     stats::TaxiPerformanceStats &stats) {
@@ -204,11 +206,11 @@ namespace parrot {
 
             runStationBCH(rs, pdLocs, upperBoundCost, stationBchStats);
             runPALS(rs, pdLocs, upperBoundCost, stats.palsAssignmentsStats);
-            runOrdinary(rs, pdLocs, relOrdinaryPickups, stats.ordAssignmentsStats,
+            runOrdinary(rs, pdLocs, relOrdinaryPickups, feasiblePickups, stats.ordAssignmentsStats,
                         upperBoundCost);
             runDALS(rs, pdLocs, relOrdinaryPickups, relPickupsBeforeNextStop, upperBoundCost,
                     stats.dalsAssignmentsStats, stats.pbnsAssignmentsStats);
-            runPBNS(rs, pdLocs, relPickupsBeforeNextStop, upperBoundCost, stats.pbnsAssignmentsStats);
+            runPBNS(rs, pdLocs, relPickupsBeforeNextStop, feasiblePickups, upperBoundCost, stats.pbnsAssignmentsStats);
         }
 
         void runStationBCH(const RequestState &rs, const PDLocs &pdLocs, const int upperBoundCost,
@@ -230,9 +232,9 @@ namespace parrot {
         }
 
         void runOrdinary(const RequestState &rs, const PDLocs &pdLocs,
-                         const RelevantPDLocs &relOrdinaryPickpus, stats::OrdAssignmentsPerformanceStats &stats,
+                         const RelevantPDLocs &relOrdinaryPickpus, const FeasiblePDLocs &feasiblePickups, stats::OrdAssignmentsPerformanceStats &stats,
                          const int upperBoundCost) {
-            ordinaryToStations.enumerateAssignments(rs, pdLocs, relOrdinaryPickpus, stations, stationsInEllipse,
+            ordinaryToStations.enumerateAssignments(rs, pdLocs, relOrdinaryPickpus, feasiblePickups, stations, stationsInEllipse,
                                                     stationDistanceFinder.getDistancesToStations(), stats,
                                                     firstTaxiLegResult, upperBoundCost);
         }
@@ -249,10 +251,11 @@ namespace parrot {
 
         void runPBNS(const RequestState &rs, const PDLocs &pdLocs,
                      const RelevantPDLocs &relPickupsBns,
+                     const FeasiblePDLocs &feasiblePickups,
                      const int upperBoundCost,
                      stats::PbnsAssignmentsPerformanceStats &stats) {
             pbnsToStations.setExternalCostUpperBound(upperBoundCost);
-            pbnsToStations.findAssignments(rs, pdLocs, relPickupsBns, stations, stationsInEllipse,
+            pbnsToStations.findAssignments(rs, pdLocs, relPickupsBns, feasiblePickups, stations, stationsInEllipse,
                                            stationDistanceFinder.getDistancesToStations(), stats, firstTaxiLegResult);
         }
 

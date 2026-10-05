@@ -771,6 +771,7 @@ namespace karri {
             // const auto waitTime = reqData.depTime - requests[reqId].requestTime;
             // requestState.setCurrentWaitTime(waitTime);
 
+            systemStateUpdater.writeBestSecondTaxiLegAssignmentToLogger(requestState, secondLegResult);
 
             auto &reqData = requestData[reqId];
             const auto &asgn = secondLegResult.getBestAssignment();
@@ -782,7 +783,6 @@ namespace karri {
             applyAssignment(requestState, asgn, reqId, secondTaxiLegStats.updateStats);
 
             systemStateUpdater.writeSecondTaxiLegLogs(reqId, secondTaxiLegStats);
-            systemStateUpdater.writeBestSecondTaxiLegAssignmentToLogger(requestState, secondLegResult);
         }
 
         void handleRiderArrivalAtDest(const int reqId, const int occTime) {

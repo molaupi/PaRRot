@@ -33,33 +33,28 @@
 #include <map>
 
 namespace karri {
-
-
     struct RelevantPDLocs {
-
-        template<typename, typename, typename> friend
-        class RelevantPDLocsFilter;
+        template<typename, typename>
+        friend class RelevantPDLocsFilter;
 
         struct RelevantPDLoc {
             int stopIndex;
-            unsigned int pdId;
+            int pdId;
             int distToPDLoc;
             int distFromPDLocToNextStop;
         };
 
         using RelevantPDLocVector = AlignedVector<RelevantPDLoc>;
-
-    public:
-
         using It = typename RelevantPDLocVector::const_iterator;
         using RevIt = typename RelevantPDLocVector::const_reverse_iterator;
 
         RelevantPDLocs() = default;
 
         explicit RelevantPDLocs(const int fleetSize)
-                : fleetSize(fleetSize),
-                  relevantSpots(),
-                  vehiclesWithRelevantSpots() {}
+            : fleetSize(fleetSize),
+              relevantSpots(),
+              vehiclesWithRelevantSpots() {
+        }
 
         const std::vector<int> &getVehiclesWithRelevantPDLocs() const {
             return vehiclesWithRelevantSpots;
@@ -68,7 +63,7 @@ namespace karri {
         bool hasRelevantSpotsFor(const int vehId) const {
             KASSERT(vehId >= 0 && vehId < fleetSize);
             return vehicleToPdLocs.contains(vehId);
-//            return startOfRelevantPDLocs[vehId] != startOfRelevantPDLocs[vehId + 1];
+            //            return startOfRelevantPDLocs[vehId] != startOfRelevantPDLocs[vehId + 1];
         }
 
         IteratorRange<It> relevantSpotsFor(const int vehId) const {
@@ -76,8 +71,10 @@ namespace karri {
             if (!hasRelevantSpotsFor(vehId))
                 return {relevantSpots.end(), relevantSpots.end()};
             const auto range = vehicleToPdLocs.at(vehId);
-            return {relevantSpots.begin() + range.start,
-                    relevantSpots.begin() + range.end};
+            return {
+                relevantSpots.begin() + range.start,
+                relevantSpots.begin() + range.end
+            };
         }
 
         IteratorRange<RevIt> relevantSpotsForInReverseOrder(const int vehId) const {
@@ -91,18 +88,15 @@ namespace karri {
         }
 
     private:
-
         int fleetSize;
-//        std::vector<int> startOfRelevantPDLocs;
         RelevantPDLocVector relevantSpots;
-//        Subset vehiclesWithRelevantSpots;
 
         struct RelevantPDLocsRange {
             int start = INVALID_INDEX;
             int end = INVALID_INDEX;
         };
+
         std::unordered_map<int, RelevantPDLocsRange> vehicleToPdLocs;
         std::vector<int> vehiclesWithRelevantSpots;
-
     };
 }

@@ -41,6 +41,15 @@ class Subset {
     elements.reserve(size);
   }
 
+  int capacity() const {
+    return elementsToIndices.size();
+  }
+
+  void resize(const int newSize) {
+    elementsToIndices.resize(newSize, INVALID_INDEX);
+    elements.reserve(newSize);
+  }
+
   // Returns an iterator referring to the first element in the subset.
   std::vector<int32_t>::const_iterator begin() const noexcept {
     return elements.begin();

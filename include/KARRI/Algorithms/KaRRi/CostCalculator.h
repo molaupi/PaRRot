@@ -130,76 +130,150 @@ namespace karri {
             return walkingCost + tripCost;
         }
 
-        // For lower bound, pass the assignment consisting of the pickup with the smallest distance from the
-        // previous stop, and the dropoff with the smallest distance to the next stop. Uses a lower bound on every
-        // PD-distance.
+        // Expects partial assignment with set vehicle, stop indices, and lower bound on dist to pickup, dist to dropoff, and dist from dropoff.
+        // Computes lower bound on cost of a paired assignment.
         template<typename RequestContext>
         int calcCostLowerBoundForOrdinaryPairedAssignment(const Assignment &asgn, const RequestContext &context) const {
             using namespace time_utils;
-            if (!asgn.vehicle || asgn.pickup.id == INVALID_ID || asgn.dropoff.id == INVALID_ID)
-                return INFTY;
-            if (asgn.distToPickup == INFTY || asgn.distFromPickup == INFTY ||
-                asgn.distToDropoff == INFTY || asgn.distFromDropoff == INFTY)
+            if (!asgn.vehicle || asgn.distToPickup == INFTY || asgn.distToDropoff == INFTY || asgn.distFromDropoff ==
+                INFTY)
                 return INFTY;
 
-            assert(asgn.pickupStopIdx == asgn.dropoffStopIdx);
             const auto stopIdx = asgn.pickupStopIdx;
             const auto vehId = asgn.vehicle->vehicleId;
+            const int numStops = routeState.numStopsOf(vehId);
+            KASSERT(asgn.pickupStopIdx == asgn.dropoffStopIdx);
+            KASSERT(stopIdx > 0 && stopIdx < numStops - 1);
 
-            const int minDetour = asgn.distToPickup + asgn.distToDropoff + asgn.distFromDropoff -
-                                  calcLengthOfLegStartingAt(stopIdx, vehId, routeState);
+            const int depTimeAtPrevStop = getVehDepTimeAtStopForRequest(vehId, stopIdx, context.now(), routeState);
+            const int depTimeAtPickup = std::max(depTimeAtPrevStop + asgn.distToPickup, context.earliestDeparture());
+
+            const int minDetour = depTimeAtPickup + asgn.distToDropoff + InputConfig::getInstance().stopTime + asgn.
+                                  distFromDropoff - routeState.schedArrTimesFor(vehId)[stopIdx + 1];
             if (doesDropoffDetourViolateHardConstraints(*asgn.vehicle, context, stopIdx, minDetour, routeState))
                 return INFTY;
 
-            const int tripTimeLowerBound = asgn.distToDropoff;
-            const auto tripCostLowerBound = F::calcTripCost(tripTimeLowerBound);
+            const int minWaitViolationCost = F::calcWaitViolationCost(depTimeAtPickup, context);
+            const int tripTime = depTimeAtPickup - context.earliestDeparture() + asgn.distToDropoff;
 
-            return F::calcVehicleCost(minDetour) + tripCostLowerBound;
+            const auto minTripCost = F::calcTripCost(tripTime);
+            const int minAddedTripCostOfOthers = F::calcChangeInTripCostsOfExistingPassengers(
+                calcAddedTripTimeInInterval(vehId, 0, numStops - 1, minDetour, routeState));
+
+            const auto residualDetourAtEnd = calcResidualTotalDetourForStopAfterDropoff(vehId, 0, numStops - 1,
+                minDetour, routeState);
+            return F::calcVehicleCost(residualDetourAtEnd) + minWaitViolationCost + minTripCost +
+                   minAddedTripCostOfOthers;
         }
 
+        // Expects partial assignment with set vehicle, stop indices, and dropoff station, as well as lower bound on dist to pickup, dist to dropoff, and exact dist from dropoff.
+        // Computes lower bound on cost of a paired assignment.
         template<typename RequestContext>
-        int calcCostLowerBoundForPairedAssignmentBeforeNextStop(const Vehicle &veh, const PDLoc &pickup,
-                                                                const int distToPickup,
-                                                                const int minDistToDropoff,
-                                                                const int distFromPickupForDetourLowerBound,
+        std::pair<int, int> calcArrivalTimeAndNonTripCostLowerBoundForPairedToStationAssignment(
+            const Assignment &asgn,
+            const RequestContext &context) const {
+            using namespace time_utils;
+            if (!asgn.vehicle || asgn.dropoff.id == INVALID_ID || !asgn.dropoff.isStation || asgn.distToPickup == INFTY
+                || asgn.distToDropoff == INFTY || asgn.distFromDropoff == INFTY)
+                return {INFTY, INFTY};
+
+            const auto stopIdx = asgn.pickupStopIdx;
+            const auto vehId = asgn.vehicle->vehicleId;
+            const int numStops = routeState.numStopsOf(vehId);
+            KASSERT(asgn.pickupStopIdx == asgn.dropoffStopIdx);
+            KASSERT(stopIdx >= 0 && stopIdx < numStops - 1);
+
+            const int depTimeAtPrevStop = getVehDepTimeAtStopForRequest(vehId, stopIdx, context.now(), routeState);
+            const int depTimeAtPickup = std::max(depTimeAtPrevStop + asgn.distToPickup, context.earliestDeparture());
+
+            const int minDetour = depTimeAtPickup + asgn.distToDropoff + InputConfig::getInstance().stopTime + asgn.
+                                  distFromDropoff - routeState.schedArrTimesFor(vehId)[stopIdx + 1];
+            if (doesDropoffDetourViolateHardConstraints(*asgn.vehicle, context, stopIdx, minDetour, routeState))
+                return {INFTY, INFTY};
+
+            const int minPsgArrTime = depTimeAtPickup + asgn.distToDropoff + asgn.dropoff.walkingDist;
+
+            const int minWaitViolationCost = F::calcWaitViolationCost(depTimeAtPickup, context);
+            const int minAddedTripCostOfOthers = F::calcChangeInTripCostsOfExistingPassengers(
+                calcAddedTripTimeInInterval(vehId, stopIdx, numStops - 1, minDetour, routeState));
+            const auto residualDetourAtEnd = calcResidualTotalDetourForStopAfterDropoff(vehId, stopIdx, numStops - 1,
+                minDetour, routeState);
+            const int minNonTripCost = F::calcVehicleCost(residualDetourAtEnd) + minWaitViolationCost +
+                                       minAddedTripCostOfOthers;
+            return {minPsgArrTime, minNonTripCost};
+        }
+
+        // Computes lower bound on cost of a partial PBNS assignment with fixed pickup,
+        // lower bound distance to pickup, distance from pickup to dropoff, and from dropoff.
+        // Dropoff does not need to be specified yet.
+        template<typename RequestContext>
+        int calcCostLowerBoundForPairedAssignmentBeforeNextStop(const Assignment &partialAsgn,
                                                                 const RequestContext &context) const {
             using namespace time_utils;
 
-            const int vehId = veh.vehicleId;
+            KASSERT(
+                partialAsgn.vehicle && partialAsgn.pickup.id != INVALID_ID && partialAsgn.pickupStopIdx == 0 &&
+                partialAsgn.dropoffStopIdx == 0);
+            const int vehId = partialAsgn.vehicle->vehicleId;
             const auto &numStops = routeState.numStopsOf(vehId);
 
-            Assignment asgn(&veh, pickup);
-            asgn.distToPickup = distToPickup;
-            asgn.distToDropoff = minDistToDropoff;
-
-            const int minActualDepTimeAtPickup = getActualDepTimeAtPickup(vehId, 0, distToPickup, pickup, context,
-                                                                          routeState);
-
-            const auto initialPickupDetour = calcInitialPickupDetour(asgn, minActualDepTimeAtPickup, context,
-                                                                     routeState);
-            const auto minInitialDropoffDetour = std::max(minDistToDropoff, distFromPickupForDetourLowerBound) -
-                                                 calcLengthOfLegStartingAt(0, vehId, routeState);
-            auto minDetourRightAfterDropoff =
-                    calcDetourRightAfterDropoff(vehId, 0, 0, initialPickupDetour, minInitialDropoffDetour, routeState);
-            minDetourRightAfterDropoff = std::max(minDetourRightAfterDropoff, 0);
-            const auto residualDetourAtEnd = calcResidualTotalDetour(vehId, 0, 0, numStops - 1, initialPickupDetour,
-                                                                     minDetourRightAfterDropoff, routeState);
-            if (isAnyHardConstraintViolated(asgn, context, initialPickupDetour, minDetourRightAfterDropoff,
-                                            residualDetourAtEnd, false, routeState))
+            const int minDepTimeAtPickup = getActualDepTimeAtPickup(partialAsgn, context, routeState);
+            int minDetourAfterDropoff = minDepTimeAtPickup + partialAsgn.distToDropoff + InputConfig::getInstance().
+                                        stopTime + partialAsgn.distFromDropoff - routeState.schedArrTimesFor(vehId)[1];
+            minDetourAfterDropoff = std::max(minDetourAfterDropoff, 0);
+            if (doesDropoffDetourViolateHardConstraints(*partialAsgn.vehicle, context, 0, minDetourAfterDropoff,
+                                                        routeState))
                 return INFTY;
 
-
-            const int minTripTime = minActualDepTimeAtPickup - context.earliestDeparture() + minDistToDropoff;
-            const int walkingCost = F::calcWalkingCost(pickup.walkingDist, InputConfig::getInstance().pickupRadius);
-            const int minWaitViolationCost = F::calcWaitViolationCost(minActualDepTimeAtPickup, context);
+            const int minTripTime = minDepTimeAtPickup - context.earliestDeparture() + partialAsgn.distToDropoff;
+            const int walkingCost = F::calcWalkingCost(partialAsgn.pickup.walkingDist,
+                                                       InputConfig::getInstance().pickupRadius);
+            const int minWaitViolationCost = F::calcWaitViolationCost(minDepTimeAtPickup, context);
             const int minTripCost = F::calcTripCost(minTripTime);
 
             const int minAddedTripCostOfOthers = F::calcChangeInTripCostsOfExistingPassengers(
-                calcAddedTripTimeInInterval(vehId, 0, numStops - 1, minDetourRightAfterDropoff, routeState));
+                calcAddedTripTimeInInterval(vehId, 0, numStops - 1, minDetourAfterDropoff, routeState));
 
+            const auto residualDetourAtEnd = calcResidualTotalDetourForStopAfterDropoff(vehId, 0, numStops - 1,
+                minDetourAfterDropoff, routeState);
             return F::calcVehicleCost(residualDetourAtEnd) + walkingCost + minWaitViolationCost + minTripCost +
                    minAddedTripCostOfOthers;
         }
+        //
+        // // Expects partial assignment with set vehicle, stop indices, and dropoff station, as well as lower bound on dist to pickup, dist to dropoff, and exact dist from dropoff.
+        // // Computes lower bound on arrival time and non-trip cost of a paired assignment.
+        // template<typename RequestContext>
+        // std::pair<int, int> calcArrivalTimeAndNonTripCostLowerBoundForBeforeNextStopPairedToStationAssignment(
+        //     const Assignment &asgn,
+        //                                                         const RequestContext &context) const {
+        //     using namespace time_utils;
+        //
+        //     KASSERT(
+        //         asgn.vehicle && asgn.dropoff.id != INVALID_ID && asgn.dropoff.isStation && asgn.pickupStopIdx == 0 &&
+        //         asgn.dropoffStopIdx == 0);
+        //     const int vehId = asgn.vehicle->vehicleId;
+        //     const int numStops = routeState.numStopsOf(vehId);
+        //     KASSERT(asgn.pickupStopIdx == asgn.dropoffStopIdx);
+        //
+        //     const int depTimeAtPrevStop = getVehDepTimeAtStopForRequest(vehId, 0, context.now(), routeState);
+        //     const int depTimeAtPickup = std::max(depTimeAtPrevStop + asgn.distToPickup, context.earliestDeparture());
+        //
+        //     const int minDetour = depTimeAtPickup + asgn.distToDropoff + InputConfig::getInstance().stopTime + asgn.
+        //                           distFromDropoff - routeState.schedArrTimesFor(vehId)[1];
+        //     if (doesDropoffDetourViolateHardConstraints(*asgn.vehicle, context, 0, minDetour, routeState))
+        //         return {INFTY, INFTY};
+        //
+        //     const int minPsgArrTime = depTimeAtPickup + asgn.distToDropoff + asgn.dropoff.walkingDist;
+        //
+        //     const int minWaitViolationCost = F::calcWaitViolationCost(depTimeAtPickup, context);
+        //     const int minAddedTripCostOfOthers = F::calcChangeInTripCostsOfExistingPassengers(
+        //         calcAddedTripTimeInInterval(vehId, 0, numStops - 1, minDetour, routeState));
+        //     const auto residualDetourAtEnd = calcResidualTotalDetourForStopAfterDropoff(vehId, 0, numStops - 1,
+        //         minDetour, routeState);
+        //     const int minNonTripCost = F::calcVehicleCost(residualDetourAtEnd) + minWaitViolationCost +
+        //                                minAddedTripCostOfOthers;
+        //     return {minPsgArrTime, minNonTripCost};
+        // }
 
 
         template<typename RequestContext>
@@ -391,12 +465,12 @@ namespace karri {
 
         template<typename RequestContext>
         int calcCostWithoutTripUntilLastStopForDALS(const Vehicle &veh,
-                                         const PDLoc &pickup,
-                                         const int pickupIndex,
-                                         const int depTimeAtPickup,
-                                         const int initialPickupDetour,
-                                         const int residualDetourAtLastStop,
-                                         const RequestContext &context) {
+                                                    const PDLoc &pickup,
+                                                    const int pickupIndex,
+                                                    const int depTimeAtPickup,
+                                                    const int initialPickupDetour,
+                                                    const int residualDetourAtLastStop,
+                                                    const RequestContext &context) {
             using namespace time_utils;
             if (depTimeAtPickup >= INFTY || initialPickupDetour >= INFTY || residualDetourAtLastStop >= INFTY)
                 return INFTY;
@@ -413,7 +487,7 @@ namespace karri {
             const int changeInTripTimeCosts = F::calcChangeInTripCostsOfExistingPassengers(addedTripTimeOfOthers);
             const int waitViolation = F::calcWaitViolationCost(depTimeAtPickup, context);
             // const int minTripTime = routeState.schedDepTimesFor(vehId)[numStops - 1] +
-                                    // residualDetourAtLastStop - context.earliestDeparture();
+            // residualDetourAtLastStop - context.earliestDeparture();
             // const int minTripCost = F::calcTripCost(minTripTime);
             return F::calcVehicleCost(residualDetourAtLastStop)
                    + changeInTripTimeCosts

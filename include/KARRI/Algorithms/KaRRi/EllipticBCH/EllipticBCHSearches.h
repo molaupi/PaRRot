@@ -44,7 +44,7 @@ namespace karri {
             typename CostFunctionT,
             typename EllipticBucketsEnvT,
             typename LastStopsAtVerticesT,
-            typename FeasibleEllipticDistancesT,
+            typename EllipticBCHSearchResultT,
             typename LabelSetT>
     class EllipticBCHSearches {
 
@@ -121,19 +121,19 @@ namespace karri {
 
         struct UpdateDistancesToPDLocs {
 
-            UpdateDistancesToPDLocs() : curFeasible(nullptr), curFirstIdOfBatch(INVALID_ID) {}
+            UpdateDistancesToPDLocs() : curResult(nullptr), curFirstIdOfBatch(INVALID_ID) {}
 
             void operator()(const int meetingVertex, const BucketEntryWithLeeway &entry,
                                  const DistanceLabel &distsToPDLocs) {
 
-                assert(curFeasible);
-                curFeasible->updateDistanceFromStopToPDLoc(entry.targetId, curFirstIdOfBatch,
+                KASSERT(curResult);
+                curResult->updateDistanceFromStopToPDLoc(entry.targetId, curFirstIdOfBatch,
                                                                   distsToPDLocs, meetingVertex);
             }
 
 
-            void setCurFeasible(FeasibleEllipticDistancesT *const newCurFeasible) {
-                curFeasible = newCurFeasible;
+            void setCurFeasible(EllipticBCHSearchResultT *const newCurResult) {
+                curResult = newCurResult;
             }
 
             void setCurFirstIdOfBatch(int const newCurFirstIdOfBatch) {
@@ -141,14 +141,14 @@ namespace karri {
             }
 
         private:
-            FeasibleEllipticDistancesT *curFeasible;
+            EllipticBCHSearchResultT *curResult;
             int curFirstIdOfBatch;
         };
 
         struct UpdateDistancesFromPDLocs {
 
             UpdateDistancesFromPDLocs(const RouteState &routeState)
-                    : routeState(routeState), curFeasible(nullptr), curFirstIdOfBatch(INVALID_ID) {}
+                    : routeState(routeState), curResult(nullptr), curFirstIdOfBatch(INVALID_ID) {}
 
             void operator()(const int meetingVertex, const BucketEntryWithLeeway &entry,
                                  const DistanceLabel &distsFromPDLocs) {
@@ -159,13 +159,13 @@ namespace karri {
                 if (prevStopId == INVALID_ID)
                     return;
 
-                assert(curFeasible);
-                curFeasible->updateDistanceFromPDLocToNextStop(prevStopId, curFirstIdOfBatch,
+                assert(curResult);
+                curResult->updateDistanceFromPDLocToNextStop(prevStopId, curFirstIdOfBatch,
                                                                       distsFromPDLocs, meetingVertex);
             }
 
-            void setCurFeasible(FeasibleEllipticDistancesT *const newCurFeasible) {
-                curFeasible = newCurFeasible;
+            void setCurFeasible(EllipticBCHSearchResultT *const newCurResult) {
+                curResult = newCurResult;
             }
 
             void setCurFirstIdOfBatch(int const newCurFirstIdOfBatch) {
@@ -174,7 +174,7 @@ namespace karri {
 
         private:
             const RouteState &routeState;
-            FeasibleEllipticDistancesT *curFeasible;
+            EllipticBCHSearchResultT *curResult;
             int curFirstIdOfBatch;
         };
 
@@ -212,16 +212,16 @@ namespace karri {
 
 
         // Run Elliptic BCH searches for pickups and dropoffs
-        void run(FeasibleEllipticDistancesT &feasibleEllipticPickups,
-                 FeasibleEllipticDistancesT &feasibleEllipticDropoffs,
+        void run(EllipticBCHSearchResultT &pickupsResult,
+                 EllipticBCHSearchResultT &dropoffsResult,
                  const RequestState& requestState,
                  const PDLocs& pdLocs,
                  stats::EllipticBCHPerformanceStats& stats) {
 
             // Run for pickups:
             KaRRiTimer timer;
-            updateDistancesToPdLocs.setCurFeasible(&feasibleEllipticPickups);
-            updateDistancesFromPdLocs.setCurFeasible(&feasibleEllipticPickups);
+            updateDistancesToPdLocs.setCurFeasible(&pickupsResult);
+            updateDistancesFromPdLocs.setCurFeasible(&pickupsResult);
             runBCHSearchesFromAndTo(requestState, pdLocs.pickups);
             const int64_t pickupTime = timer.elapsed<std::chrono::nanoseconds>();
             stats.pickupTime += pickupTime;
@@ -231,8 +231,8 @@ namespace karri {
 
             // Run for dropoffs:
             timer.restart();
-            updateDistancesToPdLocs.setCurFeasible(&feasibleEllipticDropoffs);
-            updateDistancesFromPdLocs.setCurFeasible(&feasibleEllipticDropoffs);
+            updateDistancesToPdLocs.setCurFeasible(&dropoffsResult);
+            updateDistancesFromPdLocs.setCurFeasible(&dropoffsResult);
 
             runBCHSearchesFromAndTo(requestState, pdLocs.dropoffs);
             const int64_t dropoffTime = timer.elapsed<std::chrono::nanoseconds>();

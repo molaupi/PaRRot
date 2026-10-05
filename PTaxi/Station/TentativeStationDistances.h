@@ -31,23 +31,22 @@
 #include <KARRI/DataStructures/Containers/TimestampedVector.h>
 
 namespace parrot {
-
-// Data structure for dynamically tracking distances from pickups -> stations.
-// Allocates entries for distances to a station s from all pickups when one relevant distance to s is found
-// for the first time.
+    // Data structure for dynamically tracking distances from pickups -> stations.
+    // Allocates entries for distances to a station s from all pickups when one relevant distance to s is found
+    // for the first time.
     template<typename LabelSetT>
     class TentativeStationDistances {
-
         static constexpr int K = LabelSetT::K;
         using DistanceLabel = typename LabelSetT::DistanceLabel;
         using LabelMask = typename LabelSetT::LabelMask;
 
     public:
-
         TentativeStationDistances(const int numberOfStations)
-                : startIdxForStation(numberOfStations, INVALID_INDEX),
-                  minDistanceToAnyStation(INFTY),
-                  distances() {}
+            : startIdxForStation(numberOfStations, INVALID_INDEX),
+              minDistanceToAnyStation(INFTY),
+              distances(),
+              cachedMinDistancePerStation(numberOfStations) {
+        }
 
         void init(const int &numBatches) {
             curNumBatches = numBatches;
@@ -80,11 +79,16 @@ namespace parrot {
             if (startIdx == INVALID_INDEX)
                 return INFTY;
 
-            DistanceLabel minDist(INFTY);
-            for (int batchIdx = 0; batchIdx < curNumBatches; ++batchIdx) {
-                minDist.min(distances[startIdx + batchIdx]);
+            // If minimum distance for station is not cached yet, compute it
+            if (cachedMinDistancePerStation[stationId] == -1) {
+                DistanceLabel minDist(INFTY);
+                for (int batchIdx = 0; batchIdx < curNumBatches; ++batchIdx) {
+                    minDist.min(distances[startIdx + batchIdx]);
+                }
+                cachedMinDistancePerStation[stationId] = minDist.horizontalMin();
             }
-            return minDist.horizontalMin();
+
+            return cachedMinDistancePerStation[stationId];
         }
 
         int getMinDistanceForPDLoc(const int &pdLocId) {
@@ -111,23 +115,24 @@ namespace parrot {
 
             if (startIdxForStation[stationId] == INVALID_INDEX) {
                 startIdxForStation[stationId] = distances.size();
+                cachedMinDistancePerStation[stationId] = -1;
                 distances.insert(distances.end(), curNumBatches, DistanceLabel(INFTY));
             }
 
             minDistanceToAnyStation = std::min(minDistanceToAnyStation, distanceBatch.horizontalMin());
-            minDistancesPerPDLoc[curBatchIdx].min(distanceBatch); 
+            minDistancesPerPDLoc[curBatchIdx].min(distanceBatch);
             distances[startIdxForStation[stationId] + curBatchIdx].setIf(distanceBatch, batchInsertMask);
         }
 
-
     private:
-
         int curNumBatches;
         TimestampedVector<int> startIdxForStation;
         std::vector<DistanceLabel> distances; // curNumBatches DistanceLabels per station
-        std::vector<DistanceLabel> minDistancesPerPDLoc; // minDistancesPerPDLoc[pdLocId] = min distance to any station s for pdLocId
+        std::vector<DistanceLabel> minDistancesPerPDLoc;
+        // minDistancesPerPDLoc[pdLocId] = min distance to any station s for pdLocId
         int minDistanceToAnyStation;
         int curBatchIdx;
 
+        std::vector<int> cachedMinDistancePerStation;
     };
 }

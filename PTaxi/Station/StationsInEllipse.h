@@ -294,6 +294,14 @@ namespace parrot {
             stats.stationsInEllipse_remove_time += timer.elapsed<std::chrono::nanoseconds>();
         }
 
+        bool hasStationsInEllipse(const int stopId) const {
+            assert(stopId >= 0);
+            if (stopId >= stopBucketContainer.getBucketPositionsSize()) {
+                return false;
+            }
+            return !stopBucketContainer.isBucketEmpty(stopId);
+        }
+
         ConstantVectorRange<StationEntry> getStationsInEllipse(const int stopId) const {
             assert(stopId >= 0);
             if (stopId >= stopBucketContainer.getBucketPositionsSize()) {

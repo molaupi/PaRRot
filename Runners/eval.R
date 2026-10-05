@@ -278,7 +278,9 @@ modeChoiceOverview <- function(file_base) {
 
 # Given the paths to the result files of two KaRRi runs, this functions checks
 # whether all assignments are the same in both runs.
-compareBestAssignments <- function(file1, file2, trim = F) {
+compareBestAssignments <- function(file1, file2, trim = F, 
+                                   occurrence=1 # if given n, returns n-th differing row
+                                   ) {
   bestins1 <- fread(paste0(file1, ".bestassignments.csv"))
   bestins2 <- fread(paste0(file2, ".bestassignments.csv"))
     
@@ -311,25 +313,25 @@ compareBestAssignments <- function(file1, file2, trim = F) {
   rel2 <- bestins2[, ..relcols]
   
   # Get smallest row index where at least one value differs
-  idx <- match(TRUE, rowSums(rel1 != rel2) > 0)
-  if (is.na(idx)) {
-    print("All best insertions are equal.")
+  indices <- which(rowSums(rel1 != rel2) > 0)
+  if (length(indices) < occurrence) {
+    print(paste0("Fewer than ", occurrence, " rows differ."))
   } else {
+    idx <- indices[occurrence]
     print(bestins1[idx, "request_id"])
     row1 <- bestins1[idx,]
     row2 <- bestins2[idx,]
-    View(rbind(row1, row2))
+    View(rbind(row1, row2), title = paste0("compareBestAssignments (", occurrence, ")"))
   }
 }
 
-compareFiles <- function(file1, file2, ending, trim = TRUE, trim_n = NA, ignore_columns=c()) {
+compareFiles <- function(file1, file2, ending, 
+                         trim = TRUE, 
+                         trim_n = NA, 
+                         ignore_columns=c(),
+                         occurrence=1) {
   df1 <- fread(paste0(file1, ending))
   df2 <- fread(paste0(file2, ending))
-  
-  for (col in ignore_columns) {
-    df1[, c(col) := NULL]
-    df2[, c(col) := NULL]
-  }
   
   df1 <- df1[order(df1$request_id)]
   df2 <- df2[order(df2$request_id)]
@@ -345,15 +347,23 @@ compareFiles <- function(file1, file2, ending, trim = TRUE, trim_n = NA, ignore_
     df2 <- df2[1:trim_n]
   }
   
+  ignored1 <- copy(df1)
+  ignored2 <- copy(df2)
+  for (col in ignore_columns) {
+    ignored1[, c(col) := NULL]
+    ignored2[, c(col) := NULL]
+  }
+  
   # Get smallest row index where at least one value differs
-  idx <- match(TRUE, rowSums(df1 != df2) > 0)
-  if (is.na(idx)) {
-    print("All rows are equal in non-ignored columns.")
+  indices <- which(rowSums(ignored1 != ignored2) > 0)
+  if (length(indices) < occurrence) {
+    print(paste0("Fewer than ", occurrence, " rows differ."))
   } else {
+    idx <- indices[occurrence]
     print(df1[idx, "request_id"])
     row1 <- df1[idx]
     row2 <- df2[idx]
-    View(rbind(row1, row2), paste0("diff-", ending))
+    View(rbind(row1, row2), paste0("diff-", ending, " (", occurrence, ")"))
   }
 }
 
