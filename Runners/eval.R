@@ -30,7 +30,9 @@ quality_full_path <- function(file_base,
   modes <- fread(paste0(file_base, ".modechoice.csv"))
   tripstats <- fread(paste0(file_base, ".tripstats.csv"))
   bestasgns <- fread(paste0(file_base, ".bestassignments.csv"))
-  intermediate_results <- fread(paste0(file_base, ".intermediate_results.csv"))
+  intermediate_results <- NULL
+  if (algo == "parrot")
+    intermediate_results <- fread(paste0(file_base, ".intermediate_results.csv"))
   
   return(quality_base(asgnstats, legstats, modes, tripstats, bestasgns, intermediate_results, num_vehicles, algo, mode_name, format_times))
 }

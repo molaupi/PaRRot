@@ -511,7 +511,8 @@ namespace karri {
                            stats.ordAssignmentsStats,
                            stats.pbnsAssignmentsStats,
                            stats.palsAssignmentsStats,
-                           stats.dalsAssignmentsStats);
+                           stats.dalsAssignmentsStats,
+                           stats.repositioningAssignmentsStats);
         }
 
 #define GET_RAW_TYPE_OF(x) std::remove_reference_t<decltype(x)>

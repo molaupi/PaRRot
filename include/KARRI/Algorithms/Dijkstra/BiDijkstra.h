@@ -133,15 +133,18 @@ public:
         reverseSearch.init(targets, targetOffsets);
         tentativeDistances = INFTY;
         maxTentativeDistance = INFTY;
-        bool advanceForward = false;
-        while (!stoppingCriterion.stopForwardSearch() || !stoppingCriterion.stopReverseSearch()) {
-            advanceForward = !advanceForward; // Alternate between the forward and reverse search.
-            if ((advanceForward && !stoppingCriterion.stopForwardSearch()) ||
-                stoppingCriterion.stopReverseSearch())
-                updateTentativeDistances(forwardSearch.settleNextVertex());
-            else
-                updateTentativeDistances(reverseSearch.settleNextVertex());
-        }
+        runSearches();
+    }
+
+    // Compute the shortest path from a single source to any of the given targets (with offsets).
+    // The distance computed is equal to the minimum over the distances to the targets plus their offsets.
+    // If offsets are empty, they are assumed to be 0.
+    void runOneToAny(const int s, const std::vector<int> &targets, const std::vector<int> &targetOffsets = {}) requires (K==1) {
+        std::array<int, K> sources;
+        sources.fill(s);
+        forwardSearch.init(sources);
+        reverseSearch.initMultipleRoots(targets, targetOffsets);
+        runSearches();
     }
 
     // Returns the length of the i-th shortest path.
@@ -166,6 +169,21 @@ public:
     }
 
 private:
+
+    void runSearches() {
+        tentativeDistances = INFTY;
+        maxTentativeDistance = INFTY;
+        bool advanceForward = false;
+        while (!stoppingCriterion.stopForwardSearch() || !stoppingCriterion.stopReverseSearch()) {
+            advanceForward = !advanceForward; // Alternate between the forward and reverse search.
+            if ((advanceForward && !stoppingCriterion.stopForwardSearch()) ||
+                stoppingCriterion.stopReverseSearch())
+                updateTentativeDistances(forwardSearch.settleNextVertex());
+            else
+                updateTentativeDistances(reverseSearch.settleNextVertex());
+        }
+    }
+
     // Checks whether the path via v improves the tentative distance for any search.
     void updateTentativeDistances(const int v) {
         const auto distances = forwardSearch.distanceLabels[v] + reverseSearch.distanceLabels[v];

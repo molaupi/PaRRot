@@ -81,7 +81,7 @@
 #include <KARRI/Algorithms/KaRRi/LastStopSearches/RepositioningBucketsEnvironment.h>
 #include <KARRI/Algorithms/KaRRi/RepositioningStrategies/RandomRepositioningStrategy.h>
 #include <KARRI/Algorithms/KaRRi/RepositioningStrategies/NoOpRepositioningStrategy.h>
-#include <KARRI/Algorithms/KaRRi/RepositioningAssignments/IndividualBCHStrategyRepositioning.h>
+#include <KARRI/Algorithms/KaRRi/RepositioningAssignments/CollectiveBCHStrategyRepositioning.h>
 #include <KARRI/Algorithms/KaRRi/RepositioningAssignments/RepositioningAssignmentsFinder.h>
 #include <KARRI/Algorithms/KaRRi/RequestState/VehicleToPDLocQuery.h>
 #include <KARRI/Algorithms/KaRRi/RequestState/RequestStateInitializer.h>
@@ -687,7 +687,7 @@ KARRI_DALS_STRATEGY == KARRI_COL || KARRI_DALS_STRATEGY == KARRI_IND
         using RepositioningBucketsEnv = RepositioningBucketsEnvironment<VehicleInputGraph, VehCHEnv>;
         RepositioningBucketsEnv repositioningBucketsEnv(vehicleInputGraph, *vehChEnv, repositioningBucketsStats);
 
-        using RepositioningFinderStrategy = IndividualBCHStrategyRepositioning<VehicleInputGraph, VehCHEnv,
+        using RepositioningFinderStrategy = CollectiveBCHStrategyRepositioning<VehicleInputGraph, VehCHEnv,
             RepositioningBucketsEnv, VehicleLocatorImpl, CurVehLocToPickupSearchesImpl>;
         RepositioningFinderStrategy repositioningFinderStrategy(vehicleInputGraph, fleet, *vehChEnv, calculator,
                                                                 repositioningBucketsEnv, routeState,

@@ -93,6 +93,13 @@ class CHQuery {
     search.run(sources, targets);
   }
 
+  // Compute the shortest path from a single source to any of the given targets (with offsets).
+  // The distance computed is equal to the minimum over the distances to the targets plus their offsets.
+  // If offsets are empty, they are assumed to be 0.
+  void runOneToAny(const int s, const std::vector<int> &targets, const std::vector<int> &targetOffsets = {}) requires (K==1) {
+    search.runOneToAny(s, targets, targetOffsets);
+  }
+
   // Returns the length of the i-th shortest path.
   int getDistance(const int i = 0) {
     return search.getDistance(i);
