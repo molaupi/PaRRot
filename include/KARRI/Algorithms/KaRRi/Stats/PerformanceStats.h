@@ -165,11 +165,8 @@ namespace karri::stats {
         int64_t numRelevantStopsForDropoffs = 0;
         int64_t filterRelevantPDLocsTime = 0;
 
-        int64_t numRelevantStopsForPairs = 0;
-        int64_t filterRelevantPDLocsForPairsTime = 0;
-
         int64_t getTotalTime() const {
-            return filterFeasiblePDLocsTime + filterRelevantPDLocsTime + filterRelevantPDLocsForPairsTime;
+            return filterFeasiblePDLocsTime + filterRelevantPDLocsTime;
         }
 
         void clear() {
@@ -177,8 +174,6 @@ namespace karri::stats {
             numRelevantStopsForPickups = 0;
             numRelevantStopsForDropoffs = 0;
             filterRelevantPDLocsTime = 0;
-            numRelevantStopsForPairs = 0;
-            filterRelevantPDLocsForPairsTime = 0;
         }
 
         static constexpr auto LOGGER_NAME = "perf_filterrelevantpdlocs.csv";
@@ -187,8 +182,6 @@ namespace karri::stats {
                 "num_relevant_stops_for_pickups,"
                 "num_relevant_stops_for_dropoffs,"
                 "filter_relevant_pd_locs_time,"
-                "num_relevant_stops_for_pairs,"
-                "filter_relevant_pd_locs_for_pairs_time,"
                 "total_time\n";
 
         std::string getLoggerRow() const {
@@ -197,8 +190,6 @@ namespace karri::stats {
                     << numRelevantStopsForPickups << ","
                     << numRelevantStopsForDropoffs << ","
                     << filterRelevantPDLocsTime << ","
-                    << numRelevantStopsForPairs << ","
-                    << filterRelevantPDLocsForPairsTime << ","
                     << getTotalTime();
             return ss.str();
         }

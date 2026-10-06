@@ -494,7 +494,7 @@ namespace karri {
             logPerformance(requestId, name_prefix, stats.ellipticBchStats);
             logPerformance(requestId, name_prefix, stats.pdDistancesStats);
             logPerformance(requestId, name_prefix, stats.filterOrdinaryPdLocsStats);
-            logPerformance(requestId, name_prefix, stats.filterBnsPdLocsStats);
+            logPerformance(requestId, name_prefix + "BNS_", stats.filterBnsPdLocsStats);
         }
 
         void writeTaxiAndPtPerformanceLogs(const int requestId, const stats::TaxiAndPtPerformanceStats &stats) const {

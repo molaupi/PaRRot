@@ -198,7 +198,8 @@ namespace karri {
                 calcAddedTripTimeInInterval(vehId, stopIdx, numStops - 1, minDetour, routeState));
             const auto residualDetourAtEnd = calcResidualTotalDetourForStopAfterDropoff(vehId, stopIdx, numStops - 1,
                 minDetour, routeState);
-            const int minNonTripCost = F::calcVehicleCost(residualDetourAtEnd) + minWaitViolationCost +
+            const int minNonTripCost = F::calcVehicleCost(residualDetourAtEnd) +
+                                       F::calcWalkingCost(asgn.dropoff.walkingDist) + minWaitViolationCost +
                                        minAddedTripCostOfOthers;
             return {minPsgArrTime, minNonTripCost};
         }
@@ -242,12 +243,13 @@ namespace karri {
 
         template<typename RequestContext>
         int calcCostLowerBoundForRepositioningAssignment(const int minDistToPickup,
-                                                            const int minDistToDropoff,
-                                                                         const RequestContext &context) const {
+                                                         const int minDistToDropoff,
+                                                         const RequestContext &context) const {
             if (minDistToPickup >= INFTY || minDistToDropoff >= INFTY)
                 return INFTY;
 
-            const int minDepTimeAtPickup = std::max(context.now() + minDistToPickup + stopTime, context.earliestDeparture());
+            const int minDepTimeAtPickup = std::max(context.now() + minDistToPickup + stopTime,
+                                                    context.earliestDeparture());
             const int minDetour = minDepTimeAtPickup + minDistToDropoff + stopTime - context.now();
             const int minTripTime = minDepTimeAtPickup + minDistToDropoff - context.earliestDeparture();
             const int minWaitViolationCost = F::calcWaitViolationCost(minDepTimeAtPickup, context);

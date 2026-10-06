@@ -120,7 +120,6 @@ namespace parrot {
         }
 
         void setExternalCostUpperBound(const int bestCost) {
-            externalUpperBoundCost = bestCost;
             upperBoundCost = bestCost;
         }
 
@@ -294,7 +293,7 @@ namespace parrot {
                     vehId, 0, detourRightAfterStation, routeState);
                 const int minCost = calculator.calcMinCostForOrdinaryToStations(
                     totalResDetour, minTripTime, addedTripTime);
-                if (minCost >= externalUpperBoundCost)
+                if (minCost >= upperBoundCost)
                     break;
 
                 asgn.dropoff = {
@@ -393,7 +392,7 @@ namespace parrot {
                                                   vehId, j, detourRightAfterStation, routeState);
                     const int minCost = calculator.calcMinCostForOrdinaryToStations(
                         totalResDetour, minTripTime, addedTripTime);
-                    if (minCost >= externalUpperBoundCost)
+                    if (minCost >= upperBoundCost)
                         break;
 
                     asgn.dropoff = {
@@ -510,7 +509,7 @@ namespace parrot {
                                                       vehId, j, detourRightAfterStation, routeState);
                         const int minCost = calculator.calcMinCostForOrdinaryToStations(
                             totalResDetour, minTripTime, addedTripTime);
-                        if (minCost >= externalUpperBoundCost)
+                        if (minCost >= upperBoundCost)
                             break;
 
                         asgn.dropoff = {
@@ -609,7 +608,7 @@ namespace parrot {
                 if (minArrTime == INFTY || minNonTripCost == INFTY)
                     continue;
                 const int minFullCost = minNonTripCost + CostCalculator::CostFunction::calcTripCost(minArrTime - reqTime);
-                if (minFullCost >= upperBoundCost)
+                if (minFullCost > upperBoundCost)
                     continue;
                 if (firstTaxiLegResult.isLabelDominated(station.stationId, minNonTripCost, minArrTime))
                     continue;
@@ -658,7 +657,6 @@ namespace parrot {
         }
 
         int upperBoundCost;
-        int externalUpperBoundCost;
 
         VehicleLocatorT &vehicleLocator;
         CurVehLocToPickupSearchesT &curVehLocToPickupSearches;

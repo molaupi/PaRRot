@@ -62,7 +62,7 @@ namespace parrot {
 
             for (const auto &stopId: feasiblePickups.getStopIdsWithRelevantPDLocs()) {
                 enumeratePairedAssignments(stopId, requestState, pdLocs, feasiblePickups,
-                                           stations, stationsInEllipse, stationDistances, stats, firstTaxiLegResult);
+                                           stations, stationsInEllipse, stationDistances, stats, firstTaxiLegResult, externalUpperBoundCost);
             }
         }
 
@@ -205,7 +205,8 @@ namespace parrot {
                                         const PTStations &stations, StationsInEllipseT &stationsInEllipse,
                                         StationDistancesT &stationDistances,
                                         stats::OrdAssignmentsPerformanceStats &stats,
-                                        FirstTaxiLegResult &firstTaxiLegResult) {
+                                        FirstTaxiLegResult &firstTaxiLegResult,
+                                        const int externalUpperBoundCost) {
             KaRRiTimer timer;
             const int vehId = routeState.vehicleIdOf(stopId);
             const int stopIdx = routeState.stopPositionOf(stopId);
@@ -232,6 +233,7 @@ namespace parrot {
 
             const int minDistToPickup = feasiblePickups.minDistToPDLocFor(stopId);
             const auto &feasiblePickupsForStop = feasiblePickups.feasiblePdLocsFor(stopId);
+            const int reqTime = requestState.originalRequest.requestTime;
 
             for (const auto &entry: stationsInEllipse.getStationsInEllipse(stopId)) {
                 const auto &station = stations[entry.targetId];
@@ -262,6 +264,9 @@ namespace parrot {
                 const auto [minArrTime, minNonTripCost] = calculator.calcArrivalTimeAndNonTripCostLowerBoundForPairedToStationAssignment(
                     asgn, requestState);
                 if (minArrTime == INFTY || minNonTripCost == INFTY)
+                    continue;
+                const int minFullCost = minNonTripCost + CostCalculator::CostFunction::calcTripCost(minArrTime - reqTime);
+                if (minFullCost > externalUpperBoundCost)
                     continue;
                 if (firstTaxiLegResult.isLabelDominated(station.stationId, minNonTripCost, minArrTime))
                     continue;
@@ -295,8 +300,11 @@ namespace parrot {
 
                     ++stats.numPairedAssignmentsTried;
                     KASSERT(arrivalTime == calcArrivalTime(asgn, requestState, routeState));
+                    const int cost = calculator.calc(asgn, requestState);
+                    if (cost > externalUpperBoundCost)
+                        continue;
                     firstTaxiLegResult.tryAssignmentForStation(
-                        station.stationId, asgn, calculator.calc(asgn, requestState), arrivalTime, ORDINARY);
+                        station.stationId, asgn, cost, arrivalTime, ORDINARY);
                 }
             }
 
