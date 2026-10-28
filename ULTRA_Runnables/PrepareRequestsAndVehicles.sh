@@ -36,12 +36,17 @@ done < "$config_file"
 
 graphs_dir="${cfg[base_input_dir]}/KaRRi/Graphs/"
 
-# Map requests from demand source into network
+# Filter demand source to requests with origin and destination in inner area (kept next to demand source for reference)
+echo "Filtering demand source to requests within inner area."
+filtered_demand="${cfg[demand_source]%.csv}_in_$(basename "${cfg[boundary_inner]}" .poly).csv"
+bash "${cfg[parrot_source_dir]}"/RawData/filter_demand_by_poly.sh "${cfg[demand_source]}" "${cfg[boundary_inner]}" "${filtered_demand}"
+
+# Map requests from filtered demand into network
 echo "Mapping requests from demand source into network."
 requests_dir="${cfg[base_input_dir]}/KaRRi/Requests/"
 mkdir -p "${requests_dir}"
 
-bash "${cfg[parrot_source_dir]}"/RawData/demand_source_to_transform_locations_format.sh "${cfg[demand_source]}" "${requests_dir}"/tmp_transform_locations_format.csv
+bash "${cfg[parrot_source_dir]}"/RawData/demand_source_to_transform_locations_format.sh "${filtered_demand}" "${requests_dir}"/tmp_transform_locations_format.csv
 cmake -S "${cfg[parrot_source_dir]}" -B "${cfg[parrot_source_dir]}"/Build/Release -DCMAKE_BUILD_TYPE=Release
 cmake --build "${cfg[parrot_source_dir]}"/Build/Release --target TransformLocations -j
 "${cfg[parrot_source_dir]}"/Build/Release/RawData/TransformLocations \
@@ -51,7 +56,7 @@ cmake --build "${cfg[parrot_source_dir]}"/Build/Release --target TransformLocati
   -out-repr edge-id \
   -tar-g "${graphs_dir}"/"${cfg[instance_name]}"_veh.gr.bin \
   -o "${requests_dir}"/"${cfg[instance_name]}"_od_edges.csv
-bash "${cfg[parrot_source_dir]}"/RawData/add_req_time_to_origin_destination.sh "${requests_dir}"/"${cfg[instance_name]}"_od_edges.csv "${cfg[demand_source]}" "${requests_dir}"/"${cfg[instance_name]}".csv
+bash "${cfg[parrot_source_dir]}"/RawData/add_req_time_to_origin_destination.sh "${requests_dir}"/"${cfg[instance_name]}"_od_edges.csv "${filtered_demand}" "${requests_dir}"/"${cfg[instance_name]}".csv
 rm "${requests_dir}"/tmp_transform_locations_format.csv
 rm "${requests_dir}"/"${cfg[instance_name]}"_od_edges.csv
 rm "${requests_dir}"/"${cfg[instance_name]}"_od_edges.vertexmatches.csv

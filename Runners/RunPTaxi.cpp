@@ -154,9 +154,12 @@
 
 inline void printUsage() {
     std::cout <<
-            "Usage: karri -veh-g <vehicle network> -psg-g <passenger network> -r <requests> -v <vehicles> -o <file>\n"
-            "Runs Karlsruhe Rapid Ridesharing (KaRRi) simulation with given vehicle and passenger road networks,\n"
-            "requests, and vehicles. Writes output files to specified base path."
+        "Usage: PTaxi -veh-g <vehicle network> -psg-g <passenger network> -v <vehicles> -r <requests> \\ \n"
+        "-veh-h <vehicle CH> -psg-h <passenger CH>\\ \n"
+        "-raptor-data <PT data in raptor.binary format>\\ \n"
+        "-station-mapping <PaRRot station mapping> -station-buckets <PaRRot vehicle station buckets> -psg-station-buckets <PaRRot passenger station buckets> \\ \n"
+        "-o <output file base name>\n"
+            "Runs PaRRot simulation. Writes output files to specified base path. For creation of input data see README.\n"
             "  -veh-g <file>            vehicle road network in binary format.\n"
             "  -psg-g <file>            passenger road (and path) network in binary format.\n"
             "  -r <file>                requests in CSV format.\n"
