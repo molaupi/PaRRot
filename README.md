@@ -11,7 +11,7 @@ To build PaRRot, you need to have CMake and Python installed. On Debian and its 
 
 ```
 $ sudo apt-get install cmake
-$ sudo apt-get install python3 python3-pip; pip3 install -r RawData/python_requirements.txt
+$ sudo apt-get install python3 python3-pip; pip3 install -r python_requirements.txt
 ```
 
 Next, you need to clone the libraries in the `External` subdirectory and build the `RoutingKit` library. To do so,
